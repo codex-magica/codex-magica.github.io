@@ -21,7 +21,7 @@ export type DetailsType = "BardMagicValues" | "FireMagicValues" | "PrayerValues"
 
 export type DetailsInfoType = BardMagicInfo | PrayerInfo | FireMagicInfo | PsiInfo | SkillInfo | WarlockMagicInfo | WeaponInfo | WitchMagicInfo;
 
-const getDetails = (type: DetailsType, item: DetailsInfoType, param1: any = undefined) => {
+export const getDetails = (type: DetailsType, item?: DetailsInfoType, param1?: any) => {
   switch (type) {
     case "BardMagicValues":
       return <BardMagicDetails spell={item as BardMagicInfo} />;
