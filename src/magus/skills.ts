@@ -1,6 +1,6 @@
 import {Stat} from "./character";
 
-export type SkillDifficulty = "I" | "II" | "III" | "IV" | "%";
+export type SkillDifficulty = "I" | "II" | "III" | "IV";
 export type SkillType = "Harci" | "Alvilági" | "Világi" | "Tudományos" | "Szociális" | "Misztikus";
 
 export interface SkillInfo {

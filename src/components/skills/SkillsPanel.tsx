@@ -33,7 +33,7 @@ export default () => {
     "II": "1 5 10 20 30",
     "III": "2 8 15 30 45",
     "IV": "3 10 20 35 55",
-    "%": "1 -> 3%",
+    // "%": "1 -> 3%",
   };
 
   const skillTable = (type: SkillType) => {
