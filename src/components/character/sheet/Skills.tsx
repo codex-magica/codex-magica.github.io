@@ -3,8 +3,6 @@ import {Box, FormLabel, HStack, Text, VStack} from '@chakra-ui/react';
 import {useCharacter} from "@/CharacterContext";
 import Panel from "@/components/character/sheet/util/Panel";
 import {Skill, SkillType, SkillValues} from "@/data/skills";
-import Triggerable from "@/components/etc/Triggerable";
-import {detailsModal} from "@/components/ui/DetailsModal";
 
 export default () => {
   const { character } = useCharacter();
@@ -24,20 +22,20 @@ export default () => {
     return (
     <Panel title={skillType} size="sm">
       <VStack w="100%" spacing={0}>
-        {filteredSkillLevels.map(({skill, skillSubtype, level}) => {
-          const fullSkillName = `${skill}${skillSubtype ? ` (${skillSubtype})` : ''}`;
-          const skillValue = SkillValues.find((s) => s.name === skill)!!;
-          return (
-            <Triggerable trigger={
-                <HStack key={fullSkillName} width="100%" justifyContent="space-between" cursor="pointer">
-                  <FormLabel>{fullSkillName}</FormLabel>
-                  <Text width="20px" textAlign="center" verticalAlign="middle">{level}</Text>
-                </HStack>
-            }>
-              {detailsModal("SkillValues", skillValue, level)}
-            </Triggerable>
-          );
-        })}
+        {/*{filteredSkillLevels.map(({skill, skillSubtype, level}) => {*/}
+        {/*  const fullSkillName = `${skill}${skillSubtype ? ` (${skillSubtype})` : ''}`;*/}
+        {/*  const skillValue = SkillValues.find((s) => s.name === skill)!!;*/}
+        {/*  return (*/}
+        {/*    <Triggerable trigger={*/}
+        {/*        <HStack key={fullSkillName} width="100%" justifyContent="space-between" cursor="pointer">*/}
+        {/*          <FormLabel>{fullSkillName}</FormLabel>*/}
+        {/*          <Text width="20px" textAlign="center" verticalAlign="middle">{level}</Text>*/}
+        {/*        </HStack>*/}
+        {/*    }>*/}
+        {/*      {detailsModal("SkillValues", skillValue, level)}*/}
+        {/*    </Triggerable>*/}
+        {/*  );*/}
+        {/*})}*/}
       </VStack>
     </Panel>
   );

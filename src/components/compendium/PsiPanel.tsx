@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -8,15 +8,17 @@ import {
   Td,
   Box,
   VStack,
-  Text, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, useBreakpoint,
+  Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import Triggerable from "@/components/etc/Triggerable";
 import {PsiInfo, PsiType, PsiValues} from "@/data/psi";
-import PsiDetails from "@/components/compendium/PsiDetails";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {PsiDetails, PsiTitle} from "@/components/compendium/PsiDetails";
 
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<PsiInfo | undefined>();
+
   const isMobile = useBreakpoint() === "base";
 
   const psiHeader = (caption: string) => {
@@ -24,20 +26,6 @@ export default () => {
       <Box alignSelf="center" mt={2}>
         <Text fontSize={["md","xl"]} fontWeight="bold">{caption}</Text>
       </Box>
-    );
-  }
-
-  const spellModal = (spell: PsiInfo) => {
-    return (
-      <Modal isOpen={false}  onClose={()=>{}} size="xl" scrollBehavior="inside" isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            <PsiDetails spell={spell} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     );
   }
 
@@ -58,19 +46,15 @@ export default () => {
           </Thead>
           <Tbody>
             {PsiValues.filter((spell) => spell.type === type).map((spell, index) => (
-              <Triggerable trigger={
-                <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
-                  {!isMobile && <Td textAlign="center">{spell.level}</Td>}
-                  {!isMobile && <Td textAlign="center">{spell.domain}</Td>}
-                  <Td textAlign="center">{spell.cost}</Td>
-                  <Td textAlign="center">{spell.castingTime}</Td>
-                  <Td textAlign="center">{spell.duration}</Td>
-                  {!isMobile && <Td textAlign="center">{spell.save ?? '-'}</Td>}
-                </Tr>
-              }>
-                {spellModal(spell)}
-              </Triggerable>
+              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+                <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
+                {!isMobile && <Td textAlign="center">{spell.level}</Td>}
+                {!isMobile && <Td textAlign="center">{spell.domain}</Td>}
+                <Td textAlign="center">{spell.cost}</Td>
+                <Td textAlign="center">{spell.castingTime}</Td>
+                <Td textAlign="center">{spell.duration}</Td>
+                {!isMobile && <Td textAlign="center">{spell.save ?? '-'}</Td>}
+              </Tr>
             ))}
           </Tbody>
         </Table>
@@ -88,6 +72,14 @@ export default () => {
       {psiTable("Godoni örökség")}
       {psiHeader("Slan útja")}
       {psiTable("Slan útja")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={PsiValues}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <PsiTitle spell={spell}/>}
+        bodyFn={(spell) => <PsiDetails spell={spell}/>}
+      />
     </VStack>
   );
 };

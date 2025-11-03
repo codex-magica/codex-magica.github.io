@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -8,14 +8,16 @@ import {
   Td,
   Box,
   VStack,
-  Text, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, useBreakpoint,
+  Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import Triggerable from "@/components/etc/Triggerable";
 import {WarlockMagicInfo, WarlockMagicType, WarlockMagicValues} from "@/data/warlockMagic";
-import WarlockMagicDetails from "@/components/compendium/WarlockMagicDetails";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {WarlockMagicDetails, WarlockMagicTitle} from "@/components/compendium/WarlockMagicDetails";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<WarlockMagicInfo | undefined>();
+
   const isMobile = useBreakpoint() === "base";
 
   const spellsHeader = (caption: string) => {
@@ -23,20 +25,6 @@ export default () => {
       <Box alignSelf="center" mt={2}>
         <Text fontSize={["md","xl"]} fontWeight="bold">{caption}</Text>
       </Box>
-    );
-  }
-
-  const spellModal = (spell: WarlockMagicInfo) => {
-    return (
-      <Modal isOpen={false}  onClose={()=>{}} size="xl" scrollBehavior="inside" isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            <WarlockMagicDetails spell={spell} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     );
   }
 
@@ -57,18 +45,14 @@ export default () => {
           </Thead>
           <Tbody>
             {WarlockMagicValues.filter((spell) => spell.type === type).map((spell, index) => (
-              <Triggerable trigger={
-                <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
-                  <Td textAlign="center">{spell.cost}</Td>
-                  <Td textAlign="center">{spell.castingTime ?? '-'}</Td>
-                  <Td textAlign="center">{spell.range ?? '-'}</Td>
-                  <Td textAlign="center">{(type !== "Átok" ? spell.duration : spell.incubationPeriod) ?? '-'}</Td>
-                  {!isMobile && <Td textAlign="center">{spell.save ?? '-'}</Td>}
-                </Tr>
-              }>
-                {spellModal(spell)}
-              </Triggerable>
+              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+                <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
+                <Td textAlign="center">{spell.cost}</Td>
+                <Td textAlign="center">{spell.castingTime ?? '-'}</Td>
+                <Td textAlign="center">{spell.range ?? '-'}</Td>
+                <Td textAlign="center">{(type !== "Átok" ? spell.duration : spell.incubationPeriod) ?? '-'}</Td>
+                {!isMobile && <Td textAlign="center">{spell.save ?? '-'}</Td>}
+              </Tr>
             ))}
           </Tbody>
         </Table>
@@ -100,6 +84,14 @@ export default () => {
       {warlockMagicTable("Természeti mágia")}
       {spellsHeader("Asztrál- és Mentálmágia")}
       {warlockMagicTable("Asztrál- és Mentálmágia")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={WarlockMagicValues}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <WarlockMagicTitle spell={spell}/>}
+        bodyFn={(spell) => <WarlockMagicDetails spell={spell}/>}
+      />
     </VStack>
   );
 };

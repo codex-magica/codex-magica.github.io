@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -8,14 +8,16 @@ import {
   Td,
   Box,
   VStack,
-  Text, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, useBreakpoint,
+  Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import Triggerable from "@/components/etc/Triggerable";
 import {FireMagicInfo, FireMagicType, FireMagicValues} from "@/data/fireMagic";
-import FireMagicDetails from "@/components/compendium/FireMagicDetails";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {FireMagicDetails, FireMagicTitle} from "@/components/compendium/FireMagicDetails";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<FireMagicInfo | undefined>();
+
   const isMobile = useBreakpoint() === "base";
 
   const spellsHeader = (caption: string) => {
@@ -26,27 +28,6 @@ export default () => {
     );
   }
 
-  const spellModal = (spell: FireMagicInfo) => {
-    return (
-      <Modal isOpen={false}  onClose={()=>{}} size="xl" scrollBehavior="inside" isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            <FireMagicDetails spell={spell} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    );
-  }
-
-  const spellModalLink = (spell: FireMagicInfo) => {
-    return (
-      <Triggerable trigger={<Text cursor="pointer" textDecoration="none">{spell.name}</Text>}>
-        {spellModal(spell)}
-      </Triggerable>
-    );
-  }
   const fireMagicTable = (type: FireMagicType) => {
     return (
       <Box>
@@ -62,17 +43,13 @@ export default () => {
           </Thead>
           <Tbody>
             {FireMagicValues.filter((spell) => spell.type === type).map((spell, index) => (
-              <Triggerable trigger={
-                <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
-                  <Td textAlign="center">{spell.cost}</Td>
-                  <Td textAlign="center">{spell.castingTime}</Td>
-                  <Td textAlign="center">{spell.duration}</Td>
-                  {type === "Tűzlények idézése" && <Td textAlign="center">{spell.combatModifier}</Td>}
-                </Tr>
-              }>
-                {spellModal(spell)}
-              </Triggerable>
+              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+                <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
+                <Td textAlign="center">{spell.cost}</Td>
+                <Td textAlign="center">{spell.castingTime}</Td>
+                <Td textAlign="center">{spell.duration}</Td>
+                {type === "Tűzlények idézése" && <Td textAlign="center">{spell.combatModifier}</Td>}
+              </Tr>
             ))}
           </Tbody>
         </Table>
@@ -98,6 +75,14 @@ export default () => {
       {fireMagicTable("Őstüzek befolyásolása")}
       {spellsHeader("Tűzlények megidézése")}
       {fireMagicTable("Tűzlények idézése")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={FireMagicValues}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <FireMagicTitle spell={spell}/>}
+        bodyFn={(spell) => <FireMagicDetails spell={spell}/>}
+      />
     </VStack>
   );
 };

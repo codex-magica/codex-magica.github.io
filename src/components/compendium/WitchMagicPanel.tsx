@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -8,14 +8,15 @@ import {
   Td,
   Box,
   VStack,
-  Text, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, useBreakpoint,
+  Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import Triggerable from "@/components/etc/Triggerable";
 import {WitchMagicInfo, WitchMagicType, WitchMagicValues} from '@/data/witchMagic';
-import WitchMagicDetails from "@/components/compendium/WitchMagicDetails";
+import {WitchMagicTitle, WitchMagicDetails} from "@/components/compendium/WitchMagicDetails";
+import SnappyModal from "@/components/ui/SnappyModal";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<WitchMagicInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";
 
@@ -24,20 +25,6 @@ export default () => {
       <Box alignSelf="center" mt={2}>
         <Text fontSize={["md","xl"]}  fontWeight="bold">{caption}</Text>
       </Box>
-    );
-  }
-
-  const spellModal = (spell: WitchMagicInfo) => {
-    return (
-      <Modal isOpen={false}  onClose={()=>{}} size="xl" scrollBehavior="inside" isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            <WitchMagicDetails spell={spell} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     );
   }
 
@@ -76,26 +63,22 @@ export default () => {
           </Thead>
           <Tbody>
             {spells.map((spell, index) => (
-              <Triggerable trigger={
-                <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
-                  <Td textAlign="center">{spell.cost}</Td>
+              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+                <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
+                <Td textAlign="center">{spell.cost}</Td>
 
-                  {spell.castingTime && <Td textAlign="center">{spell.castingTime}</Td>}
+                {spell.castingTime && <Td textAlign="center">{spell.castingTime}</Td>}
 
-                  {spell.range && spell.type !== "Gyertyamágia" && <Td textAlign="center">{spell.range}</Td>}
+                {spell.range && spell.type !== "Gyertyamágia" && <Td textAlign="center">{spell.range}</Td>}
 
-                  {spell.duration && <Td textAlign="center">{spell.duration}</Td>}
+                {spell.duration && <Td textAlign="center">{spell.duration}</Td>}
 
-                  {!["Alapvető varázslatok", "Misztikus képességek", "Tűzmágia", "Anyagi Mágia", "Térmágia", "Bájitalok"].includes(type) && !isMobile
-                    && <Td textAlign="center">{spell.save ?? '-'}</Td>}
+                {!["Alapvető varázslatok", "Misztikus képességek", "Tűzmágia", "Anyagi Mágia", "Térmágia", "Bájitalok"].includes(type) && !isMobile
+                  && <Td textAlign="center">{spell.save ?? '-'}</Td>}
 
-                  {spell.type === "Bájitalok" && <Td textAlign="center">{spell.ingredientsCost ?? '-'}</Td>}
-                  {spell.type === "Bájitalok" && <Td textAlign="center">{spell.sellPrice ?? '-'}</Td>}
-                </Tr>
-              }>
-                {spellModal(spell)}
-              </Triggerable>
+                {spell.type === "Bájitalok" && <Td textAlign="center">{spell.ingredientsCost ?? '-'}</Td>}
+                {spell.type === "Bájitalok" && <Td textAlign="center">{spell.sellPrice ?? '-'}</Td>}
+              </Tr>
             ))}
           </Tbody>
         </Table>
@@ -164,6 +147,14 @@ export default () => {
 
       {spellsHeader("Bájitalok")}
       {witchMagicTable("Bájitalok")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={WitchMagicValues}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <WitchMagicTitle spell={spell}/>}
+        bodyFn={(spell) => <WitchMagicDetails spell={spell}/>}
+      />
     </VStack>
   );
 };

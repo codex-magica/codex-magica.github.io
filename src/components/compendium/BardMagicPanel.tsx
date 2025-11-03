@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -11,11 +11,12 @@ import {
   Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import Triggerable from "@/components/etc/Triggerable";
 import {BardMagicInfo, BardMagicType, BardMagicValues} from "@/data/bardMagic";
-import {detailsModal} from "@/components/ui/DetailsModal";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {BardMagicDetails, BardMagicTitle} from "@/components/compendium/BardMagicDetails";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<BardMagicInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";
 
@@ -43,18 +44,14 @@ export default () => {
           </Thead>
           <Tbody>
             {BardMagicValues.filter((spell) => spell.type === type).map((spell, index) => (
-              <Triggerable trigger={
-                <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
-                  <Td textAlign="center">{spell.cost}</Td>
-                  <Td textAlign="center">{spell.castingTime}</Td>
-                  {!(type === "Dalmágia" && isMobile) && <Td textAlign="center">{spell.range}</Td>}
-                  <Td textAlign="center">{spell.duration}</Td>
-                  {type === "Dalmágia" && !isMobile && <Td textAlign="center">{spell.save?.join("/") ?? '-'}</Td>}
-                </Tr>
-              }>
-                {detailsModal("BardMagicValues", spell)}
-              </Triggerable>
+              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+                <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
+                <Td textAlign="center">{spell.cost}</Td>
+                <Td textAlign="center">{spell.castingTime}</Td>
+                {!(type === "Dalmágia" && isMobile) && <Td textAlign="center">{spell.range}</Td>}
+                <Td textAlign="center">{spell.duration}</Td>
+                {type === "Dalmágia" && !isMobile && <Td textAlign="center">{spell.save?.join("/") ?? '-'}</Td>}
+              </Tr>
             ))}
           </Tbody>
         </Table>
@@ -73,6 +70,14 @@ export default () => {
       {bardMagicTable("Fénymágia")}
       {spellsHeader("Egyéb bárdmágiák")}
       {bardMagicTable("Egyéb bárdmágia")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={BardMagicValues}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <BardMagicTitle spell={spell}/>}
+        bodyFn={(spell) => <BardMagicDetails spell={spell}/>}
+      />
     </VStack>
   );
 };

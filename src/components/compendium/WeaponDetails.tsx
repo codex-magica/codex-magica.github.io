@@ -3,12 +3,19 @@ import {Box, HStack, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
 import {WeaponInfo} from "@/data/weapons";
 
-export default ({weapon}:{weapon: WeaponInfo}) => {
+export const WeaponTitle = ({weapon}:{weapon: WeaponInfo}) => {
   return (
     <VStack>
       <Box alignSelf="center">
         <Text fontSize="xl" fontWeight="bold" textTransform="capitalize">{weapon.name}</Text>
       </Box>
+    </VStack>
+  );
+};
+
+export const WeaponDetails = ({weapon}:{weapon: WeaponInfo}) => {
+  return (
+    <VStack>
       <HStack w="100%">
         <Text w="100%"><strong>Időigény: </strong> {weapon.attackDuration}</Text>
         <Text w="100%"><strong>Sebzés: </strong> {weapon.damage}</Text>
@@ -25,7 +32,7 @@ export default ({weapon}:{weapon: WeaponInfo}) => {
         <Text w="100%"><strong>Súly: </strong>{weapon.weight}</Text>
         <Text w="100%"><strong>Ár: </strong>{weapon.cost}</Text>
         {weapon.STP > 0 && <Text w="100%"><strong>STP: </strong>{weapon.STP}</Text>}
-        {weapon.STP == 0 && <Text w="100%" />}
+        {weapon.STP === 0 && <Text w="100%" />}
       </HStack>
       {weapon.canDisarm && <Text w="100%"><strong>Lefegyverzés: </strong>igen</Text>}
       {weapon.canDestroyWeapons && <Text w="100%"><strong>Fegyvertörés: </strong>igen</Text>}

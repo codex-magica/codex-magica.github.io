@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -8,18 +8,16 @@ import {
   Td,
   Box,
   VStack,
-  Text, Tooltip, useBreakpoint, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, ModalHeader, Button,
-  HStack,
+  Text, Tooltip, useBreakpoint,
 } from '@chakra-ui/react';
 import {SkillInfo, SkillType, SkillValues} from "@/data/skills";
 import {isHighlightedRow} from "@/components/etc/utils";
 import {StatValues} from "@/data/character";
-import Details from "@/components/etc/Details";
 import SnappyModal from "@/components/ui/SnappyModal";
+import {SkillDetails, SkillTitle} from "@/components/compendium/SkillDetails";
 
 export default () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSkillInfo, setSelectedSkillInfo] = React.useState<SkillInfo | undefined>();
+  const [selectedItem, setSelectedItem] = useState<SkillInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";
 
@@ -55,7 +53,7 @@ export default () => {
           </Thead>
           <Tbody>
             {SkillValues.filter((skill) => skill.skillType === type).map((skill, index) => (
-              <Tr key={skill.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => {setSelectedSkillInfo(skill);setIsModalOpen(true);}}>
+              <Tr key={skill.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(skill)}>
                 <Td textOverflow="ellipsis"><Text textDecoration="none">{skill.name}</Text></Td>
                 <Td textAlign="center" w="50px">
                   <Tooltip label={skillDifficultyTooltip[skill.skillDifficulty]} aria-label="A tooltip">
@@ -72,30 +70,6 @@ export default () => {
       </Box>
     );
   }
-
-  const skillTitle = (skillInfo: SkillInfo) => (
-    <VStack>
-      <HStack alignSelf="center">
-        {/*<Button onClick={() => setSelectedSkillInfo(nextSkillInfo(-1))} isDisabled={!nextSkillInfo(-1)}>{'<'}</Button>*/}
-        <Text fontSize="xl" fontWeight="bold">{skillInfo?.name}</Text>
-        {/*<Button onClick={() => setSelectedSkillInfo(nextSkillInfo(1))} isDisabled={!nextSkillInfo(1)}>{'>'}</Button>*/}
-      </HStack>
-      <Box alignSelf="center">
-        <Text fontSize="md" fontWeight="bold" textOverflow="ellipsis" whiteSpace="nowrap">{'(' + skillInfo?.skillDifficulty + ' - ' + skillInfo?.stats?.join(', ') + ')'}</Text>
-      </Box>
-    </VStack>
-  );
-
-  const skillDetails = (skillInfo: SkillInfo) => (
-    <VStack spacing={4}>
-      <Details>{skillInfo.description ?? ""}</Details>
-      {skillInfo.lvl_1 && <Details prefix="1. fok">{skillInfo.lvl_1}</Details>}
-      {skillInfo.lvl_2 && <Details prefix="2. fok">{skillInfo.lvl_2}</Details>}
-      {skillInfo.lvl_3 && <Details prefix="3. fok">{skillInfo.lvl_3}</Details>}
-      {skillInfo.lvl_4 && <Details prefix="4. fok">{skillInfo.lvl_4}</Details>}
-      {skillInfo.lvl_5 && <Details prefix="5. fok">{skillInfo.lvl_5}</Details>}
-    </VStack>
-  );
 
   return (
     <VStack spacing={4} pb="120px">
@@ -116,7 +90,14 @@ export default () => {
 
       {skillHeader("Misztikus")}
       {skillTable("Misztikus")}
-      <SnappyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} data={SkillValues} selectedItem={selectedSkillInfo} titleFn={skillTitle} bodyFn={skillDetails} />
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={SkillValues}
+        selectedItem={selectedItem}
+        titleFn={(skill) => <SkillTitle skill={skill}/>}
+        bodyFn={(skill) => <SkillDetails skill={skill}/>}
+      />
     </VStack>
   );
 };

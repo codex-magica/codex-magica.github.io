@@ -3,12 +3,19 @@ import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
 import {PsiInfo} from "@/data/psi";
 
-export default ({spell}:{spell: PsiInfo}) => {
+export const PsiTitle = ({spell}:{spell: PsiInfo}) => {
   return (
     <VStack>
       <Box alignSelf="center">
         <Text fontSize="xl" fontWeight="bold">{spell.name}</Text>
       </Box>
+    </VStack>
+  );
+};
+
+export const PsiDetails = ({spell}:{spell: PsiInfo}) => {
+  return (
+    <VStack>
       <Text w="100%"><strong>Típus: </strong> {spell.domain}</Text>
       <Text w="100%"><strong>Szint: </strong> {spell.level}</Text>
       <Text w="100%"><strong>Pszi pont: </strong> {spell.cost}</Text>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -8,14 +8,16 @@ import {
   Td,
   Box,
   VStack,
-  Text, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, useBreakpoint,
+  Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import Triggerable from "@/components/etc/Triggerable";
 import {WeaponInfo, WeaponType, WeaponValues} from "@/data/weapons";
-import WeaponDetails from "@/components/compendium/WeaponDetails";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {WeaponDetails, WeaponTitle} from "@/components/compendium/WeaponDetails";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<WeaponInfo | undefined>();
+
   const isMobile = useBreakpoint() === "base";
 
   const weaponsHeader = (caption: string) => {
@@ -30,20 +32,6 @@ export default () => {
       <Box alignSelf="center" mt={2}>
         <Text fontSize={["sm","lg"]} fontWeight="bold">{subCaption}</Text>
       </Box>
-    );
-  }
-
-  const weaponsModal = (weapon: WeaponInfo) => {
-    return (
-      <Modal isOpen={false}  onClose={()=>{}} size="xl" scrollBehavior="inside" isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <ModalBody>
-            <WeaponDetails weapon={weapon} />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     );
   }
 
@@ -72,26 +60,22 @@ export default () => {
           <Tbody>
             {WeaponValues.filter((weapon) => weapon.type === type && weapon.subType === subType)
               .map((weapon, index) => (
-                <Triggerable trigger={
-                  <Tr key={weapon.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                    <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{weapon.name}</Text></Td>
-                    <Td textAlign="center">{weapon.attackDuration}</Td>
-                    <Td textAlign="center">{weapon.damage}</Td>
-                    {!isMobile && <Td textAlign="center">{weapon.KÉ}</Td>}
-                    {!isMobile && type !== "ranged" && <Td textAlign="center">{weapon.TÉ}</Td>}
-                    {!isMobile && type === "ranged" && <Td textAlign="center">{weapon.CÉ}</Td>}
-                    {!isMobile && <Td textAlign="center">{weapon.VÉ}</Td>}
-                    {!isMobile && type === "ranged" && <Td textAlign="center">{weapon.range}</Td>}
-                    {!isMobile && <Td textAlign="center">{weapon.weight}</Td>}
-                    {!isMobile && <Td textAlign="center">{weapon.cost}</Td>}
-                    {!isMobile && <Td textAlign="center">{weapon.canDisarm ? 'igen' : 'nem'}</Td>}
-                    {!isMobile && <Td textAlign="center">{weapon.canDestroyWeapons ? 'igen' : 'nem'}</Td>}
-                    <Td textAlign="center">{weapon.canPierce ? 'igen' : 'nem'}</Td>
-                    {!isMobile && <Td textAlign="center">{weapon.STP}</Td>}
-                  </Tr>
-                }>
-                  {weaponsModal(weapon)}
-                </Triggerable>
+                <Tr key={weapon.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(weapon)}>
+                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{weapon.name}</Text></Td>
+                  <Td textAlign="center">{weapon.attackDuration}</Td>
+                  <Td textAlign="center">{weapon.damage}</Td>
+                  {!isMobile && <Td textAlign="center">{weapon.KÉ}</Td>}
+                  {!isMobile && type !== "ranged" && <Td textAlign="center">{weapon.TÉ}</Td>}
+                  {!isMobile && type === "ranged" && <Td textAlign="center">{weapon.CÉ}</Td>}
+                  {!isMobile && <Td textAlign="center">{weapon.VÉ}</Td>}
+                  {!isMobile && type === "ranged" && <Td textAlign="center">{weapon.range}</Td>}
+                  {!isMobile && <Td textAlign="center">{weapon.weight}</Td>}
+                  {!isMobile && <Td textAlign="center">{weapon.cost}</Td>}
+                  {!isMobile && <Td textAlign="center">{weapon.canDisarm ? 'igen' : 'nem'}</Td>}
+                  {!isMobile && <Td textAlign="center">{weapon.canDestroyWeapons ? 'igen' : 'nem'}</Td>}
+                  <Td textAlign="center">{weapon.canPierce ? 'igen' : 'nem'}</Td>
+                  {!isMobile && <Td textAlign="center">{weapon.STP}</Td>}
+                </Tr>
             ))}
           </Tbody>
         </Table>
@@ -144,6 +128,14 @@ export default () => {
 
       {weaponsHeader("Egyéb célzófegyverek")}
       {weaponsTable("ranged", "Egyéb célzófegyverek")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={WeaponValues}
+        selectedItem={selectedItem}
+        titleFn={(weapon) => <WeaponTitle weapon={weapon}/>}
+        bodyFn={(weapon) => <WeaponDetails weapon={weapon}/>}
+      />
     </VStack>
   );
 };

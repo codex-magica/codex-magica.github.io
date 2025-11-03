@@ -3,12 +3,19 @@ import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
 import {FireMagicInfo} from "@/data/fireMagic";
 
-export default ({spell}:{spell: FireMagicInfo}) => {
+export const FireMagicTitle = ({spell}:{spell: FireMagicInfo}) => {
   return (
     <VStack>
       <Box alignSelf="center">
         <Text fontSize="xl" fontWeight="bold">{spell.name}</Text>
       </Box>
+    </VStack>
+  );
+};
+
+export const FireMagicDetails = ({spell}:{spell: FireMagicInfo}) => {
+  return (
+    <VStack>
       <Text w="100%"><strong>Mana pont: </strong> {spell.cost}</Text>
       <Text w="100%"><strong>Varázslás ideje: </strong> {spell.castingTime}</Text>
       <Text w="100%"><strong>Időtartam: </strong> {spell.duration}</Text>

@@ -3,12 +3,19 @@ import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
 import {WitchMagicInfo} from "@/data/witchMagic";
 
-export default ({spell}:{spell: WitchMagicInfo}) => {
+export const WitchMagicTitle = ({spell}:{spell: WitchMagicInfo}) => {
   return (
     <VStack>
       <Box alignSelf="center">
         <Text fontSize="xl" fontWeight="bold">{spell.name}</Text>
       </Box>
+    </VStack>
+  );
+};
+
+export const WitchMagicDetails = ({spell}:{spell: WitchMagicInfo}) => {
+  return (
+    <VStack>
       <Text w="100%"><strong>Mana pont: </strong> {spell.cost}</Text>
 
       {spell.castingTime && !["Gyertyamágia", "Viaszbábok Mágiája"].includes(spell.type)

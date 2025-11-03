@@ -98,7 +98,7 @@ const SnappyTabs: React.FC<SnappyTabsProps> = ({tabs, children}) => {
     <>
       <HStack position="fixed" top={5} width="100%" zIndex={1} justifyContent="center" bg="transparent">
         {tabs.map((tab, index) => (
-          <Button key={index} onClick={() => handleTabClick(index)} colorScheme={index === currentIndex ? "red" : undefined}>{tab}</Button>
+          <Button key={index} onClick={() => handleTabClick(index)} variant={index === currentIndex ? "outline" : undefined} bgColor={index === currentIndex ? "white" : undefined}>{tab}</Button>
         ))}
       </HStack>
       <Box w="100%" h="100%" display="flex" overflowX="auto" overflowY="hidden" scrollSnapType="x mandatory" position="relative" sx={{'&::-webkit-scrollbar': {display: 'none'}}} ref={outerRef}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Table,
   Thead,
@@ -12,10 +12,11 @@ import {
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
 import {PrayerInfo, PrayerSource, PrayerType, PrayerValues} from "@/data/prayers";
-import Triggerable from "@/components/etc/Triggerable";
-import {detailsModal} from "@/components/ui/DetailsModal";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {PrayerDetails, PrayerTitle} from "@/components/compendium/PrayerDetails";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<PrayerInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";
 
@@ -44,19 +45,15 @@ export default () => {
           </Thead>
           <Tbody>
             {PrayerValues.filter((prayer) => prayer.source === source && (!type || prayer.type === type)).map((prayer, index) => (
-              <Triggerable trigger={
-                <Tr key={prayer.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer">
-                  <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{prayer.name}</Text></Td>
-                  {!isMobile && <Td textAlign="center">{prayer.domains.map((d) => d[0]).join(",")}</Td>}
-                  <Td textAlign="center">{prayer.cost}</Td>
-                  <Td textAlign="center">{prayer.castingTime}</Td>
-                  <Td textAlign="center">{prayer.range}</Td>
-                  <Td textAlign="center">{prayer.duration}</Td>
-                  {!isMobile && <Td textAlign="center">{prayer.save?.join("/") ?? '-'}</Td>}
-                </Tr>
-              }>
-                {detailsModal("PrayerValues", prayer)}
-              </Triggerable>
+              <Tr key={prayer.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(prayer)}>
+                <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{prayer.name}</Text></Td>
+                {!isMobile && <Td textAlign="center">{prayer.domains.map((d) => d[0]).join(",")}</Td>}
+                <Td textAlign="center">{prayer.cost}</Td>
+                <Td textAlign="center">{prayer.castingTime}</Td>
+                <Td textAlign="center">{prayer.range}</Td>
+                <Td textAlign="center">{prayer.duration}</Td>
+                {!isMobile && <Td textAlign="center">{prayer.save?.join("/") ?? '-'}</Td>}
+              </Tr>
             ))}
           </Tbody>
         </Table>
@@ -99,6 +96,14 @@ export default () => {
       {prayerTable("Tharr")}
       {prayersHeader("Uwel fohászai")}
       {prayerTable("Uwel")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={PrayerValues}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <PrayerTitle spell={spell}/>}
+        bodyFn={(spell) => <PrayerDetails spell={spell}/>}
+      />
     </VStack>
   );
 };

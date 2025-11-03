@@ -3,12 +3,20 @@ import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
 import {BardMagicInfo} from "@/data/bardMagic";
 
-export default ({spell}:{spell: BardMagicInfo}) => {
+export const BardMagicTitle = ({spell}:{spell: BardMagicInfo}) => {
   return (
     <VStack>
       <Box alignSelf="center">
         <Text fontSize="xl" fontWeight="bold">{spell.name}</Text>
       </Box>
+    </VStack>
+  );
+};
+
+
+export const BardMagicDetails = ({spell}:{spell: BardMagicInfo}) => {
+  return (
+    <VStack>
       <Text w="100%"><strong>Mana pont: </strong> {spell.cost}</Text>
       <Text w="100%"><strong>Varázslás ideje: </strong> {spell.castingTime}</Text>
       <Text w="100%"><strong>Hatótáv: </strong> {spell.range}</Text>
