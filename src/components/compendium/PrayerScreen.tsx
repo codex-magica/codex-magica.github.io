@@ -15,7 +15,7 @@ import {PrayerInfo, PrayerSource, PrayerType, PrayerValues} from "@/data/prayers
 import SnappyModal from "@/components/ui/SnappyModal";
 import {PrayerDetails, PrayerTitle} from "@/components/compendium/PrayerDetails";
 
-export default () => {
+export const PrayerScreen = () => {
   const [selectedItem, setSelectedItem] = useState<PrayerInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";

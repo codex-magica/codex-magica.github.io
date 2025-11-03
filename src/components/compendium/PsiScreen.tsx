@@ -16,7 +16,7 @@ import SnappyModal from "@/components/ui/SnappyModal";
 import {PsiDetails, PsiTitle} from "@/components/compendium/PsiDetails";
 
 
-export default () => {
+export const PsiScreen = () => {
   const [selectedItem, setSelectedItem] = useState<PsiInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";

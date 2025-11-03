@@ -15,7 +15,7 @@ import {WarlockMagicInfo, WarlockMagicType, WarlockMagicValues} from "@/data/war
 import SnappyModal from "@/components/ui/SnappyModal";
 import {WarlockMagicDetails, WarlockMagicTitle} from "@/components/compendium/WarlockMagicDetails";
 
-export default () => {
+export const WarlockMagicScreen = () => {
   const [selectedItem, setSelectedItem] = useState<WarlockMagicInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";

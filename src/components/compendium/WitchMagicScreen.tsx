@@ -15,7 +15,7 @@ import {WitchMagicInfo, WitchMagicType, WitchMagicValues} from '@/data/witchMagi
 import {WitchMagicTitle, WitchMagicDetails} from "@/components/compendium/WitchMagicDetails";
 import SnappyModal from "@/components/ui/SnappyModal";
 
-export default () => {
+export const WitchMagicScreen = () => {
   const [selectedItem, setSelectedItem] = useState<WitchMagicInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";

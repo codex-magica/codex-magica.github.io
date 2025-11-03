@@ -15,7 +15,7 @@ import SnappyModal from "@/components/ui/SnappyModal";
 import {ArmorInfo, ArmorValues, ShieldInfo, ShieldValues} from "@/data/armor";
 import {ArmorDetails, ArmorTitle, ShieldDetails, ShieldTitle} from "@/components/compendium/ArmorDetails";
 
-export default () => {
+export const ArmorScreen = () => {
   const [selectedShield, setSelectedShield] = useState<ShieldInfo | undefined>();
   const [selectedArmor, setSelectedArmor] = useState<ArmorInfo | undefined>();
 

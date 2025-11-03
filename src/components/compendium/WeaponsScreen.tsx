@@ -15,7 +15,7 @@ import {WeaponInfo, WeaponType, WeaponValues} from "@/data/weapons";
 import SnappyModal from "@/components/ui/SnappyModal";
 import {WeaponDetails, WeaponTitle} from "@/components/compendium/WeaponDetails";
 
-export default () => {
+export const WeaponsScreen = () => {
   const [selectedItem, setSelectedItem] = useState<WeaponInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";

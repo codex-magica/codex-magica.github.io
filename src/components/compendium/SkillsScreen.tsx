@@ -16,7 +16,7 @@ import {StatValues} from "@/data/character";
 import SnappyModal from "@/components/ui/SnappyModal";
 import {SkillDetails, SkillTitle} from "@/components/compendium/SkillDetails";
 
-export default () => {
+export const SkillsScreen = () => {
   const [selectedItem, setSelectedItem] = useState<SkillInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";
