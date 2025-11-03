@@ -1,21 +1,16 @@
-import React from 'react';
+import React, {useMemo, useState} from 'react';
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Box,
   VStack,
-  Text, useBreakpoint, FormLabel, HStack, Tooltip, Spacer,
+  Text, useBreakpoint, HStack, Spacer,
 } from '@chakra-ui/react';
 import {TimeIcon} from '@chakra-ui/icons';
-import {isHighlightedRow} from "@/components/etc/utils";
 import {BardMagicInfo, BardMagicType, BardMagicValues} from "@/data/bardMagic";
 import Panel from "@/components/character/sheet/util/Panel";
+import SnappyModal from "@/components/ui/SnappyModal";
+import {BardMagicDetails, BardMagicTitle} from "@/components/compendium/BardMagicDetails";
 
 export default () => {
+  const [selectedItem, setSelectedItem] = useState<BardMagicInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";
 
@@ -23,6 +18,7 @@ export default () => {
     const numberPart = parseInt(spell.cost.toString().replace(/\D/g, ''));
     return numberPart <= maxMana;
   }
+  const availableSpells = useMemo(()=> BardMagicValues.filter((spell) => isSpellAvailable(spell, 10)),[])
 
   const shortenedCastingTime = (castingTime: string) => {
     const shortnededSz = castingTime.replace("szegmens", "sz").replace("perc", "p");
@@ -38,18 +34,14 @@ export default () => {
         </HStack>
       }>
         <VStack w="100%" align="start" spacing={1}>
-            {/*{BardMagicValues.filter((spell) => spell.type === type && isSpellAvailable(spell, 10)).map((spell, index) => (*/}
-            {/*  <Triggerable trigger={*/}
-            {/*    <HStack key={spell.name} w="100%">*/}
-            {/*      <Text>{spell.name}</Text>*/}
-            {/*      <Spacer />*/}
-            {/*      <Text w="30px" textAlign="center">{spell.cost}</Text>*/}
-            {/*      <Text w="40px" textAlign="center">{shortenedCastingTime(spell.castingTime)}</Text>*/}
-            {/*    </HStack>*/}
-            {/*  }>*/}
-            {/*    {detailsModal("BardMagicValues", spell)}*/}
-            {/*  </Triggerable>*/}
-            {/*))}*/}
+            {availableSpells.filter((spell) => spell.type === type).map((spell, index) => (
+              <HStack key={index} w="100%" cursor="pointer" onClick={() => setSelectedItem(spell)}>
+                <Text>{spell.name}</Text>
+                <Spacer />
+                <Text w="30px" textAlign="center">{spell.cost}</Text>
+                <Text w="40px" textAlign="center">{shortenedCastingTime(spell.castingTime)}</Text>
+              </HStack>
+            ))}
         </VStack>
       </Panel>
     );
@@ -61,6 +53,14 @@ export default () => {
       {bardMagicList("Hangmágia")}
       {bardMagicList("Fénymágia")}
       {bardMagicList("Egyéb bárdmágia")}
+      <SnappyModal
+        isOpen={selectedItem !== undefined}
+        onClose={() => setSelectedItem(undefined)}
+        data={availableSpells}
+        selectedItem={selectedItem}
+        titleFn={(spell) => <BardMagicTitle spell={spell}/>}
+        bodyFn={(spell) => <BardMagicDetails spell={spell}/>}
+      />
     </Panel>
   );
 };

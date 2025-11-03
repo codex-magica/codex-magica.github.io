@@ -53,7 +53,7 @@ export const ShieldValues: ShieldInfo[] = [
     MGT: -3,
     KÉ: 0,
     VÉ: 50,
-    description: "A nagy pajzsok embermagasak és a nehézvértezetű lovagok felsze- reléséhez tartoznak. Gyakran használnak ilyet a számszeríjászok is fedezékként."
+    description: "A nagy pajzsok embermagasak és a nehézvértezetű lovagok felszereléséhez tartoznak. Gyakran használnak ilyet a számszeríjászok is fedezékként."
   },
   {
     name: "Pajzs, pavaze",

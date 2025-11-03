@@ -16,8 +16,9 @@ export interface SkillInfo {
   lvl_3?: string;
   lvl_4?: string;
   lvl_5?: string;
+  special?: string;
 }
-export const SkillValues = [
+export const SkillValues : SkillInfo[] = [
     {
       name: "Fájdalomtűrés",
       skillType: "Harci",
@@ -32,7 +33,7 @@ export const SkillValues = [
       lvl_4: "A képzettség ilyen szintű birtokosa a vonatkozó Tulajdonságpróbáját immáron +2 módosítóval teheti, illetve a korábbiakhoz képest szintenként nem +1, hanem +2 Fp-t kap.",
       lvl_5: "A karakter szinte teljesen érzéketlen a fájdalomra, vonatkozó Tulajdonságpróbáját már +3 módosítóval dobhatja. Szintenként +3 Fp-t kap."
 
-    } as SkillInfo, {
+    }, {
       name: "Fegyverhasználat",
       skillType: "Harci",
       skillDifficulty: "III",
@@ -53,7 +54,7 @@ export const SkillValues = [
       lvl_4: "A karakter már mestere az adott fegyver forgatásának, a fegyveres harcértékeihez KÉ: +5, TÉ: +10, VÉ: +10, CÉ: +10 (A bónuszok nem adódnak össze a 3. foknál szereplőkkel).\n\nA karakter a lefegyverző, illetve fegyvertörő támadásait immáron csak -30 TÉ módosítóval hajtja végre, csapásainak, ha a fegyvere bír ilyen képességgel a páncélok -2 SFÉ- vel állnak ellen.\n\nA karakter már a kettővel magasabb méretkategóriába eső fegyverekkel szemben is a fegyvere adta, illetve a képzettség nyújtotta plusz pontokkal megnövelt harcértékkel számolhat.",
       lvl_5: "A karakter legendás mestere választott fegyvere forgatásának, sebzéseihez +1 Sp kap és a Túlütés küszöbe 10 ponttal csökken.\n\nA karakter a lefegyverző, illetve fegyvertörő támadásait immáron csak -10 TÉ módosítóval hajtja végre, csapásainak, ha a fegyvere bír ilyen képességgel a páncélok -3 SFÉ- vel állnak ellen.\n\nHa a karakter célzófegyvert használ, akkor képes felkészülni a lövésre. Minden egyes felkészüléssel töltött kör +10 CÉ-t jelent a képzettség birtokosa számára. Hagyományos íjjal lövő lövész 1 körnél, számszeríjat alkalmazó lövész 3 körnél többet nem tölthet felkészüléssel.\n\nA karakter már a hárommal magasabb méretkategóriába eső fegyverekkel szemben is a fegyvere adta, illetve a képzettség nyújtotta plusz pontokkal megnövelt harcértékkel számolhat.",
 
-    } as SkillInfo,
+    },
     {
       name: "Fegyverismeret",
       skillType: "Harci",
@@ -68,7 +69,7 @@ export const SkillValues = [
       lvl_4: "A karakter már a mágiával átitatott pengéket is nagy valószínűséggel azonosítja kiegyensúlyozásuk, megjelenésük alapján. Az összes kortárs ynevi faj fegyvereiről a 3. foknál leírtak szerint képes nyilatkozni. Az ősfajok - aquirok, amundok, óelfek, stb. - fegyverei viszont még mindig zavarba hozzák.",
       lvl_5: "Ynev legjelesebb szakértői bírnak e tudomány ilyetén fokú ismeretével. A karakter már az ősfajok fegyvereiről is a 3. foknál leírtak szerint nyilatkozik, ismeri a hozzájuk fűződő legendákat, illetve ismerheti különleges képességeik titkait is, bár ennek eldöntése a KM joga."
 
-    } as SkillInfo,
+    },
     {
       name: "Hadvezetés",
       skillType: "Harci",
@@ -83,7 +84,7 @@ export const SkillValues = [
       lvl_4: "Az ennyire képzett vezér már ritkaság, országonként egy-kettő, ha akad. Előre kidolgozott haditervei +10 TÉ vagy VÉ módosítót juttatnak csapatainak, ha képes őket kivitelezni. A sereg ellátását bármely területen képes megszervezni, kivitelezni, ha az fizikailag lehetséges - e döntés a KM jogköre.\n\nA fent leírt karizma próbát +2 módosítóval dobhatja. Maximálisan 10.000 ember vezetésére képes.\n\nHa bír a képzettség leírásánál felsorolt képzettségek 5. fokával, vagy tanácsadói bírnak a követelményekkel, akkor együttműködésük esetén egy +2 módosítóval dobott sikeres Intelligencia próbával egy megtervezett hadjárat sikeréről képes előre nyilatkozni, az összegyűjtött információk tükrében.",
       lvl_5: "A karakter stratégiai, taktikai zseni, puszta jelenléte hírneve miatt +5 Bátorság bonuszt ad alárendeltjeinek.\n\nA fent leírt karizma próbát +3 módosítóval dobhatja. Az általa vezetett csapatoknak nincs létszám korlátja.\n\nHa bír a képzettség leírásánál felsorolt képzettségek 5. fokával, vagy tanácsadói bírnak a követelményekkel, akkor együttműködésük esetén egy +3 módosítóval dobott sikeres Intelligencia próbával egy megtervezett hadjárat sikeréről képes előre nyilatkozni, az összeszedett információk fényében."
 
-    } as SkillInfo,
+    },
     {
       name: "Harci láz",
       skillType: "Harci",
@@ -98,7 +99,7 @@ export const SkillValues = [
       lvl_4: "Az efféle harci tomboló a Harc gyűlölettel módosítókat duplán kapja meg, illetve szenvedi el.",
       lvl_5: "A karakter harci megszállottságában szélvészként kaszabol és öl, közelharci fegyverei a támadások idejét illetőleg eggyel gyorsabb kategóriába esnek, azaz például egy kétkezes csatabárddal kétszer, egy hosszúkarddal háromszor támad egy teljes támadással töltött harci kör alatt."
 
-    } as SkillInfo,
+    },
     {
       name: "Harcművészet",
       skillType: "Harci",
@@ -113,7 +114,7 @@ export const SkillValues = [
       lvl_4: "A karakter már mestere az adott fegyver forgatásának vagy a pusztakezes harcművészetnek, harcértékeihez KE: +5, TÉ: +10, VÉ: +10 (a bónuszok nem adódnak össze a fokon szereplőkkel.)\n\nAz ilyetén szinten képzett harcművész már képes -30 TÉ- vel végrehajtott sikeres találat esetén lefegyverezni ellenfelét, vagy épp eltörni annak harci eszközét (akár pajzsot is), ha a fegyver eltöréséhez elég STP-t sebez rajta (nem szükséges egyetlen támadásból). Emellett a karakter képes kihasználni teste és a fegyver átütő, páncélromboló képességét; csapásainak ezen a szinten 2 ponttal csökkentett SFÉ-vel állnak ellen a páncélok. Természetesen puszta kézzel, illetve abban az esetben, ha a fegyver képes a fenti manőverek végrehajtására. (Lásd a fegyverek speciális tulajdonságait a Fegyverek című táblázatban a 197. oldalon).",
       lvl_5: "A karakter legendás mestere választott fegyvere forgatásának, illetve a pusztakezes harcművészetnek, túlütés küszöbe 10 ponttal csökken, Sebzése +1 ponttal nő.\n\nAz ilyetén szinten képzett harcművész már képes -10 módosítóval végrehajtott sikeres találat esetén lefegyverezni ellenfelét vagy épp eltörni annak harci eszközét (akár pajzsot is), ha a fegyver eltöréséhez elég STP-t sebez rajta (nem szükséges egyetlen támadásból). Emellett a karakter képes kihasználni teste, illetve a fegyver átütő, páncélromboló képességét; csapásainak ezen a szinten 3 ponttal csökkentett SFÉ-vel állnak ellen a páncélok. Természetesen puszta kézzel, illetve abban az esetben, ha a fegyver képes a fenti manőverek végrehajtására. (Lásd a fegyverek speciális tulajdonságait a Fegyverek című táblázatban a 197. oldalon)."
 
-    } as SkillInfo,
+    },
     {
       name: "Harctéri gyakorlat",
       skillType: "Harci",
@@ -128,7 +129,7 @@ export const SkillValues = [
       lvl_4: "Az ezen a szinten képzett harcos a vonatkozó Tulajdonságpróbáját immáron +2 módosítóval teheti, illetve a korábbiakhoz képest már nem egy, hanem plusz két fővel is képes levonások nélkül felvenni a harcot.\n\nA karakter a képzettség ezen szintjén már +2 HM-et kap.",
       lvl_5: "A karakter a csatamezők réme. Képtelenség megszorítani, hiába is tör ellene akár egy kisebb tömeg. Mozdulatai kiszámítottak, nincs olyan hadrend, mely legyűrné.\n\nA karakter ezen a fokon próbáját már +3 módosítóval dobhatja, illetve a feltüntetettekhez képest plusz három fővel veheti fel a harcot levonások nélkül.\n\nA karakter a képzettség ezen szintjén már +3 HM-et kap."
 
-    } as SkillInfo,
+    },
     {
       name: "Kétkezes harc",
       skillType: "Harci",
@@ -143,7 +144,7 @@ export const SkillValues = [
       lvl_4: "A kétkezes harc mesterének figyelmét már nem kell megosztania fegyverei között, ezért mindkét kezével a fegyver kategóriájának megfelelően támadhat.",
       lvl_5: "A képzettség nagymesterei minden esetben mindkét fegyverük Védő értékének alkalmazásával számíthatják ki teljes VÉ-jüket, akkor is, ha támadnak mindkét fegyverükkel."
 
-    } as SkillInfo,
+    },
     {
       name: "Pajzshasználat",
       skillType: "Harci",
@@ -158,7 +159,7 @@ export const SkillValues = [
       lvl_4: "Ezen a szinten pajzs MGT-je 2 ponttal csökken. Ha a pajzzsal sikeres támadás hajt végre, megpróbálhatja fellökni ellenfelét. Ilyenkor mind ő, mind ellenfele Erőpróbát dob, s ha a karakter nagyobb sikert ér el, mint ellenfele, a földre döntés sikeres. Amennyiben rendje okítat különleges támadásokat, azok is ezen a szinten válnak számára elérhetővé.",
       lvl_5: "A pajzs MGT-je immár 3 ponttal csökken, valamint ha támadni kíván a pajzzsal, nem veszíti el annak Védő értéket."
 
-    } as SkillInfo,
+    },
     {
       name: "Pusztakezes harc",
       skillType: "Harci",
@@ -173,7 +174,7 @@ export const SkillValues = [
       lvl_4: "A karakter mesteri birkózó vagy ökölharcos, megkapja a mester fokú fegyverhasználat bonuszait KÉ: +5, TÉ: +10, VÉ: +10. (A bónuszok nem adódnak össze a 3. foknál szereplőkkel).\n\nBirkózóként sikeres támadás, illetve sikeres Erő tulajdonság ellenpróba esetén képes részlegesen lebénítani az ellenfelét. A sikeres találatkor a kidobott sebzés (túlütés esetén duplázódik) kétszeresének megfelelő értékkel csökken az ellenfél VÉ-je a következő birkózófogással szemben, ekkor viszont nem sérül a célpont. Emellett képes egy lefegyverző támadás végrehajtására -30 TÉ-vel. Ezen támadásait a kör elején be kell jelentenie.\n\nÖklözőként könnyedén képes kiütni ellenfeleit, minden fejre mért célzott támadása esetén az okozott sebzés a leütésre nézve kétszeresének számít. (A célpont csak az eredeti sebzést szenvedi el.) Ezt a támadását a kör elején be kell jelentenie.\n\nA karakter ezen a szinten már a kettővel magasabb méretkategóriába tartozó fegyverekkel szemben is alkalmazhatja a képzettség nyújtotta bónuszait.",
       lvl_5: "A karakter immáron hihetetlen képességekkel megáldott birkózó, sikeres találat esetén képes bénító fogásba vinni ellenfelét. Találatkor, sikeres Erő ellenpróba esetén a kidobott sebzés (túlütés esetén duplázódik) háromszorosának megfelelő értékkel csökken az ellenfél VÉ-je a következő birkózófogással szemben, ekkor viszont nem sérül a célpont. A lefegyverző támadást ekkor már csak -10 TÉ levonással hajtja végre. Ezen támadásait a kör elején be kell jelentenie.\n\nÖklözőként könnyedén képes kiütni ellenfeleit, minden fejre mért célzott támadása esetén az okozott sebzés a leütésre nézve háromszorosának számít. (A célpont csak az eredeti sebzést szenvedi el.) Ezt a támadását a kör elején be kell jelentenie.\n\nA karakterek ökle vagy fogásai ezen a szinten már egyaránt lk10 Sp-t sebeznek.\n\nA karakter ezen a szinten már a hárommal magasabb méretkategóriába tartozó fegyverekkel szemben is alkalmazhatja a képzettség nyújtotta bonuszait."
 
-    } as SkillInfo,
+    },
     {
       name: "Pusztítás",
       skillType: "Harci",
@@ -188,7 +189,7 @@ export const SkillValues = [
       lvl_4: "A karakter a csatamezők réme, ellenfelei rettegik a nevét, túlütés küszöbe újabb 10 ponttal 30-ra változik, ez összeadódik esetleges más bónuszokkal.",
       lvl_5: "A legendás hírű pusztító megjelenése is félelemmel tölti el ellenfeleit, hírhedt csapásainak szinte mindegyike öl, a korábbi előnyök mellett túlütés esetén újabb +1k6 Ép extra sebzést is okoz. (Azaz a 2. fokon kapott Sebzés bonuszon felül még + 1k6)."
 
-    } as SkillInfo,
+    },
     {
       name: "Taktika",
       skillType: "Harci",
@@ -202,9 +203,9 @@ export const SkillValues = [
       lvl_3: "A képzettség 3. foka minőségi változást hoz: a karakter immáron öt harci alakzatot ismer. Ezekből általában továbbra is csak maximum egy vagy kettő kisegységes alakzat.\n\nA reguláris hadseregek elitcsapatai általában 3. fokon képzett harcosokból állnak; a fejlett hadszervezetükről híres országokban, például Abasziszban - minden katona ilyen szintű kiképzésben részesül.",
       lvl_4: "A képzettség e fokán a karakter már képes viszonylag gyorsan alkalmazkodni - sikeres Érzékeléspróba esetén - bármely harci alakzathoz, s részt venni azok működésében anélkül, hogy akadályozná annak működését. Igaz, ekkor sem kapja meg az alakzatok nyújtotta előnyöket.",
       lvl_5: "A karakter már egy-két kör alatt képes alkalmazkodni Ynev bármely harci alakzatához - sikeres Érzékeléspróba esetén. Ekkor nem csak, hogy nem akadályozza az alakzat működését, de hatásos részvételével részesül a taktika nyújtotta előnyökből.",
-      "specialis": "Shadoni páros\n\nKözelharcban a szembenálló csapatok teljes elkeveredése után használják. A két harcos egymásnak veti hátát, így védve társát a hátulról jövő támadásoktól. Az ilyen formációban küzdőket nem lehet hátulról (és fél hátulról) támadni, VÉ-jük pedig - az állandó mozgástól és forgástól - 5-tel nő. Shadonban a katonák és zsoldosok alapvető kiképzéséhez tartozik, de Ynev több táján is ismerik és használják.\n\nAbasziszi hármas\n\nHasonló a shadoni páros küzdőmódszerhez, célja a többiek védelme. Ennek végrehajtásához - értelemszerűen - három harcos szükségeltetik, akik egymásnak háttal állva szűk kört alkotnak. Fő előnye ugyanaz, mint a shadoni párosnak, azaz, hogy az így harcolókat nem lehet hátulról vagy fél hátulról támadni. Hátránya, hogy több embert igényel, előnye viszont, hogy a harcosok jobban odafigyelhetnek egymásra, hiszen így csak a teljes kör egyharmadát kell védeniük, nem pedig a felét. Ennek köszönhető a magasabb VÉ módosító: +10.\n\nKráni pusztító ék\n\nKívülállók számára ritkán elsajátítható technika, a kráni Pusztító alakulatok alkalmazzák. A módszer a hagyományos, hadászati jellegű alakzatok közül talán a leghatásosabb, legkeményebb. A küzdők ék alakban támadnak, folyamatosan törnek előre. Az ék csúcsán a legkeményebb támadó harcos áll, a két oldalon a védők. A támadónak szinte felesleges ügyelnie a védelmére, a két szárnyon állók felelősek ezért. A két védő is támadhat, de Támadó értékük alacsonyabb, a fokozott védelemre való összpontosítás miatt. Az alakzatot áttörni meglehetősen nehéz; lassan, módszeresen haladva minden útjába kerülőt elpusztít, minden ellenállást felmorzsol. Gyakran indítják meg őket az ellenséges fővezér irányába. Ha a csúcson álló netán fárad, vagy mégis komolyabb sebet kapna, az egyik védő állhat támadó pozícióba, átvéve az élharcos szerepét.\n\nAz alakzat módosítói: hátulról és fél hátulról nem intézhető támadás az ékben állók közül az ék csúcsán állóra. A támadó pozícióban álló TÉ-je 25-tel nő, a védőké fejenként 15-tel csökken. A csúcson álló VÉ-je a saját VÉ-jének fele plusz a két védő összes VÉ-jének harmada; a szárnyakon állóké nem változik. Leginkább három emberrel alkalmazzák, de lehet öt-, sőt hét fős éket is alkotni. Ekkor is csak az elöl haladó három harcos harcértékei változnak, viszont a többi is harcol, és utánpótlásként bármikor beállhatnak. Kránon kívül kevés helyen oktatják - kizárólag csakis nagyobb birodalmak (Shadon, Gorvik, Pyarron, Toron és Abaszisz) hadseregeiben.\n\nSün\n\nHasonló, mint a pajzsfal, de nem támadásra, hanem védekezésre használatos. Ennek alkalmazásához kevesebb katona is elég, de minimum 5 szükséges. A technika lényegében megegyezik a pajzsfallal, ám jelen esetben az alakzat minden oldalán felépül a pajzsok alkotta védmű. Legelterjedtebb formái a háromszög, négyszög és kör. A középen állók, akiknek társuk elestéig nincs feladatuk, pajzsaikat fejük fölé emelik, ezzel is megnehezítve az ellenfél íjászainak, parittyásainak dolgát. Az ilyen alakzat nehezen mozog, hiszen tagjai különböző irányokba néznek, haladniuk azonban egy irányba, egyszerre kellene. Védekezéshez viszont ideális: a szálfegyverek nyelének földbetámasztásával a lovasrohamot is képes megtörni, a gyalogos ellenfelek támadását pedig még inkább megnehezíti. A formációban állók VÉ-je 20-szal nő, célzott fegyverek ellen +50-nel. Ha netán haladni akarnának, úgy csak a pajzsfalból származó előnyöket kapják meg.\n\nTiadlani kettős\n\nA Tiadlani kettős nem annyira katonai formáció, mint inkább kalandozók kedvelt harcmodora. Mint neve is mutatja, két harcos kell hozzá. Alapvetően a túlerőre épít. Ha a két harcos nálánál erősebb ellenféllel kerül szembe, egymást támogatva és védve harcolhatnak a közös ellenfél ellen. Az alakzatban a résztvevők megosztják egymás közt, hogy ki támad, és ki védekezik. Ezt alaposan begyakorolják, hiszen a kettős előnye a pontosság és az összehangoltság - nem meglepő tehát, hogy a taktika származási helyét a tiadlani kolostorok erődfalai között sejtik Ynev tudós fői. Általában egyikük rátámad az ellenfélre, de szándékosan elrontja. Az felbuzdulva sikerén visszatámad. Ez a kritikus pillanat, ugyanis ezt a viszonttámadást már váró harcos felkészülten hárít, míg a másik ezzel egy időben lecsap. Ha jól időzítettek, az ellenfél nem képes védekezni, hiszen támad. A hárító harcos védekező harcot folytat annak minden előnyével és hátrányával, a Támadó pedig a Támadás Fél hátulról harci helyzet módosítóit kapja meg. A sikernek feltétele a pontos időzítés, amihez az kell, hogy a kettős támadó tagjának Kezdeményezése felülmúlja az áldozatét. Ha ez nem így történik és elkésik a támadással, akkor mindketten elveszítik pozitív módosítóikat.\n\nA Falkataktika a Tiadlani kettős többszemélyes változata. Humanoid, ember méretű ellenfél ellenében maximálisan hatan képesek egyszerre fellépni. A létszámfölény miatt nem csak egy, de két személy is Támadóként vehet részt a formációban a fenti módosítók, illetve megkötések mellett; természetesen a túlerőből adódó módosítók is sújtják az áldozatot.\n\nTerkinior-féle lándzsahasználat\n\nTerkinior hercegkapitány Abhamaik Otlokir uralkodása idején élt, a hadsereg-reformer nagykirály jobbkeze volt. Az ő nevéhez fűződik ez a módszer. Lényege egy szűk terület tartása pajzs és lándzsa segítségével. Annyi falanx-harcos szükséges hozzá, amennyi az adott terület, átjáró teljes elállásához szükséges. Ilyenkor a harcos lándzsájával, pajzsa védelmét kihasználva, feltartja ellenfeleit. Amennyiben ő kezdeményez, és ameddig ellenfelét eltalálja - ha nem üti át a páncélt az SFÉ miatt, akkor is -, annak nincs joga a visszatámadáshoz, kivéve, ha fegyvere legalább azonos méretkategóriájú, mint a falanx lándzsája. Ha a feltartó harcos elhibázza támadását, természetesen minden előnyét elveszíti."
+      special: "Shadoni páros\n\nKözelharcban a szembenálló csapatok teljes elkeveredése után használják. A két harcos egymásnak veti hátát, így védve társát a hátulról jövő támadásoktól. Az ilyen formációban küzdőket nem lehet hátulról (és fél hátulról) támadni, VÉ-jük pedig - az állandó mozgástól és forgástól - 5-tel nő. Shadonban a katonák és zsoldosok alapvető kiképzéséhez tartozik, de Ynev több táján is ismerik és használják.\n\nAbasziszi hármas\n\nHasonló a shadoni páros küzdőmódszerhez, célja a többiek védelme. Ennek végrehajtásához - értelemszerűen - három harcos szükségeltetik, akik egymásnak háttal állva szűk kört alkotnak. Fő előnye ugyanaz, mint a shadoni párosnak, azaz, hogy az így harcolókat nem lehet hátulról vagy fél hátulról támadni. Hátránya, hogy több embert igényel, előnye viszont, hogy a harcosok jobban odafigyelhetnek egymásra, hiszen így csak a teljes kör egyharmadát kell védeniük, nem pedig a felét. Ennek köszönhető a magasabb VÉ módosító: +10.\n\nKráni pusztító ék\n\nKívülállók számára ritkán elsajátítható technika, a kráni Pusztító alakulatok alkalmazzák. A módszer a hagyományos, hadászati jellegű alakzatok közül talán a leghatásosabb, legkeményebb. A küzdők ék alakban támadnak, folyamatosan törnek előre. Az ék csúcsán a legkeményebb támadó harcos áll, a két oldalon a védők. A támadónak szinte felesleges ügyelnie a védelmére, a két szárnyon állók felelősek ezért. A két védő is támadhat, de Támadó értékük alacsonyabb, a fokozott védelemre való összpontosítás miatt. Az alakzatot áttörni meglehetősen nehéz; lassan, módszeresen haladva minden útjába kerülőt elpusztít, minden ellenállást felmorzsol. Gyakran indítják meg őket az ellenséges fővezér irányába. Ha a csúcson álló netán fárad, vagy mégis komolyabb sebet kapna, az egyik védő állhat támadó pozícióba, átvéve az élharcos szerepét.\n\nAz alakzat módosítói: hátulról és fél hátulról nem intézhető támadás az ékben állók közül az ék csúcsán állóra. A támadó pozícióban álló TÉ-je 25-tel nő, a védőké fejenként 15-tel csökken. A csúcson álló VÉ-je a saját VÉ-jének fele plusz a két védő összes VÉ-jének harmada; a szárnyakon állóké nem változik. Leginkább három emberrel alkalmazzák, de lehet öt-, sőt hét fős éket is alkotni. Ekkor is csak az elöl haladó három harcos harcértékei változnak, viszont a többi is harcol, és utánpótlásként bármikor beállhatnak. Kránon kívül kevés helyen oktatják - kizárólag csakis nagyobb birodalmak (Shadon, Gorvik, Pyarron, Toron és Abaszisz) hadseregeiben.\n\nSün\n\nHasonló, mint a pajzsfal, de nem támadásra, hanem védekezésre használatos. Ennek alkalmazásához kevesebb katona is elég, de minimum 5 szükséges. A technika lényegében megegyezik a pajzsfallal, ám jelen esetben az alakzat minden oldalán felépül a pajzsok alkotta védmű. Legelterjedtebb formái a háromszög, négyszög és kör. A középen állók, akiknek társuk elestéig nincs feladatuk, pajzsaikat fejük fölé emelik, ezzel is megnehezítve az ellenfél íjászainak, parittyásainak dolgát. Az ilyen alakzat nehezen mozog, hiszen tagjai különböző irányokba néznek, haladniuk azonban egy irányba, egyszerre kellene. Védekezéshez viszont ideális: a szálfegyverek nyelének földbetámasztásával a lovasrohamot is képes megtörni, a gyalogos ellenfelek támadását pedig még inkább megnehezíti. A formációban állók VÉ-je 20-szal nő, célzott fegyverek ellen +50-nel. Ha netán haladni akarnának, úgy csak a pajzsfalból származó előnyöket kapják meg.\n\nTiadlani kettős\n\nA Tiadlani kettős nem annyira katonai formáció, mint inkább kalandozók kedvelt harcmodora. Mint neve is mutatja, két harcos kell hozzá. Alapvetően a túlerőre épít. Ha a két harcos nálánál erősebb ellenféllel kerül szembe, egymást támogatva és védve harcolhatnak a közös ellenfél ellen. Az alakzatban a résztvevők megosztják egymás közt, hogy ki támad, és ki védekezik. Ezt alaposan begyakorolják, hiszen a kettős előnye a pontosság és az összehangoltság - nem meglepő tehát, hogy a taktika származási helyét a tiadlani kolostorok erődfalai között sejtik Ynev tudós fői. Általában egyikük rátámad az ellenfélre, de szándékosan elrontja. Az felbuzdulva sikerén visszatámad. Ez a kritikus pillanat, ugyanis ezt a viszonttámadást már váró harcos felkészülten hárít, míg a másik ezzel egy időben lecsap. Ha jól időzítettek, az ellenfél nem képes védekezni, hiszen támad. A hárító harcos védekező harcot folytat annak minden előnyével és hátrányával, a Támadó pedig a Támadás Fél hátulról harci helyzet módosítóit kapja meg. A sikernek feltétele a pontos időzítés, amihez az kell, hogy a kettős támadó tagjának Kezdeményezése felülmúlja az áldozatét. Ha ez nem így történik és elkésik a támadással, akkor mindketten elveszítik pozitív módosítóikat.\n\nA Falkataktika a Tiadlani kettős többszemélyes változata. Humanoid, ember méretű ellenfél ellenében maximálisan hatan képesek egyszerre fellépni. A létszámfölény miatt nem csak egy, de két személy is Támadóként vehet részt a formációban a fenti módosítók, illetve megkötések mellett; természetesen a túlerőből adódó módosítók is sújtják az áldozatot.\n\nTerkinior-féle lándzsahasználat\n\nTerkinior hercegkapitány Abhamaik Otlokir uralkodása idején élt, a hadsereg-reformer nagykirály jobbkeze volt. Az ő nevéhez fűződik ez a módszer. Lényege egy szűk terület tartása pajzs és lándzsa segítségével. Annyi falanx-harcos szükséges hozzá, amennyi az adott terület, átjáró teljes elállásához szükséges. Ilyenkor a harcos lándzsájával, pajzsa védelmét kihasználva, feltartja ellenfeleit. Amennyiben ő kezdeményez, és ameddig ellenfelét eltalálja - ha nem üti át a páncélt az SFÉ miatt, akkor is -, annak nincs joga a visszatámadáshoz, kivéve, ha fegyvere legalább azonos méretkategóriájú, mint a falanx lándzsája. Ha a feltartó harcos elhibázza támadását, természetesen minden előnyét elveszíti."
 
-    } as SkillInfo,
+    },
     {
       name: "Vakharc",
       skillType: "Harci",
@@ -219,7 +220,7 @@ export const SkillValues = [
       lvl_4: "A vakharcos innentől kezdve hagyatkozik leginkább az ösztöneire, megérzéseire. Negatív módosítók immáron nem sújtják.",
       lvl_5: "A Játékos karakter ezen a szinten nem tanulhatja a képzettséget, csak ha vaknak született, vagy ha legalább már öt éve világtalan. Ezen a szinten, ha a harcoló feleknek sötétben kell hadakoznia, akkor a vakharcos már egy bonusz KÉ: +5, TÉ: +10, VÉ: +10 módosítóval is számolhat.\n\n"
 
-    } as SkillInfo,
+    },
     {
       name: "Vértviselet",
       skillType: "Harci",
@@ -234,10 +235,10 @@ export const SkillValues = [
       lvl_4: "A képzettség e fokának birtokosa már igen nagy gyakorlattal bír a vértviselésben, a Nehézvértezetek MGT-je 2-vel csökken, az általa viselt páncélok SFÉ-je 2 ponttal magasabbnak számít.",
       lvl_5: "„Páncélban született” tartják az efféléről a bölcsek és a köznép egyaránt, már szinte észrevétlen hordozza az irdatlan vasakkal felszerelt teljes vértezeteket is, a Nehézvértezetek MGT-je 3-mal csökken, az általa viselt vértek SFÉ-je 3 ponttal magasabbnak számít."
 
-    } as SkillInfo,
+    },
 
     {
-      name: "Alcázás/álruha",
+      name: "Álcázás/álruha",
       skillType: "Alvilági",
       skillDifficulty: "II",
       softReq: [],
@@ -250,7 +251,7 @@ export const SkillValues = [
       lvl_4: "A mesteri művelője e „szakmának” már bármilyen körbe bejuthat öltözékei segítségével, ha bír a KM által meghatározott Udvari etikett vagy Kultúra képzettség szükséges fokával. Maszkjai akár hatnyolc órán át használhatóak maradnak. A sajátjától maximálisan 30%kal eltérő testméretek utánzására képes.\n\nMár igen nagy, akár kisebb kunyhónyi tárgyakat is elrejthet a KM belátása szerinti idő alatt, ha ez az adott helyzetben lehetséges.\n\nA karakter próbájához +2 módosító járul.",
       lvl_5: "Legendás hírű álcázó mester, kinek híre munkásságának és álöltözeteinek hála csak igen szűk körben terjed. Ha ideje engedi, szinte bármekkora, emberi méretű test viselhető álcáját elkészíti, maszkjai akár napokig is kitarthatnak.\n\nKépességei birtokában nagyobb háznyi tárgyakat is megpróbálhat elrejteni a KM beleegyezésével, a megfelelő idő birtokában.\n\nA karakter próbájához +3 módosító járul."
 
-    } as SkillInfo,
+    },
     {
       name: "Hamisítás",
       skillType: "Alvilági",
@@ -265,7 +266,7 @@ export const SkillValues = [
       lvl_4: "Ezen a szinten a karakter már komolyabb ékszereket vagy iratokat hamisít, csak igazi, szakavatott mesterek kezdenek el gyanakodni munkája láttán.\n\nA karakter próbájához +2 módosító járul.",
       lvl_5: "A hamisítás nagymestere, igen tehetős, párfogókkal bíró művész. Munkája, akár még egy bankház titoknokát is megtévesztheti, igen nagybecsű és értékes ékszerekről készíthet másolatot a lelepleződés csekély esélyével. Ha bírja a vonatkozó mágikus hagyományt, akár varázstárgyakat is hamisíthat, melyek hatásukban nem, de kinézetükben és egészen használatukig képességeikben is teljesen azonosak az eredetivel.\n\nA karakter próbájához +3 módosító járul."
 
-    } as SkillInfo,
+    },
     {
       name: "Jelbeszéd",
       skillType: "Alvilági",
@@ -280,7 +281,7 @@ export const SkillValues = [
       lvl_4: "A karakter képes magát az élőszónál valamivel lassabban, de teljes nyelvi repertoárját felölelő módon kifejezni.",
       lvl_5: "Akár irodalmi értekezést is lefolytathat a karakter a jelbeszéd segítségével, már ha van, aki megértse. Kommunikációja sebessége már azonos az élőszóéval. A karakter akár már számára idegen jelrendszereket is megért sikeres Intelligencia próbával."
 
-    } as SkillInfo,
+    },
     {
       name: "Kocsmai verekedés",
       skillType: "Alvilági",
@@ -295,7 +296,7 @@ export const SkillValues = [
       lvl_4: "Az ilyen megátalkodott kocsmatöltelék már mestere a kocsmai fegyverek forgatásának, a fegyveres harcértékeihez KÉ: +2, TÉ: +5, VÉ: +5, CÉ: +5 járul.",
       lvl_5: "A karakter legendás bajnoka Ynev ivóinak, sebzéséhez +2 Sp adódik."
 
-    } as SkillInfo,
+    },
     {
       name: "Méregkeverés/semlegesítés",
       skillType: "Alvilági",
@@ -316,7 +317,7 @@ export const SkillValues = [
       lvl_4: "A karakter igazi méregmester, a képzettség ezen fokán 20 Ipt birtokol.\n\nA mérgek ellenszereit is gyakorlott könnyedséggel keveri ki és állapítja meg a szükséges gyógymódot, Intelligenciapróbáját +2 módosítóval dobja.",
       lvl_5: "A karakter ezen a szinten már szinte bármilyen mérget előállíthat, ami megalkotható a rendelkezésre álló 25 Ipjéből.\n\nEzen a fokozaton már bármilyen mérgezést orvosolhat, ha van rá ideje, a megfelelő gyógymód felismeréséhez szükséges Intelligenciapróbát +3mal dobja.",
 
-    } as SkillInfo,
+    },
     {
       name: "Orvtámadás",
       skillType: "Alvilági",
@@ -331,7 +332,7 @@ export const SkillValues = [
       lvl_4: "A karakter mestere a meglepetésszerű támadásokból bevitt iszonytató sebek okozásának, sikeres támadás esetén +2k6 Spt adhat a sebzéséhez.",
       lvl_5: "A legendás orvgyilkos, már fogalom a szakmában, meglepetésszerű támadás esetén +3k6 Spt adhat a sebzéséhez."
 
-    } as SkillInfo,
+    },
     {
       name: "Kínzás",
       skillType: "Alvilági",
@@ -346,7 +347,7 @@ export const SkillValues = [
       lvl_4: "A már szinte művészetként hivatását gyakorló kínzómester áldozata 10 percenként köteles dobni, a vallató karakter +2 módosítóval dobhatja próbáját.",
       lvl_5: "A legendás hírű mester áldozatának öt percenként kell Akaraterő próbát dobnia, amely ellenében a vallató +3 módosítóval végezheti el dobását. A képzettség ilyen szintű alkalmazója már inkább a lelki kínzásban, áldozata személyiségének és akaraterejének teljes megtörésében látja a megszerezni kívánt információhoz vezető utat, semmint a fizikai test fájdalmas szétrombolásában."
 
-    } as SkillInfo,
+    },
     {
       name: "Szabadulóművészet",
       skillType: "Alvilági",
@@ -361,7 +362,7 @@ export const SkillValues = [
       lvl_4: "A karakter igazi mestere a szabadulásnak, trükkjeit már víz alatt, teljes sötétségben, vagy egyéb a KM által engedélyezett zavaró körülmény között is alkalmazhatja, szükséges próbáját +2 módosítóval dobhatja.",
       lvl_5: "A karakter igazi nagy művész, már bármilyen kötelékből, bilincsből képes kijutni, ahonnét mágia alkalmazása nélkül ez lehetséges, szükséges próbáját +3 módosítóval dobhatja."
 
-    } as SkillInfo,
+    },
     {
       name: "Szerencsejáték",
       skillType: "Alvilági",
@@ -376,7 +377,7 @@ export const SkillValues = [
       lvl_4: "A karakter már a kártyalapok, különféle bábuk és zsetonok mestere, kultúrköre 15 játékát ismeri, próbáit +2 módosítóval dobja. Ezen a szinten a karakter egy, a KM belátása szerint nehezített, sikeres próba után, akár másra is terelheti a csalás gyanúját úgy, hogy immáron kézzel fogható bizonyítékokat is képes kreálni. Lebuktatni csakis egy sikeres ellenpróbával lehetséges.",
       lvl_5: "A karakter szinte mágikus képességekkel bír egy általa választott játéktípusban, ebben próbadobásához +4, a többi általa ismert játékban +3 módosító járul. Valószínűleg már kidolgozott egykét játékot maga is."
 
-    } as SkillInfo,
+    },
     {
       name: "Lopódzás",
       skillType: "Alvilági",
@@ -393,7 +394,7 @@ export const SkillValues = [
       lvl_3: "Képzett fejvadász, vagy tolvaj, aki már arra is képes, hogy néhány pillantással felmérjék az előttük álló útszakaszt és jó eséllyel kihasználják azokat a részeket, amelyeken a legkevesebb zajt ütik.",
       lvl_4: "A lopódzás igazi mestere, aki léptei csak nagyon ritkán ütnek zajt, s akkor is leginkább csak akkor, ha ő úgy akarja. Megannyi trükköt ismer, hogy ruháján hogyan kösse le, csendesítse el az apróbb részeket, melyek hangot okozhatnának.",
       lvl_5: "Léptei csendesek, akár a nagyvadaké. Szinte koncentrálnia sem kell, a csendes mozgás már a vérébe ivódott, akár a lélegzetvétel."
-    } as SkillInfo,
+    },
     {
       name: "Rejtőzködés",
       skillType: "Alvilági",
@@ -407,7 +408,7 @@ export const SkillValues = [
       lvl_3: "Képzett tolvaj, vagy fejvadász, aki remekül kihasználja az árnyakat. Nyilvánvalók számára a különféle árnyékos sarkok, függönyök, bútorok, szekerek és egyéb kisebb tárgyak jelentette lehetőségek.",
       lvl_4: "Az igazi mester, aki szinte egybeolvad a tereptárgyakkal, akár még fényes nappal is, hisz ismeri annyira az emberi viselkedést, hogy meghúzódjék a tekintetek holt-terében.",
       lvl_5: "A rejtőzködés nagymesterét szinte csak akkor pillantják meg, hogyha ő maga is akarja."
-    } as SkillInfo,
+    },
     {
       name: "Zárnyitás",
       skillType: "Alvilági",
@@ -427,7 +428,7 @@ export const SkillValues = [
       lvl_4: "A zárnyitás mestere, akinek kisujjában vannak még a bonyolultabb mechanikus szerkezetek megnyitásának trükkjei is. Ha az első dobása sikertelen, ám tovább tanulmányozza a zárat, s öt perc elteltével ismét próbálkozhat, de csak egy alkalommal.",
       lvl_5: "A karakter tudása oly’ hatalma, hogy még talán a dzsad bankházak többszörösen összetett zárrendszerei sem okoznának neki nehézséget. A zárszerkezeteket olyannyira kiismerte, hogy második próbadobását már egy perc elteltével kísérelheti meg."
 
-    } as SkillInfo,
+    },
     {
       name: "Zsebmetszés",
       skillType: "Alvilági",
@@ -442,7 +443,7 @@ export const SkillValues = [
       lvl_3: "A szakavatott tolvaj a ruhák megmetszésével képessé válik a szövetek mélyébe rejtett, rögzítetlen tárgyakhoz is hozzájutni. Ez mindenképpen gyors, hirtelen tevekénység, segítségével turkálni, keresgélni nemigen lehet.",
       lvl_4: "A zsebmetszés mestere képes feltérképezni az áldozat ruhája mélyén elrejtett tárgyakat. Ehhez elegendő, ha az alkalmazó, csupán „véletlenül” mellé kerül, nekitántorodik áldozatának, majd sikeres próbát tesz.",
       lvl_5: "E fok birtokosai elképesztő trükkökre is képesek. Megpróbálhatnak ellopni olyan dolgokat is, amelyek közvetlenül érintkeznek az áldozat bőrével, s ő csak némi késéssel fog rádöbbenni azok hiányára. Ilyenek a különféle nyakláncok, csizmaszárba rejtett fegyverek, alkarra erősített tárgyak.\n\nE fok kell ahhoz is, hogy olyan tárgyakat, értékekhez is hozzájuthasson, amelyek eltulajdonításához előbb csatokat, hurkokat kell kioldaniuk vagy egyéb módon „biztosított” dolgot kell elemelnie."
-    } as SkillInfo,
+    },
     {
       name: "Állatismeret",
       skillType: "Világi",
@@ -457,7 +458,7 @@ export const SkillValues = [
       lvl_4: "A bonusz ezen a szinte már KÉ: +5, TÉ: +10, VÉ: +10, CÉ: +10-re nő, illetve a karakter innentől kezdve képes a választott állatcsoport betegségeinek azonosítására, s alapvető segítséget nyújthat nekik célirányos táplálásukkal.",
       lvl_5: "A karakter olyan szinten ismeri az adott csoport tagjait, hogy jöttére nem riadnak fel az állatok, még a ragadozók is megkímélik, ha épp nem ingerli őket."
 
-    } as SkillInfo,
+    },
     {
       name: "Csapdaállitás",
       skillType: "Világi",
@@ -472,7 +473,7 @@ export const SkillValues = [
       lvl_4: "A karakter mesteri csapdái ezen a szinten már embert is huzamosabb ideig fogva tarthatnak, sebzésük pedig vagy 3k10 Fp, vagy 2K6 Ép. Jobban el is vannak rejtve, keresésük már 20%-kal nehezített feladat, ez a módosító összeadódik az Álcázás képzettségből adódó módosítókkal.",
       lvl_5: "A képzettség e fokának ismeretében már gyakorlatilag bármilyen csapda készíthető (nem mágikus, a csapda méretétől függően a KM belátására bízott sebzéssel), melyet alkotója igen jól elrejtett, a keresésük már 30%-kal nehezített feladat, ez a módosító összeadódik az Álcázás képzettségből adódó módosítókkal."
 
-    } as SkillInfo,
+    },
     {
       name: "Csomózás",
       skillType: "Világi",
@@ -487,7 +488,7 @@ export const SkillValues = [
       lvl_4: "A népi művészek ismerik ilyen behatóan ezt a képzettséget, illetve egyes kultúrák, - pl. az ilanori - hírvivőinek rejtjelezői alkalmazzák. A csomóírás alkalmazásához elengedhetetlenül szükséges a képzettség ilyen fokú ismerete.\n\nA karakter a képzettség alkalmazásakor +2 módosítóval dobhatja Ügyességpróbáját.",
       lvl_5: "A karakter tudása már a fizika törvényeit megszégyenítő hurkok és bogok kitalálására is elegendő. Olyan helyekre képes terheket függeszteni vagy kötelet vetni, ahová senki más, illetve képes bizonyos idő után a terhelés alatt kibomló csomók elkészítésére is, megfelelő, maga által elkészíthető eszközökkel.\n\nA karakter a képzettség alkalmazásakor +3 módosítóval dobhatja Ügyességpróbáját."
 
-    } as SkillInfo,
+    },
     {
       name: "Értékbecslés",
       skillType: "Világi",
@@ -502,7 +503,7 @@ export const SkillValues = [
       lvl_4: "A fenti próbát az általa ismert kultúrák esetén +2, az idegen kultúrák esetében +1 módosítóval végezheti el.\n\nA karakter ezen a szinten kezdi el átlátni a nagy bankházak és kereskedőházak működését, az általuk képviselt értéket.",
       lvl_5: "A karakter művészettörténeti tudása kultúrköreire szinte hiánytalan, a fenti becslést +3 módosítóval végezheti el. Idegen kultúrák esetén +2 módosító járul a próbáihoz."
 
-    } as SkillInfo,
+    },
     {
       name: "Futás",
       skillType: "Világi",
@@ -517,7 +518,7 @@ export const SkillValues = [
       lvl_4: "A karakter mestere a hosszútávfutásnak, képességei messze földön híresek, Állóképességének háromszorosát képes megtenni egyhuzamban.",
       lvl_5: "A karakter képességei legendásak, mozgása igen gördülékeny és rendkívül energiatakarékos. Egyhuzamban négyszer annyi ynevi mérföldet képes megtenni, mint az Állóképessége."
 
-    } as SkillInfo,
+    },
     {
       name: "Hajózás",
       skillType: "Világi",
@@ -532,7 +533,7 @@ export const SkillValues = [
       lvl_4: "A mesteri hajós neve már ismert, mint tapasztalt kapitány vagy igen képzett kormányos, ha megvannak a megfelelő képzettségei. Már tengerjáró hajókon is parancsnokolhat, illetve evezősökön, tutajokon akár már zuhatagokon, vízeséseken is áthaladhat, ha ez végrehajtható.",
       lvl_5: "A karakter legendás kapitány, tengerjáró, felfedező, evezősöknél igazi ördög. Ezek a parancsnokok, már szinte bármire képesek hajójukkal, ami egyáltalán elképzelhető. Bármekkora hajókat is parancsnokolhat.\n\nItt megjegyzendő még, hogy tengeri csata esetén úgy dönthetjük el, hogy egy hajítógép, tűzköpő vagy bármely más alkalmatosság eltalálja e hajónkat, hogy a hajót irányító személy Hajózás képzettségével ellenpróbát dobatunk az ostromgépet irányzó karakter Ostromgépkezelés Szakma képzettsége ellenében, ahol minden 100 ynevi láb távolság után, amely elválasztja a szerkezetet a célponttól -1 levonást kap a kezelőszemélyzet a próbájára."
 
-    } as SkillInfo,
+    },
     {
       name: "Hangutánzás",
       skillType: "Világi",
@@ -547,7 +548,7 @@ export const SkillValues = [
       lvl_4: "A mesteri szintű hangutánzó már egy óra alatt képes valaki hangját „ellopni”, ha jártas a Lélektan képzettségben \n\n- legalább 2. fokon - akkor akár az áldozat közeli ismerőseit, családtagjait, szeretőjét is könnyedén megtévesztheti.",
       lvl_5: "A legendás hangművész akár két ember párbeszédét is képes előadni, illetve fél óra tanulással ismeretlen beszélők hangjait utánozni. Szinte már bármilyen a KM által engedélyezett hangot leutánozhat, egy kecske mekegésétől egy komplett gyalogezred távolodó zajáig."
 
-    } as SkillInfo,
+    },
     {
       name: "Helyismeret",
       skillType: "Világi",
@@ -562,7 +563,7 @@ export const SkillValues = [
       lvl_4: "A karakter már könnyen eligazodik bárhol, ismeri a negyedek, bandák területeinek határát, ritka az olyan épület, amelynek lakóiról ne bírna legalábbis minimális ismeretekkel. Szinte bármi származási helyét képes felfedni a falak között, amit venni szeretne, és egyáltalán előfordul az adott nagyvárosban, országrészben.\n\nHa KM a próbát szükségesnek véli, azt a karakter +2 módosítóval dobhatja.",
       lvl_5: "Az ilyen mélységében egy adott területet ismerő karakter hatalmas tudás birtokosa; már minden épületet, vízmosást és barlangot ismer. Mindenkiről van néhány szónyi ismerete, aki őslakos az adott területen, még a titkos társaságok rejtett helyeiről is van elképzelése.\n\nHa KM a próbát szükségesnek véli, azt a karakter +3 módosítóval dobhatja."
 
-    } as SkillInfo,
+    },
     {
       name: "Idomítás",
       skillType: "Világi",
@@ -577,7 +578,7 @@ export const SkillValues = [
       lvl_4: "A karakter már bármilyen kunszt betanítására képes az adott állat számára, feltéve, hogy az fizikailag képes rá. Ezen a szinten válik elérhetővé az állati harcostársak kiképzésének tudománya.",
       lvl_5: "Ezen a szinten már igazi kalandozó társat nevelhet a karakter a választott állatból, aki helyette őrködik, megvédelmezi, vagy intelligenciájának függvényében, megfelelő feladatokat hajt végre önállóan. Az állat és gazdája között egyfajta asztrális kapcsolat jön létre, amely nem nevezhető a szó szoros értelmében kommunikációnak, inkább afféle benyomások és hangulatok villanásnyi cseréjének."
 
-    } as SkillInfo,
+    },
     {
       name: "Időjóslás",
       skillType: "Világi",
@@ -592,7 +593,7 @@ export const SkillValues = [
       lvl_4: "Az időjóslás mesteri szintű alkalmazója már akár egy hónapra előre képes távlati előrejelzéseket készíteni, Intelligenciapróbáját +2 módosítóval dobja.",
       lvl_5: "A legendás időjós egy teljes év időjárását képes nagyjából előre jelezni, képes nyilatkozni egyes időjárás mágiák hosszabb távú kihatásairól, ha Intelligenciapróbáját +3 módosítóval sikeresen megdobja."
 
-    } as SkillInfo,
+    },
     {
       name: "Kocsihajtás",
       skillType: "Világi",
@@ -607,7 +608,7 @@ export const SkillValues = [
       lvl_4: "A mesterien képzett karakter akár négyes- és hatos fogatok hajtására is képes. Járművét akár fegyverként is használhatja. A karakternek 5-30 körre van szüksége arra, hogy támadó helyzetbe navigálja magát. A kocsi TÉ-je 100, amihez a karakter Ügyességértéke is hozzáadódik, a megtámadott karakter a fegyvernélküli VÉ-jével védekezhet, illetve egy sikeres Gyorsaságpróbával ugorhat el a jármű útjából.",
       lvl_5: "A karakter kocsival való TÉ-je 150 + Ügyesség. Csodás kunsztokra képes, akár lépcsőzni is tud fogatával."
 
-    } as SkillInfo,
+    },
     {
       name: "Lovaglás",
       skillType: "Világi",
@@ -622,7 +623,7 @@ export const SkillValues = [
       lvl_4: "A mesteri lovas ezen a szinten már megkapja a Harc mozgó lóról bonuszait, illetve nem sújtja a CÉ levonás.",
       lvl_5: "A karakter lovagló tudása már legendás ezen a szinten, ördögi lovas, hátasa plusz egy támadást kap körönként, illetve az állat is meglopja a Harc mozgó lóról módosítókat saját értékeikhez."
 
-    } as SkillInfo,
+    },
     {
       name: "Nyomolvasás",
       skillType: "Világi",
@@ -637,7 +638,7 @@ export const SkillValues = [
       lvl_4: "A mesteri nyomolvasó akár egy hét távlatából is képes nyomokat követni, ha az időjárás, a terep vagy egyéb körülmények lehetővé teszik, ha sikeres Érzékeléspróbát tesz +2 módosítóval. Ezen a szinten már a nyomokból képes kikövetkeztetni nagy vonalakban az azokat hagyók legtöbb tevékenységét.",
       lvl_5: "A legendás nyomolvasó, ha a körülmények lehetővé teszik (zárt barlang, nem bolygatott épület belseje) - képes pontosan kikövetkeztetni az ott járt személyek számát, igen nagy pontossággal vázolja fel az általuk végzett tevékenységeket, ha sikeres Érzékeléspróbát tesz +3 módosítóval."
 
-    } as SkillInfo,
+    },
     {
       name: "Szakma",
       skillType: "Világi",
@@ -652,7 +653,7 @@ export const SkillValues = [
       lvl_4: "A karakter igazi mester szakmájában, igazi műremekeket készít, vagyonokat kereshet munkájával.",
       lvl_5: "A karakter mások számára érthetetlen módon és gyorsasággal, vagy minőségben dolgozik, művei mágia nélkül is már-már mágikus képességűek, igazi vagyonokat érő műalkotások. Más esetben pedig a rábízott vagyonokat kezeli úgy, kereskedik olyan szakértelemmel és sikerességgel, mely a józanész határait feszegeti."
 
-    } as SkillInfo,
+    },
     {
       name: "Úszás",
       skillType: "Világi",
@@ -667,7 +668,7 @@ export const SkillValues = [
       lvl_4: "A fáradhatatlan úszó annyiszor félórán át képes úszni a fent vázolt körülmények között felszerelés nélkül, amennyi az Állóképessége. Majd húszpercenként köteles Állóképesség próbát dobni, ha túllépné az időhatárt, minden alkalommal -1 módosítóval nehezítve.",
       lvl_5: "A karakter majdhogynem természetes közege a víz, annyiszor egy órán át képes úszni a fent vázolt körülmények között felszerelés nélkül, amennyi az Állóképessége. Majd félóránként köteles Állóképesség próbát dobni, ha túllépné az időhatárt, minden alkalommal -1 módosítóval nehezítve."
 
-    } as SkillInfo,
+    },
     {
       name: "Vadonjárás",
       skillType: "Világi",
@@ -682,7 +683,7 @@ export const SkillValues = [
       lvl_4: "A vadonjárás mestere már nem csak a túlélés fortélyairól, de az őslakos lényekről, illetve misztikus szörnyetegekről is beható tudással bír. Már korlátlan ideig képes eltartani magát a természetben. A terepen a képzetlen karaktereknél 20%-kal gyorsabban halad.",
       lvl_5: "Legendás hírű túlélő, már akár egy kisebb csoportot (max. 2-6 főt) is képes eltartani az általa ismert terepen, akár korlátlan ideig. Az adott területen a képzetlen karaktereknél 30%-kal gyorsabban halad."
 
-    } as SkillInfo,
+    },
     {
       name: "Akrobatika",
       skillType: "Világi",
@@ -696,7 +697,7 @@ export const SkillValues = [
       lvl_3: "Képzett akrobata, aki nemesi házakban vagy királyi udvarban biztos megélhetésre lelhet. De ha úgy akarja akkor ismeretét bármely vándorcirkuszban is kamatoztathatja. Magabiztosan, harmonikusan mozog, nem jelentenek neki különösebb akadályt a bonyolult, esetleg akrobatikus mozdulatsorok, a legnagyobb tengeri viharban is megmarad a talpán, s nem esik kétségbe, ha különféle tárgyak elől kell elmozognia.\n\nA VÉ módosító 10 pontra emelkedik.",
       lvl_4: "Mesteri akrobata, aki lélegzetelállító mutatványokra képes, akár ugrások, szaltók, vagy kötéltánc terén. A Képzettség mestere gyakorta kap meghívásokat mutatványosoktól, vagy megfelelő egyéb ismeretek birtokában színésztársulatoktól, színházakból, hisz’ bemutatóinak már szinte művészi értéke van.\n\nHarcban kiszámíthatatlan pördüléseivel, villámgyors elhajlásai és szaltói jócskán megnehezítik ellenfele dolgát. Ha sikerrel kamatoztatja tudását, a VÉ-je 15-tel nő.",
       lvl_5: "Mozgása akár egy nagymacskáé: kifinomult és harmonikus. Pördüléseire, szaltóira szinte nem is koncentrál, az összetett mozdulatsorok oly’ könnyen mennek neki, mint másnak a járás. Mesterségéből tisztesen és könnyedén megélhet.\n\nHarcban mozgása kiszámíthatatlan. Lélegzetelállító precizitással hajol, ugrik, és pördül el a csapások elől. VÉ-je sikeres ellenpróba után immár 20 ponttal emelkedik."
-    } as SkillInfo,
+    },
     {
       name: "Esés",
       skillType: "Világi",
@@ -710,7 +711,7 @@ export const SkillValues = [
       lvl_3: "A karakter meglehetősen jól képzett e mesterségben. Zuhanás közben gyors helyzetfelismerésének köszönhetően hatékonyan használja fel a keze ügyébe akadó tárgyakat, hogy lefékezze magát, esetleg teljesen megállítsa zuhanását.",
       lvl_4: "Megannyi gladiátorviadal győztese, aki többször zuhant a homokba, és csapdavermekbe, mintsem azt megszámolni tudná, végül mégis győzedelmeskedett.",
       lvl_5: "Legendás mester, aki egy kútba zuhanva, a kövek összeillesztésénél keletkező résekbe bele-belekapaszkodva is képes fékezni, sőt, kis idő múltán akár a falhoz tapadva meg is állítani az esést."
-    } as SkillInfo,
+    },
     {
       name: "Mászás",
       skillType: "Világi",
@@ -726,7 +727,7 @@ export const SkillValues = [
       lvl_3: "Jól képzett fejvadász, aki gyakran kihasználja a magaslatok nyújtotta előnyöket, így egy nehezen mászható fal sem jelent neki akadályt.",
       lvl_4: "Mesterkém, aki az éjszaka sötétjében hág fel szédítő várfalakra.",
       lvl_5: "A karakter kezei akár az acélsatuk, lábával bármilyen apró rést megtalál: bármilyen feladattal megbirkózik, ami fizikailag lehetséges."
-    } as SkillInfo,
+    },
     {
       name: "Éberség",
       skillType: "Világi",
@@ -783,7 +784,7 @@ export const SkillValues = [
         "Az Éberség nem alkalmazható távoli fenyegetéssel kapcsolatban: nem fogja jelezni egy egyén " +
         "hirtelen hangulatváltozásait, egy politikai lépés vagy bármilyen cselekedet következményeit."
 
-    } as SkillInfo,
+    },
     {
       name: "Alkímia",
       skillType: "Tudományos",
@@ -797,7 +798,7 @@ export const SkillValues = [
       lvl_3: "A hivatásos alkimista már ismeri az erős savakat (1k6 Sp sebzést okoz 1 pohárnyi anyag 1k6 körig, körönként), képes narkotikumokat és bájitalokat főzni, illetve akár világító oldatokat is, melyek kísérteties zöldes, kékes fénnyel izzanak akár fertályórán át. Vagy bármiféle kártékony vagy hasznos szert, melyet a KM engedélyez.\n\nA képzettség ezen szintje szükségeltetik a Természeti anyagi mágia tanulmányozásának megkezdéséhez, az 1. anyagcsoportba tartozó anyagok teremtéséhez, formázásához és átváltoztatásához.",
       lvl_4: "A híres alkimista harci narkotikumokat gyárthat, melyek képességnövelése nem haladhatja meg a harc kábultan helyzet módosítóit, természetesen pozitív irányba értelmezve (KÉ: +10, TÉ: +20, VÉ: +10) és tíz-húsz percnél tovább nem hatnak.\n\nTermészeti anyagi mágia szempontjából fontos, hogy' a karakter immáron képes a 2. anyagcsoportba tartozó anyagok teremtésére, átváltoztatására és formázására is.",
       lvl_5: "A legendás alkimista, tudós már mágia alkalmazása nélkül is képes a Természeti anyagi mágia első két csoportjába tartozó anyagokat egymásba átalakítani korlátozások nélkül, ha van elég ideje és elég nagy laboratóriuma.\n\nTermészeti anyagi mágia szempontjából fontos, hogy a karakter immáron képes a 3. anyagcsoportba tartozó anyagok teremtésére, átváltoztatására és formázására is."
-    } as SkillInfo,
+    },
     {
       name: "Élettan",
       skillType: "Tudományos",
@@ -812,7 +813,7 @@ export const SkillValues = [
       lvl_4: "A tudós mester tisztában van a szervek működésével, a testnedvek szerepével.\n\nHa a karakter bír a megfelelő varázserővel, akkor megértve az élőlények felépítésének módozatait, akár egyszerűbb homonkuluszok megalkotására is képes.",
       lvl_5: "A legendás tudós akár már mágia nélkül is képes élő szervezeteket alkotni, de ezek csak alig egykét órát létezhetnek, s nem lehetnek nagyabbak egy kutyánál, mert hiányzik belőlük az élet princípiuma.\n\nA Varázstudó (anyagi mágus, nekromanta) karakterek igazi lényeket alkothatnak, mely egy újszülött elméjével születnek és magatehetetlenek, igazi lélekkel nem bírnak, mégis néhány esztendeig életképesek. Puszta létezésük is sok egyház és a Pyarroni Varázsló Tanács ellenszenvét váltja ki. A képzettség ezen szintű birtokosának, ha kiderül, hogy efféle lényt alkotott valószínűleg hamarosan menekülnie kell... Épp ezért nem köztudott, hogy egyeseknek már sikerült értelemmel bíró, hosszabb életű lényt alkotni, mely szaporodni ugyan nem képes, mégis tökéletes teremtmény. Egyesek Észak tudósfői közül efféle eseményeket gyanítanak az udvari örkök megjelenése mögött is."
 
-    } as SkillInfo,
+    },
     {
       name: "Építészet",
       skillType: "Tudományos",
@@ -827,7 +828,7 @@ export const SkillValues = [
       lvl_4: "A híres építőművész már minden humán kultúra építészetét ismeri a Hetedkorból, s nagyobb alakjairól is tud eztazt. Komolyabb épületek, kastélyok várak, nagyobb?\n\nhidak megtervezését is vállalhatja kockázat nélkül. Képzettsége miatt a Rejtekhelykutatás képzettségre +20%ot kap.",
       lvl_5: "A legendás építész már művészi fokra fejlesztette az építészetet. Katedrálisokat, uralkodói palotákat emel, új stílusokat talál ki, új technikákat eszel ki és alkalmaz. Képzettsége folytán +30%ot kap a Rejtekhelykutatás képzettségére."
 
-    } as SkillInfo,
+    },
     {
       name: "Herbalizmus",
       skillType: "Tudományos",
@@ -842,7 +843,7 @@ export const SkillValues = [
       lvl_4: "A karakter által kezelt sebek Fp gyógyulása a háromszorosára gyorsul, 3. szintű betegségeket is gyógyíthat.",
       lvl_5: "A karakter által kezelt sebek Ép gyógyulása a háromszorosára gyorsul, 4. szintű betegségeket is gyógyíthat."
 
-    } as SkillInfo,
+    },
     {
       name: "Írás/Olvasás",
       skillType: "Tudományos",
@@ -857,7 +858,7 @@ export const SkillValues = [
       lvl_4: "A híres tollforgató az összes humán nyelv ábécéjét felismeri, s azokat, ha beszéli az adott nyelveket, használni is tudja. Betűi szépek, formásak igazán mutatós okleveleket és iratokat készíthet, illetve ha bírja a Művészetek (Rajzolás) képzettséget, akár iniciálékat is alkothat.",
       lvl_5: "A karakter villámolvasással a KM belátása szerint képes akár félpercenként is végezni egy teljes, nagyméretű oldal szöveggel, illetve képes alkalmazni a gyorsírást, mellyel normál beszédtempójú szöveget képes lejegyezni."
 
-    } as SkillInfo,
+    },
     {
       name: "Jog/Törvénykezés",
       skillType: "Tudományos",
@@ -872,7 +873,7 @@ export const SkillValues = [
       lvl_4: "A híres jogtudor már igazi törvényalkotó, nem csak alkalmazza, de már át is látja a törvények kialakulásának és működésének dinamikáját, az összes általa ismert kultúrában képes alkalmazni tudását.",
       lvl_5: "Általában a nagyobb, törvénykező uralkodók vagy reformer főurak sajátja, de legtöbbször a mögöttük megbúvó szürke eminenciások birtokolják ezen a szinten a képzettséget."
 
-    } as SkillInfo,
+    },
     {
       name: "Legendaismeret",
       skillType: "Tudományos",
@@ -887,7 +888,7 @@ export const SkillValues = [
       lvl_4: "A karakter már a kapcsolódó, szomszédos kultúrkörök legendáiba is belelát, s a népeket összekötő regéket is elemezheti, s alaposan ismeri azokat. Próbáját +2 módosítóval dobja.",
       lvl_5: "A karakter megbecsült tudós, képes akár ősi mítoszok valóságtartalmának kielemzésére is, ha bírja az adott kultúrát. Igazi mesékben élő ember, próbáját +3 módosítóval dobja."
 
-    } as SkillInfo,
+    },
     {
       name: "Mechanika",
       skillType: "Tudományos",
@@ -902,7 +903,7 @@ export const SkillValues = [
       lvl_4: "A karakter már igazi mérnök, zavarbeejtően kicsiny órákat, igen hatékony ostromgépeket, vagy épp más komolyabb mechanikus szerkezeteket épít. A tudomány mélyebb összefüggéseit is ismeri. Egyszerűbb mechanikus fegyvereket tervez, mint pl. tűvetők, vagy épp többvájatú, vagy tárral rendelkező nyílpuskák.",
       lvl_5: "A karakter már igen bonyolult rendszereket vázol fel, akár önjáró alkalmatosságok (gépszolga), vagy épp gondolkodónak tűnő (sakkgép) szerkezetek megalkotására is képes."
 
-    } as SkillInfo,
+    },
     {
       name: "Oktatás",
       skillType: "Tudományos",
@@ -917,7 +918,7 @@ export const SkillValues = [
       lvl_4: "A híres oktató által tanított képzettség Kp költsége 2vel csökken (de legalább 1), Százalékos Jártasság esetén -2%ot ad, minden a tanulni kívánt Százalékos képzettségre költött Kp után.",
       lvl_5: "A legendás tanár, mester által tanított képzettség Kp költsége 3mal csökken (de legalább 1) Százalékos Jártasság esetén +3%ot ad."
 
-    } as SkillInfo,
+    },
     {
       name: "Orvoslás",
       skillType: "Tudományos",
@@ -932,7 +933,7 @@ export const SkillValues = [
       lvl_4: "A karakter messze földön híres gyógyító. Az Fp és Ép sebek gyógyulását a háromszorosára gyorsítja, negyedik fokú betegségeket, mérgezéseket diagnosztizálhat és gyógyíthat. Intelligenciapróbáját +2 módosítóval dobja.",
       lvl_5: "A karakter már igazi csodadoktor. Ötödik fokú betegségeket, mérgezéseket diagnosztizál és gyógyít. Akár még végtagok visszavarrására is vállalkozhat. Intelligenciapróbáját +3 módosítóval dobja."
 
-    } as SkillInfo,
+    },
     {
       name: "Ősi nyelv",
       skillType: "Tudományos",
@@ -949,9 +950,8 @@ export const SkillValues = [
       lvl_3: "A karakter néha ugyan hibákkal, de írja az adott nyelvet és egyszerűbb szövegeket magabiztosan fordít. Ha létezik az adott nyelvnek ma is beszélt formája, annak legelemibb szavait megformálni is képes.",
       lvl_4: "A karakter töredékesen, bár de beszéli a nyelvet, bonyolultabb értekezések fordításával is megpróbálkozhat.",
       lvl_5: "A karakter már következtetni is bír bizonyos a szöveg származását, íróját érintő információkra, akkor is, ha a szövegben tartalmi utalás erre nem található. Afféle nyelvészeti, nyelvtörténeti háttértudást kap a kezébe a képzettség ezen szintű birtokosa.",
-      "specialis": "Humán kultúrák:\n\nCrantai, Északfölde első nagy emberbirodalmának nyelve, melyet a kyr hódítók tapostak sárba és feledésbe a birodalommal együtt. Főleg északi természeti népek nyelveiben fedezhetőek fel jövevényszavai, illetve egyes nagyobb könyvtárak titkos rekeszeiben találhatunk efféle nyelven íródott iratokat, melyek jórészt természetszellemek és a síkmágia, késő Cranta idején pedig a nekromancia titkaiba nyújthatnak bepillantás, írásmódja a kép és szimbólumírás érdekes keveréke.\n\nLupár és dolamin. A már Cranta ideje előtt, majd huszonötezer esztendeje itt élő nomád, majd földművelő népesség nyelve, amely először a crantai, majd a kyr uraknak behódolva őrizte meg majdnem eredeti formáját. írásbelisége csakis az uralkodó kaszt számára létezett, mely bukása nyomán a feledés homályába veszett. Jelenlegi ismert formája a Quironeia déli partját lakó lupárok és dolaminok rontást és balszerencsét űző csaska jelei, hurkai, melyeket még ma is alkalmaznak a partvidék tapasztalati mágiát űző sámánjai, boszorkányai. Megjegyzendő mindenesetre, hogy a helyi szájhagyomány állja a versenyt a kyr írásbeliséggel az általa átölelendő idő távlatában, és meglepő módon, kevéssé torzítja az ekképpen megőrzött tudást.\n\nGodon, a Délvidék első nagy emberek alapította varázslóbirodalma, melyet évezredes tündöklés után Krán taszított a nemlétbe. A pyarronita, LarDor városában tanult varázstudók mágikus nyelve, a godoni egyszerűsített változata. Az általa történő varázslás, csak a Mágikus fogékonyság előny felvételével, illetve a varázslóiskola elvégzésével válik lehetővé.\n\nInhumán kultúrák:\n\nAz óelf nyelv, a hatodkor előtt élt elfek misztikus hatalomtól átjárt nyelve, melyet csakis az elf királyságok valamelyikében, esetleg Haonwellben vagy Erionban tanulmányozhat a kíváncsi karakter.\n\nA nyelvben rejlő mágikus hatalom csakis tisztavérű óelfek számára elérhető. A játékos karakter csupán az emberelőtti történetírás kincseihez férhet közelebb általa. írásbelisége a hólyagírás.\n\nA kyr nyelv, a majd húszezer esztendeig virágzó kyr birodalom nyelve, mely kiforrottságában képessé tette a hódítókat Ynev jelenlegi egyik leghatalmasabb misztikus művészetének megalkotására. írásbelisége rúnák és jelek sorozata, a világegyetem mágikus leírása.\n\nÉszakfölde minden varázslóiskolája ezen nyelv és rúnáinak használatát oktatja, az általa történő varázslás csak a Mágikus fogékonyság előny felvételével, illetve a varázslóiskola elvégzésével válik lehetővé.\n\nAquir, a káoszt és halált szolgáló ősi népek, az Első, Másodkor szülte, más létsíkokról bevándorolt, romlott ősfajok összefoglaló neve, és az általuk használt valamennyire egységes nyelv elnevezése. Az isteni nyelvekhez legközelebb álló, főleg a pusztítás dialektusaiban elmélyedt varázsnyelv. A nyelvből eredő mágikus hatású hatalomszavak használatához a karakternek aquir vérű ősökkel kellene büszkélkednie, így használata játékosok számára nem elérhető.\n\nírásbelisége igen fejlett és sokrétű, a csak térben értelmezhető látványfeliratoktól, a szimbolikus értelmű festménysoroktól, a rúnaírásig bezárólag. A karakter valamely egyetemi könyvtár zárolt rekeszeiben, vagy a sötét birodalmak, Gorvik, Toron varázslóiskoláiban, esetleg valamely gonosz szekta szolgálatában tanulhatja a nyelvet és írásmódjait.\n\nTörpe, ÉszakYnev szorgos, dolgos népe, kikben viszonylag kevesen ismernék fel a kyrek előtti korok egyik hatalmas, az ómágiát még ma is birtokló fajainak egyikét.\n\nA híl nyelv ma már nem telítődik az ősök hatalomtól zengő, tárnákat rengető erejével, mégis nagy kincs birtokába juthat ezen nyelv ismerője, már ha a keményfejű törpék titkaikba avatják. Hiszen az északi historikusok rákfenéjétől, a Kyr Birodalom és utódállamainak elfogult történetírásától független, csak a törpékre jellemzően egyenes leírásokra és forrásokra bukkanhat az illető."
-
-    } as SkillInfo,
+      special: "Humán kultúrák:\n\nCrantai, Északfölde első nagy emberbirodalmának nyelve, melyet a kyr hódítók tapostak sárba és feledésbe a birodalommal együtt. Főleg északi természeti népek nyelveiben fedezhetőek fel jövevényszavai, illetve egyes nagyobb könyvtárak titkos rekeszeiben találhatunk efféle nyelven íródott iratokat, melyek jórészt természetszellemek és a síkmágia, késő Cranta idején pedig a nekromancia titkaiba nyújthatnak bepillantás, írásmódja a kép és szimbólumírás érdekes keveréke.\n\nLupár és dolamin. A már Cranta ideje előtt, majd huszonötezer esztendeje itt élő nomád, majd földművelő népesség nyelve, amely először a crantai, majd a kyr uraknak behódolva őrizte meg majdnem eredeti formáját. írásbelisége csakis az uralkodó kaszt számára létezett, mely bukása nyomán a feledés homályába veszett. Jelenlegi ismert formája a Quironeia déli partját lakó lupárok és dolaminok rontást és balszerencsét űző csaska jelei, hurkai, melyeket még ma is alkalmaznak a partvidék tapasztalati mágiát űző sámánjai, boszorkányai. Megjegyzendő mindenesetre, hogy a helyi szájhagyomány állja a versenyt a kyr írásbeliséggel az általa átölelendő idő távlatában, és meglepő módon, kevéssé torzítja az ekképpen megőrzött tudást.\n\nGodon, a Délvidék első nagy emberek alapította varázslóbirodalma, melyet évezredes tündöklés után Krán taszított a nemlétbe. A pyarronita, LarDor városában tanult varázstudók mágikus nyelve, a godoni egyszerűsített változata. Az általa történő varázslás, csak a Mágikus fogékonyság előny felvételével, illetve a varázslóiskola elvégzésével válik lehetővé.\n\nInhumán kultúrák:\n\nAz óelf nyelv, a hatodkor előtt élt elfek misztikus hatalomtól átjárt nyelve, melyet csakis az elf királyságok valamelyikében, esetleg Haonwellben vagy Erionban tanulmányozhat a kíváncsi karakter.\n\nA nyelvben rejlő mágikus hatalom csakis tisztavérű óelfek számára elérhető. A játékos karakter csupán az emberelőtti történetírás kincseihez férhet közelebb általa. írásbelisége a hólyagírás.\n\nA kyr nyelv, a majd húszezer esztendeig virágzó kyr birodalom nyelve, mely kiforrottságában képessé tette a hódítókat Ynev jelenlegi egyik leghatalmasabb misztikus művészetének megalkotására. írásbelisége rúnák és jelek sorozata, a világegyetem mágikus leírása.\n\nÉszakfölde minden varázslóiskolája ezen nyelv és rúnáinak használatát oktatja, az általa történő varázslás csak a Mágikus fogékonyság előny felvételével, illetve a varázslóiskola elvégzésével válik lehetővé.\n\nAquir, a káoszt és halált szolgáló ősi népek, az Első, Másodkor szülte, más létsíkokról bevándorolt, romlott ősfajok összefoglaló neve, és az általuk használt valamennyire egységes nyelv elnevezése. Az isteni nyelvekhez legközelebb álló, főleg a pusztítás dialektusaiban elmélyedt varázsnyelv. A nyelvből eredő mágikus hatású hatalomszavak használatához a karakternek aquir vérű ősökkel kellene büszkélkednie, így használata játékosok számára nem elérhető.\n\nírásbelisége igen fejlett és sokrétű, a csak térben értelmezhető látványfeliratoktól, a szimbolikus értelmű festménysoroktól, a rúnaírásig bezárólag. A karakter valamely egyetemi könyvtár zárolt rekeszeiben, vagy a sötét birodalmak, Gorvik, Toron varázslóiskoláiban, esetleg valamely gonosz szekta szolgálatában tanulhatja a nyelvet és írásmódjait.\n\nTörpe, ÉszakYnev szorgos, dolgos népe, kikben viszonylag kevesen ismernék fel a kyrek előtti korok egyik hatalmas, az ómágiát még ma is birtokló fajainak egyikét.\n\nA híl nyelv ma már nem telítődik az ősök hatalomtól zengő, tárnákat rengető erejével, mégis nagy kincs birtokába juthat ezen nyelv ismerője, már ha a keményfejű törpék titkaikba avatják. Hiszen az északi historikusok rákfenéjétől, a Kyr Birodalom és utódállamainak elfogult történetírásától független, csak a törpékre jellemzően egyenes leírásokra és forrásokra bukkanhat az illető."
+    },
     {
       name: "Számtan/Mértan",
       skillType: "Tudományos",
@@ -966,7 +966,7 @@ export const SkillValues = [
       lvl_4: "A karakter már minden matematikai műveletekre vonatkozó ismerettel bír, azokat alkalmazza is. Mértanilag már röppályát számol, akár a szél beiktatásával, halmazokkal és folyamatábrákkal dolgozik.",
       lvl_5: "A karakter már bír a nagy egyenletrendszerek tudományával, matematikai becslések és jóslások felállítására képes, akár mondjuk hadjáratok sikerét illetőleg, ha bír a Hadvezetés képzettséggel.\n\nMértanilag korszakalkotó ötletei vannak, főleg a tapasztalati építészeti, mechanikai felhasználásokban, de páran a világegyetem, Ynev felépítésének titkait is feszegetik."
 
-    } as SkillInfo,
+    },
     {
       name: "Térképészet",
       skillType: "Tudományos",
@@ -981,7 +981,7 @@ export const SkillValues = [
       lvl_4: "A tudomány mestere már minden műszert ismer, amelyet a térképészet alkalmaz, pontos és igen részletes térképeket készít, s igen jól navigál.",
       lvl_5: "A legendás hírű utazó már ritkaságszámba menő térképeket készíthet, akár útleírásokból is. A számára teljesen idegen jelekkel íródott térképeket is megfejtheti, ha elég ideje van rá."
 
-    } as SkillInfo,
+    },
     {
       name: "Történelem",
       skillType: "Tudományos",
@@ -996,7 +996,7 @@ export const SkillValues = [
       lvl_4: "A legendáriumok mesteri, szakavatott ismerője, a karakter igazi történész, átlátja a politikai erővonalakat az események mögött. A történelmi folyamatok kimenetelére is lehetnek valószínűsíthető elképzelései. Kultúrköre minden titokzatos szervezetéről tud egy keveset, s a választott szervezet teljes történelméről beható ismeretekkel bír, ami adott esetben nem életbiztosítás.",
       lvl_5: "A legendás hírű tudós fő tisztában van minden kultúrkörébe tartozó nyílt és titkos szervezet történelmével jóllehet az utóbbiak közül néhány még számára is rejtély). Már nem csak elemzi, de meg is jósolhatja nagy valószínűséggel az eljövendőben lezajló folyamatok végkifejletét. Igazán érdekessé a hadvezetés képzettség társításával válik a karakter tudománya."
 
-    } as SkillInfo,
+    },
     {
       name: "Vallásismeret",
       skillType: "Tudományos",
@@ -1011,7 +1011,7 @@ export const SkillValues = [
       lvl_4: "A hírneves hittantudós az adott vallás nagy ismerője, akár hitvitákban is részt vehet. A szertartásokat, kegytárgyakat, esetleges ismertebb ereklyéket és eretnek tanokat, a Szakrális mágia fohászait egy +2 módosítóval dobott Intelligenciapróbával ismerheti fel.\n\nA karakter a képzettség ezen fokán már hitéből eredően, szintenként 2 pontot kap az Asztrális és a Mentális TMEhoz.?\n\nA pap vagy paplovag a képzettség ezen fokán minden Tapasztalati szinten +2 Kegy pontot nyer hitéből.\n\nA felszentelt személy ezen a szinten már komoly mágikus erővel és igen nagy elmélyüléssel bír istene tanaiban, ezért az Általános varázslatokat alap Erősítésen Kegy pontok feláldozása nélkül idézi meg.",
       lvl_5: "A legendás egyháztudós, egyházfő az adott vallás istenének, isteneinek nagy ismerője, képes akár az istenségek más megjelenési formáit is azonosítani esetleg más vallásokban, ha erre megfelelő forrás akad a kezébe. Tudományával mindenesetre csínján kell bánni, hiszen esetleges ellenlábasai könnyen máglyára küldhetik. A szertartásokat, kegytárgyakat, esetleges ismertebb ereklyéket és eretnek tanokat, a Szakrális mágia fohászait egy +3 módosítóval dobott Intelligenciapróbával ismerheti fel.\n\nA karakter a képzettség ezen fokán már, hitéből eredően szintenként 3 pontot kap az Asztrális és a Mentális TMEhoz.\n\nA pap vagy paplovag a képzettség ezen fokán minden Tapasztalati szinten +3 Kegy pontot nyer hitéből.\n\nA pap vagy paplovag ezen a szinten már annyira elmélyedt istene tanaiban, annyira magáévá tette az ő igazságait, hogy képes új rituálékat és litániákat kérni istenétől hétévente egyszer. Természetesen a fohász csak az istenség jóindulatából lehet sikeres. (Ám minden esetben a KMé a döntő szó, ő bírálja el a játékos által megalkotott új fohászt is.)"
 
-    } as SkillInfo,
+    },
 
     {
       name: "Ékesszólás",
@@ -1027,7 +1027,7 @@ export const SkillValues = [
       lvl_4: "A mesterien szónokló karakter képes a tömeget immáron nem csak feltüzelni, de lecsillapítani is. karizmapróbáját már +2 módosítóval dobja, a képzettség alkalmazásának felső létszámhatára ezer fő.",
       lvl_5: "A karakter legendás szónokká válik, akár egy népvándorlást megindító szónoklatot vagy nyilvános egyházszakadást elérő előadást is képes prezentálni, ha járatos az adott témákban. karizmapróbáját +3 módosítóval dobja."
 
-    } as SkillInfo,
+    },
     {
       name: "Heraldika",
       skillType: "Szociális",
@@ -1042,7 +1042,7 @@ export const SkillValues = [
       lvl_4: "A Heraldika mestere ezen a fokozaton új jeleket is alkothat, a jelek értelmezése és kialakulása mögé lát, messzemenő következtetéseket vonhat le a címert, jelet, vagy tetoválást megalkotó mesterről, a szervezetről, melyhez tartozik, vagy a nemesi családokról, amelyek ezeket birtokolják, ha sikeres Intelligenciapróbát tesz +2 módosítóval.?",
       lvl_5: "A legendás címertudós belelát a jelek mögötti összefüggésrendszerekbe, szövetségek és nemesi házak titkai nem maradnak előtte rejtve...\n\nezen a fokozaton akár még igazi tudós fők számára is hitelesnek tűnő csalásokat, eszelhet ki, vagy nemesi családok származását vonhatja kétségbe, ha sikeres Intelligenciapróbát tesz +3 módosítóval."
 
-    } as SkillInfo,
+    },
     {
       name: "Kultúra",
       skillType: "Szociális",
@@ -1057,7 +1057,7 @@ export const SkillValues = [
       lvl_4: "A közösség valamely tanultabb vezetője, vagy idegen, aki lassan őslakosnak is kiadhatja magát, bírja ezen a fokon a képzettséget. A karakter már az adott kultúra fiókkultúráinak dolgaiban is járatos, elzárt, titkos közösségekkel szembeni fellépés mikéntjében sem ejt vérlázító hibát. Ezen a szinten már történeti alapossággal képes nyilatkozni egy kultúra fejlődéséről, átalakulásairól.",
       lvl_5: "A tudós fők és papok sajátja, esetleg mesterkémek és kereskedők birtokolják ezt a fokot. Az ennyire képzett karakter már tisztában van az adott kultúra rétegkultúráinak minden apróbb szokásával, illetve kimerítően képes nyilatkozni ezek kialakulásáról is."
 
-    } as SkillInfo,
+    },
     {
       name: "Lélektan",
       skillType: "Szociális",
@@ -1072,7 +1072,7 @@ export const SkillValues = [
       lvl_4: "A karakter mestere a lélektannak, ha elegendő ideje és lehetősége van, hosszas munkával kondicionálhat, vagy kondicionálás alól szabadíthat fel másokat - a KM beleegyezésével. A gyanús jelek, elváltozások keresésére dobott próbáját a karakter +2 módosítóval végezheti el.",
       lvl_5: "Az igazán sokat látott bölcs mesterek az ilyen szintű tudás birtokosai, tapasztalataikat felhasználva egyre inkább elmélyültek a tudományban, emiatt a képzettség ezen fokú ismerői a gyanús jelek, elváltozások keresésére dobott próbájukhoz +3 módosítót adhatnak."
 
-    } as SkillInfo,
+    },
     {
       name: "Művészetek",
       skillType: "Szociális",
@@ -1087,7 +1087,7 @@ export const SkillValues = [
       lvl_4: "Igazi művész, műveivel, előadásaival már szép summákat kereshet. Megérintette a felsőbb harmónia, előadásaiba, műremekeibe akár rejtett mondanivalót is becsempészhet.",
       lvl_5: "Csak Művésztehetség Háttérrel rendelkező karakter veheti fel. Ihletett nagy művész, százévente ha egy születik."
 
-    } as SkillInfo,
+    },
     {
       name: "Nyelvtudás",
       skillType: "Szociális",
@@ -1102,7 +1102,7 @@ export const SkillValues = [
       lvl_4: "Kiművelt nyelvtudás, egykét tájszólást is beszél már a karakter a képzettség ezen fokán. Ha úgy hozza a szükség irodalmilag is elég választékos.",
       lvl_5: "Mesteri tudás, a nyelv virtuóza, az adott nyelv minden dialektusát beszéli, utánozza bármelyik tájszólást vagy akcentust. Elengedhetetlenül szükséges ez a fokozat az igazán komoly irodalmi művek megalkotásához, azok élvezhető, felemelő vagy épp a mélységekbe taszító előadásához."
 
-    } as SkillInfo,
+    },
     {
       name: "Párbaj",
       skillType: "Szociális",
@@ -1117,7 +1117,7 @@ export const SkillValues = [
       lvl_4: "A tudomány mesterfokú ismerője a kultúrkör minden párbajfajtájának minden apró kiskapuját, csínját-bínját ismeri, ceremóniamester. A képzettség ezen fokán akár már a becsület vagy hírnév elvesztése nélkül is találhat kibúvót egy párbaj alól, vagy párbajra kényszeríthet valakit.",
       lvl_5: "A karakter az illem és a szokások ismeretének tárháza, maga is valószínűleg hírneves párbajhős, akár egy párbajkódexet is megalkothat, tettei legendásak, tudása páratlan."
 
-    } as SkillInfo,
+    },
     {
       name: "Politika/diplomácia",
       skillType: "Szociális",
@@ -1132,7 +1132,7 @@ export const SkillValues = [
       lvl_4: "A képzettség ezen fokának birtokosa már személyesen is ismer egykét befolyásos embert, neki is neve van, vagy szürke eminenciásként van jelen a politikában. Már gazdasági, hadászati ügyek politikai ki és behatásait is ismeri, és ha bír a vonatkozó Kultúrával, akkor már külpolitikai kérdésekben is mérvadó a véleménye.",
       lvl_5: "A legendás államférfi vagy befolyásos hölgy diplomáciai zseni, nem ritkán kérik fel bizonyos titkos szervezetekkel történő tárgyalásra. Pontosan tudja ki vagy mi áll az események hátterében, rövidtávra akár meg is jósolhatja az események kihatásait, nagy valószínűséggel... hacsak ellenfelei nem állítanak egy hasonlóan képzett diplomatát ügyeik intézésére."
 
-    } as SkillInfo,
+    },
     {
       name: "Szexuális kultúra",
       skillType: "Szociális",
@@ -1147,7 +1147,7 @@ export const SkillValues = [
       lvl_4: "A karakter igazi művész, még az ellene ágálókat is képes a pártjára csábítani, ha a KM szerint ez elképzelhető... Az ehhez szükséges karizmapróbát a játékos +2 módosítóval dobja.",
       lvl_5: "Igazi szeretőművész, képességeivel képes másokat a legmagasabb mennyektől a legmélyebb pokolbugyrokig eljuttatni. Szexuális játékai olyan szinten őrjítik meg szeretőit és oly járatossá vált az ellentétes nem vágyaiban, hogy karizma próbáját +3 módosítóval dobhatja."
 
-    } as SkillInfo,
+    },
     {
       name: "Színészet",
       skillType: "Szociális",
@@ -1162,7 +1162,7 @@ export const SkillValues = [
       lvl_4: "Igazi művész, előadásaival már szép summákat kereshet. A vonatkozó Asztrálpróbát +2 módosítóval dobhatja.",
       lvl_5: "Már csak a tehetség előnnyel rendelkező karakter veheti fel. Ihletet nagy művész, százévente, ha egy születik... arca szinte gumiból van, bármilyen érzelmet képes megjeleníteni rajta és villanásnyit sem látszanak saját gondolatai érzelmei, ha csak nem akarja. A vonatkozó Asztrál próbát +3 módosítóval dobhatja."
 
-    } as SkillInfo,
+    },
     {
       name: "Udvari etikett/intrika",
       skillType: "Szociális",
@@ -1177,7 +1177,7 @@ export const SkillValues = [
       lvl_4: "Vérbeli politikus, szertartásmester. A karakter már komolyan képes befolyásolni az adott helyszín, udvar, bál szertartásmenetét, egyes szabályok alkalmazásával. Ha úgy kívánja szavaival, intrikus megnyilvánulásaival földbe tiporhat, vagy az egekig magasztalhat bárkit a társaság szemében, ha sikeres Tulajdonságpróbát dob +2 módosítóval.",
       lvl_5: "Igen befolyásos politikus, a társasági élet titkos vezetője. Szertartásmesterként a tudás végső forrása, igazán fontos ceremóniák és szertartások ismerője. Tettei még évszázadok távolából is híresek, a történelem részét képezik. Tulajdonságpróbáját +3 módosítóval teheti."
 
-    } as SkillInfo,
+    },
 
     {
       name: "Démonológia",
@@ -1193,7 +1193,7 @@ export const SkillValues = [
       lvl_4: "A démonikus hagyományok mestere az Intelligencia próbáját +2 módosítóval végezheti el, siker esetén felismeri az 14. démonológiai osztályba sorolt túlvilági lényeket, azok képességeiről, elpusztításuk vagy megidézésük módozatairól kimerítően tud nyilatkozni.\n\nHa bír asztrál/mentál alapú varázslatokkal, akkor innentől kezdve azokat képes alkalmazni a démonokra is. Lásd Démonológia c. fejezetben a 384. oldalon.",
       lvl_5: "A legendás hírű pap, varázsló vagy démonvadász az Intelligenciapróbáját +3 módosítóval végezheti el, siker esetén felismeri az 15. démonológia osztályba sorolt köztes síkokról származó lényeket, azok képességeiről, elpusztításuk vagy megidézésük, létrehozásuk módozatairól kimerítően tud nyilatkozni.\n\nA karakter képes szeráfi paktum megkötésére, lásd a Démonológia c. fejezetben a 384. oldalon."
 
-    } as SkillInfo,
+    },
     {
       name: "Drágakőmágia",
       skillType: "Misztikus",
@@ -1208,7 +1208,7 @@ export const SkillValues = [
       lvl_4: "A drágakőmágikus hagyományok avatott mestere az Intelligenciapróbát +2 módosítóval dobja.\n\nA képzettség ezen fokának birtokosa már képes a drágaköveket Védelem típusú hatásokkal feltölteni, igaz drágakövekben Mpot tárolni.",
       lvl_5: "A legendás hírű mester az Intelligenciapróbáját már +3 módosítóval dobja.\n\nImmár képes a drágaköveket Okozás típusú hatásokkal feltölteni, illetve igazi drágakövekben komplett varázslatokat tárolni."
 
-    } as SkillInfo,
+    },
     {
       name: "Magasmágia",
       skillType: "Misztikus",
@@ -1223,7 +1223,7 @@ export const SkillValues = [
       lvl_4: "A mágiaelméleti tudomány avatott mestere a karakter a képzettség ezen fókán, az Intelligenciapróbáját +2 módosítóval dobja, a fenti megkötések továbbra is érvényesek.\n\nA varázsló képes a varázslatot befejező Végjei megformázását akár egy körrel is elodázni, ezáltal később, vagy egyáltalán nem létrehozni az adott mozaikot. Az idevágó szabályokat bővebben lásd a Mozaikmágia c. fejezetben a 355. oldalon.\n\nA mágikus tanokba való ilyen szintű elmélyedés miatt a karakter minden Tapasztalati szinten +2 Mpot kap.",
       lvl_5: "A legendás hírű mester az Intelligenciapróbáját -3 módosítóval dobja, a fenti megkötések továbbra is érvényesek.\n\nA varázsló ezen a szinten már az általa gyakorolt iskolaformák nagymestere, képes új mozaikot alkotni, de csak az általa megfelelő fokon űzött iskolaformákon belül. Pl. Ha Dián magiszter új jelmágikus rajzolatokat akarna kreálni, akkor a Rúnamágia képzettség 5. fokával kell bírnia, míg ha inkább a Természetes anyagok mágiájában akar maradandót alkotni, akkor az Alkímia képzettség 5. fokát kell előbb tanulmányoznia.\n\n(Am minden esetben a KMé a döntő szó, ő bírálja el a ótékos által megalkotott új varázslatot.)"
 
-    } as SkillInfo,
+    },
     {
       name: "Nekromancia",
       skillType: "Misztikus",
@@ -1238,7 +1238,7 @@ export const SkillValues = [
       lvl_4: "A sötét tudományok mestere az Intelligenciapróbáját +2 módosítóval végezheti el, siker esetén felismeri az 14. nekrográfiai osztályba sorolt túlvilági lényeket, azok képességeiről, elpusztításuk vagy megidézésük, létrehozásuk módozatairól kimerítően tud nyilatkozni.\n\nHa bármely mágikus hagyomány művelője és bír asztrál/mentál alapú varázslatokkal, akkor képes hatni a tudattal vagy személyiséggel bíró élőhalottakra is.",
       lvl_5: "A legendás hírű tudós fő az Intelligenciapróbáját +3 módosítóval végezheti el, siker esetén felismeri az 15. nekrográfiai osztályba sorolt túlvilági lényeket, azok képességeiről, elpusztításuk, vagy idézésük, létrehozásuk módozatairól kimerítően tud nyilatkozni.\n\nA karakter képes a saját, vagy mások életerejéből is varázsolni. Ha a saját életerejét használná varázslásra, akkor képes 1 Épért 5 Mpot nyerni szervezetéből. Ez a rituálé mindösszesen némi összpontosítást és egy kör időtartamot vesz igénybe. Ebben az esetben nem vonatkoznak a mágiahasználóra az Életerő szabályainak megkötései az eszméletvesztésre és a halálra vonatkozóan, míg a varázslás folyik. A mágia befejeztével viszont számolnia kell a kiszipolyozott teste reakcióival.\n\nMások életerejéből fertályórányi felkészülés után tud varázsolni. A rítushoz fel kell rónia az életerőből származó energiákat fókuszáló jeleket, mégpedig az áldozatok vérével, mely majd közvetíti ezen erőket a jel közepén álló varázstudóhoz. Az áldozatok csak a varázslás befejeztével sebződnek meg vagy hunynak el."
 
-    } as SkillInfo,
+    },
     {
       name: "Őselemi mágia",
       skillType: "Misztikus",
@@ -1253,7 +1253,7 @@ export const SkillValues = [
       lvl_4: "Az őselemi síkok teremtményeit felismeri, immáron azok képességeiről +2 módosítóval dobott sikeres Intelligenciapróba után tud nyilatkozni.\n\nA képzettség ezen fokának ismerője az elemi mágia mestere, képes az egyszer már megidézett őselemeket újabb Formázás mozaikokkal kordában tartani, egyre újabb és újabb alakba kényszeríteni az időtartam letelte előtt. Bővebben lásd az Elemi mágia c. fejezetben az 358. oldalon.",
       lvl_5: "A őselemi mágia letéteményese, a világot alakító erők avatott ismerője. Az őselemi síkok minden teremtményét felismeri, immáron azok képességeiről +3 módosítóval dobott sikeres Intelligenciapróba után tud nyilatkozni.\n\nA varázsló ezen a szinten már képes az elemeket teljesen uralma alá hajtani, képes a Formázás mozaikkal szabad elemi formák megalkotására. Bővebben lásd az Elemi mágia c. fejezetben a 358. oldalon."
 
-    } as SkillInfo,
+    },
     {
       name: "Pszi",
       skillType: "Misztikus",
@@ -1268,7 +1268,7 @@ export const SkillValues = [
       lvl_4: "Az Érintés szintje. A fegyelmezett elme ezen a szinten képes áthidalni a fizikai világ szakadékait, melyek a belső síkokon is megmutatkoznak. A karakter már képes más elmékre, vagy a fizikai valóság elemeire, tárgyakra hatni, ismeri és alkalmazza a 4. foknál feltüntetett diszciplínákat közül az általa választott ág diszciplínáit is - ha oktatói lehetővé teszik a Kyr Metódus vagy a Slan Út elemeit is.\n\nA karakter minden szintlépéskor a belső erők tudományában való elmélyülése miatt +2 Pszi pontot kap.",
       lvl_5: "A elme művészetének magasiskolája, az uralom szintje, a karakter erre a szintre csakis a Slan Út vagy a Kyr Metódus tanulmányozásával juthat. Az ilyen szinten képzett pszi alkalmazó már komolyan formálja, a valóságot. A belső síkokon keresztül képes elérni, megfigyelni és befolyásolni mások elméjét. A karakter ismeri és alkalmazza a 5. foknál feltűntetett, az általa választott ágon található diszciplínákat, azaz oktatói által elérhetővé tett Kyr Metódust vagy a Slan pszit.\n\nA karakter minden szintlépéskor a belső erők tudományában való elmélyülése miatt +3 Pszi pontot kap."
 
-    } as SkillInfo,
+    },
     {
       name: "Rúnamágia",
       skillType: "Misztikus",
@@ -1283,7 +1283,7 @@ export const SkillValues = [
       lvl_4: "A képzettség mesteri fokozatú beavatottja a fenti Intelligenciapróbát +2 módosítóval dobja.\n\nA karakter már teljesen átlátja a jelmágia működését, mozaikjait egyetlen jelbe sűrítve készíti el, így a varázslási idő a felére csökken.",
       lvl_5: "A legendás hírű ismerője ezen képzettségnek a fenti Intelligenciapróbát +3 módosítóval dobja.\n\nA varázstudó rúnajeleibe a Leplezés varázslat mozaikját - ha bír a Mozaikmágia használatának - is képes belefoglalni, így rejtve el azt a kíváncsiskodók elől."
 
-    } as SkillInfo,
+    },
     {
       name: "Tapasztalati mágia",
       skillType: "Misztikus",
@@ -1298,7 +1298,7 @@ export const SkillValues = [
       lvl_4: "A ilyen fokú birtokosa a képzettségnek az Intelligencia próbáját +2 módosítóval dobja, a fenti megkötések továbbra is érvényesek.\n\nA karakter már mestere a választott misztikus hagyománynak, mozdulatai, elejtett szavai mágikus erőket rejtenek. Az ilyen fokon képzett varázstudó képes létrehozni egy varázslatot, majd testében, mozgásában megkötni a mágikus hatalmat, s akár órákkal később életre hívni azt.\n\nJátéktechnikailag a varázstudó megidézi az adott varázslatot, elkölti a szükséges Mana pontokat - amennyiben szükséges felhasználja az egyéb kellékeket, -, majd nem fejezi be varázslatát, mintegy testében köti le, majd később 1 szegmens alatt egy korábban meghatározott formulával - ez mindig ugyanaz: egy intés, egy mosoly vagy egy szó - beindítja a varázslatot. Ha a karakter elalszik, vagy bármilyen más módon, de eszméletét veszti, elvész a varázslat és a belefoglalt varázserő, mely sebzés okozása és hatás nélkül, némi fényjelenség kíséretében visszaáramlik a Manahálóba. Amíg a mágiahasználó egy varázslatot efféleképp birtokol, addig semmilyen koncentrálást igénylő feladatot nem végezhet: azaz nem használhat pszit, nem varázsolhat és varázserejét sem nyerheti vissza.\n\nA mágikus tanokba való ilyen szintű elmélyedés miatt a karakter minden Tapasztalati szinten +2 Mp-ot kap.",
       lvl_5: "A karakter az adott hagyomány nagymestere, ősi titkok és regulák ismerője, tisztelt, vagy rettegett személy. Az Intelligenciapróbáját +3 módosítóval dobja, a fenti megkötések továbbra is érvényesek.\n\nA játékos ezen a szinten már saját varázslatokat is megalkothat, de csak azon mágiaformából, melynek vonatkozó képzettségéből szintén bír az 5. fokkal. Pl. Varsarco a tűzvarázsló új tűzmágiák megalkotását tűzte ki maga elé célul, ezt akkor teheti meg, ha az Őselemi mágia képzettséget szintén 5. fokon birtokolja, míg új bájolások kiötléséhez Syrának a boszorkánynak 5. fokú Lélektan képzettség szükséges.\n\n(Ám minden esetben a KM-é a döntő szó, ő bírálja el a játékos által megalkotott új varázslatot.)\n\nA mágikus tanokba való ilyen szintű elmélyedés miatt a karakter minden Tapasztalati szinten +3 Mp-ot kap."
 
-    } as SkillInfo,
+    },
   ];
 
 
@@ -1306,7 +1306,7 @@ export type Skill =
   // harci
   "Fájdalomtűrés" | "Fegyverhasználat" | "Fegyverismeret" | 'Hadvezetés' | "Harci láz" | "Harcművészet" | "Harctéri gyakorlat" | "Kétkezes harc" | "Pajzshasználat" | "Pusztakezes harc" | "Pusztítás" | "Taktika" | "Vakharc" | "Vértviselet"
   // alvilagi
-  | "Alcázás/álruha" | "Hamisítás" | "Jelbeszéd" | "Kocsmai verekedés" | "Méregkeverés/semlegesítés" | "Orvtámadás" | "Kínzás" | "Szabadulóművészet" | "Szerencsejáték"
+  | "Álcázás/álruha" | "Hamisítás" | "Jelbeszéd" | "Kocsmai verekedés" | "Méregkeverés/semlegesítés" | "Orvtámadás" | "Kínzás" | "Szabadulóművészet" | "Szerencsejáték"
   | "Lopódzás" | "Rejtőzködés" | "Zárnyitás" | "Zsebmetszés"
   // vilagi
   | "Állatismeret" | "Csapdaállitás" | "Csomózás" | "Értékbecslés" | "Futás" | "Hajózás" | "Hangutánzás" | "Helyismeret" | "Idomítás" | 'Időjóslás' | "Kocsihajtás" | "Lovaglás" | "Nyomolvasás" | "Szakma" | "Úszás" | "Vadonjárás"

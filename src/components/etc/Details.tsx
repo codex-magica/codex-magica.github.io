@@ -4,6 +4,7 @@ import DetailsTable from "@/components/etc/DetailsTable";
 
 interface DetailsProps {
   prefix?: string,
+  color?: string,
   children: JSX.Element | string | string[],
 }
 
@@ -19,7 +20,7 @@ const isStringArray = (value: any) => {
   return Array.isArray(value) && value.every(isString);
 }
 
-export default ({prefix, children}: DetailsProps) => {
+export default ({prefix, color, children}: DetailsProps) => {
 
   const renderString = (text: string, applyPrefix = false) => {
     if(isTableString(text)) {
@@ -33,7 +34,7 @@ export default ({prefix, children}: DetailsProps) => {
     return (
         <VStack align='start' spacing={0} w="100%">
           {paragraphs.map((paragraph, index) => (
-            <Text textAlign="justify" w="100%" key={index} fontSize={isSmall ? 'sm' : undefined} textIndent="20px">
+            <Text textAlign="justify" w="100%" key={index} fontSize={isSmall ? 'sm' : undefined} textIndent="20px" color={color}>
               {applyPrefix && index === 0 && prefix && <strong>{prefix + ' '}</strong>}
               {paragraph}
             </Text>
@@ -59,7 +60,7 @@ export default ({prefix, children}: DetailsProps) => {
   }
 
   return (<>
-    {prefix && <strong>{prefix + ' '}</strong>}
+    {prefix && <Text fontWeight="bold" color={color}>{prefix + ' '}</Text>}
     {children}
   </>);
 };

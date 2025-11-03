@@ -13,7 +13,7 @@ const defaultStats = {
   Asztrál: 10,
   Érzékelés: 10,
 };
-export const defaultCharacter = {
+export const defaultCharacter : Character = {
   // baseStats: {...defaultStats},
   // stats: {...defaultStats},
   // derivedStats: DerivedStatValues,
@@ -72,4 +72,4 @@ export const defaultCharacter = {
     { skill: "Lopódzás", level: 1 },
     { skill: "Rejtőzködés", level: 1 }
   ],
-} as Character;
+};

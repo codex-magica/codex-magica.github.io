@@ -27,7 +27,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "15 perc",
   description: "A hit pajzsa nevezetű fohász segítségével a kegyelt egy rövid fohásszal felhívja magára pártfogója figyelmét, hogy óvja meg az elkövetkezendőkben. Az ima nyomán a pap, vagy paplovag hatalma egy, a kegyelt kör üli 20 ynevi láb sugarú gömbben nyilvánul meg; itt az időtartam lejártáig minden létrejövő ártó szándékú varázslat, vagy fohász ellen kinyilváníthatja istene hatalmát. Ez annyit tesz, hogy a kegyelt akár 1 szegmenses varázslatokat is képes még létrejöttük előtt szétoszlatni a Mágia szétoszlatása nevezetű fohásznál leírtaknak megfelelően, az ott részletezett Kegy pont mennyiségért. Azonban a pap képtelen előre felmérni egy megfoganó varázslat erejét, így, ha a fohász segítségével ellenszegül és nem bír a varázslat szétoszlatásához szükséges Kegy pontokkal, akkor a varázslat a fohász félbeszakadásának pillanatában ismét teljes erősítésével fogan meg.\n\nA fohászt a kegyelt az Időtartam lejárta előtt bármikor megszüntetheti, addig azonban nem képes semmilyen más fohászt alkalmazni."
-} as PrayerInfo, {
+}, {
   name: "Mágiaérzékelés",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Litánia",
@@ -37,7 +37,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "10 kör",
   description: "A rövid litánia alatt a pap szent szimbólumát, vagy kezét felemelve lassan kör befordul, és megpillantja a csak számára felderengő tárgyakban, személyekben, varázslatokban fénylő mágiát.\n\nA fohász segítségével a pap bármely mágikus energiát érzékelhet. Ez sugározhat tárgyakból, személyekből, jelekből, rúnákból is. A fohász a mágia természetét és erősségét nem mutatja meg, csak jelenlétét érzékeli. Ha a célpont varázslat leplezve van, jelenlétét a fohász csak akkor fedi fel, ha Erőssége nagyobb a leplezés Erősségénél."
-} as PrayerInfo, {
+}, {
   name: "Mágia kifürkészése - Kicsi",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Litánia",
@@ -47,7 +47,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "A fohász segítségével a pap megtudja, hogy a kifürkészésre szánt varázslat milyen erősítésű, tehát mennyi Mp-ból, vagy Kegy pontból hozták létre. Ily módon nem kell találomra használnia a Mágia szétoszlatását, s nem vesznek el a Kegy pontok, ha rosszul méri fel a lehetőségeket.\n\nTermészetesen, ha az adott varázslatot vagy varázstárgyat bármiféle leplezés védelmezi, akkor csak úgy jut információkhoz a pap, ha fohásza Erőssége meghaladja a leplezés Erősségét."
-} as PrayerInfo, {
+}, {
   name: "Mágia kifürkészése - Közép",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Litánia",
@@ -57,7 +57,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "A Mágia kifürkészésének második, nagyobb Kegy pont költségű módozattal a pap nemcsak a varázslat erősítését mérheti fel, de megtudja azt is, hogy mely mágikus hagyományba tartozik az adott varázs, és hogy mennyi ideig tart még ki, mielőtt magától szétoszlana.\n\nTermészetesen, ha az adott varázslatot vagy varázstárgyat bármiféle leplezés védelmezi, akkor csak úgy jut információkhoz a pap, ha fohásza Erőssége meghaladja a leplezés Erősségét."
-} as PrayerInfo, {
+}, {
   name: "Mágia kifürkészése - Nagy",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Litánia",
@@ -67,7 +67,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "A Mágia kifürkészésének harmadik esetében a pap egy varázstárgyat fürkészhet ki. Ilyenkor azt istene oltárára kell helyeznie, és úgy végrehajtania a fohászt. Ebben az esetben az istenség felfedi papja előtt a tárgy képességeit, ám a fohász nem árulja el használatának titkát, az esetlegesen szükséges szavakat, mellyel a varázstárgy aktiválható.\n\nTermészetesen, ha az adott varázslatot vagy varázstárgyat bármiféle leplezés védelmezi, akkor csak úgy jut információkhoz a pap, ha fohásza Erőssége meghaladja a leplezés Erősségét."
-} as PrayerInfo, {
+}, {
   name: "Mágia szétoszlatása",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Litánia",
@@ -77,7 +77,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Kijelölt varázslat",
   duration: "Egyszeri",
   description: "A litánia szavait elősorolva a pap istene nevében megtagadja a varázslat létezését, majd a fohász befejeztével öklével a szétoszlatni kívánt mágia félé sújt.\n\nA fohászt alkalmazva a pap képessé válik mindenféle mágiák hatásainak megszüntetésére, ám csakis abban az esetben, ha a fohász Erőssége meghaladja a kiszemelt varázslatba fektetett Mana pontok számát."
-} as PrayerInfo, {
+}, {
   name: "Rendreutasítás",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Litánia",
@@ -87,7 +87,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Végleges",
   description: "Ez a fohász akkor juthat komoly szerephez, ha a papnak magából kikelt hívőkkel kell foglalkoznia. Olyan esetben, melyben a pappal azonos valláskőrbe tartozó, a papot más körülmények között tisztelő, esetleg szerető személlyel vagy személyekkel akadnak problémák. Előfordulhat, hogy az illetők olyan cselekedet végrehajtására készülnek, mely a pap istenének nem tetsző. Amennyiben a pap tudomást szerez erről, a fohásszal - a kellő időben, a kellő helyen - megakadályozhatja a tett végrehajtását. így megkímélheti a más körülmények között tisztességes híveket, s megmentheti lelkűk üdvősségét.\n\nA fohász egyszerre több célpontra is alkalmazható, és nem tesz mást, mint ráébreszti a cselekedetet végrehajtani szándékozókat a tett valódi hatásaira, következményeire. A pap alakja a fohász pillanatában eleven, félelmetes lelkiismeretként szegül szembe a megtévedt hívők akaratával. Amennyiben azok Mentális Mágiaellenállása sikertelen, feladják szándékukat és belátják a pap igazát.\n\nMegjegyzendő, hogy a fohász csak akkor működik, ha a célpontok valóban istenüknek nem tetsző dolgot kővettek el, vagy annak elkövetésére készülnek. Amennyiben az előbbi feltétel nem teljesül, a fohásznak semmiféle hatása nem lesz. Különösen jól használható például akkor, ha két hívő vész össze, és egymás torkának ugrana.\n\nA fohász - ha a célpontok Mágiaellenállás sikertelen - minden ártalom nélkül visszavezeti az eltévelyedetteket istenükhöz, hitükhöz, meggátolva őket a bűnös tett végrehajtásában. Ez nem kényszerítő erőként, hanem a felébredt lelkiismeretként, a célpont saját döntéseként jelentkezik.\n\nPersze a KM is alkalmazhat NJK-papot a kalandozók lelkiismeretének állandó ébrentartására. Ezzel több, vallásának nem megfelelően viselkedő játékos közvetett úton történő kordában tartására is lehetőség nyílik."
-} as PrayerInfo, {
+}, {
   name: "A hatalom szava",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -97,7 +97,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "„A látszat csal, az univerzum hazugságok sokaságára épül” - tartja egy ősi kyr bölcsesség. Az igazi hatalommal bírók nemritkán titkolják, mire képesek valójában. Egyszerű, szerény megjelenésük nem árulkodik igazi képességeikről, s ez megtévesztő lehet. Persze a valódi hatalom kisugárzása szinte tapinthatóan árad birtokosából, s ezt látja minden nyitott szemmel, tiszta elmével járó lény. Ám a sok nagyhangú, felületes, csupán a látszatra adó szerencsétlen gyakorta már csak akkor veszi észre, kivel került szembe, kit sértett vérig, amikor már késő, visszakozni lehetetlen. Az efféle fickók megtoppantására szolgál A hatalom szava.\n\nA fohász egyetlen mondat elcitálásából áll, melyben a pap fennhangon kiejti saját nevét, égi pártfogóját és világi méltóságát (például „Assero atya vagyok, Dreina felkent főpapja!’’), s melynek tisztán és érthetően kell hallatszania 20 ynevi láb körzetben. A papnak közben fel kell mutatnia szent jelképét. Mindenki, aki ezen a területen belül tartózkodik, szembesül a pap valódi hatalmával és tudatára ébred annak, mi mindenre képes az (megismeri kegyelt mivoltát, Tapasztalati szintjét, maximális Kegy pontjainak értékét, valamint tisztában lesz minden világi és vallási rangjával, méltóságával).\n\nA fohász sohasem hazudik, mindig a valóság szerint mutatja be alkalmazóját. A hatalom szavának nincs kényszerítő ereje. Ha a támadók, kötekedők a valódi mivoltot megpillantva sem riadnak meg, a papnak más eszközöket kell keresnie megfékezésükre.\n\nNem Játékos Karakter esetében a KM belátására van bízva, hogy a megismert tudás fényében az NJK féli-e a pap hatalmát"
-} as PrayerInfo, {
+}, {
   name: "A hit hatalma",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -107,7 +107,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "6 kör",
   description: "A fohász lehetővé teszi, hogy alkalmazója hitének erejét harci elvakultsággá formálja. A pap csak istene szolgálatában alkalmazhatja e fohászt - azaz jellemével ellentétes lényekkel vívott küzdelemben -, amennyiben máskor vagy indokolatlanul próbálkozna, a fohász nem jön létre és maximális Kegy pontja 1-gyel csökken. Ezen fohász külsőségeiben igen zord, mivel a pap egy pillanatra megmerítkezik szimbóluma fényében, mialatt istene nevét fennhangon üvöltve a csatába veti magát, szeméből túlvilági fényt sugározva.\n\nA mágia ideje alatt a pap testi ereje, harci kedve és fegyverforgatási képességei megnőnek; az elvakultság, a szinte fanatikus hit tüze fűti. Az Erő tulajdonsága a pap minden 2 Tapasztalati szintje után 1-el emelkedik (legfeljebb 20-ig), KÉ-je és TÉ-je 15-tel nő. A fohász ideje alatt a pap nem gondolhat menekülésre, nem varázsolhat, nem használhat pszit, csak kétkezi harcot folytathat. A fohásznak csak az időtartama hosszabbítható meg további Kegy pontok feláldozásával, a harcértékek tovább nem növelhetők.\n\nA fohász meglehetősen népszerű Arel papjai közt, akik csatában sokszor fordulnak ily módon segítségért istennőjükhöz. Használata több látható jellel jár. A hatása alá került pap bámulatos gyorsasággal vív, keresi a veszélyt és a legerősebb, leghatalmasabb ellenfelet. Szemében különös, vad tűz lángol, ajkát harci kiáltások, az ellenfelet ingerlő, kihívó szavalt hagyják el. A fohász különlegessége, hogy kis eséllyel ugyan, de kapcsolatot tesz lehetővé isten és papja közt - már amennyiben a pap valós istent imád. Tapasztalati szintenként 1% az esélye annak, hogy az isten felfigyel kővetőjének elvakult kirohanására, és saját maga is szemlélője lesz az összecsapásnak. (Ez az esély Arel papjai esetében kétszer ekkora, szintenként 2%).\n\nAmennyiben az istenség lepillantott hívére, néhány apróság történhet, amit többen hajlamosak kizárólag a véletlen, a jó szerencse számlájára írni. Az alkalmazó pap útjából az alsóbb rendű, gyenge ellenfelek félrevonulnak, nem állítják meg, nem próbálják feltartóztatni. A pap így elérkezhet kiszemelt célpontjához, aki az esetek nagy részében az ellenséges erők egyik vezetője, irányítója. Kezdetét veheti a párbaj. A papot a véletlen is segíti harcában. A KM a harc minden körében dob k6-ot. Amennyiben az eredmény 5, illetve 6, a szerencse valamilyen formában a pap oldalára áll. A hatások lehetséges számának csak a KM fantáziája szabhat határt Megtörténhet, hogy az ellenfél a kritikus pillanatban egy vizes fűcsomóra lép, és elesik. Ekkor a küzdelmet - míg fel nem áll ismét - a földre kerülés negatív módosítóival kell folytatnia. Előfordulhat, hogy az ellenség gyönyörű vágása, mely minden bizonnyal végzett volna hősünkkel, mégis a pap füle mellett suhan el, mert az utolsó pillanatban az isten kővetője egy szemvillanásra elvesztette egyensúlyát és oldalra billent. Számtalan lehetőség kínálkozik a párharc eredményének befolyásolására, de néhány apró szabályt mindenképp érdemes szem előtt tartani.\n\nAz isten véletlenhez hasonlatos beavatkozása semmiképp sem döntheti el közvetlenül a küzdelmet - azaz az ellenfél nem halhat meg, nem ájulhat el egyiktől sem. A másik kikötés, hogy a pap életét egy összecsapásban legfeljebb egy alkalommal mentheti meg a sors. Ne feledjük tehát, a második halálos csapás könnyen az utolsóvá válhat. A fohász külön érdekessége lehet, ha mindkét küzdő fél sikeresen alkalmazza a fohászt, és a véletlen szinte minden másodpercben komolyan befolyásolja a harc kimenetelét."
-} as PrayerInfo, {
+}, {
   name: "Áldás",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -117,7 +117,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "10 kör / 1 hónap",
   description: "Alkalmazásakor a pap rövid fohászával istene jóindulatát, segítségét kéri, s figyelmébe ajánlja a megáldandó személyt vagy tárgyat. Ennek következtében a fohász Erőssége végtelenül magas, hiszen ha valaki meg akarná törni, a közvetlen isteni hatalommal kéne szembeszegülnie.\n\nMindazok, akikre a pap kiterjeszti az áldás hatását - hacsak jellemük, életfelfogásuk nem ellenkezik gyökeresen a pap vallásának tanításaival - megerősödnek eltökéltségükben, a fohász időtartama alatt optimisták, jókedvűek és bátrak lesznek. Ebben az esetben a fohász időtartama 10 kör, s ez idő alatt a megáldott személyek minden harcértékeihez +5 járul, akárcsak az Asztrális és Mentális Mágiaellenállásukhoz. Egyetlen fohásszal akár több személy is megáldható, egyszerre annyi, ahány Kegy pontot a pap erre áldoz. A fohász nem evilági vagy élőholt teremtményekre nem fejti ki hatását.\n\nAz Áldás segítségével felszentelt víz, étel tiszta és fogyasztható lesz - amennyiben mérgezett volt, úgy látványosan megposhad, undorítóvá válik. Azok a tárgyak, melyeket a pap megáldott, egy holdhónapon keresztül nem porosodnak, nem fog rajtuk a rozsda, színük nem fakul, s a belőlük áradó hatalom folytán a fegyverek képessé válnak másvilági lények megsebzésére is."
-} as PrayerInfo, {
+}, {
   name: "Aszkézis",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -127,7 +127,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 nap",
   description: "A fohász a papok bűntől és földi kísértéstől való megtisztulását segíti elő. Új gondolatokat ébreszt, közelebb hozza a papot istenéhez, segít elszakadni a világi örömök gyarlóságától. Első lépésként a papnak tökéletesen el kell szakadnia a mindennapi valóságtól, egyedül kell maradnia gondolataival. Erre a legtökéletesebb, ha egy elhagyatott helyen, netán cellája magányában meditál. A papnak a nap elején, napkeltekor kell elmondania a fohászt, mely egy órás imádkozást és rituális szövegek kántálását jelenti. Ezek után a napot imáknak és meditációnak kell szentelnie. \n\nEz alatt az idő alatt a pap szükségletei szinte ára esnek vissza, így nem kőtik le a test kívánalmai. Napi egy pohár víz és egy szelet kenyér elég táplálásához. Nem beszélhet senkivel, lelke megtisztítására kell koncentrálnia. Az aszkézist addig kell folytatnia, míg istene jónak látja. Ha véget vethet önnön sanyargatásának, jelet kap istenétől. A fohászt minden aszkézissel töltött nap elején használni kell (ez teszi lehetővé, hogy a szervezet elviselje a kevés élelem és víz okozta ártalmakat).\n\nAz aszkézis végeztével a pap bűnei megbocsátást nyernek, esetleg istene valamely küldetést ír elő számára, amit teljesítenie kell a bűnbocsánathoz."
-} as PrayerInfo, {
+}, {
   name: "Szent fény",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -137,7 +137,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Speciális",
   duration: "6 kör",
   description: "Nevezik az Istenek vezérlő tüzének is. A pap érintésével fényt gyújt valamely tárgyon vagy helyen. E fény 5 ynevi hüvelyk sugarú gömbként, kékesen ragyogva világít. A Szent fény csak olyan tárgyon vagy helyen - élőlényen, élőholton nem! - jelenik meg, melyet Szertartás segítségével felszenteltek. A mágia 5 ynevi lábnyi világosságot ad a legnagyobb sötétben is, és időlegesen eloszlatja a Sötétség-varázs hatását. A Szent fény csalt erősebb papi Mágia szétoszlatása fohásszal szüntethető meg, egyéb módon eloltani lehetetlen.\n\nA fohász az időtartam alatt figyelmezteti a papot, ha olyan helyre téved, amelynek vallásával ellentétes jellemű kisugárzása van, illetve, ha veszély leselkedik rá. Ilyenkor színe egyre mélyül, majd vöröses árnyalatba csap át. A Szent fény a fohász időtartama alatt - további Kegy pontok felhasználása nélkül - a pap akaratának megfelelően bármikor kioltható és újraéleszthető."
-} as PrayerInfo, {
+}, {
   name: "Szertartás",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -147,7 +147,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Speciális",
   duration: "Végleges",
   description: "A legelső fohász, amit egy papnak felszentelése után megtanítanak, s az átlagemberek leggyakrabban csupán a fohászok ezen formájával találkoznak életük folyamán. Habár vallásonként váltakoznak formái, s egyes hitek többfélét ismernek, mint mások, az alább kővetkező hat szertartást mind alkalmazzák.\n\nA leírások pusztán egyszerű vázlatai az eseményeknek.\n\n1. Templomszentelés: Új oltár, szentély vagy templom felavatásakor celebrálják. A felépített helyet a papnak körbe kell járnia, s fennhangon idéznie a szertartás szövegét. A templom vagy szentély ezek után már alkalmas fohászkodásra, áldozat bemutatására, s otthont, támogatást nyújt az azonos vallású hívőknek.\n\n2. Névadás: Ezen szertartás alatt adatik az újszülöttnek a név, melyet élete során viselnie kell.\n\n3. Felszentelés: A szertartással szenteltvíz, és más szentelt tárgy készíthető.\n\n4. Áldozat: Az istentől függő áldozati formula és rituális szöveg, melyet az Áldozat bemutatása közben mormolnak. \n\n5. Áldás: Segítségével a kővetkező év termése biztosíttatik, s nem kell nagyobb természeti katasztrófától sem tartani a megszentelt területen. Legalábbis olyantól nem, amit a pap istene idézne elő.\n\n6. Összeesketés: A szertartással házasság köttetik.\n\nA szertartások lefolyása vallásonként nagyon eltérő lehet, így ezek ismertetésére itt nem térünk ki. A papok a legtöbb fenti szertartáshoz különleges, felszentelt füstölőket, gyertyákat, istenüknek szentelt tárgyakat és egyéb kultikus segédeszközöket használnak.\n\nAkárcsak az Áldás esetén, a pap itt is istene jóindulatát kéri, s ennek következtében a fohász Erőssége végtelenül magas, hiszen ha valaki meg akarná törni, a közvetlen isteni hatalommal kéne szembeszegülnie."
-} as PrayerInfo, {
+}, {
   name: "A halál szava",
   domains: ["Halál"],
   type: "Litánia",
@@ -158,7 +158,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Végleges",
   save: ["Asztrális"],
   description: "A fohász egyetlen rövid túlvilági sikoly, mely egyaránt hallik az Anyagi-, az Asztrál-, illetve a Mentálsíkokon is. Hatására nemcsak az áldozat lelke téphető ki porhüvelyéből, de a közelben állók is pillanatnyi fehéren izzó gyötrelmet élnek át.\n\nA pap ezen fohásza képes kiszakítani a lelket a testből, azaz megölni az áldozatot. A fohász létrehozásához a papnak elég egy szót hangosan kimondania. A halál rendkívül fájdalmas, de legalább gyors. Legtöbbször Halál jellemű papok használják - a testből így kiszakított lélek sokszor élőhalottként visszatér, s rettegésben tartja a környéket, ahol meghalt. Ám nemritkán megesik, hogy a lélek bosszút esküszik halálának pillanatában. A varázslat másik mellékhatása, hogy az 1 ynevi mérföldön belül tartózkodó élőholtak, amennyiben nem rendelkeznek személyiséggel, önkéntelenül a varázs helyére gyűlnek, a lélekkel bírók pedig tudomást szereznek a pap jelenlétéről."
-} as PrayerInfo, {
+}, {
   name: "Asztrál/Mentálfátyol",
   domains: ["Lélek"],
   type: "Litánia",
@@ -168,7 +168,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "5 perc",
   description: "A rövid suttogásnyi fohász kezdetkor a papnak választania kell, hogy Asztrál- vagy Mentálfátylat kér-e urától, úrnőjétől. A fohász egyetlen személyre hat, s ha az valamely ok miatt ellenszegülne, akkor sem jogosult Mágiaellenállásra. A fohász alkalmazásakor meg kell érinteni a kijelölt személyt jobb kezével, s eközben kell elmormolni a védő ige szavait. A Fátyol elrejti az Asztrál- vagy a Mentáltestet, így megnehezíti annak megtámadását, megfigyelését. Ez annyit jelent, hogy a fohász idejére a célpont Asztrál vagy Mentái Mágiaellenállása minden mágia ellen a Fátyol Erősségével nő. A védelem nem növelhető a varázslat megismétlésével."
-} as PrayerInfo, {
+}, {
   name: "Asztrál/Mentálpárharc",
   domains: ["Lélek"],
   type: "Litánia",
@@ -179,7 +179,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Végleges",
   save: ["Asztrális", "Mentális"],
   description: "A litánia segítségével a pap képes lesz elűzni mindazokat a lényeket, teremtményeket és entitásokat, akik valakit az Asztrál- vagy Mentálsíkról befolyásolnak, kiszipolyoznak vagy hatalmukban tartanak. Rövid elmélyülése és csendes imája alatt érzelmi hullámokat bocsát ki az Asztrál-, vagy gondolati hullámokat a Mentálsíkon, amelyek megtévesztik ezeket a lényeket, s azok - mivel nem érzékelik ezen hullámok hamis voltát - otthagyják eddigi áldozatukat (azonban semmi sem tartja vissza őket attól, hogy később ismét megtámadják azt).\n\nAmennyiben a fohász erősítése 15-tel meghaladja az adott lény Asztrális vagy Mentális ellenállását, el is pusztítja azt. Azonban ha a pap fohásza sikertelen (a lény Mágiaellenállása magasabb a fohász Erősségénél), a lény otthagyja előző áldozatát, s a papot támadja meg.\n\nAz Asztrál- és Mentállények képességeiről bővebben a Bestiáriumban olvashatsz a 494. oldalon."
-} as PrayerInfo, {
+}, {
   name: "Asztrál/Mentálpillantás",
   domains: ["Lélek"],
   type: "Litánia",
@@ -193,7 +193,7 @@ export const PrayerValues: PrayerInfo[] = [{
     "A rövid, suttogva elszavalt litánia segítségével a pap bepillantást nyer az Asztrál- vagy a Mentálsíkra, s megfigyelheti, hogy a vizsgált személy Asztrál- vagy Mentálteste miként viselkedik, pontosan milyen mértékű és típusú erők védelmezik az elméjét (Statikus, Dinamikus Pajzsok, Tudatalatti Mágiaellenállás, hitből fakadó védelem stb.). Ha a célpont Mágiaellenállása sikertelen, a pap bepillantást nyer az áldozat aurájának legfelső két rétegébe. Megállapíthatja, hogy ha valamely, csupán az Asztrál- vagy Mentálsíkon létező teremtmény les rá, esetleg annak befolyása alatt áll. A fohász ideje alatt lehetősége nyílik annak megállapítására, hogy milyen erős ez a teremtmény, s hogy elűzéséhez, esetleg kibékítéséhez mely erőkhöz kell fordulnia.\n\nAmennyiben a célpont Mágiaellenállása sikeres, a pap csak annyit tud meg, hogy milyen típusú és nagyságrendileg mekkora erősségű a védelem.\n\n",
     "table:Védelem Erőssége \tNagyságrend\n\n1-10\telenyésző\n\n10-20\tgyenge \n\n20-30\tmérsékelt \n\n30-40\tközepes \n\n40-50\terős \n\n50+\tnagyon erős"
   ]
-} as PrayerInfo, {
+}, {
   name: "Asztrál/Mentálpöröly",
   domains: ["Lélek"],
   type: "Litánia",
@@ -204,7 +204,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "3 kör",
   save: ["Asztrális", "Mentális"],
   description: "A rövid tagadó igékből álló fohász tulajdonképpen ellentéte a Fátyolnak, célja az ellenfél védelmének lerombolása. A fohász hatása gyors és nagyon erőteljes, valóban egy pörölycsapásra emlékeztet. A fohász idejére az ellenfél Asztrális vagy Mentális pszi-pajzsa, esetleg más varázslat, diszciplína, vagy fohász nyújtotta védelme (a varázstárgyak adta védelem nem) a fohász Erősségének megfelelő számú ponttal csökken. Ez a fohász hatóidejének leteltével visszatér, mert a Pöröly a védelmet nem pusztítja el, pusztán időleges utat nyit valamely tudati támadás előtt."
-} as PrayerInfo, {
+}, {
   name: "Átok",
   domains: ["Élet", "Halál", "Lélek"],
   type: "Litánia",
@@ -215,7 +215,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Végleges",
   save: ["Asztrális"],
   description: "Ezt a fohászt is többnyire Halál jellemű papok alkalmazzák, de egyik formája az Élet jellemű papoktól sem idegen. A papi átkok erősebbek mind a boszorkányi, mind a boszorkánymesteri átkoknál. Azon vállfájuk, amelyet a halál jelleműek alkalmaznak, tulajdonság vagy harcérték csökkenést okoz. A csökkenés nem túl jelentős, viszont folyamatos, s csak az átok elűzésével állítható meg. Ily módon például egy pap megátkozhat egy harcost, úgy hogy annak TÉ-je csökkenjen. A játékosnak természetesen ezt ékes szavakkal kell megfogalmaznia, mivel éppen ezen áll vagy bukik az átok hatásossága. Nagyjából így hangzana hát a pap szájából:\n\n„Nyomorult féreg! Ranagol nevében sújtalak iszonyú átkommal, hogy ismerd és rettegd őt! Fegyvered hagyjon cserben, erőd apadjon el, agyonveretve leld nyomorú véged, s őrökké kísértsen a vereség szelleme! Pusztulj erről a világról!”\n\nAz átok erősítéséhez +1-10 E adható, amit a KM határozhat meg az átok szövegének ismeretében. Az átok szövege meghatározza a fohász hosszát is - minél hosszabb a szöveg, annál tovább tart a fohász. A hatás egy Tulajdonságpont csökkenés naponta, illetve 5 pontos csökkenés, ha százalékos képzettségről vagy harcértékről van szó. A hatás annyi napig súlyosbodik, ahányadik szintű a pap, utána stagnálni kezd. így például valamely Tulajdonság 0-ra csökkentésével egy magas rangú pap meg is ölheti ellenfelét.\n\nA papi átkok másik képviselője inkább a kiátkozás nevet érdemelné. Ezt Élet jellemű papok is használhatják, de csak rendkívül súlyos esetben. Ennek lényege, hogy a saját vallásához tartozó áldozatot a pap kitaszíthatja istene kegyéből. Ez csak akkor lehetséges, ha az áldozat valóban súlyosan vétett vallásának' szabályai ellen. Ha a pap feleslegesen használja a fohászt, vagy egyenesen önző céllal, s nem istenének érdekeit szem előtt tartva, a fohász nem jön létre, a pap pedig 1k6 napig elveszíti összes Kegy pontját. Az efféle kiátkozás a papokra nézve a legsúlyosabb, mert elmúltáig csak a Kis Arkánum Litániáit használhatják. Megszüntetése Átokűzéssel lehetséges, de mindaddig nem sikerülhet, míg a kiátkozott jóvá nem teszi elkövetett bűnét.\n\nA nem papi kasztú áldozatok minden harcértéke 10-zel csökken, s állandó reményvesztettség jellemzi majd viselkedésüket. Ez is az átok elűzéséig tart, s a papnál leírtak vonatkoznak rá. Az átok első formája ellen Asztrál ME lehetséges, a második típus mindig hatásos, ha a kiátkozás jogos, ám sohasem, ha jogtalan."
-} as PrayerInfo, {
+}, {
   name: "Átokűzés",
   domains: ["Élet", "Lélek"],
   type: "Litánia",
@@ -225,7 +225,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "A papok Átokűzése a leghatásosabb semlegesítő fohász a boszorkányok és boszorkánymesterek mágiájával szemben. Tehát nemcsak a papi átkokat, de a boszorkányok és boszorkánymesterek által megidézett átkokat is megszüntetheti. A fohász hosszas előkészítést igényel, s a megidézésének időtartama is hosszú - annyi kör, ahány Kegy pontot a pap a fohászhoz felhasznál. A papnak először meg kell áldania a megátkozott személyt, majd tarkójára megszentelt vért, vizet, esetleg bort (a vallás reguláitól függően) öntve fennhangon újra s újra elcitálnia az átoktörés szövegét. Az átok hatása akkor szüntethető meg, ha az űzés erősítése nagyobb az átok eredeti Erősítésénél."
-} as PrayerInfo, {
+}, {
   name: "Belső síkok lényeinek szólítása",
   domains: ["Lélek"],
   type: "Litánia",
@@ -236,7 +236,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "1 óra",
   save: ["Asztrális", "Mentális"],
   description: "E mágiaforma segítségével a pap a Belső Síkok lényeit szólíthatja a közelébe. A fohász végrehajtásakor csak az adott lény síkját tudja meghatározni, a faját nem. A szólított lény Asztrális vagy Mentális Mágiaellenállásra jogosult attól függően, hogy mely sík lakója. Ha enged a hívásnak, az időtartam alatt engedelmeskedik a pap utasításainak, ha kell, még más, az adott síkon lakó lény ellen is fordul. Ily módon az is elérhető, hogy valamely, a síkon élő teremtmény által megszállt, befolyásolt vagy irányított személyt a pap megmentsen, bár ez a fohász nem tiltja meg, hogy az elűzött lény később ne próbálkozhasson újra."
-} as PrayerInfo, {
+}, {
   name: "Bénítás",
   domains: ["Halál", "Lélek"],
   type: "Litánia",
@@ -247,7 +247,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "3 kör",
   save: ["Mentális"],
   description: "A pap ezzel a fohásszal részlegesen megbéníthatja az ellenfél mozgásirányító központját. Rá kell mutatnia a kiszemelt áldozatra, majd ki kell mondania a fohász megidézéséhez szükséges szavakat. A mágia hatására, amennyiben a Mágiaellenállása sikertelen volt, az áldozat a kővetkező módosítókat szenvedi el:\n\nErő: -8 Gyorsaság: -8 Ügyesség: -8\n\nKÉ: -30 TÉ: -40 VÉ:-35 CÉ: -15\n\nValamint képtelenné válik varázsolni. A Bénítás jól alkalmazható szinte minden harci helyzetben, s további előnye még, hogy időtartama alatt az ellenfél sem varázslatait, sem fohászait nem hívhatja segítségül."
-} as PrayerInfo, {
+}, {
   name: "Csapás",
   domains: ["Halál", "Természet"],
   type: "Litánia",
@@ -257,7 +257,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "A papok mágiájának egyik egyszerű, ám hatásos harcban is alkalmazható fohásza a Csapás. Ennek segítségével megtörhető az ellenfél rohama, vagy fájdalmas seb okozható rajta. A fohász végrehajtásakor a pap választhat, milyen módon kívánja felhasználni a mágiát. Két lehetőség áll rendelkezésére: az első inkább védekező, a második tisztán támadó jellegű.\n\nA fohász megidézése a kővetkezőképpen zajlik: a pap mindkét kezét ökölbe zárja, majd behúzza a mellkasához. Ezt követően szorosan egymás mellett kinyújtja két karját, mintha a levegőben maga elé ütne.\n\nA fohász első felhasználási módja esetén a kéz kinyújtásának hatására láthatatlan erőfal keletkezik, mely a rohamban megakasztja a támadót, az álló ellenfelet pedig erősen hátrataszítja. A lökés nagysága elegendő ahhoz, hogy az álló vagy lassan haladó áldozat 1-2 ynevi lábat hátrazuhanjon - ami viszont nem jár feltétlenül hanyatt eséssel! A rohamozó vagy gyorsan haladó áldozat a fohász Erősítésének minden E-je után 1k6 Fp-t veszít az ütközéstől, lendülete pedig elvész; a fallal való találkozás helyén az illető megáll.\n\nA fohász másik, támadó felhasználása esetén az erő nem fal, hanem rúd vagy kopja alakjában jelenik meg. Ezt a rudat „löki ki” a pap gyors karnyújtása. Sikeres Célzó dobás esetén - a fohász CÉ-je +20 - az ellenfélen keresztülszalad a fantomfegyver. Ennek hatására a fohász Erősítésének minden E-je után 1k6 Fp-t veszít az áldozat, azonban a fohász túlütés esetén sem okoz ÉP-sebzést."
-} as PrayerInfo, {
+}, {
   name: "Élelemteremtés",
   domains: ["Élet", "Természet"],
   type: "Litánia",
@@ -267,7 +267,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "A pap rövid imával képes friss élelmet és italt teremteni. Ez, a fohász minden egyes E-je után, egy felnőtt ember számára egyetlen étkezésre elegendő. Az étel a környező természeti anyagokból formálódik, míg az ital a légkőrből kicsapódó párából alakul át. Különleges étel vagy ital a fohász segítségével nem teremthető. A megteremtett étel és ital minden egyéb tekintetben megegyezik a közönséges úton előállított élelmiszerekkel."
-} as PrayerInfo, {
+}, {
   name: "Életerő-csapolás",
   domains: ["Halál"],
   type: "Litánia",
@@ -277,7 +277,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "A Halál szféra ezen fohászával a pap életerőt vonhat el ellenfelétől, és saját gyógyulására használhatja fel. A papnak az életet tagadó igék kiejtése után meg kell érintenie áldozatát, ami sikeres Támadó dobást igényel - eredményesség esetén az alany a fohász minden egyes E-je után 1k6 Fp-t veszít. Ezt a mennyiséget a pap saját gyógyítására használhatja fel: egy okozott sebzés 1 Fp, vagy 1/5 Ép gyógyulást jelent."
-} as PrayerInfo, {
+}, {
   name: "Gyógyítás",
   domains: ["Élet", "Természet"],
   type: "Litánia",
@@ -293,7 +293,7 @@ export const PrayerValues: PrayerInfo[] = [{
     "table:Egyéb\tErősség\n\nMéreg szintjének 1-gyel csökkentése\t8 E\n\nValamely végtag bénultsága\t60 E\n\nBármely fogyatékosság (süketség, némaság, vakság)\t40 E",
     "A pap gyógyítás közben kezével megérinti a sebesültet (beteget), mialatt lehunyt szemhéjai mögül, ujjai hegyéből hófehér fény csordogál a beteg teste felé, lassan felizzítva, életre keltve annak auráját. Ezalatt a pap szent jelképével meg kell, hogy érintse az áldozat homlokát. Ha a sebesült (beteg) jelleme ellentétes a pap vallásának jellemével, körönként 50% az esély, hogy a gyógyítás csődöt mond, és a fohász egyáltalán nem jön létre, a felhasznált Kegy pontok pedig elvesznek.\n\nHa a mágia sikeresen kifejtette hatását, a sebek pillanatok alatt, látványosan, heg nélkül beforrnak és a betegségek is maradandó nyom nélkül - a fohász végrehajtása után azonnal - meggyógyulnak.\n\nSikertelen fohász esetén, a sebesült (beteg) állapota ugyanúgy tovább romlik - vagy stagnál -, mintha nem is kísérleteztek volna meggyógyításával.\n\nA pap csakis azoknak a sérüléseknek, betegségeknek és egyéb károsodásoknak meggyógyítására képes, amelyeket egyetlen fohásszal semlegesíthet. Elképzelhetetlen tehát, hogy amennyiben nincs elegendő Kegy pontja egy komolyabb sérülés orvoslására, akkor azt több részletben tegye meg.\n\n"
   ]
-} as PrayerInfo, {
+}, {
   name: "Időtlen álom",
   domains: ["Halál", "Lélek"],
   type: "Litánia",
@@ -307,7 +307,7 @@ export const PrayerValues: PrayerInfo[] = [{
     "A mágia áldozata mozdulatlanságba dermed, amiből természetes úton csak a fohász időtartamának lejártakor riad fel. E különös tetszhalál megtorpantja az életfolyamatokat, és szinte teljesen megállítja az öregedést: minden tíz Időtlen álomban töltött év alatt csak egy hónapot vénül a célpont. A papnak a fohász elkántálása után egy körön belül meg kell érintenie áldozatát, s amennyiben az ellenkezik, úgy a mágiaalkalmazónak sikeres Támadó dobást kell tennie. Ezután a mágia alanya az alábbi táblázat szerinti, véletlenszerű időtartamra Időtlen álomba merül.\n\nA pap semmilyen módon nem tudja befolyásolni az időtartamot, az minden esetben a véletlen függvénye. A fohász magasabb erősítésű Mágia szétoszlatással megszüntethető.\n\nA fohász nem evilági vagy élőholt lényeken nem fejti ki hatását.\n\n",
     "table:k100\tIdőtlen álomban töltött idő\n\n01-09\t1 nap\n\n10-16\t2 hét\n\n17-20\t5 év\n\n21-25\t6 perc\n\n26-30\t4 óra\n\n31-50\t3 nap\n\n51-57\t10 óra\n\n58-75\t3 kör\n\n76-80\t3 szegmens\n\n81-85\t22 év\n\n86-88\t7 nap\n\n89-92\t100 év\n\n93\t17 év\n\n94-96\t21 nap\n\n97-98\t9 óra\n\n99\t44 nap\n\n00\t333 év"
   ]
-} as PrayerInfo, {
+}, {
   name: "Igaz szó",
   domains: ["Lélek"],
   type: "Litánia",
@@ -318,7 +318,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "5 perc",
   save: ["Mentális"],
   description: "A fohász hatására a fohász hatókőrén belül a jelenlévők száját csak igaz szó hagyhatja el. A fohász hátránya, hogy a papra is hat, így ő sem hazudhat a körülötte állóknak, illetve senki nem tud hazudni, viszont semmi sem kényszeríti őket, hogy megszólaljanak. Komoly tárgyalásoknál sokszor van jelen pap csak azért, hogy a fohászt megidézze, s a tárgyaló felek még véletlenül se állíthassanak valótlant. A fohász ellen Mentái ME-ra jogosult minden érintett, s ha ez sikeres, rájuk a fohász nem hat."
-} as PrayerInfo, {
+}, {
   name: "Intő jel",
   domains: ["Halál", "Lélek"],
   type: "Litánia",
@@ -332,7 +332,7 @@ export const PrayerValues: PrayerInfo[] = [{
     "A pap fohásza szörnyű, felvillanó látomást hoz létre a kiválasztott lény elméjében. A látomás nem más, mint önnön halálának rövid, döbbenetes hatású képsora. A halál okát a pap választhatja meg, s ő vázolhatja fel a képsor egyes részeit is. A képsor 15-20 percnyi történetet sűrít 1 szegmensnyi időbe, s ebbe koncentrálja a benne testet öltött szenvedést is, melynek vége minden esetben halál. Az áldozat a sokktól különféle károsodásokat szenvedhet, ezeket k100 segítségével kell meghatározni:\n\n",
     "table:Dobás\tHatás\n\n1-23\tAz áldozat 4 órás kómába esik.\n\n24-43\tAz áldozat nem tud együtt élni a látottakkal, s tudata meghasad. Egyik fele meghal, személyiségének másik fele tovább él.\n\n44-59\tAz áldozat habzó szájjal áll 2kl0 körön át, védekezni is képtelen.\n\n60-74\tAz áldozat valódi holttestnek képzeli magát, s nem hajlandó megmozdulni, míg be nem bizonyítják neki, hogy életben van.\n\n75-99\tAz áldozat félelmében menekülni kezd, minél távolabb igyekszik kerülni a paptól.\n\n00\tAz áldozat idegrendszere teljesen felmondja a szolgálatot, a lény meghal."
   ]
-} as PrayerInfo, {
+}, {
   name: "Jellemérzékelés",
   domains: ["Lélek"],
   type: "Litánia",
@@ -343,7 +343,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Speciális",
   save: ["Asztrális"],
   description: "A fohász segítségével megállapítható, hogy egy adott jellem képviselői megtalálhatóak-e a hatótávolságon belül tartózkodó lények között. A mágia végrehajtójának pontosan meg kell határoznia, hogy melyik jellemre kíváncsi, és látnia kell érzékelésének alanyait. Ha több lényt vizsgál, a pap nem tudja meg, melyikük rendelkezik a keresett jellemmel, csupán annyit észlel, hogy ott van-e közöttük, avagy sem.\n\nA fohász végrehajtása közepette a papnak szent jelképét a markában tartva erősen koncentrálnia kell, s amennyiben kizökken a koncentrációból, a mágia csődöt mond."
-} as PrayerInfo, {
+}, {
   name: "Kárhozat",
   domains: ["Halál", "Lélek"],
   type: "Litánia",
@@ -357,7 +357,7 @@ export const PrayerValues: PrayerInfo[] = [{
     "A rövid, büntetésért vagy épp megvilágosodásért szóló fohász segítségével a pap felvillantja a célpont előtt a halál után rá váró kárhozat kínjait. Az így megélt gyötrelem pontos mása a jövőbeli (halál után bekövetkező) bűnhődésnek, így ha a Kárhozatot olyasvalaki ellen használják, aki szent életet él, avagy a vallása nem bünteti az életében elkövetett bűnöket, akkor a fohász semmilyen eredménnyel nem jár.\n\nA Kárhozat alanya az időtartam alatt tisztában lesz azzal, hogy ez a valóban rá váró kínok kóstolója, s így nem vonhatja ki magát a hatás alól.\n\nA papnak a kántálást kővető körben meg kell érintenie a fohász alanyát ahhoz, hogy a Kárhozat létrejöjjön - ha az áldozat ellenkezik, a papnak sikeres Támadó dobást kell tennie.\n\nA fohász nem evilági vagy élőholt lényekre hatástalan.\n\nA fohász hatása alatt az áldozat semmiféle tudatos cselekedetre nem képes, beszélni is csak szaggatottan és alig érthetően tud. A fohász maradandó fizikai nyomairól az alábbi táblázat tudósít, melyeket a Mágia szétoszlatása sem szüntet meg, csupán egy legalább 60 E-s Gyógyítás tüntethet el.\n\n",
     "table:k10 dobás\tEredmény\n\n1-3\tőszes csíkok a hajban\n\n4-5\tAz arc megráncosodik\n\n6-7\tA haj megőszül\n\n8-9\tA kéz maradandóan remeg\n\n10\tAz összes fenti tünet egyszerre"
   ]
-} as PrayerInfo, {
+}, {
   name: "Kétely",
   domains: ["Lélek"],
   type: "Litánia",
@@ -368,7 +368,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "6 kör",
   save: ["Mentális"],
   description: "A fohász hatására a pap saját hitük iránti kételyeket ébreszthet mindazokban, akik elvétik Mágiaellenállásukat. Általában nem látványos, inkább a háttérben meghúzódó, kiegészítő varázsként szokták alkalmazni. Akik a hatása alá kerülnek, elveszítik - ha volt addig - erős vallásos meggyőződésüket, kétségek merülnek fel bennük saját hitük tanításaival szemben."
-} as PrayerInfo, {
+}, {
   name: "Mérgezés",
   domains: ["Halál"],
   type: "Litánia",
@@ -379,7 +379,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Végleges",
   save: ["Egészség"],
   description: "A fohász hatására a pap ujjának hegyéről méreg jut az áldozat szervezetébe. Ha az áldozat ellenszegül, ehhez sikeres Támadó dobás szükséges, ez után az áldozatnak Egészségpróbát kell dobnia a méreg ellen. A fohász minden E-je után a pap egy pontot kap, melyekből a Méregkeverés képzettség leírásában szereplő táblázat szerint alkothatja meg a teremtett mérget. Ha a pap rendelkezik a Méregkeverés képzettség valamely fokával, az így nyert pontok nem adódnak össze a képzettségből származó pontokkal!"
-} as PrayerInfo, {
+}, {
   name: "Méreg lassítása",
   domains: ["Élet", "Természet"],
   type: "Litánia",
@@ -389,7 +389,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Leírásban",
   description: "A fohász hatására a méreg hatóideje a fohász minden egyes E-je után egy kategóriával lassul."
-} as PrayerInfo, {
+}, {
   name: "Meggyőzés",
   domains: ["Lélek"],
   type: "Litánia",
@@ -400,7 +400,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Speciális",
   save: ["Mentális"],
   description: "„Igazat mondani nem nehéz, csak bebizonyítani művészet”\n\n- tartja a kyr mondás. Gyakorta a legkiáltóbb esetekben is lehetetlen valakit akarata ellenére meggyőzni. Vagy azért, mert az igazság a legritkább esetben a tetszésünk szerint való, vagy mert büszkeségünkkel ellenkezik, hogy beismerjük tévedésünket. A Szakrális mágia ezen darabja, az igazság bebizonyítására szolgál.\n\nA pap a fohász végrehajtása után meg tudja győzni állításai igazáról beszélgető - illetve vitapartnereit - ha azok valóban igazak. Ha az érvek, vagy állítások akár csak minimális olyan hazugságot is tartalmaznak, amelynek valótlan voltával a pap tisztában van, a fohász kudarcot vall. Aki a hatótávon belül elvéti Mágiaellenállását, elfogadja a pap érveit, és belátja annak igazát. Ez azonban semmilyen cselekedetre nem kőtelezi, az továbbra is a belátásától függ.\n\nA fohász csak akkor működik, ha a pap olyan nyelven beszél, amelyet a hallgatóság megért, s emellett látják is egymást. A fohász nem evilági és élőholt lényekre nem fejti ki hatását. A Meggyőzés időtartama addig tart, míg a pap be nem fejezi az érvelést."
-} as PrayerInfo, {
+}, {
   name: "Őrző aura",
   domains: ["Élet"],
   type: "Litánia",
@@ -410,7 +410,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "A pap képes a hatótávolságon belül egy területet - amennyiben nem valamely más vallás felszentelt helyéről van szó - őrző aurával ellátni. Amíg a fohász kifejti hatását, a pap értesül a közeledő lényekről, amint azok elérik az őrző aura határát.\n\nAz őrző aurát nem tudja kijátszani semmiféle láthatatlanság vagy álcázó mágia, sem a pszi Érzékelhetetlenség vagy Jelentéktelenség diszciplínája.\n\nA hatótávolságon belül csak olyan idegen - nem a pap, illetve kompániájához tartozó személy által megidézett - mágia jöhet létre, melynek erőssége meghaladja az őrző aura erősségét."
-} as PrayerInfo, {
+}, {
   name: "Parancs",
   domains: ["Lélek"],
   type: "Litánia",
@@ -421,7 +421,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "2 kör",
   save: ["Mentális"],
   description: "A pap képes egyszerű, legfeljebb néhány tagú parancs kiadására. A megfogalmazás több szavas is lehet, csak a feladat ne számítson összetettnek. Tipikus parancsok: „Takarodj!”, „Rohanj el!”, „Menekülj!”, „Hallgass!”, „Állj fel!”, „Feküdj a földre!”, „Támadd meg!”, „Ne védekezz!\". Remek ellenpélda a „Szolgálj!”. Ezt nem lesz képes teljesíteni, egyszerűen követni fogja a papot. A „Pusztulj!” utasításra az áldozat Összerogy, mintha halott lenne, de az időtartam lejártával magához tér anélkül, hogy valójában bármi baja történt volna. Amennyiben a parancs félreérthető vagy nem egyértelmű, a mágia megtörik. Az öngyilkosságra való felszólítást figyelmen kívül hagyja, a fohász azonnal megtörik. A befolyásolt lény az időtartam lejártával tisztában lesz azzal, hogy a pap parancsára cselekedett.\n\nA Parancs végrehajtásához a papnak látnia kell áldozatát és olyan nyelven szólnia hozzá, amit az megért. Az áldozat, ha elvétette Mágiaellenállását, akkor a tőle telhető legjobb képességei szerint megpróbálja végrehajtani a pap utasítását, amíg az időtartam tart.\n\nA fohász nem evilági vág)' élőholt lényekre nem fejti ki hatását."
-} as PrayerInfo, {
+}, {
   name: "Rettegés",
   domains: ["Halál", "Lélek"],
   type: "Litánia",
@@ -432,7 +432,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "5 perc",
   save: ["Asztrális"],
   description: "A fohász hatására a pap sokkal hatalmasabbnak és félelmetesebbnek tűnik ellenfelei szemében, szinte legyőzhetetlennek látszik. Ezért a hatótávolságon belül minden ellenfél legjobb képessége szerint menekülni kezd, ha nem sikerül a Mágiaellenállása. Az időtartam lejártával csak akkor térnek vissza, ha eredendően komoly céljuk volt a pappal és kísérőivel. Ily módon például útonállók bandája nem fog visszatérni, ha egyszer lélekszakadva elmenekült, hiszen továbbra is tartanak a pap hatalmától.\n\nHa mégis harcra kényszerítik őket, a Harc félelem hatása alatt negatív módosítóival küzdenek:\n\nKÉ: a támadóé, TÉ: -20, VÉ: +10, CÉ: —"
-} as PrayerInfo, {
+}, {
   name: "Szent tűz",
   domains: ["Természet"],
   type: "Litánia",
@@ -442,7 +442,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "A fohászt csak szabad ég alatt lehet megidézni, segítségével a pap tűzbe boríthatja ellenfelét. A papnak rá kell mutatnia az áldozatra, s hangosan zengenie kell istene nevét. Ennek hatására mintha maguk az istenek dühödtek volna meg az áldozatra, a fellegek közül lesújt egy lángoszlop, s tűzbe borítja a célpontot. A tűz az első körben Elemi tűz, s a fohász minden egyes E-je után 1k6 Sp-t sebez. A második és további körökben csak a meggyújtott anyagok természetes tüze sebzi az áldozatot, míg az el nem oltja ruháit és felszerelését. Minden gyúlékony anyag automatikusan lángra kap a fohász hatására."
-} as PrayerInfo, {
+}, {
   name: "Szétzúzás",
   domains: ["Természet"],
   type: "Litánia",
@@ -452,7 +452,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Végleges",
   description: "A fohász hűen tükrözi azt a tényt, hogy a Szakrális mágia sokszor messze többre képes, mint az Anyagi Sík energiáival manipuláló bármely más varázslási mód. A papok isteni forrású hatalma többször is megsérti a varázslók által leírt, természetet irányító tőrvényeket - ebben az esetben is. A fohász hatásának ugyanis nem szab határt a Személyes Aura jelentette védelem.\n\nA pap a fohász alkalmazásával porrá zúzhat egy általa kiválasztott, nem mágikus, élettelen tárgyat. Ez lehet kő, fém, arany, bármi. A szétzúzható tárgy mérete a felhasznált Kegy pontok számától függ. A fohász minden E-je után 1 ynevi font tömegű tárgy tehető semmivé.\n\nA pusztulás teljes, ráadásul meglehetősen látványos. A kiszemelt tárgy szilánkokra hull, s a szilánkok még további darabokra esnek szét. Mindez villámgyorsan történik, az apró, szerteszét repülő maradványok folyamatosan porladnak, a tárgy eredeti helyétől nagyjából fél ynevi láb sugarú körben már porszemekként hullnak alá. A fohász használatában számos lehetőség rejlik: könnyen megszabadíthatjuk ellenfelünket drága lánc- vagy sodronyingétől, esetleg féltett buzogányától, kétkezes kardjától."
-} as PrayerInfo, {
+}, {
   name: "Túlvilági lények elűzése",
   domains: ["Élet", "Halál", "Lélek"],
   type: "Litánia",
@@ -463,7 +463,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Végleges",
   save: ["Speciális"],
   description: "A pap ezen fohásza más síkokról átkerült lényeket taszíthat ki az Elsődleges Anyagi Síkról. A könyörgés közben csak rámutat a kiválasztott lényre, s egy parancsszóval megtagadja jelenlétét az Elsődleges Anyagi Síkon. Ha a pap ismeri a lény igazi nevét, s ezt is használja a fohászban, az erősség 20 E-vel növekszik. Az űzés csak akkor sikeres, ha a fohász erőssége meghaladja a másvilági lény aktuális életerejét."
-} as PrayerInfo, {
+}, {
   name: "Útmutatás",
   domains: ["Lélek"],
   type: "Litánia",
@@ -474,7 +474,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "10 perc",
   save: ["Mentális"],
   description: "A fohász lehetővé teszi, hogy a pap tárgyak vagy személyek irányát felderítse. A fohász hatására a papnak felfedi a keresett tárgyak vagy személyek helyét, illetve irányát. Ez nem jelenti a távolság tökéletes ismeretét és az irányzók teljes pontosságát, ám ha a pap az isteni gondviselésre bízza magát, megérzései mindig a helyes útra vezérlik. A fohász időtartamának lejártáig hozzávetőlegesen érzi, hogy milyen messze és merrefelé lehet a célja, majd az érzések elvesznek - de a már így betájolt irányban tovább haladhatnak. Megjegyzendő, hogy a fohásszal nemcsak tárgyak, de városok, épületek is kereshetőek, így a pap nemigen tévedhet el. Hasznos tudomány Ynev hatalmas világában.\n\nTárgyak kereséséhez igen pontos leírással kell rendelkezni. Elbeszélés alapján csak igen érzékletes leírás esetén van esély a megtalálására, a biztos sikerhez egy rajzra vagy emlékképre van szükség. Nem egy esetben megtörtént, hogy a kísérletező papot hasonló, de nem a keresett tárgyhoz vezette el a fohász.\n\nSzemély keresése esetén tudni kell az illető életkorát, hozzávetőleges kinézetét, és azt a nevét, amit születésekor a névadás szertartás keretében adományoztak neki. Később felvett álnevek esetén a varázslat csak a leírásra támaszkodik, s könnyen tévútra vezetheti alkalmazóját.\n\nA keresett személy Mágiaellenállásra jogosult a fohász ellen, ha ez sikeres, jelenléte titokban marad."
-} as PrayerInfo, {
+}, {
   name: "Villámcsapás",
   domains: ["Természet"],
   type: "Litánia",
@@ -484,7 +484,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Egyszeri",
   description: "A fohászt csak szabad ég alatt lehet megidézni. A pap éles kiáltása nyomán hirtelen felmorajlik az ég és a jobbja által kijelölt helyre villámnyaláb sújt le a magasból. Ellentétben a mágiahasználók villámaival, ez nem az ujjhegyéből, hanem az áldozat feje feletti magasságból csap le, így fedezékbe vonulni, pajzsot a pap felé tartani teljesen felesleges. A kiszemelt célpontot látnia kell a papnak, s felé kell mutatnia a fohász alkalmazásakor. A villám sebzése a fohász minden E-je után 1k10 Sp. A villám minden esetben a fejet találja el."
-} as PrayerInfo, {
+}, {
   name: "Vízfakasztás",
   domains: ["Élet", "Természet"],
   type: "Litánia",
@@ -494,7 +494,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Egyszeri",
   description: "A Vízfakasztás segítségével a pap a fohász minden egyes E-je után 1 liter vizet képes fakasztani valamely természeti tárgyból; avagy felszínre hívható a talajban lévő víz is. A víz teljesen természetes eredetű, tiszta és iható. A pap csak olyan tárgyból (pl. szikla vagy fatörzs) képes vizet fakasztani, melyet nem itat át semmiféle mágia. Ha az elő- csorgó vizet nem fogják fel edénybe, akárcsak a közönséges víz, szétfolyik."
-} as PrayerInfo, {
+}, {
   name: "Átokérzékelés",
   domains: ["Élet", "Lélek"],
   type: "Rituálé",
@@ -504,7 +504,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Egyszeri",
   description: "A fohász megfelel a boszorkányok és boszorkánymesterek Átokfejtés varázslatának, de minden típusú átkot képes felismerni, s ismérveit a pap tudomására hozni, ki az imádság során istenétől kér útmutatást. A fohász megmutatja az átok pontos hatását, s hogy ki alkalmazta azt az áldozaton."
-} as PrayerInfo, {
+}, {
   name: "Csend",
   domains: ["Természet"],
   type: "Rituálé",
@@ -514,7 +514,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "3 m",
   duration: "1 kör",
   description: "A fohász végrehajtásakor a hatótávolságon belül eső területen eluralkodik a teljes csend. Semmilyen zaj nem hallható - beszélgetni lehetetlen, a fohászok és varázslatok hangkomponense elvész (mindazon varázslatok, melyek bűvigék kiejtését igénylik, nem hozhatók létre. Ha valaki mégis megpróbálkozik vele, a hatás nem jön létre, és a felhasználni kívánt Mana avagy Kegy pontok nem vesznek el).\n\nA fohásszal megcélozható a talaj, a levegő egy darabja, de rá lehet mondani élőlényre vagy tárgyra is. Az így elnémított ember vagy tárgy mozgásakor a Csend a fohász alanyával halad, tehát az semmiféle zajt nem üthet, hangot nem hallathat.\n\nA Csend teremtéséhez a papnak meg kell érintenie szent jelképével azt a középpontot, melyből a fohász kisugárzik. Ha ez élőlény, s ellenáll, úgy a papnak sikeres Támadó dobást kell tennie. A felhasznált Kegy pontok többszörözésével az időtartam megnyújtható, a hatótávolság azonban nem növelhető."
-} as PrayerInfo, {
+}, {
   name: "Életérzékelés",
   domains: ["Élet"],
   type: "Rituálé",
@@ -524,7 +524,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "A fohász igéinek elsorolása után a pap megtudja, hogy a hatótávolságon belül van-e élet. A nővényi, állati és magasabban fejlett életjelenségek között különbség észlelhető, és a fohász tájékoztat a jelenlévő élőlények számáról is, azonban hollétüket nem fedi fel. Az Életérzékelés csak természeti lények kisugárzásait képes felfedezni, tehát a Külső, illetve Belső Síkokról származó teremtmények, valamint az élőholtak rejtve maradnak a fohász előtt. Az érzékelésnek nem vet gátat sem fal, sem egyéb természetes vagy mesterséges akadály.\n\nAz Életérzékelés felfedi a tetszhalál állapotába dermedt lények, a láthatatlanságba burkolózók vagy az Érzékelhetetlenség diszciplínával rejtőzők jelenlétét is."
-} as PrayerInfo, {
+}, {
   name: "Fanatizálás - Bátorság",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -534,7 +534,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "10 m",
   duration: "5 perc",
   description: "Csak a pap szövetségeseire van hatással, NJK-katonák harci kedvének növelésére használatos. A közös imádság hatására a katonák Bátorsága 6 ponttal emelkedik, szinte verhetetlennek érzik majd magukat. Erejük látszólag megsokszorozódik, a legkisebb esélyekkel szemben is harcolni fognak. A papnak hosszan, hangosan kell elmondania a fohász igéit, s az 100 ynevi láb sugarú körön belül minden kiválasztottra hatni fog. Ebben az esetben a 15 alaphoz +1 Kegy pont elköltése szükséges fejenként.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Fanatizálás - HM",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -544,7 +544,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "10 m",
   duration: "5 perc",
   description: "Csak a pap szövetségeseire van hatással. Az első alkalmazási mód inkább játékos karakterek esetében hasznos. A pap istenéhez intézett fohászának hatására a harcban minden félelmük elvész, különös, belső energiák árasztják el őket, sokszoros erővel vetik magukat a küzdelembe. Minden közelharci harcértékük, KÉ, TÉ, VÉ-jük 10-zel emelkedik, és semmiféle félelem alapú mágia nem érintheti őket a fohász hatóideje alatt. Az első módszer alkalmazásakor a Kegy pont igény a 15 alapponton kívül 5 pont fejenként.\n\n\n\n"
-} as PrayerInfo, {
+}, {
   name: "Hang",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -554,7 +554,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Korlátlan",
   duration: "Egyszeri",
   description: "A fohász segítségével a pap telepatikus üzenetet küldhet egy konkrét, általa ismert személynek. Az üzenet a címzett elméjében szólal meg, a pap hangján. A szöveg vagy dallam hossza nem haladhatja meg az 1 percet, de más megkötés nem vonatkozik rá."
-} as PrayerInfo, {
+}, {
   name: "Hősi lélek",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -564,7 +564,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "10 kör",
   description: "A fohász hasonlít az Áldáshoz, de sokkal nagyobb hatalmú annál. Csak egyetlen kiválasztott személyre használható, akinek vallása (jelleme) meg kell egyezzen a pap vallásával (jellemével). A mágia hatására a személy mindhalálig harcolni fog. Ha Fp-i a alá esnek, akkor is harcképes marad, egészen a halálig, azaz az Ép-k elfogyásáig. A hős harci értékei is megváltoznak: KÉ: +15, TÉ: +30, VÉ: +10. Akaratereje és Egészsége 1k6-tal nő (ám nem emelkedhet a faji maximum- érték fölé), s ez hat a méregellenállásra is."
-} as PrayerInfo, {
+}, {
   name: "Izzó vér",
   domains: ["Halál"],
   type: "Rituálé",
@@ -574,7 +574,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "Az Izzó vér a Vérmágia fohászainak egyik leggonoszabbika: az áldozat saját vére válik önnön elpusztítójává, ha a körülmények megfelelnek erre. A fohász hatása meglehetősen sajátos. Alkalmazása esetén az ellenfél vére, ha levegőre kerül - például kapott seb miatt - lángra lobban. A hatás döbbenetes. A több sebből vérző áldozat, még ha sérülései nem is lennének végzetesek, a lángok őrök oltásába hal bele, ha be nem kőtőzik. Több seb esetén minden egyes mozdulata, mely a vérzés csillapítására irányul, az ellenkező oldalon feltépi a sebeket, fellobbannak hát a lángok. Ekkor kétségbeesetten próbálja eloltani a bőrén csörgő, eleven tüzet, mire a lassan már-már lecsillapodó vérzés kezdődik elölről az ellenkező oldalon.\n\nA fellobbanó tűz nagysága persze arányos az elvesztett vérrel, így a lángok sebzése is ettől függ. A tűz minden körben fele annyi Fp-t sebez, mint amennyi az eredeti seb okozta veszteség volt. Ezek után a sebet a fellobbanó lángok kiégetik, és nem vérzik tovább. Tehát az áldozat egy sebből csak egyszer szenvedi el az Izzó vér okozta sebzést. A lángok a közönséges anyagokat nem gyújtják meg, egyedül az áldozat vérére vannak hatással"
-} as PrayerInfo, {
+}, {
   name: "Káoszkard",
   domains: ["Halál", "Természet"],
   type: "Rituálé",
@@ -584,7 +584,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "6 kör",
   description: "A rövid isteni segítségkérés - mely leginkább dühödt üvöltésre emlékeztet - nyomán a pap vagy az általa megérintett személy kezében egy hosszúkard anyagiasul. Egyenes, kétélű pengéjű, fekete színű, túlburjánzó kaotikus mintázattal ékített fegyver, melynek egészen apró, szinte jelzésszerű a keresztvasa.\n\nKÉ: 25, TÉ: 25, VÉ: -10, CÉ: 2k6+2\n\nA Káoszkard forgatója nem használhat másik kezében semmilyen fegyvert vagy pajzsot - ha ilyesmi lenne nála, azt azonnal eldobja. A Káoszkardot nem lehet eldobni vagy másnak átadni, amíg az időtartam tart. Ha nem harc közben jelent meg, akkor is reagál a legkisebb provokációra: támadásra kényszeríti gazdáját. A fohász nem akadályozza meg, hogy a Káoszkardot a fohászt létrehozó pap ellen használják.\n\nAmennyiben a pap nem önmagát jelöli meg a fegyver forgatójául, s az áldozat ellenkezik, a papnak sikeres Támadó dobást kell tennie.\n\nA felhasznált Kegy pontok többszörözésével csak az időtartam növelhető, a fegyver harcértékei ettől nem változnak. A Káoszkard használatának nem előfeltétele a fegyver- használat képzettség elsajátítása, ha a pap nem is képzett benne, úgy forgathatja, mintha 2. fokú képzettséggel bírna. Amennyiben a fegyveres képzettsége ennél magasabb, az ebből adódó bónuszok érvényesülnek. Fegyvertöréssel, Lefegyverzéssel nem támadható. Két Káoszkardot egyetlen karakter sem forgathat."
-} as PrayerInfo, {
+}, {
   name: "Köd felidézése",
   domains: ["Természet"],
   type: "Rituálé",
@@ -594,7 +594,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "A pap ezen fohásszal ködöt idéz a kijelölt terület fölé. A kis kiterjedésű, de annál sűrűbb kőd felhő az Időtartam lejártáig stabil marad, s utána is fennmaradhat, ha a szél szét nem oszlatja. Az Időtartam lejárta után a kőd már csak a légmozgás játéka, nem feltétlen marad a kijelölt területen, hanem tovább sodródik, vagy eloszlik. A kődben tartózkodó személyek a kővetkező negatív harcérték módosítókat szenvedik el:\n\nKÉ: -, TÉ: -10, VÉ: -10, CÉ: -50*\n\n* azokra is vonatkozik, akik a kődön kívülről használnak célzó fegyvert a kődben tartózkodókkal szemben"
-} as PrayerInfo, {
+}, {
   name: "Láthatatlanság evilági lények előtt",
   domains: ["Természet"],
   type: "Rituálé",
@@ -604,7 +604,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "6 kör",
   description: "A pap képes egyetlen halk segélykérő igével ajkán pillanatok alatt láthatatlanná válni bármilyen - az Elsődleges Anyagi Síkról származó - teremtmény előtt. Az így nyert láthatatlanság nem észlelhető sem infralátás, sem ultralátás segítségével, s csupán érzékelő varázslatokkal, fohászokkal vagy diszciplínával leplezhető le. A pap látható marad minden más síkról származó, vagy élőholt lény előtt."
-} as PrayerInfo, {
+}, {
   name: "Láthatatlanság túlvilági lények előtt",
   domains: ["Élet"],
   type: "Rituálé",
@@ -614,7 +614,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "6 kör",
   description: "A pap fohászra kulcsolja kezét, hogy istene mentse ki szorultságából, majd egy szemvillanás alatt láthatatlanná válik minden olyan lény előtt, mely nem az Elsődleges Anyagi Síkról származik. Ugyanígy nem érzékelhető az élőholt lények számára sem. Ezek a lények csak akkor pillanthatják meg, ha valamilyen mágiához folyamodnak."
-} as PrayerInfo, {
+}, {
   name: "Méregérzékelés",
   domains: ["Élet", "Természet"],
   type: "Rituálé",
@@ -624,7 +624,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Leírásban",
   duration: "3 kör",
   description: "A pap ezen fohásza segítségével meg tudja mondani, hogy a megérintett tárgy vagy személy mérgezett-e, illetve az a helyiség, amelyben tartózkodik, körülötte 3 ynevi láb sugarú területen belül tartalmaz-e valamilyen légmérget. A fohász minden mérget érzékel, megállapítja típusát, szintjét és hatását is."
-} as PrayerInfo, {
+}, {
   name: "Óvó fegyver",
   domains: ["Élet"],
   type: "Rituálé",
@@ -634,7 +634,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "6 kör",
   description: "A fohász hatására olyan fegyver jelenik meg a pap, vagy az általa kiválasztott személy kezében. A fegyver kékes színben fog tündökölni - kinézetre egyszerű, dísztelen. Harcértékei:\n\nKÉ: - TÉ: - VÉ: 45 CÉ: -\n\nCsak a Harcrendszerben leírt Védekező harc folytatható vele. Ha támadásra kívánják használni, azonnal szertefoszlik. A fegyver másik kézben csak pajzsot tűr meg, s ha azzal támad alkalmazója, ugyanúgy eltűnik, mintha őt használták volna támadásra. A fegyvert nem lehet eltörni, nem üthető ki a kézből.\n\nAz Óvó fegyver használatának nem előfeltétele a Fegyver- használat képzettség elsajátítása, ha a pap nem is képzett benne, úgy forgathatja, mintha 2. fokú képzettséggel bírna. Amennyiben a fegyveres képzettsége ennél magasabb, az ebből adódó bónuszok érvényesülnek. Két Óvó fegyvert egyetlen karakter sem forgathat."
-} as PrayerInfo, {
+}, {
   name: "Szférák zenéje",
   domains: ["Élet", "Lélek", "Természet"],
   type: "Rituálé",
@@ -644,7 +644,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "1 óra",
   description: "A pap megidézheti a tökéletes harmónia dallamait, a Szférák zenéjét. A fohász hatására a levegő megtelik csodás hangokkal, s minden lény, aki a hatótávon belül tartózkodik, egy óra elteltével frissebbnek és kipihentebbnek érzi magát. Fájdalomtűrés pontjaik a pap szintjeinek háromszorosával növekednek, s annyi Pszi pontot kapnak vissza, mintha 2 órát meditációval töltöttek volna el. Ha valaki az egy óra letelte előtt kilép a körből, nem gyógyul, s Pszi pontjai sem töltődnek újra, mert megtörte a harmóniát, ami a folyamat előidézője volt."
-} as PrayerInfo, {
+}, {
   name: "Transz",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -654,7 +654,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 óra",
   description: "A fohász órájában a pap mély transzba esik. Miután elcsitultak lelkében az anyagi világ zavaros képei, tudata átcsúszik a megbékélés csendes ürességébe, s egy örökkévalóságnak tűnő óráig lebeg eme üdvözült állapotban két világ határán. Amennyiben égi pártfogója érdemesnek találja rá, megnyilatkozik előtte.\n\nA pap egyetlen kérdést tehet fel urának, aki ha a kérdést fontosnak érzi, avagy a pap sok szolgálatot tett neki a közelmúltban, válaszol a kérdésre. A papok ilyenkor rendszerint Áldozatot is mutatnak be égi pártfogójuknak.\n\nA válasz az istenség természetétől függően nem feltétlenül lesz igaz, s nem is biztos, hogy az istenség kimerítő válasszal felel rá! Általában homályos kinyilatkoztatásokat, jóslatszerű talányos feleletet kap, amiből már neki kell kitalálnia a megoldást.\n\nHa a pap túl gyakran, vagy jelentéktelen esetben használja ezt a fohászt, istene figyelmen kívül hagyja a túlbuzgó egyházfi kérdéseit, és maximális Kegy pontjainak számát 1-gyel csökkenti."
-} as PrayerInfo, {
+}, {
   name: "Veszély észlelése",
   domains: ["Élet", "Lélek", "Természet"],
   type: "Rituálé",
@@ -664,7 +664,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "15 perc",
   description: "Istene segítségével a pap tudomást szerez a rá leselkedő veszélyek létezéséről - pontos helyéről, természetéről azonban nem. Az iránnyal és távolsággal nagyjából tisztában lesz, ám a veszély mibenléte teljesen ismeretlen marad. A fohász csupán annyi segítséget nyújt, hogy különbséget tesz a veszély fokozatai között, ám mindig csak a legveszélyesebbet jelzi."
-} as PrayerInfo, {
+}, {
   name: "Véráldozat",
   domains: ["Halál"],
   type: "Rituálé",
@@ -674,7 +674,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "1 óra",
   description: "A fohászt nagyrészt emberáldozó vallások alkalmazzák. Az áldozat vére a pap istenét dicsőítő imája után kerül áldozati bemutatásra. A pap, miután a fohászt létrehozta, az ellenfél életerejét istenéhez irányítja, kiontott vére vaskos füstként emelkedik az egek felé. így az áldozat az időtartam alatt (pl. harcban, vagy egyéb sebzésből kifolyólag) vesztett Fp-t és Ép-t természetes úton nem szerezheti vissza, s a Szakrális mágia Gyógyítás fohásza is csak a szokásos mennyiség negyedét gyógyítja rajta. A tapasztalati mágiák formulái azonban továbbra is rendesen műkődnek."
-} as PrayerInfo, {
+}, {
   name: "Vérgát - Egyedre",
   domains: ["Halál"],
   type: "Rituálé",
@@ -684,7 +684,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "10 m",
   duration: "1 nap",
   description: "A Vérmágia védőfohásza, mely távol tarthatja a nem kívánt behatolókat a pap által kijelölt területről. Ehhez a területet vérrel kell megjelölni, illetve a rituálé szőve gének citálása közben körberajzolni határait. A fohász eredményeképp a gátat csak az az egy lény nem lépheti át, melynek vérével azt felrajzolták.\n\nA rajzoláshoz felhasznált vér lehet kevert is. Annyi személy vagy lény vérét tartalmazhatja, ahányadik szintű a pap. A lények tartozhatnak egyazon fajba, avagy több különböző fajba is, ez utóbbi esetben minden képviselt faj egyedei számára áttörhetetlen lesz a gát.\n\nA Vérgát vonalát bárki megtörheti, akinek vérét (illetve a második esetben vele egy fajba tartozó vérét) nem tartalmazza a rajzolat. A Vérgátat felrajzoló pap istenének többi felkentje szabadon keresztülsétálhat a Vérgát vonalán, még akkor is, ha ahhoz a fajhoz tartozik, amelynek véréből rajzolták.\n\nA Kegy pontok többszörözésével a Vérgát mérete és a védelem időtartama egyaránt növelhető."
-} as PrayerInfo, {
+}, {
   name: "Vérgát - Fajra",
   domains: ["Halál"],
   type: "Rituálé",
@@ -694,7 +694,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "10 m",
   duration: "1 nap",
   description: "A Vérmágia védőfohásza, mely távol tarthatja a nem kívánt behatolókat a pap által kijelölt területről. Ehhez a területet vérrel kell megjelölni, illetve a rituálé szőve gének citálása közben körberajzolni határait. Minden, az adott lény fajába tartozó kreatúra távol tartható, legyen az ember, ork, tigris vagy árnyjáró. A rajzoláshoz felhasznált vér lehet kevert is. Annyi személy vagy lény vérét tartalmazhatja, ahányadik szintű a pap. A lények tartozhatnak egyazon fajba, avagy több különböző fajba is, ez utóbbi esetben minden képviselt faj egyedei számára áttörhetetlen lesz a gát.\n\nA Vérgát vonalát bárki megtörheti, akinek vérét (illetve a második esetben vele egy fajba tartozó vérét) nem tartalmazza a rajzolat. A Vérgátat felrajzoló pap istenének többi felkentje szabadon keresztülsétálhat a Vérgát vonalán, még akkor is, ha ahhoz a fajhoz tartozik, amelynek véréből rajzolták.\n\nA Kegy pontok többszörözésével a Vérgát mérete és a védelem időtartama egyaránt növelhető."
-} as PrayerInfo, {
+}, {
   name: "Álca",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -704,7 +704,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "10 perc",
   description: "A fürkésző mágiák, fohászok és diszciplínák elől rejtheti el magát a pap ily módon. Az összes típusú, őt fürkésző hatást nem lehetetlenné teszi, hanem megtéveszti (többet vagy kevesebbet mutat a pap képességeiből, az elméjét óvó pajzsokból, magánál hordott varázstárgyakból stb.). A KM feladata annak eldöntése, hogy az adott varázslat ismeretében „félretájékoztassa” azt, aki a fohász alanyára kíváncsi. A különféle befolyásoló varázslatok ellen nem nyújt védelmet, csupán az érzékelő jellegűeket vezeti félre."
-} as PrayerInfo, {
+}, {
   name: "Álomút",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -714,7 +714,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 óra",
   description: "Az isteni útmutatás segítségével a pap végigjárhat egy olyan álmot, melynek alaptörténetét önnön maga határozza meg. így előre megélhet olyan cselekedeteket, melyeket a későbbiekben majd végre kell hajtania, kielemezhet megoldásra váró történeteket vagy újra átélhet egy már megtörtént eseményt.\n\nHátránya a fohásznak, hogy a pap nem nyer vele új információkat, pusztán a már birtokában lévőket rendezi egységes egésszé; miként egy szeme előtt pergő történetben. Az álom nem készíti fel a véletlenre és az ismeretlenre, csak az előre kiszámítható tényeket, apró momentumokat, figyelmetlenségeket és összefüggéseket mutatja meg egy cselekménysor formájában. Az álom eseményeit a KM meséli el, ő az, aki a pap emlékeit „rendezi”, kiegészíti, figyelmét elfeledett momentumokra felhívja."
-} as PrayerInfo, {
+}, {
   name: "Égi szekér",
   domains: ["Természet"],
   type: "Rituálé",
@@ -724,7 +724,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "1 óra",
   duration: "1 óra",
   description: "A fohász megidéz egy energiákból szőtt kocsit, melyet két légelementál vontat. A kocsin legfeljebb hat személy utazhat, s akit a pap nem enged fel a kocsira, az egyszerűen átesik rajta. A szekér jogosult utasai ezzel szemben teljes biztonságban érezhetik magukat, az energiaszövedék biztosan tartja őket a levegőben. A kocsi messziről alig látható, s közelről is inkább csak a levegő furcsa vibrálásához hasonlítható. A két elementál is teljesen átlátszó, de lehetséges megérinteni őket. A szekér képes repülni, és akár égen, akár szárazföldön 40 ynevi mérföldet képes megtenni óránként. Ha a két légelementált elpusztítják, a kocsi lassan ereszkedni kezd, s egy percen belül földet ér."
-} as PrayerInfo, {
+}, {
   name: "Elemi lények szólítása",
   domains: ["Természet"],
   type: "Rituálé",
@@ -734,7 +734,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "10 perc",
   description: "Ezen idéző fohász a pap istenéhez szóló segítségkérésből, majd az adott őselemi sík jelének levegőbe rovásából áll. A litánia kisebb erősségű elementál hívását teszi lehetővé. A fohász kaput nyit az Elemi Síkok egyikére, s egy, a pap által kiválasztott elemi szolga megjelenik a pap által megjelölt helyen az Elsődleges Anyagi Síkon. A lény engedelmeskedik a pap parancsainak, de önálló gondolkodásra nem képes, s bonyolult utasításokat követni is képtelen.\n\nTulajdonságai a Bestiárium c. fejezetben olvashatóak a 489. oldalon."
-} as PrayerInfo, {
+}, {
   name: "Földrengés",
   domains: ["Természet"],
   type: "Rituálé",
@@ -744,7 +744,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "5 km",
   duration: "5 perc",
   description: "Ez a hatalmas erejű fohász vad földrengést idézhet, s ezzel falvakat, kisebb városokat, városrészeket dönthet romba. A pap kijelölheti a rengések epicentrumát, egy tőle maximum 5 mérföldre levő pontot A rengések 3-4 mérföldre terjednek középpontjuktól, s legerősebben az epicentrumban lesznek érezhetők. Még a házak és fák sem állhatnak ellen a földrengés erejének. A fából és agyagból tákolt épületek összeroskadnak, a kőből épültek csak megrongálódnak.\n\nAnnak megállapítása, hogy a területen tartózkodók mekkora sérülést szenvednek el, a KM jogkőre."
-} as PrayerInfo, {
+}, {
   name: "Gólemteremtés",
   domains: ["Élet", "Halál", "Természet"],
   type: "Rituálé",
@@ -754,7 +754,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "A fohász lehetővé teszi a varázslóknál leírt kő-, illetve vaslények készítését, egy egyszerűbb és hatásosabb módon. A gólem készítésére a varázslók több mozaikot is felhasználnak, a papok ezt egyetlen fohásszal képesek elérni, ám az előkészítő munka náluk hosszabb.\n\nA szobor elkészítéséhez 4. fokú Élettan képzettség szükséges, és 12 napon át kell Szertartás fohászt celebrálni rá. Ha a 12 nap letelt, elérkezik a tizenharmadik, a teremtés napja. A pap ekkor használja a Gólem teremtés fohászt, ami a testbe életet lehel. Ezek után a gólem teljesen megfelel a varázslóknál leírt gélemnek; a pap irányíthatja, utasításokat adhat neki. Egy pap egyszerre csak egy gólemet birtokolhat. A gólemek részletes leírását a könyv végén található Bestiráiumban, a 492. oldalon olvashatod."
-} as PrayerInfo, {
+}, {
   name: "Hazatérés",
   domains: ["Élet"],
   type: "Rituálé",
@@ -764,7 +764,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Egyszeri",
   duration: "Egyszeri",
   description: "Ezzel a fohásszal a pap minden körülmények között visszakerül abba a templomba, ahol pappá avatták. A visszatérés az Elsődleges Anyagi Sík minden pontjáról megtörténhet, a fohásznak nem szab gátat egyetlen mágiaforma sem. A fohász szavainak kimondása után a pap azonnal teleportál, s a templom oltára előtt találja magát."
-} as PrayerInfo, {
+}, {
   name: "Holtak megelevenítése",
   domains: ["Halál"],
   type: "Rituálé",
@@ -774,7 +774,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "5 perc",
   description: "A rituálék ezen fohászának segítségével a pap pillanatnyi uralmat nyerhet az elhunytak teste felett. A pap könyörgése nyomán a holttestek megrázkódnak és túlvilági életet nyernek, tetemek emelkednek fel a földről (emberi és állati holttestek egyaránt), és megelevenedvén engedelmeskednek megidézőjük utasításainak.\n\nA testek lassú mozgással követik mozgatójuk parancsait, s zaurakként harcolnak (lásd a Bestiárium c. fejezetet a 484. oldalon). Ha a fohász időtartama lejár, a holtak a földre rogynak, s visszaváltoznak egyszerű tetemekké."
-} as PrayerInfo, {
+}, {
   name: "Időjárás-ellenőrzés",
   domains: ["Természet"],
   type: "Rituálé",
@@ -784,7 +784,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "2 km",
   duration: "1 óra",
   description: "A fohász hatalmat ad a papnak az időjárás felett. A rituálé segítségével egészen szélsőséges időjárás is előidézhető (bármilyen, ami az adott tájegységen egyáltalán elképzelhető), jóllehet például a sivatagban így sem kerekedhet hóvihar. Az egy óra eltelte után azonban az idő változni kezd, lassan, természetes úton, végül pedig az adott körülményeknek megfelelő idő fog kialakulni, meglehet, éppen a pap által létrehozott stabilizálódik."
-} as PrayerInfo, {
+}, {
     name: "Küldött megidézése",
     domains: ["Élet", "Halál"],
     type: "Rituálé",
@@ -794,7 +794,7 @@ export const PrayerValues: PrayerInfo[] = [{
     range: "20 m",
     duration: "1 nap/veszély ideje",
     description: "A pap ezt a fohászt két módon használhatja fel, s oly lényeket szabadíthat e világra, melyek könnyen kisebb városok, falvak pusztulását okozhatják. Az első alkalmazási mód esetén a pap hosszasan előkészül a szertartáshoz, oltárt épít, áldozatot mutat be és felrajzolja istenének szimbólumát a megidézés helyére. Ezek után hozzákezd az idéző rituáléhoz, s várja a lény érkezését.\n\nA Külső Síkról érkező lény minden esetben a pap istenének síkjáról kerül át az Elsődleges Anyagi Síkra, az istenség szolgáinak, angyalainak vagy küldötteinek egyike lesz. Segíteni fogja a papot, egy napig vele marad, mindenben követi, majd nyomtalanul eltűnik; visszatér saját lakhelyére.\n\nA gyorsabb segítségért fontos küldetés veszélybe kerülésekor könyöröghet a kegyelt. Ha az isten a veszélyt valósnak és súlyosnak érzi, leküldheti valamely szolgáját a pap megsegítésére. A szolga a veszély elmúltával azonnal visszatér saját síkjára.\n\nHa a pap indokolatlan esetben folyamodik a fohászhoz, a küldött nem érkezik meg és maximális Kegy pontjainak száma 10-zel csökken."
-  } as PrayerInfo, {
+  }, {
   name: "Lélekáldozat",
   domains: ["Halál"],
   type: "Rituálé",
@@ -804,7 +804,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "A fohászt csak emberáldozó vallások papjai használják. Az ellenfél halálának pillanatában kell elkántálni, mire a testből épp távozni készülő lélek kiragadtatik az Örök körforgásból, nem távozik szabadon, hanem a pap akaratának foglya marad - a pap istenének áldoztatik fel. Az így megölt személy feltámasztására nincs mód, mert lelke megsemmisül.\n\nKivételes esetekben, ha az áldozat valamely másik istenség kegyeltje vagy kiválasztottja, elképzelhető, hogy a fohász hatástalan marad. Ennek eldöntése a KM jogkőre."
-} as PrayerInfo, {
+}, {
   name: "Lélekcsapda",
   domains: ["Élet", "Halál"],
   type: "Rituálé",
@@ -814,7 +814,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "12 m",
   duration: "10 nap",
   description: "A fohász segítségével egyetlen személy lelke csapdába ejthető, s egy legalább 20 karátos igaz drágakőben (rubin, zafír, gyémánt) megőrizhető. így a holtak lelke tárolható, s alkalmas fohászokkal a testbe visszahelyezhető lesz; de a lelket akár fel is lehet áldozni, már amennyiben az istennek tetsző az ilyen áldozat.\n\nHa a pap a lelket ki akarja ragadni a még élő testből, és így szeretné tárolni, a fohászt együtt kell alkalmaznia a Halál szava nevű fohásszal."
-} as PrayerInfo, {
+}, {
   name: "Isteni áldás",
   domains: ["Élet", "Halál", "Lélek", "Természet"],
   type: "Rituálé",
@@ -824,7 +824,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "10 perc",
   description: "A fohász felhívja a pap istenének figyelmét az érte harcoló halandókra. A rituálé során a pap fennhangon szólítva istenét idézi meg annak akaratát, ha céljai valóban égi pártfogója érdekeit szolgálják, s helyzete valóban igényli a közbeavatkozást.\n\nA pap és körülötte lévő segítőtársai a fohász megidézésének pillanatában az időtartam alatt bármikor 3k10 Fp-t és 1k10 Ép-t gyógyulnak (a maximális értékeiket azonban így sem haladhatják meg). Harcértékeik mindegyikéhez 30 pont adódik (KÉ, TÉ, VÉ, CÉ-hez egyaránt), Asztrális és Mentális védelmük 10 ponttal nő, harci kedvük felülmúlhatatlan lesz, és immunissá válnak minden félelem alapú mágiával szemben. (NJK-k esetében a Bátorság 10 ponttal emelkedik).\n\nHa a pap indokolatlan esetben folyamodik a fohászhoz, a hatás elmarad és maximális Kegy pontjainak száma 10-zel csökken."
-} as PrayerInfo, {
+}, {
   name: "Összetartozás Asztrálisan/Mentálisan",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -834,7 +834,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "1 óra",
   description: "A fohász segítségével rendkívül hatásos Asztrális vagy Mentális védelem kiépítésére van lehetőség. A pap összeköti két vagy több személy tudatát: a kapcsolatban állók ismerni fogják egymás érzelmeit avagy gondolatait a legmélyebb rezdülésekig. Korlátozott telepátia is kiépül közöttük, ami egyszerű, könnyen megfogalmazható gondolatok azonnali átadására elegendő. A legfontosabb azonban, hogy a résztvevők Asztrális vagy Mentális védelme egyetlen közös védelemmé forr össze, mely mindig épp azt támogatja, aki ellen mágikus támadást hajtottak végre. A fohász alanyainak tudatalatti és hitükből fakadó Mágiaellenállása összeadódik, és egyetlen, közös védelmet formál. Azonban a pszi pajzsok és egyéb mágikus védelmek a közös védelembe nem, csupán az egyén ellenállásába számítanak bele.\n\nPéldául, ha egy harcos, egy pap és egy varázsló egyszerre lép kapcsolatba, s mindegyikük Akaratereje 15-ős, ráadásul a pap hitéből fakadóan I2-es Ellenállással rendelkezik, összesített Mentális védelmük 57 lesz, mindegyikőjük ekkora ME-vel rendelkezik a Mentái alapú támadásokkal szemben. A varázsló saját elméje köré épített pszi pajzsa azonban csakis őt védelmezi.\n\nHa az így összekötött személyeket egyazon pillanatban éri Asztrális vagy Mentális támadás, az Összeadódott védelem egyenlő részben oszlik el a megtámadottak között."
-} as PrayerInfo, {
+}, {
   name: "Segélykérés",
   domains: ["Élet"],
   type: "Rituálé",
@@ -844,7 +844,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Korlátlan",
   duration: "Végleges",
   description: "A fohásszal a pap kijelölhet egy személyt, akit veszélyhelyzetben megidézhet. A kijelölés 20 Kegy pontot igényel, a kiválasztotton láthatatlan bélyeg keletkezik, ami mindig jelen van, s utal a kapcsolatra. Csak olyan személy választható ki a pap segítőjéül, akinek vallása megegyezik a papéval, s istenének eddig hű szolgája volt A fohász felhasználása további 40 Kegy pontot igényel, s a kiválasztott személy 1 szegmens alatt a pap mellett terem. Ennek nem szab gátat semmilyen kirekesztő mágia.\n\nHa a személy éppen aludt, álmosan, hálóköntösben jelenik meg, ha éppen harc közben volt, teljes felszerelésben, esetleg sebesülten. Ha a kiválasztott személy vagy a pap meghal, másikuk megérzi a kapcsolat megszakadását. A papnak egyszerre csak egy kijelölt segítője lehet, ha másikat választ, a korábbi kapcsolat megszűnik. Ha a pap sűrűn folyamodik a segítő megidézéséhez, vagy nem istene, hanem saját érdekeit tartja szem előtt, a KM dönthet úgy, hogy a fohász hatása elmarad, a kapcsolat megszűnik, és a pap maximális Kegy pontjainak száma 10-zel csökken.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Természet megidézése",
   domains: ["Természet"],
   type: "Rituálé",
@@ -854,7 +854,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "5 perc",
   description: "A fohász hatására minden nővény a pap céljainak szolgálatába áll. A papnak nem kell irányítania őket, csupán céljának végrehajtásán kell munkálkodnia, vagy annak beteljesülésére gondolnia. Ez lehet győztes közelharc, egy menekülő foglyul ejtése, esetleg feljutás egy falra vagy egy fa tetejére. A fohász nem idéz meg állatokat, csupán a növényzetre fejti ki hatását, de a növekedésüket nem befolyásolja.\n\nA nővények ágaikkal óvhatják a papot, esetleg lesújthatnak az ellenségre, vagy körül fonhatják, szinte megbilincselhetik. Akadályozhatják látását, rátekeredhetnek a lábára, terméseket, magokat zúdíthatnak rá.\n\nA fohász félelmetes és egyben rendkívül látványos. Sokszor a pap nem is csinál egyebet, mint szilárdan áll, körülötte pedig a megelevenedett erdő küzd az ellenféllel. A fohász természetesen csak ott lehet igazán hasznos, ahol megfelelő mennyiségű és minőségű nővény áll rendelkezésre. A nővények fajtája sokat számít - hiába van egy kisebb réten rengeteg fűféle, ezek legfeljebb lelassíthatják az ellenfél haladását. Ezért a fohászt leginkább sűrű erdőben alkalmazzák.\n\nA hatás minden egyes esetben más, a döntő szó ebben is a KM-é. A fohász sebzése még a legideálisabb körülmények kőzt sem haladhatja meg a 3k6 Sp-t személyenként. Ez a magas sebzés is csak akkor adható meg, ha a KM és játékosa valóban ötletes, és a sebzés valóban indokolt.\n\nMindemellett nem szabad elfelejteni, hogy a nővények ösztönösen menekülnek a tűztől, ezért arra kényszeríteni őket, hogy áthaladjanak rajta, vagy esetleg egy tűzzel védett célpontot támadjanak meg, nem lehet."
-} as PrayerInfo, {
+}, {
   name: "Vadak irányítása",
   domains: ["Lélek", "Természet"],
   type: "Rituálé",
@@ -864,7 +864,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "5 perc",
   description: "Ezzel a fohásszal a pap szintenként egy állatra tudja rákényszeríteni akaratát. Mentálisan képes utasítani őket, ehhez szavakat nem kell használnia, mindössze arra koncentrálnia, mit cselekedjék az adott állat. Egy körben legfeljebb 10 állatnak képes utasítást adni, a többi addig mozdulatlanul áll, vagy ha megtámadják, védekezik. Egy parancs teljesítése nem tart szükségszerűen csak egyetlen körig, az őrzés vagy támadás például mind az 30 kört (5 perc) kitöltheti. Ez a fohász csak állatokra alkalmazható, a fejlett tudattal vagy mágikus képességekkel rendelkező lényekre nem."
-} as PrayerInfo, {
+}, {
   name: "Vadak szólítása",
   domains: ["Természet"],
   type: "Rituálé",
@@ -874,7 +874,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "2 km",
   duration: "10 perc",
   description: "Ezen fohásszal a pap bármiféle, mágikus képességekkel nem rendelkező állatot megidézhet. A fohász kántálása közben meg kell neveznie az állat faját, s ha ilyen tartózkodik a hatóterületen, akkor közülük a legközelebb lévő 1k10 példány haladéktalanul a paphoz siet. Ha ezen a területen nincs ilyen állat, a fohász hatástalan marad, s a Kegy pontok is elvesznek.\n\nAz állatok, miután megérkeztek, barátsággal viseltetnek a pap iránt, és az Időtartam lejártáig maradnak vele. Ha képesek kommunikálni, a pap parancsokat is adhat nekik, amiket a józan ész határain belül az állatok megkísérelnek teljesíteni. Ha nem találnak közös nyelvet, az állatok akkor is megvédik a papot harc esetén, de mást nem tehetnek érte."
-} as PrayerInfo, {
+}, {
   name: "Vízlégzés",
   domains: ["Természet"],
   type: "Rituálé",
@@ -884,7 +884,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "5 perc",
   description: "Ez a fohász lehetővé teszi a pap, vagy az általa megérintett személy számára, hogy természetes módon kapjon levegőt a víz alatt is, ameddig a fohász hatóideje azt megengedi. Nem teszi viszont lehetővé továbbra sem a víz alatti beszédet vagy a szabad mozgást."
-} as PrayerInfo, {
+}, {
   name: "Vérgyűjtés",
   domains: ["Halál"],
   type: "Rituálé",
@@ -894,7 +894,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "5 perc",
   description: "A Vérmágia ezen fohásza segítségével a pap a kívánt személy vérét összegyűjtheti és további praktikákhoz fel- használhatóvá teheti. A fohász elején ki kell jelölnie egy edényt, melybe a vért fel kívánja fogni. Ezek után az áldozaton ütött sebből a fohász hatására a vér az edénybe áramlik, méghozzá igen látványos, hátborzongató módon. Ahogy a sebből kifolyik, a levegőben vagy a talajon lassan az edény felé kúszik, majd belecsorog. Az így gyűjtött vér soha nem alvad meg, tehát mindig felhasználható marad. Minden egyéb módon lecsapolt vér esetében meg kell gátolni az alvadást, ami különböző anyagok felhasználásával lehetséges. A vér mennyisége attól függ, hogy az áldozat mennyi Fp-t és Ép-t veszített a fohász időtartama alatt. Egy Fp veszteség 1 gyűszűnyi, egy Ép pedig egy kis pohárnyi vért jelent."
-} as PrayerInfo, {
+}, {
   name: "Vérzés",
   domains: ["Halál"],
   type: "Rituálé",
@@ -904,7 +904,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "Ez a kegyetlen fohász szintén a Vérmágia része. A pap rámutat áldozatára, s mutatóujjának hegyével lassan egy képzeletbeli vágást ejt rajta, és a seb azonnal megjelenik az áldozat testén.\n\nA vágás mély és fájdalmas, nem csak Fp, de Ép veszteség- gél is járhat. A seb nem záródik össze, s folyamatosan vérzik. A fohász időtartama alatt a sebzés körönként 1k10 Fp, s minden tízedik Fp elvesztése egy Ép elvesztésével is jár.\n\nA pap a Vérgyűjtéssel összhangban is használhatja e fohászt. Ha az okozott sebet a fohász időtartamának lejárta előtt kezelik, mágiával vagy fohásszal teljesen meggyógyítják, a vérzés eláll. A nem mágikus gyógymódhoz az Orvoslás képzettség 4. foka szükséges, a fohász idejének lejártával a 2. fok is elegendő."
-} as PrayerInfo, {
+}, {
   name: "Csábítás",
   domains: ["Lélek"],
   type: "Litánia",
@@ -915,7 +915,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "5 perc",
   save: ["Asztrális"],
   description: "Arel papjai nem vetik meg a másik nemet, mi sem példázza ezt jobban, mint ez a fohász. Segítségével a pap szebbnek, kellemtelibbnek tüntetheti fel magát egy választott személy előtt. A fohász eggyel növeli alkalmazója Karizmáját, és ha az áldozat elvéti Mágiaellenállását, kívánatosnak és bizalomgerjesztőnek fogja találni a papot még akkor is, ha a fohász hatóideje már elmúlt. Feltéve persze, hogy a pap nem tesz semmi olyat, amit az áldozat fenyegetésnek foghatna fel, ilyenkor ugyanis a hatás szertefoszlik."
-} as PrayerInfo, {
+}, {
   name: "Állati kémek",
   domains: ["Lélek", "Természet"],
   type: "Rituálé",
@@ -925,7 +925,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "5 perc",
   description: "Ennek a fohásznak az alkalmazásával lehetővé válik, hogy a Vadak irányítása fohász segítségével ne csak parancsokat adhasson egy adott állatnak, hanem annak érzékszerveit a sajátjaként is használhassa. Ekkor kizárólag az adott állat szemével lát, fülével hall stb., mindaz, ami valójában körülötte történik, nem jut el hozzá. Az állatnak csak a fohász meg- foganásának pillanatában kell a pap közelében tartózkodnia, utána bármilyen messze eltávolodhat tőle."
-} as PrayerInfo, {
+}, {
   name: "Csatakiáltás",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -935,7 +935,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 kör",
   description: "Arel papjai különféle csatakiáltásai nem csak Észak-Yneven ismertek. Számos közülük mágikus hatalommal is bír. Ha a pap ezzel a csataszóval veti magát a küzdelembe, szinte biztos lehet támadása sikerében. A fohásszal csakis saját magára hat, harcértékei a kővetkezőképpen módosulnak:\n\nKÉ: +5, TÉ: +10, Sp: +1\n\nA Sólymok Asszonyának papjai előszeretettel alkalmazzák, bár ez néha a legjobban felépített támadási terveket is dugába döntheti. Nem ritka ugyanis, hogy míg mások csöndben, meglepetésszerűen készülnek a támadásra, Arel papjai üvöltve vetik magukat a küzdelembe. Legismertebb formája az A’frad.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Ivászat",
   domains: ["Élet", "Természet"],
   type: "Rituálé",
@@ -945,7 +945,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "Egyszeri",
   description: "Ez a trükk akár aljasnak is nevezhető, ezzel együtt Arel papjainak kedvelt fogása. Segítségével alkalmazói megháromszorozzák ellenálló-képességüket az ital hatásaival szemben. Ez annyit tesz, hogy csupán háromszor akkora mennyiségű alkohol fog ki rajtuk, mint egyébként. Ennek mértéke persze egyénenként változó. Hogy ezt a lehetőséget ők miként használják fel, csupán rajtuk múlik. A fohász egyetlen hátulütője, hogy nem mentesít a másnaposság gyötrelmeitől."
-} as PrayerInfo, {
+}, {
   name: "Sólyomidézés",
   domains: ["Természet"],
   type: "Rituálé",
@@ -955,7 +955,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "",
   duration: "1 óra",
   description: "A Sólyomidézés az Arel-papok különleges fohásza. Segítségével a pap magához szólíthat egyet istennője szent állatai közül, mely hívására azonnal megjelenik. A papnak a fohász utolsó igéinek kiejtése után három kurta vijjogást kell hallatnia, hűen utánozva a vadászó sólyom hangját (ehhez Hangutánzás képzettség legalább 2. fokára van szükség).\n\nA pap harmadik vijjogására válaszul az égen felrikolt a sólyom, majd alászáll, s a pap bal karjára telepszik. Arel papjai szerint ezek a sólymok nem közönséges lények, hanem istennőjük madártestű küldöttei. Ebben lehet némi igazság, mivel a sólyom akkor is megjelenik, ha történetesen a környéken egyáltalán nem él ilyen madár. A Sólyomidézést nem lehet városban alkalmazni.\n\nA közkeletű tévhittel ellentétben a madár nem intelligensebb a közönséges sólyomnál, kővetkezésképpen nem lehet beszélgetni vele, vág)' bonyolult utasításokat adni neki. Arel kegyelméből azonban úgy fog engedelmeskedni a papnak, mintha az 4. fokú Idomítással és Állatismerettel bírna.\n\nHa a szent állatot komolyabb sérülés éri, miközben meg- idézője szolgálatában fáradozik, Arel azonnal megvonja kegyét a paptól, aki csak hosszú és viszontagságos vezeklés után nyerheti vissza istennője jóindulatát. Amennyiben a sólyom a pap hibájából halálát lelné, a kegyvesztettség örökre szól, s az úrnő soha többé nem bocsát meg vétkes szolgájának.\n\nMégsem az ettől való félelem az oka, hogy a papok ritkán kívánnak többet a madártól, mint egy nyúl elejtése, egy üzenet eljuttatása vagy áldozat bemutatása, s jóval az időtartam előtt elbocsátják a madarat. Sokkalta inkább arról van szó, hogy őszintén tisztelik és becsülik őket, mint büszke, egyenrangú társakat, akit alávaló gazság lenne önző érdekből veszélybe sodorni. Hitük szerint a harcban elesett Arel-papokat úrnőjük maga mellé emeli, s ilyen vándorsólymok formájában küldi hívei megsegítésére.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Szélkeltés",
   domains: ["Természet"],
   type: "Rituálé",
@@ -965,7 +965,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "50 m",
   duration: "5 perc",
   description: "Arel papjai kisebb szelet hívhatnak létre ily módon, feltéve, hogy a szabad ég alatt tartózkodnak. A szél erőssége nem lesz elegendő ahhoz, hogy tárgyakat sodorjon el, de a fáklyákat és a kisebb tüzeket már képes kioltani. Csak kisebb hajók tartós irányítására alkalmas, nemcsak gyengesége, de rövid időtartama miatt is. Ködök, mérgező gőzök elhajtására viszont kiválóan alkalmas."
-} as PrayerInfo, {
+}, {
   name: "Gyilkos tréfa",
   domains: ["Halál", "Lélek"],
   type: "Rituálé",
@@ -976,7 +976,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "6 kör",
   save: ["Asztrális"],
   description: "Ha az alany elvéti Mágiaellenállását, fájdalmas, kínlódó röhögésben tőr ki. Minden körrel elveszít egyet Állóképességéből, illetve 1k3-at Fp-iből. Ha állóképessége 0-ra csökken, belehal kínjaiba, csakúgy, ha elfogynak Fp-i után az ÉP-i is. Darton szolgája az időtartam alatt bármikor megszakíthatja fohászát, de akkor is véget ér, ha a fohászt megidéző pap elveszíti eszméletét vagy maga is meghal.\n\nAz áldozat csakis akkor képes harcolni, ha a kör elején sikeres Akaraterőpróbát tesz. Ekkor a Harc kábultan módosítói érvényesek rá.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Méregizzadás",
   domains: ["Halál"],
   type: "Rituálé",
@@ -986,7 +986,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 kör/IP",
   description: "Darton szolgája ily módon képes eltávolítani a szervezetébe került mérget, hacsak az lehetetlenné nem teszi fohászok használatát. A fohász mindig annyi körig tart, ahányadik szintű az adott méreg volt, s ez határozza meg a fohász Kegy pont szükségletét is. Ha a pap nincs tisztában a méreg erősségével, csak találgathat, és addig kell folytatnia a fohászkodást, míg a mérget sikeresen el nem távolítja a testéből. Ha hatalma ehhez nem elegendő, a fohász minden E-je egy szinttel csökkenti a méreg erősségét.\n\nTehát egy 3. szintű méreg legyőzése 18 Kegy pont, azonban ha a papnak csak 12 Kegy pontja van, a mérget nem sikerül maradéktalanul eltávolítania, viszont Erőssége 1. szintre esik vissza. A pap ilyenkor újabb Egészségpróbára jogosult, immár a méreg csökkentett Erősségével szemben.\n\nHa sikerül felülkerekednie a mérgező anyagon, azt kiizzadva eltávolítja szervezetéből, s minden eddigi káros hatását megszünteti. Az ily módon hatástalanított anyag újbóli felhasználása lehetetlen.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Holt beszéd",
   domains: ["Halál"],
   type: "Rituálé",
@@ -996,7 +996,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "10 kör",
   description: "E fohász segítségével Darton szolgája megértetheti magát mindazon túlvilági teremtményekkel, amelyeket ő hajt hatalma alá, valamint azokkal, akik valamilyen szintű intelligenciával rendelkeznek. Ettől függetlenül az ellenséges élőholtak nem feltétlenül válnak barátságossá az irányában, ám megpróbálhatja meggyőzni őket saját igazáról."
-} as PrayerInfo, {
+}, {
   name: "Nyugalom",
   domains: ["Halál"],
   type: "Rituálé",
@@ -1006,7 +1006,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "Ennek a mágiának a felhasználásával Darton szolgája nyugalmat biztosíthat mindazoknak, akiket eltemet. Az ily módon túlvilági útra bocsátott holttesteket nem lehet sírjukból előszólítani, sem beléjük lelket idézni. Erre egyedül az lenne képes, aki magát a szertartást végrehajtotta."
-} as PrayerInfo, {
+}, {
   name: "Holtak útja",
   domains: ["Halál"],
   type: "Rituálé",
@@ -1016,7 +1016,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "5 perc",
   description: "Igen veszélyes része ez annak a tudásnak, amelyet Darton tár fel szolgálói előtt. Segítségével ugyanis képesek lesznek arra, hogy egy hónaposnál nem régebbi holttestbe férkőzve, hozzájussanak utolsó emlékeihez. Az utolsó 5 perc és a halál emléke oly szörnyű, hogy a papnak sikeres Asztrál próbát kell tennie, különben csak zavaros rémképek maradnak meg benne.\n\nAmennyiben sikeres a próbája, akkor az minden mozdulatát átéli az áldozat utolsó 30 körének (5 perc), legyen az akármilyen rémisztő is. Ez alatt az idő alatt egyfajta transzba kerül és semmilyen más tevékenységre nem képes. A transzból kizökkenthető ugyan, ám ekkor mind a Kegy pontjai, mind az addig megszerzett információ kárba vész.\n\nHa kettővel, vagy annál többel véti el Asztrálpróbáját, akkor még komolyabb következményei is lehetnek a fohásznak. A pap ilyenkor annyi pontot veszít Asztráljából, amennyivel a próbát elvétette, s ezeket a pontokat csak 1k6 nap alatt nyeri vissza.\n\nA fohász időtartama a Kegy pontok megtöbbszörözésével sem hosszabbítható meg."
-} as PrayerInfo, {
+}, {
   name: "Acélos akarat",
   domains: ["Lélek"],
   type: "Litánia",
@@ -1026,7 +1026,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "10 perc",
   description: "A Hétarcú szolgálói gyakorta kerülhetnek olyan helyzetbe, amikor kivételes Akaraterővel lehet csak szembeszegülni az ellenük forduló hatalmakkal. Ez a fohászuk éppen az ilyen lehetőségek esetén nyújt segítséget Domvik híveinek. A pap nemcsak magára, hanem egy általa kiválasztott személyre is rámondhatja.\n\nA fohász hatására az illető Akaratereje a fohász minden E-je után 1-gyel megnő (nem emelkedhet azonban 20 fölé), s a fohász ideje alatt ez lesz a meghatározó pl. a TME kiszámolásánál is."
-} as PrayerInfo, {
+}, {
   name: "Isteni emlékezet",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1036,7 +1036,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "Speciális",
   description: "Domvik közbenjárásával papjai hihetetlen módon kitolhatják emlékezetük korlátait. A szertartás gondos előkészületeket igényel, s a papnak mindenre fel kell készülnie, ami a későbbiekben fontos lehet számára. Ezt kővetően egyfajta transzba esik, s onnan csupán a fohász végeztével kerül ki.\n\nA pap könyveket tanulhat meg ily módon szóról szóra, szertartások leírását tanulmányozhatja, de éppen verseket is hallgathat. Minden esetben pontosan fog emlékezni mindenre a fohász befejezésététől számított 1 hétig. A transz időtartama mindig olyan hosszú lesz, amennyit az adott feladat elvégzése, tehát valamely tudás elsajátítása jelent, ám semmi esetre sem lehet a pap Intelligenciájával egyező számú óránál több. Képzettségek és más gyakorlati dolgok - nyelvek, stb. - megtanulása ily módon nem lehetséges, lévén sokkalta több időt igényelnek.\n\nHa a pap valamilyen külső behatás folytán kizökken a transzból, minden eddig elsajátított ismerete és elhasznált Kegy pontja kárba vész, s csakúgy megsemmisül mindaz a tudás, amelynek elsajátítása meghaladná a rendelkezésére álló időt."
-} as PrayerInfo, {
+}, {
   name: "Isteni fegyver",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1046,7 +1046,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "6 kör",
   description: "A papot kérésére istene különleges fegyverrel ajándékozhatja meg. Ez esetenként természetesen különbőzhet, ám mindig erős fehér fényt árasztó tárgy lesz. Ezeket a harci eszközöket Domvik papjai általában csak végső esetben kérik istenüktől, de általánosan ilyen fegyverekkel szokás az Exterminust is végrehajtani.\n\nÉrtékeik a hasonló, közönséges fegyverekéhez képest a kővetkezőképpen módosulnak:\n\nKÉ: +2, TÉ: +5, VÉ: +5, CÉ: +5, Sp: +1\n\nHitük szerint a Fekete Angyaltól kapják ezeket a fegyvereket, s az ő közbenjárásáért csak a legritkább esetekben fohászkodnak.\n\nAz Isteni fegyver használatának nem előfeltétele egyetlen képzettség elsajátítása sem, ha a pap nem is képzett benne, úgy forgathatja, mintha 2. fokú képzettséggel bírna. Amennyiben a fegyveres képzettsége ennél magasabb, az ebből adódó bónuszok érvényesülnek. Fegyvertöréssel, Lefegyverzéssel nem támadható. Két Isteni fegyvert egyetlen karakter sem forgathat."
-} as PrayerInfo, {
+}, {
   name: "Kézrátétel",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1056,7 +1056,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "Domvik papjainak gyógyító hatalma közismert még az északon élők között is. Ezzel a fohásszal sebeket, sérüléseket képesek eltüntetni. A közönséges Gyógyítástól azonban több vonatkozásban is eltér. A fohász bárkit meggyógyít, akit a pap arra érdemesnek tart, s nem kíván előzetesen Áldást sem az alkalmazójától. Míg a pap egyik kezében szent jelképét tartja, másikat a sérült testrészre kell helyeznie, s amennyiben hatalma elegendő rá, azt rendbe is hozza. Szúrt, vágott és zúzott sérülések egyaránt orvosolhatók így - a hegek forradások nyomtalanul eltűnnek ám betegségeket, mérgezést és egyéb fogyatékosságot képtelen gyógyítani.\n\nA pap szintenként 2 Ép vagy 4 Fp visszaadására képes. További Kegy pontok felhasználásával az így visszaadható életerő nem növelhető. A pap csakis azoknak a sérüléseknek a meggyógyítására képes, amelyeket egyetlen fohásszal semlegesíthet. Elképzelhetetlen tehát, hogy amennyiben nem elég magas szintű egy komolyabb sérülés orvoslására, akkor azt több részletben tegye meg."
-} as PrayerInfo, {
+}, {
   name: "Hűségbéklyó",
   domains: ["Élet"],
   type: "Litánia",
@@ -1067,7 +1067,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "1 nap",
   save: ["Asztrális"],
   description: "Ha ezt a fohászt alkalmazva Dreina egy papja megérint valakit, és az elvéti a Mágiaellenállását, akkor a fohász célpontja a hatóidő lejártáig hűséges marad ahhoz a személyhez, eszméhez, csoportosuláshoz, országhoz stb., amelyet, akit a pap számára meghatároz."
-} as PrayerInfo, {
+}, {
   name: "Földabrosz",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1077,7 +1077,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "Végleges/ 1óra",
   description: "Ez a fohász kétféleképpen alkalmazható. Az egyik formája szerint a pap elméjébe vési mindazon helyek, városok, utak, keresztutak, folyók stb. nevét, elhelyezkedését, egymáshoz való viszonyát, ahol az elmúlt napon megfordult. Mindez az ismeretanyag az elméjében rendeződik, kapcsolódik a már meglévő információkhoz és idővel könnyen átlátható, használható térképpé rendeződik.\n\nA pap megteheti azt is, hogy nem közvetlenül a nap végén vési be az ismereteit, de akkor az ily módon rögzített ismeret- anyag homályosabb lesz, nem kapcsolódik esetleg pontosan a már meglévő részletekhez, a későbbiekben zavarossá válhat. Az ilyen utólagos rögzítésre egy hétig képes.\n\nA másik felhasználási mód természetesen az, amikor a meglévő tudást a pap alkalmazni is akarja. Ilyenkor a fejében lévő térkép bármely részéhez 1 órán keresztül hozzáférhet."
-} as PrayerInfo, {
+}, {
   name: "Lakat",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1087,7 +1087,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "A fohásszal egy mágikus zárat hoz létre Dreina papja két felület közé, melyet csak ő bír kinyitni, egyébként csak a felületek szétrombolásával nyitható az adott készség. A pap bármikor kinyithatja, de ekkor a zár elenyészik."
-} as PrayerInfo, {
+}, {
   name: "Menedék",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1097,7 +1097,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "1 m",
   duration: "3 óra",
   description: "Dreina papja óvó leplet hív létre, mely az időjárás viszontagságai ellen nyújt bizonyos védelmet. Az ilyen menedék nem más, mint egyfajta láthatatlan erőkupola, amely véd az esőtől és a hótól, vagy adott esetben útjába áll a szélnek. Mindig helyhez kötött - tehát valahol érintkeznie kell környezetével -, s még az őt létrehozó pap sem képes mozgatására. Formáját tekintve egy a talajra illeszkedő félgömb, melynek sugara 1 ynevi láb.\n\nA Kegy pontok többszörözésével mind a Menedék mérete, mind az időtartama egyaránt növelhető."
-} as PrayerInfo, {
+}, {
   name: "Óvó kar",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1107,7 +1107,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "Végleges",
   description: "Ez a mágiaforma bizonyos módon a Segélykérés ellentéte. Ez alkalommal azonban a pap ajánlja fel védelmét valakinek. Szent jelképének érintésével energiát ad át a segítségre szorulónak - s egyben meg is jelöli -, aki azt egyetlen egyszer használhatja fel. Ekkor - függetlenül attól, hogy a hívó mágiahasználó vagy sem - ő fogja a testében rejtező energiát aktiválni, s ennek hatására maga mellé rántani Dreina papját vagy paplovagját. Ennek nem szab gátat semmilyen kirekesztő mágia.\n\nő, ha akarna sem tudna ellenszegülni a fohásznak, s egy szegmens alatt, amilyen állapotban a megidézés pillanatában van, úgy fog megjelenni a hívó mellett, hogy annak védelmére lehessen."
-} as PrayerInfo, {
+}, {
   name: "Elmeszipoly",
   domains: ["Lélek"],
   type: "Litánia",
@@ -1118,7 +1118,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Egyszeri",
   save: ["Mentális"],
   description: "Ezzel a módszerrel olyan tudás birtokába kerülhetnek Krad hívei, amelyet mások nem akarnak felfedni előttük. Hatására a kérdéses dologról megtudhatnak mindent, amire kíváncsiak - pontosabban mindazt, amire három kérdés segítségével választ kaphatnak a KM-től, ha a célpont elvéti Mágiaellenállását. Ekkor nem lesz tudatában az elméjében lezajlott történéseknek sem. Akkor viszont, ha sikeres volt a Mágiaellenállása, megérzi, hogy valaki az elméjében próbált kutakodni, noha annak pontos irányáról nem lesz tudomása."
-} as PrayerInfo, {
+}, {
   name: "Biztos kéz",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1128,7 +1128,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 óra",
   description: "A Tudás istenének papjai gyakran kerülnek olyan helyzetbe, amikor oly dolgokra bukkanhatnak, amelyek uruknak hasznára válhat, ám nem vihetik magukkal. Ilyen esetekben látják nagy hasznát ennek a fohásznak, amely lehetővé teszi, hogy ha kell, a legapróbb részletekig pontosan, méretarányosan lemásolhassanak egy adott rajzot, írást, térképet stb."
-} as PrayerInfo, {
+}, {
   name: "Emlékezet",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1138,7 +1138,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 óra",
   description: "A pap képes arra, hogy ezzel a fohásszal az emlékezetébe égessen bizonyos dolgokat: párbeszédeket, könyvek, főlián- sok tartalmát, mindazt, amire szüksége lehet. Megjegyezhet ily módon az Időtartam alatt mindent, amit akar, csupán koncentrálnia kell rá. Az ily módon bevésett információk véglegesen megmaradnak, csakis valamely Mentális operáció tüntetheti el őket."
-} as PrayerInfo, {
+}, {
   name: "Utazás",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1148,7 +1148,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "3 óra",
   description: "Gyakorta előfordul, hogy az utazók rendelkezésére csupán olyan úti eszközök állnak, amelyek irányításával ők maguk nem boldogulnak, s feltétlenül olyasvalaki segítségére van szükségük, aki ismeri az adott szerkezetet. Ezen a hiányosságon segít ez a fohász, mivel lehetővé teszi, hogy bizonyos időre a pap, paplovag birtokába jusson az adott jártasságnak. Ez annyit tesz, hogy az időtartam alatt istene segítségével a képzettség 3. fokán lesz jártas abban. Amennyiben az adott képzettségnek előképzettség-feltételei vannak, a fohásszal ideiglenesen azokat is megszerzi, ám csakis az utazásra vonatkozó részeiknek látja hasznát, másra nem alkalmasak, s a hatóidő lejárta után nyomtalanul eltűnnek."
-} as PrayerInfo, {
+}, {
   name: "Útkeresés - Irány",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1158,7 +1158,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Speciális",
   duration: "Végleges",
   description: "Az utazók istene nem hagyja cserben híveit, ha azok valamilyen oknál fogva nem találják a helyes utat céljukhoz. Ez a fohász megmutatja számukra, hogy merre is van az általuk keresett város, folyó, keresztút. Csupán arról tájékoztat, hogy milyen irányban van a keresett cél.\n\nA fohász sikeréhez elengedhetetlenül szükséges, hogy vagy ő, vagy valamelyik útitársa legalább egyszer a múltban már járt az így keresett helyen. Az Útmutatás fohásztól eltérően az így szerzett ismeretek pontosak és a hatóidő elmúltával sem halványodnak el. Személyek és tárgyak viszont nem kereshetők vele.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Útkeresés - Irány és távolság",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1168,7 +1168,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Speciális",
   duration: "Végleges",
   description: "Az utazók istene nem hagyja cserben híveit, ha azok valamilyen oknál fogva nem találják a helyes utat céljukhoz. Ez a fohász megmutatja számukra, hogy merre is van az általuk keresett város, folyó, keresztút. Pontos iránnyal és távolsággal is szolgál a kiszemelt cél felé. A fohász sikeréhez elengedhetetlenül szükséges, hogy vagy ő, vagy valamelyik útitársa legalább egyszer a múltban már járt az így keresett helyen. Az Útmutatás fohásztól eltérően az így szerzett ismeretek pontosak és a hatóidő elmúltával sem halványodnak el. Személyek és tárgyak viszont nem kereshetők vele.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Útkeresés - Távolság",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1178,7 +1178,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Speciális",
   duration: "Végleges",
   description: "Az utazók istene nem hagyja cserben híveit, ha azok valamilyen oknál fogva nem találják a helyes utat céljukhoz. Ez a fohász megmutatja számukra, hogy merre is van az általuk keresett város, folyó, keresztút. Csupán arról tájékoztat, hogy milyen távolságban van a keresett cél. A fohász sikeréhez elengedhetetlenül szükséges, hogy vagy ő, vagy valamelyik útitársa legalább egyszer a múltban már járt az így keresett helyen. Az Útmutatás fohásztól eltérően az így szerzett ismeretek pontosak és a hatóidő elmúltával sem halványodnak el. Személyek és tárgyak viszont nem kereshetők vele.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Kizökkent idő",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1188,7 +1188,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "1 kör",
   description: "Ezt a fohászt alkalmazva a pap képes megállítani az időt egyetlen kör erejéig, s ez alatt vagy ő, vagy egy általa kiválasztott személy szabadon cselekedhet. Kyel nem tűri azonban, hogy ez idő alatt bárki életében is kár keletkezzen, ezért jól meg kell fontolnia a papnak, hogy mit cselekedjen, illetve, hogy kit ruház fel a hatalommal. Ha hibát követ el (Ép-sérülést, maradandó károsodást okoz stb.), Kyel azonnal és végérvényesen kitagadja kegyéből."
-} as PrayerInfo, {
+}, {
   name: "Kyel ökle",
   domains: ["Halál"],
   type: "Rituálé",
@@ -1198,7 +1198,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Érintés",
   duration: "10 kör",
   description: "Saját testéből formálhat istene segítségével ily módon fegyvert Kyel papja. Isteni hatalmak szálljak meg fegyverforgató karját, s még akkor is, ha különben pusztakezes harcban nem is járatos, nem vonatkoznak rá a képzetlen fegyverforgatásból eredő negatív módosítók. A pap ökle földöntúli fénnyel ragyog fel, és mindent elsöprő erő járja át. Az isteni ököl harcértékei a kővetkezők:\n\nKÉ: 8, TÉ: 16, VÉ: 20, Sp: 2k6+2\n\nAz isteni erő miatt a fohász időtartamára a 3. méretkategóriába számít. Amíg a fohász tart, ezt a kart nem lehet csonkítani, még mágikus fegyverrel sem. Ha a pap úgy látja jónak, az öklöt más számára is előhívhatja, csupán a szent jelképével kell az illetőt megérinteni a fohász során. Ennek feltétele, hogy a választott szintén Kyel híve legyen."
-} as PrayerInfo, {
+}, {
   name: "Sors",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1208,7 +1208,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "Egyszeri",
   description: "Kyel papjainak egyik legnagyobb hatalmú fohásza ez, melynek segítségével istenük a jövőbe enged bepillantást híveinek, feltéve, hogy Kyel maga is fontosnak tartja azt megismertetni velük. Éppen ezért a Sors Urának hívei csak végső esetben próbálkoznak a fohásszal. Ellenkező esetben a hatás elmarad és a pap maximális Kegy pontjainak száma 10-zel csökken.\n\nA fohász nyomán Kyel fellebbenti a kővetkező 15 kör történéseit rejtő fátylat a pap előtt. Minden információ egyetlen szegmens alatt a pap birtokába jut, s ezek ismeretében mérlegelheti döntését.\n\nTovábbi Kegy pontok felhasználásával ez az időtartam nem befolyásolható."
-} as PrayerInfo, {
+}, {
   name: "A Kos hite",
   domains: ["Lélek"],
   type: "Litánia",
@@ -1219,7 +1219,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "3 kör",
   save: ["Mentális"],
   description: "Ez a fohász kétféleképpen is alkalmazható. Amennyiben a pap saját magára, vagy egy olyan személyre mondja, aki Ranagol elkötelezett hívének számít, akkor hatására az alany Akaratereje 2-vel nő a fohász időtartamának lejártáig.\n\nHa ugyanezt a fohászt valamely ellentétes vallás hívére mondják, és ő elvéti Mágiaellenállását, iszonyú lidércnyomásban lesz része, melyben saját kisebbrendűségének szörnyű tudatára ébred, s kénytelen megtapasztalni Ranagol felsőbbrendűségének igazát.\n\nAz áldozat hite megrendül, és az Időtartam lejártáig elveszíti a hite biztosította Mágiaellenállást."
-} as PrayerInfo, {
+}, {
   name: "Döbbenet",
   domains: ["Lélek"],
   type: "Litánia",
@@ -1230,7 +1230,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Egyszeri",
   save: ["Mentális"],
   description: "A fohász nem más, mint egy éles kiáltás, amely, ha az ellenfél elvéti Mágiaellenállását, lehetővé teszi, hogy a zavart kihasználva Ranagol papja az összecsapásukban elsőként támadhasson, bármi volt is a kezdeményezés eredménye. Ellenfele döbbenetét kihasználva mindenképpen az övé lesz az első támadás, és a megtámadott Védő értékéből is levonódik 20 pont.\n\nGyakorta alkalmazzák fegyveres összecsapásokban, még akkor is, ha a biztos sikerhez esetleg csak sok Kegy pont felhasználásával juthatnak."
-} as PrayerInfo, {
+}, {
   name: "Holt szolga",
   domains: ["Halál"],
   type: "Litánia",
@@ -1241,7 +1241,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Míg a szelence sértetlen",
   save: ["Mentális"],
   description: "Ez a borzasztó hatású fohász számos szolgát teremtett már a Kosfejes Úr alattvalóinak, s jól példázza, hogy a Szakrális mágia bizonyos esetekben oly dolgokra is képes, amelyekre hasonló energiák felemésztésével a varázslók képtelenek.\n\nEz a fohász ugyanis, ha az áldozat elvéti mindkét Mágiaellenállását, kitépi lelkét a testéből, s azt egy kis szelencébe zárja. Ezt a parányi tárgyat a papnak mindig magánál kell tartania, legalábbis akkor, ha halott szolgáját irányítani is akarja. Az ily módon teremtett élőholtak semmiben nem különböznek az élő személyektől, csupán szemük lehet az árulójuk.\n\nEzek a testek nem indulnak oszlásnak, nem éreznek fájdalmat, nem igényelnek élelmet, de a szolgálat igencsak megtépázhatja őket. Önálló akaratuk nincs, mindenben a papnak tartoznak engedelmességgel, aki a szelencétől 1 ynevi mérföldnyi távolságban képes parancsolni nekik. Ha valamilyen okból kívül kerülnének a hatótávolságon, megállnak és értelem nélkül bambulnak maguk elé.\n\nA szelence elkészítéséhez a papnak rendelkeznie kell a Rúnamágia képzettség 3. fokával, valamint a rajzolatok megalkotása előtt fel kell szentelnie azt. Egy papnak egyszerre csupán egy holt szolgája lehet.\n\nAz elorzott lelkek csak akkor kerülhetnek vissza a testbe, ha a szelencét valaki megszerzi és kinyitja a számukra. Ebben az esetben a lélek azonnal visszaköltőzik a testbe (amennyiben a porhüvely nem szenvedett maradandó károsodásokat), és a borzalmas emlékeket leszámítva éppen kerül ki a megpróbáltatásokból."
-} as PrayerInfo, {
+}, {
   name: "Őrző kos",
   domains: ["Halál"],
   type: "Litánia",
@@ -1252,7 +1252,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Egyszeri",
   save: ["Mentális"],
   description: "Ranagol hívei gyakran alkalmazzák ezt a fohászt mások, esetleg saját lakóhelyiségeik védelmében. Egy faszéndarabbal vagy más íróeszközzel az őrizni kívánt helyiség ajtaja fölé kell felróniuk a tradicionális ábrát, amely leginkább egy kosfejre hasonlít. Ha fontos a rajzolat elrejtése, gyakorta valamilyen módon álcázzák, bár kisugárzása így is megmarad.\n\nA papon kívül a kosfej mindenkit megtámad, aki áthalad alatta, s akinek a pap fennhangon nem enged bebocsátást Egyetlen energiacsapásra képes, ez felhasználja minden erejét. Annyi SP-veszteség okozására képes, amennyi Erősítése. Vonalai megtörésével sem lehet hatástalanítani, erre egyedül az őt felrovó képes. Mindenki más megismerheti a belé zárt hatalmat, aki evvel próbálkozik\n\nAmennyiben az ábra egyszer kisül, arról a pap azonnal értesül, bárhol tartózkodjon is. Azt is tudni fogja, melyik ábrája semmisült meg. Ranagol híve legfeljebb kétszer annyi őrző kost tarthat „életben”, mint amennyi a Tapasztalati szintje."
-} as PrayerInfo, {
+}, {
   name: "Kigyótűz",
   domains: ["Természet"],
   type: "Litánia",
@@ -1262,7 +1262,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "1 kör",
   description: "Bármely természetes tűz alakját megváltoztathatja ezzel a mágikus módszerrel a pap, kígyózó tüzet hozva így létre, amely az akarata szerinti irányba halad. Körönként 6 ynevi lábnyi távolság megtételére képes, és minden útjába eső gyúlékony anyagot lángra lobbant. Hossza és sebzése a tűz nagyságától és a fohász erejétől függ.\n\n1 E erősségű tűz 1k6 Fp-t sebez és 1 ynevi láb hosszú kígyó létrehozására elegendő, befolyásolásához 1 E Erősségű fohász szükséges. A fohásszal a pap nem képes a tűzkígyó erejét befolyásolni, csupán az időtartamra lehet hatással. A fohász időtartamának lejártával a kígyó szertefoszlik, a tűz kihuny."
-} as PrayerInfo, {
+}, {
   name: "Perzselő ordítás",
   domains: ["Természet"],
   type: "Litánia",
@@ -1272,7 +1272,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Leírásban",
   duration: "Egyszeri",
   description: "Ezzel a fohásszal a tűz őselemi síkjának melegéből formál egy csóvát a Tűzkobra szolgája. Hangos üvöltésével pokoli forróságot szabadít arra, aki a fohász idején előtte áll. De nem csak támadó jelleggel szokás alkalmazni, bizonyos esetekben az adott környezet kiszárítására - gyúlékonyabbá tételére használják. A fohász minden E-je egy ynevi lábbal növeli a hőcsóva hosszát és 1kő-tal az okozott sebzést."
-} as PrayerInfo, {
+}, {
   name: "Sogron szent tüze",
   domains: ["Természet"],
   type: "Litánia",
@@ -1282,7 +1282,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "Végleges",
   description: "Ezen fohász segítségével a pap közönséges tüzek hatásait képes véglegessé tenni, mágikusan befolyásolt tüzekkel szemben azonban hatástalan. Ehhez a tüzet először fel kell szentelnie, majd elmondania a fohász igéit.\n\nIly módon a fáklyák, lámpások őrökké égnek, a kandallók folyamatosan ontják a meleget. A fohász minden egyes E-je után egyes erősségű tűz szentelhető fel. Tehát egy kandalló tüze (2 E) 20 Kegy pontért változtatható örökkévalóvá."
-} as PrayerInfo, {
+}, {
   name: "Tűztáplálás",
   domains: ["Természet"],
   type: "Litánia",
@@ -1292,7 +1292,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "A Tűzkobra papja ezzel a fohásszal a Hatótávon belül égő közönséges tüzek erejét képes megnövelni anélkül, hogy azok mérete megváltozna. A fohász minden Erőssége után 1-gyel növeli a kiválasztott természetes tűz erősségét (akár éghető anyag hiányában is). A tűz mérete nem változik, csak fényereje és hője (ezáltal pedig a sebzése is) növekszik."
-} as PrayerInfo, {
+}, {
   name: "A Kobra ujja",
   domains: ["Természet"],
   type: "Rituálé",
@@ -1302,7 +1302,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "3 kör",
   description: "Amíg a Időtartam tart, a pap körönként három, fáklya nagyságú tüzet képes gyújtani 20 ynevi láb sugarú körön belül. Maguk a lángok csupán 3 szegmensnyi ideig égnek, sebzésük 1k6 és azonnal lángra lobbantanak minden gyúlékony anyagot. Azon a ponton jelennek meg, ahova a pap mutat."
-} as PrayerInfo, {
+}, {
   name: "Rángó hús",
   domains: ["Halál", "Lélek"],
   type: "Litánia",
@@ -1313,7 +1313,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "1 kör",
   save: ["Mentális"],
   description: "Tharr papja átható kiáltást hallat, minek következtében, ha az áldozata elvéti Mágiaellenállását, rövid időre rángatózó bábbá változik. Az Időtartam alatt a földre zuhanva vonaglik, arcát hideg verejték veri ki, tagjain górcsős rángások futnak végig. Semmilyen fizikai cselekvésre vagy varázslásra nem képes, de pszit használhat.\n\nA fohász nem alkalmazható nem evilági vagy élőholt lényekre."
-} as PrayerInfo, {
+}, {
   name: "Vérbéklyó",
   domains: ["Halál"],
   type: "Litánia",
@@ -1324,7 +1324,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "Egyszeri",
   save: ["Gyorsaság"],
   description: "A Háromfejű Vérmágiájának olyan fohásza ez, amely már alacsony szinten is jól alkalmazható, s a későbbiekben igen veszedelmes fegyverré válhat. Hatására, ha az áldozat elvéti Gyorsaságpróbáját, bőre alól vérkacsok sarjadnak, s magukat egy 2 ynevi lábnyi távolságnál nem messzebb lévő szilárd ponthoz láncolják (ha nincs ilyen az áldozat környezetében, a fohász hatása elmarad).\n\nHa csak módjuk van rá, igyekeznek mozgásképtelenné tenni áldozatukat. Maga a kacsok megszületése csupán 1k3 Fp veszteséggel jár, igazából az jár fájdalommal, ha megpróbálják a már rögzült kacsokat eltépni, vagy elvágni (sikeres Erőpróba az első, sikeres Támadódobás a második esetében). Ekkor minden egyes csáp 1k6 Fp fájdalmat okoz.\n\nMinden egyes vérkacs 5 Kegy pontot emészt fel a paptól, és az áldozatnak kacsonként kell Gyorsaságpróbát dobnia. Ha az egyszer is elvéti, az összes utána kővetkező próba automatikusan sikertelennek minősül, s a vérbéklyók maradéka előfurakodik a bőre alól. Toronból szabadult félőrültek elbeszéléseiben nem egyszer szerepel vérből font pókhálóban vergődő társak alakja.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Vérdermesztés",
   domains: ["Halál"],
   type: "Litánia",
@@ -1335,7 +1335,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "5 kör",
   save: ["Mentális"],
   description: "E varázslat segítségével a pap uralma alá hajthatja ellenfele testét, egyszerűen megdermesztve azt. Aki a mágia hatása alá kerül, az a varázslat időtartama alatt képtelen lesz akárcsak megmozdulni is, mintha magukat a testét behálózó ereket fagyasztották volna meg. Harcolni, varázsolni vagy fohászkodni képtelen, ellenben pszi diszciplínákat alkalmazhat.\n\nA fohászt sokkal könnyebb végrehajtani, ha előtte alkalmazója már ivott az áldozat véréből. Ennek hatása az ivástól számított 1 hónapig érezteti hatását, és +10-et ad a mágia erősítéséhez.\n\nTermészetesen az olyan áldozatokkal szemben (nem evilági vagy élőholt lényekkel), akiknek nincs vérük, a fohász hatástalan."
-} as PrayerInfo, {
+}, {
   name: "Vérszolga",
   domains: ["Halál"],
   type: "Litánia",
@@ -1345,7 +1345,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Speciális",
   duration: "Végleges",
   description: "Egy kisebb hatalmú szolgát képes Tharr papja e fohásszal létrehozni. A teremtmény egy különösebb értelem nélküli lény lesz, aki képes a pap bizonyos utasításait végrehajtani (Intelligenciája 5). Egyszerre legfeljebb két-három parancsnak tud engedelmeskedni. Beszélni képtelen, de bizonyos utasításokkal irányítva, egy egyszerű jelrendszer megtanítható vele. Nem képes harcra, legfeljebb őrnek alkalmazható, hiszen az önmaga körüli 30 ynevi lábnyi teret kitűnően érzékeli. A fájdalmat nem érzi, harcolni képtelen, Védő értéke 50 (ám csak Túlütéssel sebezhető).\n\nLétrehozásához Vérgyűjtés fohásszal tartósított vér szükséges, méreteit csupán a felhasznált mennyiség határozza meg. Egy ember nagyságú szolgához 30 liter vér szükséges. 1 liter vér felhasználása 8 Kegy pontot emészt fel és ez 1 Ép-t jelent a vérszolga számára. Egy átlagos szolga nem nagyobb egy jól megtermett kutyánál, de állítólag Shulurban számos, több ember magas, vérből gyúrt óriás is szolgálja az egyházat.\n\n"
-} as PrayerInfo, {
+}, {
   name: "Istenalak",
   domains: ["Halál"],
   type: "Rituálé",
@@ -1355,7 +1355,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 óra",
   description: "Magasabb szinten Tliarr papja képessé válik e fohász segítségével urának alakját magára ölteni. Nincs ennél nagyobb megtiszteltetés a Háromfejű szolgáinak, éppen ezért csakis kivételes esetekben, szakrális események alkalmával, Tharr nagyobb ünnepein stb. használják ezt a fohászt. Kizárólag a jelenlévők között rangban legelöl álló alkalmazhatja, s ha valaki más mégis ehhez a fohászhoz folyamodik, az nyílt kihívásként értékelhető.\n\nAmennyiben Tharr méltatlannak találja erre a kegyre, a hatás létrejön és a pap ezután őrökre elveszíti ura jóindulatát, és minden szakrális hatalmát.\n\nA fohász hatására a pap feje oroszlánfejjé változik, mely mellől egy bak és egy kígyófej nő ki. Az alany ruházata és testének többi része változatlan marad. A fenséges megjelenésen és a neki kijáró tiszteleten kívül más előnyei is vannak ennek a fohásznak.\n\nA pap ugyanis megmaradt Kegy pontjait három részre oszthatja, és ha úgy tartja kedve, egyszerre akár három különböző fohászt is alkalmazhat. Mindhárom feje képes a beszédre és az egyidejű cselekvésre. A pap megszüntetheti a fohászt akár az időtartam lejárta előtt is, de erre igen ritkán kerül sor."
-} as PrayerInfo, {
+}, {
   name: "Patkányidézés",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1365,7 +1365,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "200 m",
   duration: "30 perc",
   description: "A Tharr-papok különleges fohásza, mellyel 30+5kl0 patkányt képesek magukhoz szólítani és ellenfeleikre zúdítani. A fohász létrehozásához mindössze 2 szegmensnyi időre, egyetlen visításra van szükség, melynek élethűen kell a patkányok hangját utánozni, különben a fohász hatástalan marad (ehhez Hangutánzás képzettség legalább 2. fokára van szükség).\n\nA patkányok 1k6 perc alatt érkeznek és csak olyan helyen érdemes hívásukhoz folyamodni, ahol természetesen előfordulnak, hiszen máskülönben egy sem jelenik meg.\n\nA patkányok mindenben engedelmeskednek a pap parancsainál«, és igen hasznos segítőnek bizonyulhatnak, akár harcban is, ám az Időtartam lejárta előtt minden patkánynak el kell pusztulnia, hiszen ezen állatok Tliarr tanításai szerint olyan halott emberek, kik méltatlanok voltak a tisztességre, hogy haláluk után a Lindigassra, Tharr vérsíkjára kerüljenek, és lelkük azóta is itt sínylődik bebocsátásra várva. Mivel szolgálatukkal kiérdemelték, hogy az isten magához vegye őket, ezért ha a pap egyet is futni hagy a szolgálat végeztével, akkor istene haragját vonja a fejére, maximális Kegy pontja 1-gyel csökken.\n\nA patkányok harci képességeiről a Bestiárium c. fejezetben olvashatsz bővebben a 479. oldalon."
-} as PrayerInfo, {
+}, {
   name: "Vérzivatar",
   domains: ["Halál"],
   type: "Rituálé",
@@ -1375,7 +1375,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "6 kör",
   description: "E fohászt inkább lélektani fegyverként használják a Háromfejű papjai, hisz konkrét sérülést nem okozhatnak vele. Hatására a kijelölt területen hihetetlen mennyiségű vér szakad alá zivatarszerűen, akárha valamely ciszterna fala repedt volna meg. Miközben az érintett terület falaiból ömleni kezd a vér, pillanatok alatt iszamóssá változtatva a környéket.\n\nAz ily módon teremtett anyag valódi vér, amit azonban semmiféle céllal nem lehet felhasználni, az időtartam lejártával visszaszivárog a Lindigassra, ahonnan aláhullott.\n\nAz itt tartózkodók Akaraterőpróbát kőtelesek tenni, amit ha elvétenek akkor a körben a döbbenettől nem képesek gyorsan és hatékonyan cselekedni. Harcértékeikhez a Harc Kábultan módosítói járulnak és kővetkező varázslatukat vagy fohászukat csak 5 szegmenssel később kezdhetik el megidézni.\n\nKÉ: -10, TÉ: -20, VÉ: -10, CÉ: -30"
-} as PrayerInfo, {
+}, {
   name: "Bizonyosság",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1385,7 +1385,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "Egyszeri",
   description: "Uwel szolgái sem szívesen tévednek, főképp nem akkor, ha egy tévedés ártatlan életek kioltásához vezet. Éppen az ilyen sajnálatos balesetek kiküszöbölésére hivatott ez a fohász. Jóllehet az esetek tőbbségében Uwel hívei egyértelműen tudják bizonyítani ellenfelük bűnösségét, néha még ők maguk is meginoghatnak. Ilyenkor használatos ez a fohász, amely meggyőzheti őket cselekedeteik helyességéről. Ha ugyanis áldozatuk valóban bűnös, a bosszúállókat jótékony bizonyosság árasztja el tetteik helyességéről."
-} as PrayerInfo, {
+}, {
   name: "Jutalom",
   domains: ["Lélek"],
   type: "Rituálé",
@@ -1395,7 +1395,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "Önmaga",
   duration: "1 óra",
   description: "Az igaz bosszú jutalmaként is szokás emlegetni ezt a fohászt, mellyel Uwel a jogos elégtételt honorálja. A fohász hatóideje alatt ugyanis - ha valóban igaz ügyért harcolnak - Uwel szolgái nem szenvedik el az első Ép-t sebző találatot. Az ellenfél hiába ejt súlyos sebet a paplovagon, a sérülés azonnal és nyomtalanul beforr.\n\nKizárólag az összecsapás előtt használható, harc közbeni megidézése lehetetlen. Arra is volt azonban példa, hogy a bosszúálló mégis súlyosan megsebesült leszámolás közben. Ezzel számukra is nyilvánvalóvá válik tévedésük, s ha csak tehetik, bocsánatot remélve felhagynak a küzdelemmel."
-} as PrayerInfo, {
+}, {
   name: "Kopó",
   domains: ["Élet"],
   type: "Rituálé",
@@ -1405,4 +1405,4 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "1 nap",
   description: "A bosszúállás paplovagjai nem ritkán hónapokon keresztül üldöznek egyeseket abban a reményben, hogy istenük segedelmével lecsaphatnak rá. Megkönnyíti a dolgukat, ha tudják, kiről van szó, vagy legalább a kezükben van az illető egy holmija, amely egy napnál nem régebben még a célpont birtokában volt (nem kell feltétlenül szimpatikus viszonyban lévő tárgy.).\n\nA paplovag ennek a fohásznak a segítségével könnyedén kő- vetheti áldozatát, mintha pontosan megérezné annak szagát,\n\nbármilyen nehézségek - mészárszék, szeszfőzde, stb. - ellenére, ha az illető egy napnál nem régebben volt ott. így kopók módjára képesek áldozatukat üldözni, míg csak az időtartam lehetővé teszi, azután ismét meg kell újítaniuk a fohászt."
-} as PrayerInfo]
+}]
