@@ -13,11 +13,11 @@ import {
 import {TimeIcon} from '@chakra-ui/icons';
 import {isHighlightedRow} from "@/components/etc/utils";
 import Triggerable from "@/components/etc/Triggerable";
-import {BardMagicInfo, BardMagicType, BardMagicValues} from "@/magus/bardMagic";
+import {BardMagicInfo, BardMagicType, BardMagicValues} from "@/data/bardMagic";
 import {detailsModal} from "@/components/ui/DetailsModal";
 import Panel from "@/components/character/sheet/util/Panel";
-import {SkillValues} from "@/magus/skills";
-import {StatValues} from "@/magus/character";
+import {SkillValues} from "@/data/skills";
+import {StatValues} from "@/data/character";
 
 export default () => {
 

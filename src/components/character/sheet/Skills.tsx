@@ -2,7 +2,7 @@ import React from 'react';
 import {Box, FormLabel, HStack, Text, VStack} from '@chakra-ui/react';
 import {useCharacter} from "@/CharacterContext";
 import Panel from "@/components/character/sheet/util/Panel";
-import {Skill, SkillType, SkillValues} from "@/magus/skills";
+import {Skill, SkillType, SkillValues} from "@/data/skills";
 import Triggerable from "@/components/etc/Triggerable";
 import {detailsModal} from "@/components/ui/DetailsModal";
 

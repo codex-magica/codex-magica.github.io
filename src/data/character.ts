@@ -1,4 +1,4 @@
-import {Skill} from "@/magus/skills";
+import {Skill} from "@/data/skills";
 
 export const StatValues = {
   Erő: { short: "Erő" },

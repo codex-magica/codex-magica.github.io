@@ -11,7 +11,7 @@ import {
   Text, useBreakpoint,
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
-import {PrayerInfo, PrayerSource, PrayerType, PrayerValues} from "@/magus/prayers";
+import {PrayerInfo, PrayerSource, PrayerType, PrayerValues} from "@/data/prayers";
 import Triggerable from "@/components/etc/Triggerable";
 import {detailsModal} from "@/components/ui/DetailsModal";
 

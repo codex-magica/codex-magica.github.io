@@ -2,7 +2,7 @@ import React from 'react';
 import {FormLabel, HStack, Text, VStack} from '@chakra-ui/react';
 import {useCharacter} from "@/CharacterContext";
 import Panel from "@/components/character/sheet/util/Panel";
-import {StatValues} from "@/magus/character";
+import {StatValues} from "@/data/character";
 
 export default () => {
   const { character } = useCharacter();

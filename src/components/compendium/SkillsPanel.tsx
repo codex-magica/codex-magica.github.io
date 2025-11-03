@@ -11,9 +11,9 @@ import {
   Text, Tooltip, useBreakpoint, Modal, ModalOverlay, ModalContent, ModalCloseButton, ModalBody, ModalHeader, Button,
   HStack,
 } from '@chakra-ui/react';
-import {SkillInfo, SkillType, SkillValues} from "@/magus/skills";
+import {SkillInfo, SkillType, SkillValues} from "@/data/skills";
 import {isHighlightedRow} from "@/components/etc/utils";
-import {StatValues} from "@/magus/character";
+import {StatValues} from "@/data/character";
 import Details from "@/components/etc/Details";
 import SnappyModal from "@/components/ui/SnappyModal";
 

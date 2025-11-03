@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
-import {FireMagicInfo} from "@/magus/fireMagic";
+import {FireMagicInfo} from "@/data/fireMagic";
 
 export default ({spell}:{spell: FireMagicInfo}) => {
   return (

@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
-import {BardMagicInfo} from "@/magus/bardMagic";
+import {BardMagicInfo} from "@/data/bardMagic";
 
 export default ({spell}:{spell: BardMagicInfo}) => {
   return (

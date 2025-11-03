@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Text, VStack} from "@chakra-ui/react";
-import {PrayerInfo} from "@/magus/prayers";
+import {PrayerInfo} from "@/data/prayers";
 import Details from "@/components/etc/Details";
 
 export default ({prayer}:{prayer: PrayerInfo}) => {

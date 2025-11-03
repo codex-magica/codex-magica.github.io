@@ -12,7 +12,7 @@ import {
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
 import Triggerable from "@/components/etc/Triggerable";
-import {BardMagicInfo, BardMagicType, BardMagicValues} from "@/magus/bardMagic";
+import {BardMagicInfo, BardMagicType, BardMagicValues} from "@/data/bardMagic";
 import {detailsModal} from "@/components/ui/DetailsModal";
 
 export default () => {

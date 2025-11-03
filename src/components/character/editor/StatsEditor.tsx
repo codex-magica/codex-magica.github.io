@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Button, FormControl, FormLabel, HStack, Text, VStack} from '@chakra-ui/react';
-import {RaceValues, Stat} from "@/magus/character";
+import {RaceValues, Stat} from "@/data/character";
 import {useCharacter} from "@/CharacterContext";
 
 export default () => {

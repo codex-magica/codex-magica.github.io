@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
-import {PsiInfo} from "@/magus/psi";
+import {PsiInfo} from "@/data/psi";
 
 export default ({spell}:{spell: PsiInfo}) => {
   return (

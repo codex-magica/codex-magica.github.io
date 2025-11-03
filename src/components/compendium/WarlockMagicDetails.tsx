@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
-import {WarlockMagicInfo} from "@/magus/warlockMagic";
+import {WarlockMagicInfo} from "@/data/warlockMagic";
 
 export default ({spell}:{spell: WarlockMagicInfo}) => {
   return (

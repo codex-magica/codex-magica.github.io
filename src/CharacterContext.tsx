@@ -1,6 +1,6 @@
 import React, {createContext, ReactNode, useContext, useReducer} from 'react';
-import {Character} from "@/magus/character";
-import {defaultCharacter} from "@/magus/defaultCharacter";
+import {Character} from "@/data/character";
+import {defaultCharacter} from "@/data/defaultCharacter";
 
 // Define the type for the context value
 interface CharacterContextValue {

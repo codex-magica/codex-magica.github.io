@@ -12,8 +12,8 @@ import {
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
 import Triggerable from "@/components/etc/Triggerable";
-import {PsiInfo, PsiType, PsiValues} from "@/magus/psi";
-import PsiDetails from "@/components/psi/PsiDetails";
+import {PsiInfo, PsiType, PsiValues} from "@/data/psi";
+import PsiDetails from "@/components/compendium/PsiDetails";
 
 
 export default () => {

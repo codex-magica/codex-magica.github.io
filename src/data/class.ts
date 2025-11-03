@@ -1,4 +1,4 @@
-import {Race} from "@/magus/character";
+import {Race} from "@/data/character";
 
 
 export interface ClassInfo {

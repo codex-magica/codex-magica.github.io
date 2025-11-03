@@ -12,8 +12,8 @@ import {
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
 import Triggerable from "@/components/etc/Triggerable";
-import {WeaponInfo, WeaponType, WeaponValues} from "@/magus/weapons";
-import WeaponDetails from "@/components/weapons/WeaponDetails";
+import {WeaponInfo, WeaponType, WeaponValues} from "@/data/weapons";
+import WeaponDetails from "@/components/compendium/WeaponDetails";
 
 export default () => {
   const isMobile = useBreakpoint() === "base";

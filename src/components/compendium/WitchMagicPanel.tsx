@@ -12,8 +12,8 @@ import {
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
 import Triggerable from "@/components/etc/Triggerable";
-import {WitchMagicInfo, WitchMagicType, WitchMagicValues} from '@/magus/witchMagic';
-import WitchMagicDetails from "@/components/witchMagic/WitchMagicDetails";
+import {WitchMagicInfo, WitchMagicType, WitchMagicValues} from '@/data/witchMagic';
+import WitchMagicDetails from "@/components/compendium/WitchMagicDetails";
 
 export default () => {
 

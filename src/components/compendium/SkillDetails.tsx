@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Text, VStack} from "@chakra-ui/react";
-import {SkillInfo} from "@/magus/skills";
+import {SkillInfo} from "@/data/skills";
 import Details from "@/components/etc/Details";
 
 export default ({skill, level = 5}:{skill: SkillInfo, level?: number}) => {

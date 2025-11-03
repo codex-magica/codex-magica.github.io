@@ -1,21 +1,21 @@
-import {PrayerInfo} from "@/magus/prayers";
+import {PrayerInfo} from "@/data/prayers";
 import {Modal, ModalBody, ModalCloseButton, ModalContent, ModalOverlay} from "@chakra-ui/react";
-import PrayerDetails from "@/components/prayers/PrayerDetails";
+import PrayerDetails from "@/components/compendium/PrayerDetails";
 import React from "react";
-import {BardMagicInfo} from "@/magus/bardMagic";
-import {FireMagicInfo} from "@/magus/fireMagic";
-import {WitchMagicInfo} from "@/magus/witchMagic";
-import {WeaponInfo} from "@/magus/weapons";
-import {WarlockMagicInfo} from "@/magus/warlockMagic";
-import {SkillInfo} from "@/magus/skills";
-import {PsiInfo} from "@/magus/psi";
-import BardMagicDetails from "@/components/bardMagic/BardMagicDetails";
-import FireMagicDetails from "@/components/fireMagic/FireMagicDetails";
-import PsiDetails from "@/components/psi/PsiDetails";
-import SkillDetails from "@/components/skills/SkillDetails";
-import WarlockMagicDetails from "@/components/warlockMagic/WarlockMagicDetails";
-import WeaponDetails from "@/components/weapons/WeaponDetails";
-import WitchMagicDetails from "@/components/witchMagic/WitchMagicDetails";
+import {BardMagicInfo} from "@/data/bardMagic";
+import {FireMagicInfo} from "@/data/fireMagic";
+import {WitchMagicInfo} from "@/data/witchMagic";
+import {WeaponInfo} from "@/data/weapons";
+import {WarlockMagicInfo} from "@/data/warlockMagic";
+import {SkillInfo} from "@/data/skills";
+import {PsiInfo} from "@/data/psi";
+import BardMagicDetails from "@/components/compendium/BardMagicDetails";
+import FireMagicDetails from "@/components/compendium/FireMagicDetails";
+import PsiDetails from "@/components/compendium/PsiDetails";
+import SkillDetails from "@/components/compendium/SkillDetails";
+import WarlockMagicDetails from "@/components/compendium/WarlockMagicDetails";
+import WeaponDetails from "@/components/compendium/WeaponDetails";
+import WitchMagicDetails from "@/components/compendium/WitchMagicDetails";
 
 export type DetailsType = "BardMagicValues" | "FireMagicValues" | "PrayerValues" | "PsiValues" | "SkillValues" | "WarlockMagicValues" | "WeaponValues" | "WitchMagicValues";
 

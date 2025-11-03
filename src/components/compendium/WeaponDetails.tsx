@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, HStack, Text, VStack} from "@chakra-ui/react";
 import Details from "@/components/etc/Details";
-import {WeaponInfo} from "@/magus/weapons";
+import {WeaponInfo} from "@/data/weapons";
 
 export default ({weapon}:{weapon: WeaponInfo}) => {
   return (

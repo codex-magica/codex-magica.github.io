@@ -12,8 +12,8 @@ import {
 } from '@chakra-ui/react';
 import {isHighlightedRow} from "@/components/etc/utils";
 import Triggerable from "@/components/etc/Triggerable";
-import {WarlockMagicInfo, WarlockMagicType, WarlockMagicValues} from "@/magus/warlockMagic";
-import WarlockMagicDetails from "@/components/warlockMagic/WarlockMagicDetails";
+import {WarlockMagicInfo, WarlockMagicType, WarlockMagicValues} from "@/data/warlockMagic";
+import WarlockMagicDetails from "@/components/compendium/WarlockMagicDetails";
 
 export default () => {
   const isMobile = useBreakpoint() === "base";

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Select } from '@chakra-ui/react';
-import {Race, RaceValues, Stat} from "@/magus/character";
+import {Race, RaceValues, Stat} from "@/data/character";
 import _ from "lodash";
 import {useCharacter} from "@/CharacterContext";
 
