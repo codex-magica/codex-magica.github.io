@@ -44,7 +44,7 @@ export default () => {
           </Thead>
           <Tbody>
             {BardMagicValues.filter((spell) => spell.type === type).map((spell, index) => (
-              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+              <Tr key={index} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
                 <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
                 <Td textAlign="center">{spell.cost}</Td>
                 <Td textAlign="center">{spell.castingTime}</Td>

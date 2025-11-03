@@ -9,8 +9,8 @@ export default () => {
   return (
     <Panel title="Derived Stats">
       <VStack spacing={0}>
-        {Object.entries(character.derivedStats).map(([statName, statValue]) => (
-          <HStack key={statName}>
+        {Object.entries(character.derivedStats).map(([statName, statValue], index) => (
+          <HStack key={index}>
             <FormLabel width="120px">{statName}</FormLabel>
             <Text width="20px" textAlign="center" verticalAlign="middle">{statValue.calc(character)}</Text>
           </HStack>

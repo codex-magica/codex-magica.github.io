@@ -53,7 +53,7 @@ export default () => {
           </Thead>
           <Tbody>
             {SkillValues.filter((skill) => skill.skillType === type).map((skill, index) => (
-              <Tr key={skill.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(skill)}>
+              <Tr key={index} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(skill)}>
                 <Td textOverflow="ellipsis"><Text textDecoration="none">{skill.name}</Text></Td>
                 <Td textAlign="center" w="50px">
                   <Tooltip label={skillDifficultyTooltip[skill.skillDifficulty]} aria-label="A tooltip">

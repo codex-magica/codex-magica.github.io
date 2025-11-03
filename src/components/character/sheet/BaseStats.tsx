@@ -10,8 +10,8 @@ export default () => {
   return (
     <Panel title="Tulajdonságok">
       <VStack spacing={0}>
-        {Object.entries(character.stats).map(([statName, statValue]) => (
-          <HStack key={statName}>
+        {Object.entries(character.stats).map(([statName, statValue], index) => (
+          <HStack key={index}>
             <FormLabel width="120px">{statName}</FormLabel>
             <Text width="20px" textAlign="center" verticalAlign="middle">{statValue}</Text>
           </HStack>

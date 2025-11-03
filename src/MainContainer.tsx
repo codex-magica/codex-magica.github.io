@@ -9,12 +9,13 @@ import PsiPanel from "@/components/compendium/PsiPanel";
 import WeaponsPanel from "@/components/compendium/WeaponsPanel";
 import SnappyTabs from "@/components/ui/SnappyTabs";
 import CharacterSheet from "@/components/character/sheet/CharacterSheet";
+import ArmorPanel from "@/components/compendium/ArmorPanel";
 
 
 function MainContainer() {
 
   return (
-    <SnappyTabs tabs={['Karakter', 'Képzettségek', 'Bárdmágia', 'Szakrális Mágia', 'Boszorkánymágia', 'Boszorkánymesteri mágia', 'Tűzmágia', 'Pszi', 'Fegyverek']}>
+    <SnappyTabs tabs={['Karakter', 'Képzettségek', 'Bárdmágia', 'Szakrális Mágia', 'Boszorkánymágia', 'Boszorkánymesteri mágia', 'Tűzmágia', 'Pszi', 'Fegyverek', 'Páncélok']}>
       <CharacterSheet />
       <SkillsPanel />
       <BardMagicPanel />
@@ -24,6 +25,7 @@ function MainContainer() {
       <FireMagicPanel />
       <PsiPanel />
       <WeaponsPanel />
+      <ArmorPanel />
     </SnappyTabs>
   );
 }

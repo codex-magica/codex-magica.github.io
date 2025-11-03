@@ -17,8 +17,8 @@ export default () => {
 
   return (
     <VStack spacing={4}>
-      {Object.entries(character.stats).map(([statName, statValue]) => (
-        <FormControl key={statName}>
+      {Object.entries(character.stats).map(([statName, statValue], index) => (
+        <FormControl key={index}>
           <HStack>
             <FormLabel width="120px">{statName}</FormLabel>
             <Button

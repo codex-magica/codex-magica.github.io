@@ -46,7 +46,7 @@ export default () => {
           </Thead>
           <Tbody>
             {PsiValues.filter((spell) => spell.type === type).map((spell, index) => (
-              <Tr key={spell.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
+              <Tr key={index} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(spell)}>
                 <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{spell.name}</Text></Td>
                 {!isMobile && <Td textAlign="center">{spell.level}</Td>}
                 {!isMobile && <Td textAlign="center">{spell.domain}</Td>}

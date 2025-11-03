@@ -45,7 +45,7 @@ export default () => {
           </Thead>
           <Tbody>
             {PrayerValues.filter((prayer) => prayer.source === source && (!type || prayer.type === type)).map((prayer, index) => (
-              <Tr key={prayer.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(prayer)}>
+              <Tr key={index} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(prayer)}>
                 <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{prayer.name}</Text></Td>
                 {!isMobile && <Td textAlign="center">{prayer.domains.map((d) => d[0]).join(",")}</Td>}
                 <Td textAlign="center">{prayer.cost}</Td>

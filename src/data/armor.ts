@@ -1,7 +1,7 @@
 
 export interface ArmorInfo {
   name: string;
-  cost: string;
+  cost?: string;
   weight: string;
   STP: number;
   MGT: number;
@@ -17,6 +17,7 @@ export interface ShieldInfo {
   attackDuration?: string;
   MGT: number;
   KÉ: number;
+  TÉ: number
   VÉ: number | string;
   description: string | string[];
 }
@@ -30,6 +31,7 @@ export const ShieldValues: ShieldInfo[] = [
     damage: "1k6",
     MGT: 0,
     KÉ: 5,
+    TÉ: 0,
     VÉ: 20,
     description: "Kis pajzsnak nevezzük a hozzávetőleg fél ynevi láb átmérőjű, általában kerek pajzsokat."
   },
@@ -41,6 +43,7 @@ export const ShieldValues: ShieldInfo[] = [
     damage: "1k6",
     MGT: -1,
     KÉ: 0,
+    TÉ: 0,
     VÉ: 35,
     description: "A közepes pajzsok hosszúkásak és a felsőtestet védik, azaz kb. egy ynevi láb méretűek."
   },
@@ -52,6 +55,7 @@ export const ShieldValues: ShieldInfo[] = [
     damage: "1k6",
     MGT: -3,
     KÉ: 0,
+    TÉ: 0,
     VÉ: 50,
     description: "A nagy pajzsok embermagasak és a nehézvértezetű lovagok felszereléséhez tartoznak. Gyakran használnak ilyet a számszeríjászok is fedezékként."
   },
@@ -61,8 +65,9 @@ export const ShieldValues: ShieldInfo[] = [
     weight: "6",
     MGT: 0,
     KÉ: 0,
+    TÉ: 0,
     VÉ: "30/40",
-    description: "A pavéze pajzs a számszeríjászok kedvelt pajzsa. Eredetileg az edorli gyalogezredben használták, onnan terjedt el. A pavéze hozzávetőleg téglalap alakú, de a közepén széles, függőleges gerinc fut végig. Ez azt a célt szolgálja, hogy a pajzsot fel lehessen állítani. Ha a számszeríjász ledöf egy karót a földbe, a pajzsot pedig úgy állítja mellé, hogy a gerinc belső oldala mentén támaszkodjon a karónak, akkor az nem fog eldőlni. A számszeríjászok ezt a pajzsot egyébként fedezékként használják, míg újratöltik nyílpuskáikat. A pavéze magas, egy felnőtt embernek a mellkasáig ér. Nagy mérete és esetlen alakja közelharcban nehezen mozgatható, Védő érté- ke így 30, fedezékként azonban annál hasznosabb, a Célzó dobással szembe állított Védő értéke ugyanis 40."
+    description: "A pavéze pajzs a számszeríjászok kedvelt pajzsa. Eredetileg az edorli gyalogezredben használták, onnan terjedt el. A pavéze hozzávetőleg téglalap alakú, de a közepén széles, függőleges gerinc fut végig. Ez azt a célt szolgálja, hogy a pajzsot fel lehessen állítani. Ha a számszeríjász ledöf egy karót a földbe, a pajzsot pedig úgy állítja mellé, hogy a gerinc belső oldala mentén támaszkodjon a karónak, akkor az nem fog eldőlni. A számszeríjászok ezt a pajzsot egyébként fedezékként használják, míg újratöltik nyílpuskáikat. A pavéze magas, egy felnőtt embernek a mellkasáig ér. Nagy mérete és esetlen alakja közelharcban nehezen mozgatható, Védő értéke így 30, fedezékként azonban annál hasznosabb, a Célzó dobással szembe állított Védő értéke ugyanis 40."
   },
   {
     name: "Alkarvédő",
@@ -70,6 +75,7 @@ export const ShieldValues: ShieldInfo[] = [
     weight: "1",
     MGT: 0,
     KÉ: 0,
+    TÉ: 0,
     VÉ: 15,
     description: "A legkisebb, hárításra használt eszközök az alkarvédők, amelyek használata sokban emlékeztet a pajzsokéra. Ezek Védő értéke 15, de ez csak akkor érvényesül, ha a karakter sem fegyvert, sem pajzsot nem fog védekező kezébe. Azok a páncélok, amelyek eleve rendelkeznek alkarvérttel (fél- és teljes vértezet) biztosítják ezt a védelmet viselőjük számára."
   }
@@ -137,7 +143,7 @@ export const ArmorValues: ArmorInfo[] = [
     MGT: -2,
     SFÉ: 3,
     description: [
-      "Az előkelő urak nem találták megfelelőnek a gyűrűsvértet — számukra készült a brigandin, Itt nem kívülről kerülnek a ru- hára a fém részek, hanem két réteg szövet közé rögzítik azokat.",
+      "Az előkelő urak nem találták megfelelőnek a gyűrűsvértet — számukra készült a brigandin, Itt nem kívülről kerülnek a ruhára a fém részek, hanem két réteg szövet közé rögzítik azokat.",
     "Messziről a brigandin közönséges ruhának is vélhető, bár közelről látszanak a lemezek rögzítésére szolgáló, szabályosan elhelyezkedő varrások vagy szegecsek.  A brigandin ezenfelül hathatósabb védelmet nyújt a gyűrűsvértnél, mert itt a lapok átfedéssel kerülnek a két réteg szövet  közé, nem hagyva rést maguk között. A nagyobb biztonság ára  a nagyobb súly és a nehezebb mozgás. A gyűrűsvért, valamint  a brigandin elöl-hátul védi a felsőtestet és általában a felkarokat, éppúgy, mint a fegyverkabát ami ezek alapjául szolgál."
     ]
   },
@@ -211,29 +217,26 @@ export const ArmorValues: ArmorInfo[] = [
     STP: 120,
     MGT: -5,
     SFÉ: 6,
-    description: "A lovagi fél- és teljesvértek mellvasának jobb oldalán kap helyet az úgynevezett ord, ami a nehézkopja megtámasztására szolgál. Ebbe a csuklós kampóba akasztja bele a lovas a kopja végét, amit így könnyebb tartani, azaz pontosabb lesz vele a döfés. Néhány vérten a hátlemezen is található ilyen ord, ez a kopja végének megtámasztását szolgálja. A mellvashoz kapcsolódik a vállvért, amelyen sokszor magas gallér fut végig. Ez néhány esetben csak a bal oldalon található meg. Feladata a nyak védelme; általában rákozott megoldással ké- szül. Fontos problémája a páncélkovácsoknak a vállvas és a mellvért találkozása. Itt ugyanis a váll széles mozgásigénye miatt a hónalj részben fedetlen marad, Ezt a vállakra szíjazott korongokkal, tárcsákkal igyekeznek áthidalni, de ez a megoldás sem kielégítő. Ezért van, hogy a páncélos lovag ellen - akár kopjával, akár karddal — az egyik leghatékonyabb szúrás a hónaljdöfés.\nLehetséges megoldást kínál a felemás páncél, aminek a jobb vállvasa kicsi, de a bal hosszan benyúlik a mellvas elé, mivel a balban csak a pajzsot kell tartani. A felső és alsó karvasakat a könyökvért köti össze, amelyen oldalt pillangószerű kiszélesedés védi a hajlatot. A hátvasak tagoltak, alakjuk jól követi az emberi testet. A nagyobb merevség érdekében gyakran bordázottak. A mell- és hátvasakhoz szíjakkal csatlakozik a csatakötény, ami rendszerint rákozott, akárcsak a rákozott vért. Feladata a combok védelme. A mozgást és a lovaglást megkönnyítendő, ágyéknál általában helyet hagynak — ezt a részt a teljes vért alá vett fegyverkabáton sodrony rátéttel védik. A lábvértek csőszerű vasak, melyeket a mellvért alatt viselt övhöz szíjaznak, egymáshoz pedig vaskapoccsal vagy szíjakkal csatlakoztatnak. A comb- és lábszárvértet a térdvas kapcsolja össze, ami a könyökvashoz hasonlóan pillangószerű kiszélesedéssel védi a hajlatot. A mellvérthez felül vagy az állvért kapcsolódik, amihez azután a harangsisakot rögzítik, vagy az összetettebb zárt sisak. A sisak és a mellvért találkozása a vállvérthez hasonlóan nem teljesen megoldott, ezért az ellenfél álla is elsődleges célpont a lovagok számára. Az alkarvérthez vaskesztyű csatlakozik. Egyes vidékeken ez csak egy fémlemezekkel megerősített bőrkesztyű, de a nevesebb fegyverkovácsok olyan kesztyűket is készítenek, amelyek mindenütt acél alkatrészekből állnak, és pontosan követik a kéz mozdulatait. A legtöbb páncélkesztyű csak a kézhát felőli oldalon véd, a lovag tenyere szabadon marad, így képes megfogni fegyvereit. A lábszárvérthez vassaru csatlakozik. Ennek orrészére gyakran hosszú, hegyes toldalékot illesztenek, ez azonban csak a lovasságra jellemző — a gyalog- ság vassarui elöl mind lekerekítettek.\nA nehézvért alá, a hézagok elfedésére sodrony- vagy láncrátétet hordanak, amit a bőr- vagy posztóruházaton viselnek. A díszes, rangot jelző köpönyegek a vértezeteken kívülre kerülnek. A súly csökkentése végett a nehézvért alá vett kiegészítőket gyakran ötvözik. A bőr- vagy posztó fegyverkabátra csak ott erősítenek láncszövet darabokat, ahol annak védenie kell."
+    description: "A lovagi fél- és teljesvértek mellvasának jobb oldalán kap helyet az úgynevezett ord, ami a nehézkopja megtámasztására szolgál. Ebbe a csuklós kampóba akasztja bele a lovas a kopja végét, amit így könnyebb tartani, azaz pontosabb lesz vele a döfés. Néhány vérten a hátlemezen is található ilyen ord, ez a kopja végének megtámasztását szolgálja. A mellvashoz kapcsolódik a vállvért, amelyen sokszor magas gallér fut végig. Ez néhány esetben csak a bal oldalon található meg. Feladata a nyak védelme; általában rákozott megoldással készül. Fontos problémája a páncélkovácsoknak a vállvas és a mellvért találkozása. Itt ugyanis a váll széles mozgásigénye miatt a hónalj részben fedetlen marad, Ezt a vállakra szíjazott korongokkal, tárcsákkal igyekeznek áthidalni, de ez a megoldás sem kielégítő. Ezért van, hogy a páncélos lovag ellen - akár kopjával, akár karddal — az egyik leghatékonyabb szúrás a hónaljdöfés.\nLehetséges megoldást kínál a felemás páncél, aminek a jobb vállvasa kicsi, de a bal hosszan benyúlik a mellvas elé, mivel a balban csak a pajzsot kell tartani. A felső és alsó karvasakat a könyökvért köti össze, amelyen oldalt pillangószerű kiszélesedés védi a hajlatot. A hátvasak tagoltak, alakjuk jól követi az emberi testet. A nagyobb merevség érdekében gyakran bordázottak. A mell- és hátvasakhoz szíjakkal csatlakozik a csatakötény, ami rendszerint rákozott, akárcsak a rákozott vért. Feladata a combok védelme. A mozgást és a lovaglást megkönnyítendő, ágyéknál általában helyet hagynak — ezt a részt a teljes vért alá vett fegyverkabáton sodrony rátéttel védik. A lábvértek csőszerű vasak, melyeket a mellvért alatt viselt övhöz szíjaznak, egymáshoz pedig vaskapoccsal vagy szíjakkal csatlakoztatnak. A comb- és lábszárvértet a térdvas kapcsolja össze, ami a könyökvashoz hasonlóan pillangószerű kiszélesedéssel védi a hajlatot. A mellvérthez felül vagy az állvért kapcsolódik, amihez azután a harangsisakot rögzítik, vagy az összetettebb zárt sisak. A sisak és a mellvért találkozása a vállvérthez hasonlóan nem teljesen megoldott, ezért az ellenfél álla is elsődleges célpont a lovagok számára. Az alkarvérthez vaskesztyű csatlakozik. Egyes vidékeken ez csak egy fémlemezekkel megerősített bőrkesztyű, de a nevesebb fegyverkovácsok olyan kesztyűket is készítenek, amelyek mindenütt acél alkatrészekből állnak, és pontosan követik a kéz mozdulatait. A legtöbb páncélkesztyű csak a kézhát felőli oldalon véd, a lovag tenyere szabadon marad, így képes megfogni fegyvereit. A lábszárvérthez vassaru csatlakozik. Ennek orrészére gyakran hosszú, hegyes toldalékot illesztenek, ez azonban csak a lovasságra jellemző — a gyalogság vassarui elöl mind lekerekítettek.\nA nehézvért alá, a hézagok elfedésére sodrony- vagy láncrátétet hordanak, amit a bőr- vagy posztóruházaton viselnek. A díszes, rangot jelző köpönyegek a vértezeteken kívülre kerülnek. A súly csökkentése végett a nehézvért alá vett kiegészítőket gyakran ötvözik. A bőr- vagy posztó fegyverkabátra csak ott erősítenek láncszövet darabokat, ahol annak védenie kell."
   },
   {
     name: "gladiátorvért",
-    cost: "-",
     weight: "15",
     STP: 80,
     MGT: -2,
     SFÉ: 4,
-    description: "A szaknyelv gladiátorvértezetnek nevezi a következő ösz- szeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
+    description: "A szaknyelv gladiátorvértezetnek nevezi a következő öszszeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
   },
   {
     name: "kráni vért",
-    cost: "-",
     weight: "15",
     STP: 80,
     MGT: -2,
     SFÉ: 4,
-    description: "A szaknyelv gladiátorvértezetnek nevezi a következő ösz- szeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
+    description: "A szaknyelv gladiátorvértezetnek nevezi a következő öszszeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
   },
   {
     name: "kardművész vért",
-    cost: "-",
     weight: "15",
     STP: 80,
     MGT: -1,

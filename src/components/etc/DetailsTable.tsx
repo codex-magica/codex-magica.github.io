@@ -22,8 +22,8 @@ export default ({tableString}: {tableString: string}) => {
       <Table variant="simple" size="sm">
         <Thead>
           <Tr>
-            {adjustedHeaderRow.map((header) => (
-              <Th key={header} textAlign="center">{header}</Th>
+            {adjustedHeaderRow.map((header, index) => (
+              <Th key={index} textAlign="center">{header}</Th>
             ))}
           </Tr>
         </Thead>

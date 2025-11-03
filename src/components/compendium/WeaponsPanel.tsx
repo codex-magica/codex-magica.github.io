@@ -60,7 +60,7 @@ export default () => {
           <Tbody>
             {WeaponValues.filter((weapon) => weapon.type === type && weapon.subType === subType)
               .map((weapon, index) => (
-                <Tr key={weapon.name} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(weapon)}>
+                <Tr key={index} bg={isHighlightedRow(index) ? '#E7E7E7' : 'inherit'} cursor="pointer" onClick={() => setSelectedItem(weapon)}>
                   <Td maxW="200px" textOverflow="ellipsis"><Text textDecoration="none">{weapon.name}</Text></Td>
                   <Td textAlign="center">{weapon.attackDuration}</Td>
                   <Td textAlign="center">{weapon.damage}</Td>
