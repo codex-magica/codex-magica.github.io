@@ -6,6 +6,10 @@ export const handler = async (event) => {
   const headers = request.headers;
   const uri = request.uri;
 
+  console.log("===== Incoming request =====");
+  console.log(JSON.stringify(request, null, 2));
+  console.log("===========================");
+
   const cookies = headers.cookie?.[0]?.value || "";
   const tokenMatch = cookies.match(/id_token=([^;]+)/);
   const token = tokenMatch?.[1];
