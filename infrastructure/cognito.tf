@@ -23,12 +23,12 @@ resource "aws_cognito_user_pool_client" "web" {
   name = "${local.name_prefix}-web"
   user_pool_id = aws_cognito_user_pool.main.id
   generate_secret = false
-  allowed_oauth_flows = ["code"]
+  allowed_oauth_flows = ["code", "implicit"]
   allowed_oauth_scopes = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
   callback_urls = var.cognito_callback_urls
   logout_urls = var.cognito_logout_urls
-  supported_identity_providers = compact(["COGNITO", var.google_client_id != null ? "Google" : null, var.apple_services_id != null ? "SignInWithApple" : null])
+  supported_identity_providers = compact([var.google_client_id != null ? "Google" : null, var.apple_services_id != null ? "SignInWithApple" : null])
   prevent_user_existence_errors = "ENABLED"
 }
 
@@ -53,8 +53,14 @@ resource "aws_cognito_identity_provider" "google" {
     client_id = var.google_client_id
     client_secret = data.aws_ssm_parameter.cognito_client_secret_google.value
     authorize_scopes = "openid email profile"
+    attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
+    attributes_url_add_attributes = "true"
+    authorize_url                 = "https://accounts.google.com/o/oauth2/v2/auth"
+    oidc_issuer                   = "https://accounts.google.com"
+    token_request_method           = "POST"
+    token_url                      = "https://www.googleapis.com/oauth2/v4/token"
   }
-  attribute_mapping = { email = "email" }
+  attribute_mapping = { email = "email", username = "sub" }
 }
 
 
@@ -121,4 +127,12 @@ resource "aws_lambda_function" "cognito_whitelist" {
   handler = "index.handler"
   filename = data.archive_file.whitelist_zip.output_path
   environment { variables = { ALLOWED_EMAILS_JSON = jsonencode(var.allowed_emails) } }
+}
+
+resource "aws_cognito_user_pool_ui_customization" "ui" {
+  user_pool_id = aws_cognito_user_pool.main.id
+  client_id    = aws_cognito_user_pool_client.web.id
+
+  css = file("${path.module}/cognito.css")
+  # image_file = filebase64("${path.module}/assets/login-bg.png")
 }

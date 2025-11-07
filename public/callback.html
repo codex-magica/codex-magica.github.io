@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Signing in...</title>
+    <style>
+        body {
+            background: #1a202c;
+            color: #edf2f7;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 { font-size: 1.5em; font-weight: 600; }
+    </style>
+</head>
+<body>
+<h1>Signing you in...</h1>
+<script>
+  (function() {
+    try {
+      const params = new URLSearchParams(window.location.hash.substring(1));
+      const idToken = params.get("id_token");
+      if (idToken) {
+        // Store token in secure cookie
+        document.cookie = `id_token=${idToken}; Path=/; Secure; SameSite=Lax;`;
+      }
+    } catch (e) {
+      console.error("Token extraction failed", e);
+    }
+    // Redirect to app root (no fragment)
+    window.location.replace(window.location.origin + "/");
+  })();
+</script>
+</body>
+</html>

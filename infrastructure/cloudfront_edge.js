@@ -1,18 +1,21 @@
-import jwt from "jsonwebtoken";
-import fetch from "node-fetch";
+// import jwt from "jsonwebtoken";
+// import fetch from "node-fetch";
 
 export const handler = async (event) => {
   const request = event.Records[0].cf.request;
   const headers = request.headers;
+  const uri = request.uri;
 
   const cookies = headers.cookie?.[0]?.value || "";
   const tokenMatch = cookies.match(/id_token=([^;]+)/);
   const token = tokenMatch?.[1];
 
-  if (!token) {
+  const isCallback = uri === "/callback.html";
+
+  if (!token && !isCallback) {
     // Redirect to Cognito login
     // const redirect = encodeURIComponent(`https://${headers.host[0].value}${request.uri}`);
-    const redirect = 'https://dexample000001.cloudfront.net/'
+    const redirect = encodeURIComponent('https://dexample000001.cloudfront.net/callback.html');
     return {
       status: "302",
       headers: {

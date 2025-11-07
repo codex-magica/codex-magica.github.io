@@ -1,5 +1,4 @@
 const { override, addWebpackAlias } = require('customize-cra');
-const { InjectManifest } = require('workbox-webpack-plugin');
 const path = require('path');
 
 // // Function to add Workbox InjectManifest plugin
