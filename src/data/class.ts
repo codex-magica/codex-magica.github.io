@@ -54,6 +54,7 @@ export const ClassValues = {
     allowedRaces: ["Ember", "Elf", "FélElf", "KyrSzármazék"],
     kapCost: 6,
     subclasses: {
+      "Magányos mester": {} as SubclassInfo,
       "Aszisz Énekmondó": {} as SubclassInfo,
       "Lombhullás Árvái": {} as SubclassInfo,
       "Vándorló dalnok": {} as SubclassInfo,
@@ -130,7 +131,7 @@ export const ClassValues = {
   Varázsló: {
     allowedRaces: ["Ember", "Elf", "FélElf", "Törpe", "KyrSzármazék"],
     kapCost: 10,
-subclasses: {
+    subclasses: {
       "Lar-Dor": {} as SubclassInfo,
       "Pyarroni Varázslórend": {} as SubclassInfo,
       "Doran": {} as SubclassInfo,

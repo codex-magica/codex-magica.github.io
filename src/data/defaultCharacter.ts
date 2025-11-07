@@ -57,7 +57,7 @@ export const defaultCharacter : Character = {
     { skill: "Herbalizmus", level: 3 },
     { skill: "Vadonjárás", skillSubtype:"erdő", level: 4 },
     { skill: "Lovaglás", level: 4 },
-    { skill: "Fegyverhasználat", level: 3 },
+    { skill: "Fegyverhasználat", level: 3, skillSubtype: "íjak" },
     { skill: "Csomózás", level: 2 },
     { skill: "Futás", level: 2 },
     { skill: "Úszás", level: 2 },
