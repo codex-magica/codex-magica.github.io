@@ -7,7 +7,7 @@ import SnappyModal from "@/components/ui/SnappyModal";
 import {SkillDetails, SkillTitle} from "@/components/compendium/SkillDetails";
 import {SkillLevel} from "@/data/character";
 
-export default () => {
+export const SkillsPanel = () => {
   const { character } = useCharacter();
 
   const [selectedItem, setSelectedItem] = useState<SkillLevel | undefined>();

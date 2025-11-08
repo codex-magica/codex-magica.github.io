@@ -7,7 +7,7 @@ import {RangedAttackModal} from "@/components/character/sheet/RangedAttackModal"
 import {MeleeAttackModal} from "@/components/character/sheet/MeleeAttackModal";
 import {SwordIcon} from "@/icons/SwordIcon";
 
-export default () => {
+export const CombatValuesPanel = () => {
   const { character } = useCharacter();
 
   const rangedAttackModal = useDisclosure();
@@ -17,16 +17,16 @@ export default () => {
     <Panel title="Harcértékek">
       <Panel title="Közelharci" size="sm">
         <HStack onClick={meleeAttackModal.onOpen} cursor="pointer">
-          <FormLabel width="120px">Tőr</FormLabel>
-          <Text textAlign="center" verticalAlign="middle">2k10-1</Text>
-          <Text textAlign="center" verticalAlign="middle">43</Text>
+          <FormLabel width="120px" cursor="pointer">Tőr</FormLabel>
+          <Text textAlign="center" verticalAlign="middle" cursor="pointer">2k10-1</Text>
+          <Text textAlign="center" verticalAlign="middle" cursor="pointer">43</Text>
         </HStack>
       </Panel>
       <Panel title="Távolsági" size="sm">
         <HStack onClick={rangedAttackModal.onOpen} cursor="pointer">
-          <FormLabel width="120px">Hosszú íj</FormLabel>
-          <Text textAlign="center" verticalAlign="middle">2k6+1</Text>
-          <Text textAlign="center" verticalAlign="middle">49</Text>
+          <FormLabel width="120px" cursor="pointer">Hosszú íj</FormLabel>
+          <Text textAlign="center" verticalAlign="middle" cursor="pointer">2k6+1</Text>
+          <Text textAlign="center" verticalAlign="middle" cursor="pointer">49</Text>
         </HStack>
       </Panel>
       <Panel title="Ammo" size="sm">

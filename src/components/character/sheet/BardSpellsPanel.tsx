@@ -9,7 +9,7 @@ import Panel from "@/components/character/sheet/util/Panel";
 import SnappyModal from "@/components/ui/SnappyModal";
 import {BardMagicDetails, BardMagicTitle} from "@/components/compendium/BardMagicDetails";
 
-export default () => {
+export const BardSpellsPanel = () => {
   const [selectedItem, setSelectedItem] = useState<BardMagicInfo | undefined>();
 
   const isMobile = useBreakpoint() === "base";

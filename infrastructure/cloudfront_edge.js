@@ -1,22 +1,36 @@
 // import jwt from "jsonwebtoken";
 // import fetch from "node-fetch";
 
+function isPublicPath(uri, patterns) {
+  return patterns.some(pattern => {
+    // Escape regex special chars except '*'
+    const regexPattern = '^' + pattern
+      .replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&') // escape regex meta chars
+      .replace(/\*/g, '.*') + '$';             // convert * → .*
+    return new RegExp(regexPattern).test(uri);
+  });
+}
+
+const publicPaths = [
+  "/callback.html",
+  "/favicon*",
+  "/logo*",
+  "/manifest*",
+  "/robots.txt"
+];
+
 export const handler = async (event) => {
   const request = event.Records[0].cf.request;
   const headers = request.headers;
   const uri = request.uri;
 
-  console.log("===== Incoming request =====");
-  console.log(JSON.stringify(request, null, 2));
-  console.log("===========================");
-
   const cookies = headers.cookie?.[0]?.value || "";
   const tokenMatch = cookies.match(/id_token=([^;]+)/);
   const token = tokenMatch?.[1];
 
-  const isCallback = uri === "/callback.html";
+  const isPublic = isPublicPath(uri, publicPaths)
 
-  if (!token && !isCallback) {
+  if (!token && !isPublic) {
     // Redirect to Cognito login
     // const redirect = encodeURIComponent(`https://${headers.host[0].value}${request.uri}`);
     const redirect = encodeURIComponent('https://dexample000001.cloudfront.net/callback.html');
