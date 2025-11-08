@@ -14,7 +14,7 @@ resource "aws_cognito_user_pool" "main" {
 
 
   lambda_config {
-    post_authentication = aws_lambda_function.cognito_whitelist.arn
+    pre_token_generation = aws_lambda_function.cognito_whitelist.arn
   }
 }
 
@@ -95,15 +95,28 @@ resource "aws_cognito_identity_provider" "google" {
 # }
 
 
-# Whitelist Lambda (PostAuthentication) — blocks users not in allowed_emails
-resource "aws_iam_role" "cog_lambda" {
-  name = "${local.name_prefix}-cog-lambda-exec"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+resource "aws_iam_role" "lambda_cognito" {
+  name = "${local.name_prefix}-lambda-cognito-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "lambda.amazonaws.com"
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
 }
 
 
 resource "aws_iam_role_policy_attachment" "cog_lambda_basic" {
-  role = aws_iam_role.cog_lambda.name
+  role = aws_iam_role.lambda_cognito.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -122,11 +135,19 @@ data "archive_file" "whitelist_zip" {
 
 resource "aws_lambda_function" "cognito_whitelist" {
   function_name = "${local.name_prefix}-cognito-whitelist"
-  role = aws_iam_role.cog_lambda.arn
+  role = aws_iam_role.lambda_cognito.arn
   runtime = "nodejs20.x"
   handler = "index.handler"
   filename = data.archive_file.whitelist_zip.output_path
   environment { variables = { ALLOWED_EMAILS_JSON = jsonencode(var.allowed_emails) } }
+}
+
+resource "aws_lambda_permission" "allow_cognito_invoke" {
+  statement_id  = "AllowExecutionFromCognito"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cognito_whitelist.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.main.arn
 }
 
 resource "aws_cognito_user_pool_ui_customization" "ui" {

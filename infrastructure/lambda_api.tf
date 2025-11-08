@@ -1,18 +1,18 @@
-resource "aws_iam_role" "lambda_exec" {
-  name = "${local.name_prefix}-lambda-exec"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
-}
+# resource "aws_iam_role" "lambda_exec" {
+#   name = "${local.name_prefix}-lambda-exec"
+#   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+# }
 
 
-data "aws_iam_policy_document" "lambda_assume" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type = "Service"
-      identifiers = ["lambda.amazonaws.com"]
-    }
-  }
-}
+# data "aws_iam_policy_document" "lambda_assume" {
+#   statement {
+#     actions = ["sts:AssumeRole"]
+#     principals {
+#       type = "Service"
+#       identifiers = ["lambda.amazonaws.com"]
+#     }
+#   }
+# }
 #
 #
 # resource "aws_iam_role_policy_attachment" "lambda_basic" {

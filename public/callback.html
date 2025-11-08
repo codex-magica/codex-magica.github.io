@@ -14,25 +14,56 @@
             justify-content: center;
             height: 100vh;
         }
-        h1 { font-size: 1.5em; font-weight: 600; }
+        h1 { font-size: 1.5em; margin-bottom: 0.5em; }
+        p  { color: #a0aec0; max-width: 320px; text-align: center; }
     </style>
 </head>
 <body>
-<h1>Signing you in...</h1>
+<h1 id="title">Signing you in...</h1>
+<p id="message"></p>
+
 <script>
   (function() {
+    const msg = (text) => { document.getElementById("message").textContent = text; };
+
+    function parseJwt (token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+      } catch (e) {
+        console.error("Failed to parse JWT:", e);
+        return null;
+      }
+    }
+
     try {
       const params = new URLSearchParams(window.location.hash.substring(1));
       const idToken = params.get("id_token");
-      if (idToken) {
-        // Store token in secure cookie
-        document.cookie = `id_token=${idToken}; Path=/; Secure; SameSite=Lax;`;
+
+      if (!idToken) {
+        msg("No token found in redirect.");
+        return;
       }
+
+      const payload = parseJwt(idToken);
+      console.log("Decoded id_token payload:", payload);
+
+      if (payload?.["custom:access_denied"] === "true") {
+        // remove any existing token cookies
+        document.cookie = "id_token=; Path=/; Secure; SameSite=Lax; Max-Age=0";
+        document.getElementById("title").textContent = "Access denied";
+        msg("Your account is not authorized to access this application. Please contact the administrator if this is unexpected.");
+        return;
+      }
+
+      // Store valid token
+      document.cookie = `id_token=${idToken}; Path=/; Secure; SameSite=Lax;`;
+      window.location.replace(window.location.origin + "/");
     } catch (e) {
       console.error("Token extraction failed", e);
+      msg("An unexpected error occurred during sign-in.");
     }
-    // Redirect to app root (no fragment)
-    // window.location.replace(window.location.origin + "/");
   })();
 </script>
 </body>

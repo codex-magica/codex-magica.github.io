@@ -1,11 +1,20 @@
-import { CognitoIdentityServiceProvider } from 'aws-sdk';
-
-const allowed = JSON.parse(process.env.ALLOWED_EMAILS_JSON || '[]').map(e => e.toLowerCase());
-
 export const handler = async (event) => {
+  const allowed = JSON.parse(process.env.ALLOWED_EMAILS_JSON || "[]").map(e => e.toLowerCase());
   const email = event?.request?.userAttributes?.email?.toLowerCase();
+
   if (!email || !allowed.includes(email)) {
-    throw new Error('Unauthorized: email not allowed');
+    console.warn(`Disallowed SSO user: ${email}`);
+
+    event.response = {
+      claimsOverrideDetails: {
+        claimsToSuppress: ["email", "sub", "name", "cognito:username"],
+        claimsToAddOrOverride: {
+          "custom:access_denied": "true"
+        }
+      }
+    };
+    return event;
   }
+
   return event;
 };
