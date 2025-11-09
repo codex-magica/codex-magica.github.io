@@ -63,7 +63,7 @@ export const VitalsPanel = () => {
   return (
     <Panel title="Életerő">
       <VStack w="100%">
-        <StatBar label="Életpont" value={13} max={13} color={colors.elet} bg={bg} />
+        <StatBar label="Életpont" value={14} max={14} color={colors.elet} bg={bg} />
         <StatBar label="Fájdalompont" value={29} max={29} color={colors.fajdalom} bg={bg} />
         <StatBar label="Mana" value={8} max={14} color={colors.mana} bg={bg} />
         <StatBar label="Kegypont" value={3} max={20} color={colors.kegy} bg={bg} />

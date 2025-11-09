@@ -63,7 +63,7 @@ variable "apple_private_key" {
 # Whitelisted emails allowed to authenticate
 variable "allowed_emails" {
   type = list(string)
-  default = ["owner@example.com","player1@example.com","player2@example.com","player3@example.com"]
+  default = ["owner@example.com","player1@example.com","player2@example.com","player3@example.com","player4@example.com"]
 }
 
 
