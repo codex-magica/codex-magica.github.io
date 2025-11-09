@@ -18,7 +18,7 @@ export const BardSpellsPanel = () => {
     const numberPart = parseInt(spell.cost.toString().replace(/\D/g, ''));
     return numberPart <= maxMana;
   }
-  const availableSpells = useMemo(()=> BardMagicValues.filter((spell) => isSpellAvailable(spell, 10)),[])
+  const availableSpells = useMemo(()=> BardMagicValues.filter((spell) => isSpellAvailable(spell, 14)),[])
 
   const shortenedCastingTime = (castingTime: string) => {
     const shortnededSz = castingTime.replace("szegmens", "sz").replace("perc", "p");
