@@ -521,7 +521,7 @@ export const WeaponValues: WeaponInfo[] = [
     description: "Használatában a hosszúkardtól gyökeresen különbözik, hiszen elsősorban döfésre használható, klasszikus vívójelenetekbe aligha bonyolódhatunk vele. Aki először döf, nyert. Előszeretettel alkalmazzák tolvajok, fejvadászok, mivel kis mérete miatt könnyen elrejthető. Kedvelt fegyver Abasziszban is, ahol egyes hadseregtestek fő fegyvere.",
   },
   {
-    name: "seguor",
+    name: "sequor",
     type: 3,
     subType: "Egykezes kardok",
     damage: "1k6+2",
