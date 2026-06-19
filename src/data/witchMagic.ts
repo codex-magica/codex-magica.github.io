@@ -127,7 +127,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   cost: "36",
   castingTime: "1 kör",
   range: "Lásd a leírást!",
-  duration: "Lásd a leírást!",
+  duration: "Egyszeri",
   description: "A boszorkány ezzel a varázslattal kegyetlen pusztítás véghezvitelére képes, minden létező energiájának befektetése árán. Épp ezért a Pusztítást a boszorkányok csak a legvégső esetben használják, ha már minden más módszer kudarcot vallott. A varázslat elemi, romboló energiává alakít minden Mana pontot, Pszi pontot és Fájdalomtűrés pontot, amivel a boszorkány az adott pillanatban rendelkezik. Az energia legősibb formáját, egyfajta nyers mágiát szabadít fel: kékes, villódzó örvény jelenik meg körülötte, melynek erősségét a következő módon számolhatjuk ki:\n\n10 Fp=l E, 4 Ψp=1 E, 4 Mp=l E\n\nA boszorkány Ép-inek mennyisége nem változik, de a varázslat minden a varázslat elmondása után maradt Fp-t, Mp-t és Pszi-pontot varázserővé alakít. Az így felszabaduló energia az örvényben a boszorkány szándéka szerint osztható el, a leírtak szerint:\n\n2\tynevi láb sugarú örvény - a sebzés annyi, mint amenynyi a varázslat E-je.\n\n4 ynevi láb sugarú örvény — a sebzés feleannyi, mint amennyi a varázslat E-je.\n\n8 ynevi láb sugarú örvény — a sebzés negyedannyi, mint amennyi a varázslat E-je.\n\nAz örvény sebzése E-nként 11k6 Sp.\n\nA boszorkány akcióját követően ájultan esik Össze, hisz minden Fp-jét felélte. Továbbá, a varázslat létrehozását követő 3 napig semmilyen mágiát nem használhat, s naponta legalább 12 órát kell pihennie."
 }, {
   name: "Repülés",
@@ -221,7 +221,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   name: "Kígyóvarázs II.",
   type: "Anyagi Mágia",
   cost: "7",
-  castingTime: "6",
+  castingTime: "6 sz",
   range: "Érintés",
   duration: "6 kör",
   description: "A varázslat igéivel a boszorkány egy egyszerű kötelet, melyet a varázslás során mágikus hurokba rendez, mérges kígyóvá alakíthat. A kígyó engedelmeskedik a boszorkány parancsainak. Méregfogai harapásával támad; KÉ-je 45, TÉ- je 65, VÉ-je 75, sebzése lk3 Sp. A befecskendezett méreg 1. szintű, sikeres Méregellenállás estén lk10 Sp-t, sikertelen esetén 3kl0 Sp-t sebez. A véráramba jutva fejti ki azonnali, de csak egyszeri hatását, (lásd Mérgek c. fejezetben a 186. oldalon!)\n\nA kígyó 5 Fp-vel és 3 Ép-vel rendelkezik. A varázslat Időtartamának lejártával, vagy ha a kígyó nulla Fp-re illetve Ép-re esik, visszaalakul kötéllé."
@@ -249,7 +249,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   castingTime: "1 kör",
   range: "Lásd a leírást!",
   duration: "6 kör",
-  description: ["A varázslat hatására a környéken található rovarok, pókok, férgek, csúszómászók mind a boszorkány köré gyűlnek, s annak parancsára megtámadnak bárkit, akire vagy akikre a boszorkány rámutat. A támadás igen heves, s a sebzésen kívül más kellemetlen módon is hat. A rovarfélhő összetétele minden égtájon és környezetben más és más. Tavak, mocsarak környékén, különösen a forró égöv alatt szitakötők, szúnyogok és egyéb vérszívók jönnek. Erdőben inkább nagyobb testű rovarok és hangyák érkeznek; városban csótányok, legyek, pókok. A rovarfelhő vagy 2 ynevi láb sugarú területet érint, és körönként 2K6 Sp-t sebez, vagy 1k6 Sp-t, 4 ynevi láb sugarú területen. A sebzést természetesen csak az érintett területen belül tartózkodók szenvedik el - kivéve a boszorkányt. A sebzésen kívül a felhő lehetetlenné teszi a célzást és a fegyverdobást, ezen felül 25-tel csökkenti a felhőben állók TÉ-jét és VÉ-jét. A rovarok fertőzést is terjeszthetnek, a következő eséllyel:",
+  description: ["A varázslat hatására a környéken található rovarok, pókok, férgek, csúszómászók mind a boszorkány köré gyűlnek, s annak parancsára megtámadnak bárkit, akire vagy akikre a boszorkány rámutat. A támadás igen heves, s a sebzésen kívül más kellemetlen módon is hat. A rovarfelhő összetétele minden égtájon és környezetben más és más. Tavak, mocsarak környékén, különösen a forró égöv alatt szitakötők, szúnyogok és egyéb vérszívók jönnek. Erdőben inkább nagyobb testű rovarok és hangyák érkeznek; városban csótányok, legyek, pókok. A rovarfelhő vagy 2 ynevi láb sugarú területet érint, és körönként 2K6 Sp-t sebez, vagy 1k6 Sp-t, 4 ynevi láb sugarú területen. A sebzést természetesen csak az érintett területen belül tartózkodók szenvedik el - kivéve a boszorkányt. A sebzésen kívül a felhő lehetetlenné teszi a célzást és a fegyverdobást, ezen felül 25-tel csökkenti a felhőben állók TÉ-jét és VÉ-jét. A rovarok fertőzést is terjeszthetnek, a következő eséllyel:",
     "table:Forró klímájú, mocsaras, lápos, vizes terület\t75%\n\nMocsaras terület\t25%\n\nVárosi, lakott terület\t5%\n\nErdő, száraz terület\t2%\n\n",
     "small:A fenti értékeket a Kalandmester módosíthatja, ha szükségét érzi - például a város általános higiéniája, vagy épp ellenkezőleg, a falain belül fennálló járványveszély miatt. A rovarfelhő föld alatt nem idézhető meg, itt esetleg egy-egy féreg vagy sötétséget kedvelő bogár érkezik a boszorkány hívására. A rovarok 6 körig maradnak együtt, utána a felhő eloszlik. Ha szél irányításával vagy egyéb szelet manipuláló mágiával a felhőt megtámadják, szintén eloszlik. Eloszlatja továbbá a tűz és a füst is, feltéve, ha mágikus. Közönséges tűzzel is el lehet pusztítani a felhőt, ha a tűz sebzése egy kör alatt meghaladja a 20 Sp-t."
 
@@ -354,6 +354,8 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   save: "Asztrális",
   description: "E varázs áldozatai irtózatot, félelemmel vegyes iszonyatot éreznek egyes - a boszorkány által meghatározott - tárgyak vagy tárgytípusok iránt. Ha az irtózat tárgya az áldozat közelébe kerül, legszívesebben elmenekülne előle (nem félelem, irtózat!), ha nem teheti, megzavarodik, nem képes koncentrálni, s így minden harci dobását -15-ös módosítóval, tulajdonságpróbáit -5 módosítóval teszi."
 }, {
+  // TODO: VÉ modifier set to +5. The original book is self-contradictory here —
+  // the body combat line reads "VÉ: -45" (OCR-garbled / conflicting). Verify against print.
   name: "Rettegés",
   type: "Érzelemkeltő varázslatok",
   cost: "1",
@@ -361,7 +363,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "10 m",
   duration: "1 óra",
   save: "Asztrális",
-  description: "A varázslat hatására a boszorkány láttán félelem járja át az áldozatok szívét, az iszonyat valósággal megbéklyózza tagjaikat. Lehetőségeikhez mérten a legsebesebben menekülnek, s ha sarokba szorulnak, a Harc telelem hatása alatt módosítóival támadhatnak csak a boszorkányra (KÉ: -15 TÉ: -10 VÉ: +5 CÉ: -20)."
+  description: "A varázslat hatására a boszorkány láttán félelem járja át az áldozatok szívét, az iszonyat valósággal megbéklyózza tagjaikat. Lehetőségeikhez mérten a legsebesebben menekülnek, s ha sarokba szorulnak, a Harc félelem hatása alatt módosítóival támadhatnak csak a boszorkányra (KÉ: -15 TÉ: -10 VÉ: +5 CÉ: -20)."
 }, {
   name: "Szerelemvarázs",
   type: "Érzelemkeltő varázslatok",
@@ -406,7 +408,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   duration: "Végleges",
   description: "E varázs sokszor az egyetlen megoldás az átkok eltávolítására - jó kereseti lehetőség minden boszorkánynak. Annyi Mana pontot kell használni, hogy erőssége meghaladja az átok erősségét. A varázslattal csak boszorkányok átkai távolíthatóak el, a boszorkánymesterek és a papok átkai nem."
 }, {
-  name: "Atokvarázs",
+  name: "Átokvarázs",
   type: "Átkok",
   cost: "3",
   castingTime: "Lásd a leírást!",
@@ -481,11 +483,11 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   name: "Tiszteletlenség",
   type: "Jellemtorzító Átkok",
   cost: "2",
-  castingTime: "5kör",
+  castingTime: "5 kör",
   range: "Érintés",
   duration: "Végleges",
   save: "Asztrális",
-  description: "A varázslat áldozata - bármily tisztelettudó volt is annak előtte - tiszteletlenné lesz. Minél inkább tiszteletet ébresztő emberekkel hozza össze a sors, annál pimaszabbul viselkedik. Gúnyolja az időseket, kineveti az ügyetleneket, káromolja a bölcseket, az égieket Olykor még tettlegességre is vetemedik - egyedül saját testi épségének megőrzése érdekében fúj visszavonulót."
+  description: "A varázslat áldozata - bármily tisztelettudó volt is annak előtte - tiszteletlenné lesz. Minél inkább tiszteletet ébresztő emberekkel hozza össze a sors, annál pimaszabbul viselkedik. Gúnyolja az időseket, kineveti az ügyetleneket, káromolja a bölcseket, az égieket. Olykor még tettlegességre is vetemedik - egyedül saját testi épségének megőrzése érdekében fúj visszavonulót."
 }, {
   name: "Akaratrablás",
   type: "Mentális praktikák",
@@ -512,7 +514,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "Látótávolság",
   duration: "1k6 óra",
   save: "Mentális",
-  description: "A Láthatatlanság továbbfejlesztett formája. A látótávolságban tartózkodó összes teremtmény köteles Mentális Mágiaellenállást dobni a varázslat erőssége ellen. Akik sikerrel jártak, nem kerülnek a hatása alá. A többiek elméjében a varázslat nemcsak a boszorkány vizuális képét, de az általa - vagy a vele érintkezésbe került objektumok által - keltett hangokat is semlegesíti. Értsd: léptek nesze, ruhasuhogás, padlódeszkák nyikorgása. Minden szag, valamint a Mentális és Asztrális kisugárzás is elnyelődik, azaz a boszorkányt csak az fedezheti fel, aki megérinti. A varázslat kő óráig tartható fenn.\n\nMindazok, akik a boszorkányt nem szabad szemmel nézik, hanem tükörben, vagy bármely tükröződő felületen, látni fogják, még ha áldozatul estek is a varázslatnak. Az Észlelhetetlenség állatok ellen szintén alkalmazható - mégpedig döbbenetes hatékonysággal."
+  description: "A Láthatatlanság továbbfejlesztett formája. A látótávolságban tartózkodó összes teremtmény köteles Mentális Mágiaellenállást dobni a varázslat erőssége ellen. Akik sikerrel jártak, nem kerülnek a hatása alá. A többiek elméjében a varázslat nemcsak a boszorkány vizuális képét, de az általa - vagy a vele érintkezésbe került objektumok által - keltett hangokat is semlegesíti. Értsd: léptek nesze, ruhasuhogás, padlódeszkák nyikorgása. Minden szag, valamint a Mentális és Asztrális kisugárzás is elnyelődik, azaz a boszorkányt csak az fedezheti fel, aki megérinti. A varázslat k6 óráig tartható fenn.\n\nMindazok, akik a boszorkányt nem szabad szemmel nézik, hanem tükörben, vagy bármely tükröződő felületen, látni fogják, még ha áldozatul estek is a varázslatnak. Az Észlelhetetlenség állatok ellen szintén alkalmazható - mégpedig döbbenetes hatékonysággal."
 }, {
   name: "Kínokozás",
   type: "Mentális praktikák",
@@ -530,7 +532,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "Látótávolság",
   duration: "1k6 óra",
   save: "Mentális",
-  description: "A láthatatlanságot okozó mágiaformák széles tárházának egyik legkülönösebb változata ez a varázslat - egyfajta Mentális pajzs. A boszorkány valójában mindvégig látható marad, pusztán a varázslat hatása alatt állók érzékeléséből tűnik el. Akik a boszorkány felé pillantanak, Mentális Mágiaellenállásra jogosultak, s ha ez sikeres, továbbra is látni fogják a boszorkányt. Ha ez sikertelen, akkor jelenlétéről - látás útján - tudomást sem szereznek, számukra a boszorkány az Időtartam végéig láthatatlan. Ha a hatásnak már áldozatul esett szemlélő figyelmét valaki felhívja, s megmutatja, hol tartózkodik a boszorkány, az áldozat újabb ME-re jogosult, melynek sikere esetén felszabadul a hatás alól. Ám ha ekkor is elvéti ME-jét, többé nincs lehetősége újra próbálkozni. A varázslat alaperőssége a boszorkány Tapasztalati szintjének számával egyenlő, s maximálisan kő órán át tartható fenn. Fenntartása folyamatos, enyhe koncentrációt igényel, így a láthatatlanság a dinamikus pszi-pajzsokhoz hasonlóan nyomban megszűnik, mihelyt a boszorkány elveszíti gondolatainak tudatosságát.\n\nMindazok, akik a boszorkányt nem szabad szemmel nézik, hanem tükörben, vagy bármely tükröződő felületen, látni fogják, még ha áldozatul estek is a varázslatnak. A Láthatatlanság állatok ellen is alkalmazható, bár azok - kifinomult hallásuknak, szaglásuknak hála - rendszerint tovább érzékelik a boszorkány jelenlétét."
+  description: "A láthatatlanságot okozó mágiaformák széles tárházának egyik legkülönösebb változata ez a varázslat - egyfajta Mentális pajzs. A boszorkány valójában mindvégig látható marad, pusztán a varázslat hatása alatt állók érzékeléséből tűnik el. Akik a boszorkány felé pillantanak, Mentális Mágiaellenállásra jogosultak, s ha ez sikeres, továbbra is látni fogják a boszorkányt. Ha ez sikertelen, akkor jelenlétéről - látás útján - tudomást sem szereznek, számukra a boszorkány az Időtartam végéig láthatatlan. Ha a hatásnak már áldozatul esett szemlélő figyelmét valaki felhívja, s megmutatja, hol tartózkodik a boszorkány, az áldozat újabb ME-re jogosult, melynek sikere esetén felszabadul a hatás alól. Ám ha ekkor is elvéti ME-jét, többé nincs lehetősége újra próbálkozni. A varázslat alaperőssége a boszorkány Tapasztalati szintjének számával egyenlő, s maximálisan k6 órán át tartható fenn. Fenntartása folyamatos, enyhe koncentrációt igényel, így a láthatatlanság a dinamikus pszi-pajzsokhoz hasonlóan nyomban megszűnik, mihelyt a boszorkány elveszíti gondolatainak tudatosságát.\n\nMindazok, akik a boszorkányt nem szabad szemmel nézik, hanem tükörben, vagy bármely tükröződő felületen, látni fogják, még ha áldozatul estek is a varázslatnak. A Láthatatlanság állatok ellen is alkalmazható, bár azok - kifinomult hallásuknak, szaglásuknak hála - rendszerint tovább érzékelik a boszorkány jelenlétét."
 }, {
   name: "Láthatatlanság felfedezése",
   type: "Mentális praktikák",
@@ -557,7 +559,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "10 m",
   duration: "1 kör",
   save: "Mentális",
-  description: "A boszorkány egyszavas - legfeljebb egy ige és igekötő kombinációjából álló - parancsot adhat ki, egyetlen lénynek. A kiszemelt áldozat, ha elvéti Mentális Mágiaellenállását, 1 körig legjobb tudása szerint köteles engedelmeskedni a parancsnak. További feltétel, hogy értenie kell a nyelvet, melyen a parancs elhangzott, s ekkor maximum 10 ynevi láb távolságra tartózkodhat a boszorkánytól. Ha öngyilkosságra, vagy azzal egyenértékű cselekedetre kap utasítást, joga van Akaraterőpróbát dobni, melynek sikere esetén azonnal felszabadul a varázslat hatása alól. Ha a próbát elvéti, végrehajtja a végzetes tettet.\\"
+  description: "A boszorkány egyszavas - legfeljebb egy ige és igekötő kombinációjából álló - parancsot adhat ki, egyetlen lénynek. A kiszemelt áldozat, ha elvéti Mentális Mágiaellenállását, 1 körig legjobb tudása szerint köteles engedelmeskedni a parancsnak. További feltétel, hogy értenie kell a nyelvet, melyen a parancs elhangzott, s ekkor maximum 10 ynevi láb távolságra tartózkodhat a boszorkánytól. Ha öngyilkosságra, vagy azzal egyenértékű cselekedetre kap utasítást, joga van Akaraterőpróbát dobni, melynek sikere esetén azonnal felszabadul a varázslat hatása alól. Ha a próbát elvéti, végrehajtja a végzetes tettet."
 }, {
   name: "Sugallat",
   type: "Mentális praktikák",
@@ -664,7 +666,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "10 m",
   duration: "1 óra/szint",
   save: "Asztrális",
-  description: "Sokban hasonlít az Őrjítő pillantás nevű varázslatra, ám ez még azokra a férfiakra is hatással van, alak máskülönben rendkívül visszahúzódóak női társaságban. Ha elvétik AME- jüket, az időtartam alatt heves udvarlásba kezdenek az adott hölgynek, azok a férfiak pedig, akik különben is vonzódnak a másik nemhez, szinte megőrülnek, hogy a nő kedvére tegyenek. Nem is annyira a szerelem teszi ezt velük, sokkal inkább a nő iránti vágyuk. Fontos megjegyezni, hogy amennyiben a mágiahasználó ki tudja provokálni, hogy áldozata megérintse őt, abban az esetben a varázslat erősítéséhez +5 E járul."
+  description: "Sokban hasonlít az Őrjítő pillantás nevű varázslatra, ám ez még azokra a férfiakra is hatással van, akik máskülönben rendkívül visszahúzódóak női társaságban. Ha elvétik AME- jüket, az időtartam alatt heves udvarlásba kezdenek az adott hölgynek, azok a férfiak pedig, akik különben is vonzódnak a másik nemhez, szinte megőrülnek, hogy a nő kedvére tegyenek. Nem is annyira a szerelem teszi ezt velük, sokkal inkább a nő iránti vágyuk. Fontos megjegyezni, hogy amennyiben a mágiahasználó ki tudja provokálni, hogy áldozata megérintse őt, abban az esetben a varázslat erősítéséhez +5 E járul."
 }, {
   name: "Fürkészés",
   type: "Szexuálmágia",
@@ -673,7 +675,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "Érintés",
   duration: "2 kör",
   save: "Mentális",
-  description: "Nagyon ravasz fogása ez a boszorkányoknak, hiszen általa megtudhatják, hogy akiszemelt áldozat milyen női eszményképért rajong. A rövid összpontosítás után a boszorkánynak meg kell érintenie az áldozatot; ha a férfi elvéti a Mágiaellenállását, feltárul az alkalmazó előtt az a nőideál, amely legközelebb van a férfi szívéhez. Nemcsak a külső erényekről szerez ily módon tudomást, de a képzeletbeli nő belső tulajdonságairól is hozzávetőlegesen teljes képet alkothat, arról nem beszélve, hogy amennyiben áldozata legalább 3-mal elvétette az MME-t, képet kaphat az illető szexuális szokásairól, vágyairól is."
+  description: "Nagyon ravasz fogása ez a boszorkányoknak, hiszen általa megtudhatják, hogy a kiszemelt áldozat milyen női eszményképért rajong. A rövid összpontosítás után a boszorkánynak meg kell érintenie az áldozatot; ha a férfi elvéti a Mágiaellenállását, feltárul az alkalmazó előtt az a nőideál, amely legközelebb van a férfi szívéhez. Nemcsak a külső erényekről szerez ily módon tudomást, de a képzeletbeli nő belső tulajdonságairól is hozzávetőlegesen teljes képet alkothat, arról nem beszélve, hogy amennyiben áldozata legalább 3-mal elvétette az MME-t, képet kaphat az illető szexuális szokásairól, vágyairól is."
 }, {
   name: "Őrjítő pillantás",
   type: "Szexuálmágia",
@@ -711,7 +713,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   castingTime: "5 sz",
   range: "Csók",
   duration: "Egyszeri",
-  description: "A boszorkány csókjával életerőt szívhat el áldozata testéből, hogy saját súlyos (Ép) sebeinek gyógyítására fordítsa. Az elvett Ép mennyisége alapesetben k6. A varázslat erőssége növelhető, ezzel együtt az Ép-elszívás is l<6-tal nő, maximum 4k6 ÉP-ig.\n\nUgyan igen ritkán fordul elő, de a boszorkány ezzel a csókkal képes saját életerejéből jutattni a célpontnak, ekkor a varázslat teljesen a fentiekhez hasonlóan működik, de a sebzést a boszorkány szenvedi el, és az áldozat gyógyul."
+  description: "A boszorkány csókjával életerőt szívhat el áldozata testéből, hogy saját súlyos (Ép) sebeinek gyógyítására fordítsa. Az elvett Ép mennyisége alapesetben k6. A varázslat erőssége növelhető, ezzel együtt az Ép-elszívás is k6-tal nő, maximum 4k6 ÉP-ig.\n\nUgyan igen ritkán fordul elő, de a boszorkány ezzel a csókkal képes saját életerejéből jutattni a célpontnak, ekkor a varázslat teljesen a fentiekhez hasonlóan működik, de a sebzést a boszorkány szenvedi el, és az áldozat gyógyul."
 }, {
   name: "Felejtés csókja",
   type: "Szexuálmágia",
@@ -743,10 +745,10 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   name: "Izzó csók",
   type: "Szexuálmágia",
   cost: "3",
-  castingTime: "5",
+  castingTime: "5 sz",
   range: "Csók",
   duration: "Egyszeri",
-  description: "A legegyszerűbb Csókmágia. Azon a ponton, ahol a boszorkány ajkait a varázslat áldozatának bőréhez érinti, égett seb keletkezik, ami lkő FP-t sebez. Természetesen a seb - attól függően, hogy hol érte az áldozatot - sokkal kellemetlenebb is lehet. Az okozott seb más égési sebekhez hasonlóan gyógyul. A varázslat színtiszta Tűzmágía, így Mágiaellenállásnak ellene helye nincs.\n\nA varázslat erőssége emelhető, ezzel a sebzés is k6-tal nő - de legtöbb 10k6 Sp lehet."
+  description: "A legegyszerűbb Csókmágia. Azon a ponton, ahol a boszorkány ajkait a varázslat áldozatának bőréhez érinti, égett seb keletkezik, ami 1k6 FP-t sebez. Természetesen a seb - attól függően, hogy hol érte az áldozatot - sokkal kellemetlenebb is lehet. Az okozott seb más égési sebekhez hasonlóan gyógyul. A varázslat színtiszta Tűzmágia, így Mágiaellenállásnak ellene helye nincs.\n\nA varázslat erőssége emelhető, ezzel a sebzés is k6-tal nő - de legtöbb 10k6 Sp lehet."
 }, {
   name: "Kriptacsók",
   type: "Szexuálmágia",
@@ -754,7 +756,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   castingTime: "5 sz",
   range: "Csók",
   duration: "1 nap",
-  description: "A csók áldozata egyik pillanatról a másikra éveket öregszik, annyival, amennyivel Asztális, illetve Mentális ME-jét elvétette, 1 kör alatt 1 esztendőt. Az áldozat bőre elszürkül, ráncossá válik, szemei elvesztik ifjonti ragyogásukat, tartása megroskad, haja megőszül. Képességei - s ennek függvényében értékei - az idevágó táblázat szerint csökkennek (lásd: Képességek!). A hosszabb élettartamú fajokra (pl. elf) bár hat a varázslat, természetesen az adott fajok nekromanciára való érzékenysége függvényének megfelelően súlyosabb következményekkel. Törpék, udvari örkök és egyéb hoszszabb életű fajok csak 2 évet öregszenek minden átjutott E-je után a varázslatnak, míg az elf és félelf fajúak 5, illetve 10 esztendőt."
+  description: "A csók áldozata egyik pillanatról a másikra éveket öregszik, annyival, amennyivel Asztrális, illetve Mentális ME-jét elvétette, 1 kör alatt 1 esztendőt. Az áldozat bőre elszürkül, ráncossá válik, szemei elvesztik ifjonti ragyogásukat, tartása megroskad, haja megőszül. Képességei - s ennek függvényében értékei - az idevágó táblázat szerint csökkennek (lásd: Képességek!). A hosszabb élettartamú fajokra (pl. elf) bár hat a varázslat, természetesen az adott fajok nekromanciára való érzékenysége függvényének megfelelően súlyosabb következményekkel. Törpék, udvari orkok és egyéb hoszszabb életű fajok csak 2 évet öregszenek minden átjutott E-je után a varázslatnak, míg az elf és félelf fajúak 5, illetve 10 esztendőt."
 }, {
   name: "Megbélyegzés csókja",
   type: "Szexuálmágia",
@@ -777,7 +779,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   name: "Akarat elorzása",
   type: "Szexuálmágia",
   cost: "2",
-  castingTime: "1 jür",
+  castingTime: "1 kör",
   range: "Érintés",
   duration: "1 óra",
   save: "Mentális",
@@ -795,7 +797,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   name: "Féltékenység",
   type: "Szexuálmágia",
   cost: "1",
-  castingTime: "3",
+  castingTime: "3 sz",
   range: "Érintés",
   duration: "1 óra",
   save: "Asztrális",
@@ -974,7 +976,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   type: "Térmágia",
   cost: "12",
   castingTime: "5sz",
-  range: "5 km",
+  range: "5 ynevi mérföld",
   duration: "10 p",
   description: "A boszorkány a varázslattal egy égben szárnyaló madár szemszögéből tekinthet le az alanti tájra. Ennek egyetlen feltétele, hogy lásson legalább egy madarat. Ha többet is észrevesz, tetszése szerint választhat közülük. A varázslat 12 Mana pontba kerül, de ha alkalmazója további 6-t áldoz rá, irányíthatja is a madarat. Feljebb vagy alább reptetheti, esetleg épületekbe is beviheti.\n\nA varázslat nem erősíthető, és csak állati intelligenciájú szárnyasra alkalmazható."
 }, {
@@ -1018,12 +1020,12 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   range: "Érintés",
   duration: "Lásd a leírást!",
   save: "Asztrális és Mentális",
-  description: "A varázslat segítségével a boszorkány erős mágikus kapcsolatba kerülhet egyetlen, tetszés szerint kiválasztott állattal, amennyiben azt a varázslás ideje alatt megérinti. Kettőjüket ettől fogva elszakíthatatlan fonál fűzi össze, bármily meszsze távolodjanak is egymástól. A familiárissá tett állatot a boszorkány bármikor irányíthatja a puszta akaratával is, minden cselekedetet végrehajtathat vele, amire az fizikailag képes. Érzékszervein keresztül ő is érzékel (lát, hall), gyakorta jobban, mint sajátjaival - ám a különleges érzékek használatánál nehézségekbe ütközhet (hiába remek az állat szaglása, a boszorkány nem ismeri fel a szagokat). Természetesen nem képes a saját és az állat érzékeinek egyidejű használatára, amíg az egyikre támaszkodik, a másikra érzéketlen; ahogyan nem képes az érzékszerveket sem elkülöníteni egymástól: összes érzékével vagy boszorkányként vagy állatként érzékel.\n\nAzalatt, míg a boszorkány az állat érzékeire támaszkodik, a saját szemére vak, a saját fülére süket, nem érzi a fájdalmat - észre sem veszi, ha megsebezték, vagy megégették. (Ennek veszélyeit kár lenne taglalni, mert bár a boszorkány nem érzi, Fájdalomtűrés pontjai fogynak, s idővel már az Életerejéből veszít.) Ez idő alatt boszorkányként nem mozdulhat - helyesen teszi, ha ül vagy fekszik, különben saját testéről mit sem tudva elesik - nem használhat varázslatokat, sem pszit. Ha ilyenkor az állatot váratlan fájdalom éri, a boszorkány vele együtt szenved: ugyanannyi FP-t veszít, mint familiárisa. (Az összetartozás az Életerőre nem vonatkozik.) Sikeres Akaraterő-próba esetén a fájdalom ellenére is képes állatként érzékelni továbbra is, sikertelensége esetén önkéntelenül is visszatér saját érzékszerveihez. Ha az érintett idő alatt az állat kimúlik, a boszorkány elveszíti eszméletét; csak kő óra múltán vagy külső segítségre tér ismét magához.\n\nA boszorkány a familiáris-összetartozáshoz hasonló rituáléval képes a kapcsolatot megszüntetni familiárisával, és ez után tud csak új állatot társává tenni.\n\nA kiszemelt és megérintett áldozat Asztrális Mágiaellenállásra jogosult, melynek sikere esetén semmiféle eredménnyel nem jár. A varázslat intelligens lények ellen nem alkalmazható sikerrel."
+  description: "A varázslat segítségével a boszorkány erős mágikus kapcsolatba kerülhet egyetlen, tetszés szerint kiválasztott állattal, amennyiben azt a varázslás ideje alatt megérinti. Kettőjüket ettől fogva elszakíthatatlan fonál fűzi össze, bármily meszsze távolodjanak is egymástól. A familiárissá tett állatot a boszorkány bármikor irányíthatja a puszta akaratával is, minden cselekedetet végrehajtathat vele, amire az fizikailag képes. Érzékszervein keresztül ő is érzékel (lát, hall), gyakorta jobban, mint sajátjaival - ám a különleges érzékek használatánál nehézségekbe ütközhet (hiába remek az állat szaglása, a boszorkány nem ismeri fel a szagokat). Természetesen nem képes a saját és az állat érzékeinek egyidejű használatára, amíg az egyikre támaszkodik, a másikra érzéketlen; ahogyan nem képes az érzékszerveket sem elkülöníteni egymástól: összes érzékével vagy boszorkányként vagy állatként érzékel.\n\nAzalatt, míg a boszorkány az állat érzékeire támaszkodik, a saját szemére vak, a saját fülére süket, nem érzi a fájdalmat - észre sem veszi, ha megsebezték, vagy megégették. (Ennek veszélyeit kár lenne taglalni, mert bár a boszorkány nem érzi, Fájdalomtűrés pontjai fogynak, s idővel már az Életerejéből veszít.) Ez idő alatt boszorkányként nem mozdulhat - helyesen teszi, ha ül vagy fekszik, különben saját testéről mit sem tudva elesik - nem használhat varázslatokat, sem pszit. Ha ilyenkor az állatot váratlan fájdalom éri, a boszorkány vele együtt szenved: ugyanannyi FP-t veszít, mint familiárisa. (Az összetartozás az Életerőre nem vonatkozik.) Sikeres Akaraterő-próba esetén a fájdalom ellenére is képes állatként érzékelni továbbra is, sikertelensége esetén önkéntelenül is visszatér saját érzékszerveihez. Ha az érintett idő alatt az állat kimúlik, a boszorkány elveszíti eszméletét; csak k6 óra múltán vagy külső segítségre tér ismét magához.\n\nA boszorkány a familiáris-összetartozáshoz hasonló rituáléval képes a kapcsolatot megszüntetni familiárisával, és ez után tud csak új állatot társává tenni.\n\nA kiszemelt és megérintett áldozat Asztrális Mágiaellenállásra jogosult, melynek sikere esetén semmiféle eredménnyel nem jár. A varázslat intelligens lények ellen nem alkalmazható sikerrel."
 }, {
   name: "Jellemtorzítás itala",
   type: "Bájitalok",
   cost: "Lásd leírást!",
-  duration: "végleges",
+  duration: "Végleges",
   ingredientsCost: "1 arany",
   sellPrice: "10-200 arany",
   description: "Az ital tulajdonképpen többféle folyadékot foglal magába. Segítségével a boszorkány Jellemtorzító átkokat hozhat létre bájital formájában. A kiszemelt áldozatnak csak el kell fogyasztania a két-három kortynyi keveréket, és sikertelen ellenállás esetén máris a varázslat hatása alá kerül. Az egyébként meglehetősen nehezen erősíthető varázslatok így sokkal hatékonyabban alkalmazhatóak: mivel az áldozat testén belül fejtik ki hatásukat, az Erősítés sokkal kevesebb Mana pontot igényel. Az átkot hordozó ital elkészítéséhez csupán viszonylag könnyen beszerezhető gyógyfüvek és egy apró tűz szükséges - no meg Mana pontok. A bájital elkészítése 20 + annyi Mp-t igényel, amennyi az eredeti varázslat Mana pont igénye. Ezért a befektetésért az átok alaperőssége minden esetben 30E lesz, a további Erősítés pedig feleannyi Mana pontot igényel, mint az eredeti varázslatnál feltüntetett értékek. Az így elkészített bájital természetesen nem méreg, ám egyetlen módon akként is felhasználható. Amennyiben a boszorkány az elkészített italt Zöld gyertya megformálásához alkalmazza, a gyertya öt adag mérgét kétfőzetnyi bájitallal helyettesítheti. Az erősségre és a hatásra ugyanazon szabályok vonatkoznak, mint az italra - a gyertya óriási előnye, hogy nem csak egy személyre hat, ráadásul hatóanyagát nem kell lenyeletni, mivel a Zöld gyertya füstjében már kontaktalapú anyagként van jelen. Az eladási ár, a 10-200 arany kizárólag az átok típusától függ - egy Csalást és egy Öngyilkossági hajlamot hordozó készítmény értéke érthető okokból nem azonos. Megjegyzendő, hogy a KM gonosz fantáziájának is kellemes táptalajt biztosíthatnak az efféle italok - ki garantálhatja, hogy minden, kaland folyamán talált bájital pozitív hatású az elfogyasztóra, vagy hogy a sötét erdő magányos vajákosasszonya valóban gyógyító italt adott a sebesült kalandozó néhány aranyáért?"
@@ -1057,5 +1059,5 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   duration: "1 nap",
   ingredientsCost: "Lásd leírást!",
   sellPrice: "Lásd leírást!",
-  description: "Ezen különleges főzetet nem minden boszorkányrend tagia: ismerik, (csakis az idősebb, komolyabb történelemmel rendelkező szervezetek kaparinthatták meg,) vagy juthattak el természeti anyagok mágiájának ezen fokára. (Arról, hogy az adott boszorkány ismeri-e ezen varázsital receptjét, mindaz a KM hivatott dönteni.)\n\nA varázsital hatása mindenben megegyezik az Átváltoztatás csókja nevezetű varázslatnál leírtakkal, azonban hatása: mindig arra fejti ki, aki felhajtja varázsitalt, és elvéti Asztrál.; és Mentális ME-jét 40 E erősséggel szemben. A varázslta, elkészítéséhez mindig az italba kell keverni az átváltozás végeredményéül kiszemelt fajú lény vérének legalább hét cseppet Az ital elkészítéséhez szükséges Mana pont igény 10 Mp-tal több mint az Átváltozás csókjánál feltüntetett érték. Amikor a boszorkány palackba zárja a főzetet, egy csókot lehel ra így hívja életre a mágikus hatást.\n\nAbban az esetben, ha egy kiszemelt lénnyé kíván változni az ital alkalmazója, akkor az adott teremtmény vérét kell felhasználnia, és újabb 10 Mana pontot feláldoznia."
+  description: "Ezen különleges főzetet nem minden boszorkányrend tagia: ismerik, (csakis az idősebb, komolyabb történelemmel rendelkező szervezetek kaparinthatták meg,) vagy juthattak el természeti anyagok mágiájának ezen fokára. (Arról, hogy az adott boszorkány ismeri-e ezen varázsital receptjét, mindaz a KM hivatott dönteni.)\n\nA varázsital hatása mindenben megegyezik az Átváltoztatás csókja nevezetű varázslatnál leírtakkal, azonban hatása: mindig arra fejti ki, aki felhajtja varázsitalt, és elvéti Asztrál.; és Mentális ME-jét 40 E erősséggel szemben. A varázsital elkészítéséhez mindig az italba kell keverni az átváltozás végeredményéül kiszemelt fajú lény vérének legalább hét cseppet Az ital elkészítéséhez szükséges Mana pont igény 10 Mp-tal több mint az Átváltozás csókjánál feltüntetett érték. Amikor a boszorkány palackba zárja a főzetet, egy csókot lehel ra így hívja életre a mágikus hatást.\n\nAbban az esetben, ha egy kiszemelt lénnyé kíván változni az ital alkalmazója, akkor az adott teremtmény vérét kell felhasználnia, és újabb 10 Mana pontot feláldoznia."
 }]
