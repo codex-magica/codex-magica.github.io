@@ -61,6 +61,21 @@ export type DerivedStat = keyof typeof DerivedStatValues;
 
 export type DerivedStats = typeof DerivedStatValues;
 
+export interface VitalStat {
+  current: number;
+  max: number;
+}
+
+export interface Vitals {
+  eletpont: VitalStat;
+  fajdalompont: VitalStat;
+  mana: VitalStat;
+  kegypont: VitalStat;
+  pszi: VitalStat;
+}
+
+export type VitalKey = keyof Vitals;
+
 interface Modifier {
   stat: Stat | DerivedStat;
   value: number;
@@ -200,5 +215,6 @@ export interface Character {
   race: Race;
   class: string;
   skills: SkillLevel[];
+  vitals: Vitals;
 }
 

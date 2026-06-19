@@ -25,3 +25,17 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# MAGUS source material — large binaries (the Markdown results in
+# source_material/build/{md,chapters,ocr} ARE kept and committed)
+/source_material/Magus_UTK_v1.pdf
+/source_material/pages/
+/source_material/pilot_md/
+/source_material/crop_test/
+/source_material/build/deskewed/
+/source_material/build/strips/
+/source_material/build/crops/
+/source_material/build/prep_full.log
+
+# local certificates
+/local-cert/

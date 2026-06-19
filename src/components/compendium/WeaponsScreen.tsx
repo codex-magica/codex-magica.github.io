@@ -116,6 +116,7 @@ export const WeaponsScreen = () => {
 
       {weaponsHeader("5. Méretkategória")}
       {weaponsSubHeader("Nyeles fegyverek")}
+      {weaponsTable(5, "Nyeles fegyverek")}
 
       {weaponsHeader("Hajítófegyverek")}
       {weaponsTable("ranged", "Hajítófegyverek")}

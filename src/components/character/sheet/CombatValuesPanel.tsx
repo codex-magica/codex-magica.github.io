@@ -18,7 +18,7 @@ export const CombatValuesPanel = () => {
       <Panel title="Közelharci" size="sm">
         <HStack onClick={meleeAttackModal.onOpen} cursor="pointer">
           <FormLabel width="120px" cursor="pointer">Tőr</FormLabel>
-          <Text textAlign="center" verticalAlign="middle" cursor="pointer">2k10-1</Text>
+          <Text textAlign="center" verticalAlign="middle" cursor="pointer">1k10-1</Text>
           <Text textAlign="center" verticalAlign="middle" cursor="pointer">43</Text>
         </HStack>
       </Panel>

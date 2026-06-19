@@ -74,4 +74,11 @@ export const defaultCharacter : Character = {
     { skill: "Udvari etikett/intrika", level: 2 },
     { skill: "Ékesszólás", level: 2 }
   ],
+  vitals: {
+    eletpont: { current: 14, max: 14 },
+    fajdalompont: { current: 29, max: 29 },
+    mana: { current: 8, max: 14 },
+    kegypont: { current: 3, max: 20 },
+    pszi: { current: 20, max: 25 },
+  },
 };

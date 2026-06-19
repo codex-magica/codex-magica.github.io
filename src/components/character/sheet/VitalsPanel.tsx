@@ -1,7 +1,9 @@
-import React from 'react';
-import {Box, FormLabel, HStack, Progress, Spacer, Text, useColorModeValue, VStack} from '@chakra-ui/react';
-import {useCharacter} from "@/CharacterContext";
+import React, { useState } from 'react';
+import { Box, Progress, Text, useColorModeValue, useDisclosure, VStack } from '@chakra-ui/react';
+import { useCharacter } from "@/CharacterContext";
 import Panel from "@/components/character/sheet/util/Panel";
+import { VitalKey } from "@/data/character";
+import { VitalsCalculatorModal } from "./VitalsCalculatorModal";
 
 interface StatBarProps {
   label: string;
@@ -9,14 +11,23 @@ interface StatBarProps {
   max: number;
   color: string;
   bg: string;
+  onClick?: () => void;
 }
 
-const StatBar = ({ label, value, max, color, bg }: StatBarProps) => {
+const StatBar = ({ label, value, max, color, bg, onClick }: StatBarProps) => {
   const textColor = useColorModeValue("gray.700", "gray.200");
   const overlayColor = useColorModeValue("black", "gray.800");
 
   return (
-    <VStack w="100%" spacing={1} align="stretch">
+    <VStack
+      w="100%"
+      spacing={1}
+      align="stretch"
+      cursor={onClick ? "pointer" : "default"}
+      onClick={onClick}
+      _hover={onClick ? { opacity: 0.8 } : undefined}
+      transition="opacity 0.2s"
+    >
       <Text fontSize="xs" color={textColor} w="100%" textAlign="center">{label}</Text>
       <Box position="relative" w="100%">
         <Progress
@@ -24,10 +35,10 @@ const StatBar = ({ label, value, max, color, bg }: StatBarProps) => {
           size="lg"
           sx={{
             "& > div:first-of-type": {
-              backgroundColor: bg, // background for the "off" area
+              backgroundColor: bg,
             },
             "& > div:last-of-type": {
-              backgroundColor: color, // filled area color
+              backgroundColor: color,
             },
           }}
           borderRadius="sm"
@@ -47,28 +58,74 @@ const StatBar = ({ label, value, max, color, bg }: StatBarProps) => {
   );
 };
 
+interface VitalConfig {
+  key: VitalKey;
+  label: string;
+  colorKey: 'elet' | 'fajdalom' | 'mana' | 'kegy' | 'pszi';
+}
+
+const vitalsConfig: VitalConfig[] = [
+  { key: 'eletpont', label: 'Életpont', colorKey: 'elet' },
+  { key: 'fajdalompont', label: 'Fájdalompont', colorKey: 'fajdalom' },
+  { key: 'mana', label: 'Mana', colorKey: 'mana' },
+  { key: 'kegypont', label: 'Kegypont', colorKey: 'kegy' },
+  { key: 'pszi', label: 'Pszi', colorKey: 'pszi' },
+];
+
 export const VitalsPanel = () => {
   const { character } = useCharacter();
+  const calculatorModal = useDisclosure();
+  const [selectedVital, setSelectedVital] = useState<{
+    key: VitalKey;
+    label: string;
+    color: string;
+  } | null>(null);
 
   const colors = {
-    fajdalom: useColorModeValue("#9ae6b4", "#2f855a"),       // Életpont — fresh green (life)
-    elet: useColorModeValue("#fc8181", "#c53030"),   // Fájdalompont — soft red/coral (pain)
-    mana: useColorModeValue("#90cdf4", "#2b6cb0"),       // Mana — calm blue (magic)
-    kegy: useColorModeValue("#fce588", "#b7791f"),       // Kegypont — divine golden yellow
-    pszi: useColorModeValue("#d6bcfa", "#553c9a"),       // Pszi — mystical purple
+    fajdalom: useColorModeValue("#9ae6b4", "#2f855a"),
+    elet: useColorModeValue("#fc8181", "#c53030"),
+    mana: useColorModeValue("#90cdf4", "#2b6cb0"),
+    kegy: useColorModeValue("#fce588", "#b7791f"),
+    pszi: useColorModeValue("#d6bcfa", "#553c9a"),
   };
 
-  const bg = useColorModeValue("gray.100", "gray.700"); // subtle neutral background
+  const bg = useColorModeValue("gray.100", "gray.700");
+
+  const handleStatBarClick = (key: VitalKey, label: string, color: string) => {
+    setSelectedVital({ key, label, color });
+    calculatorModal.onOpen();
+  };
+
+  const handleModalClose = () => {
+    calculatorModal.onClose();
+    setSelectedVital(null);
+  };
 
   return (
     <Panel title="Életerő">
       <VStack w="100%">
-        <StatBar label="Életpont" value={14} max={14} color={colors.elet} bg={bg} />
-        <StatBar label="Fájdalompont" value={29} max={29} color={colors.fajdalom} bg={bg} />
-        <StatBar label="Mana" value={8} max={14} color={colors.mana} bg={bg} />
-        <StatBar label="Kegypont" value={3} max={20} color={colors.kegy} bg={bg} />
-        <StatBar label="Pszi" value={20} max={25} color={colors.pszi} bg={bg} />
+        {vitalsConfig.map(({ key, label, colorKey }) => (
+          <StatBar
+            key={key}
+            label={label}
+            value={character.vitals[key].current}
+            max={character.vitals[key].max}
+            color={colors[colorKey]}
+            bg={bg}
+            onClick={() => handleStatBarClick(key, label, colors[colorKey])}
+          />
+        ))}
       </VStack>
+
+      {selectedVital && (
+        <VitalsCalculatorModal
+          isOpen={calculatorModal.isOpen}
+          onClose={handleModalClose}
+          vitalKey={selectedVital.key}
+          vitalLabel={selectedVital.label}
+          vitalColor={selectedVital.color}
+        />
+      )}
     </Panel>
   );
 };
