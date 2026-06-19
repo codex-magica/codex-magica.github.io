@@ -89,11 +89,11 @@ export const ShieldValues: ShieldInfo[] = [
 // brigandin -2 3 15 4a 60
 // láncing -1 2 20 10a 40
 // sodronying -1 3 20 12a 60
-// pikkelyvért -2 3 16 12a 60
+// pikkelyvért -2 3 16 20a 60
 // lemezvértezet -2 2 18 40a 40
-// rákozott páncél -2 4 15 100a 80
+// rákozott páncél -2 4 25 100a 80
 // mellvért -3 4 20 80a 80
-// félvértezet -4 6 30 120a 100
+// félvértezet -4 5 30 120a 100
 // teljes vértezet -5 6 35 200a 120
 // gladiátorvért -2 4 15 - 80
 // kráni vért -2 4 15 - 80
@@ -167,7 +167,7 @@ export const ArmorValues: ArmorInfo[] = [
   },
   {
     name: "pikkelyvért",
-    cost: "12a",
+    cost: "20a",
     weight: "16",
     STP: 60,
     MGT: -2,
@@ -186,7 +186,7 @@ export const ArmorValues: ArmorInfo[] = [
   {
     name: "rákozott páncél",
     cost: "100a",
-    weight: "15",
+    weight: "25",
     STP: 80,
     MGT: -2,
     SFÉ: 4,
@@ -207,7 +207,7 @@ export const ArmorValues: ArmorInfo[] = [
     weight: "30",
     STP: 100,
     MGT: -4,
-    SFÉ: 6,
+    SFÉ: 5,
     description: "A félvért jóval egyszerűbb, itt a lábat védő páncéldarabok részben vagy teljes egészében elmaradnak. A csataszoknyát a megfelelő védelem miatt láncnadrággal egészítik ki. Gyakran a térdvértet külön is felveszik, mivel a térd különösen sérülékeny. A mellvért hagyományos értelemben csak a mellvasat tartalmazza, bár általában a hátvassal együtt veszik fel. Alkalmanként váll-, könyök- és térdvas egészíti ki, olykor a csataszoknyát is felcsatolják hozzá. Szintén láncinget vagy sodronyinget hordanak alatta, ami a lábakat és a karokat védi."
   },
   {
