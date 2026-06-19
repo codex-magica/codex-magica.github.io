@@ -95,7 +95,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "3 kör",
-  description: "A varázslat befejeztekor a tűzvarázslót - vagy azt a kizárólag egyetlenegy, Zónáján belül tartózkodó személyt, akit meghatároz - Tűzaura veszi körül. Ez úgy hat, mint valami lángokból álló vértezet: beborítja, védelmezi az illetőt. Testétől mintegy tíz ynevi hüvelyk távolságra lobog, védettjét a mozgásban és a látásban egyáltalán nem akadályozza, és nem is sebzi; mi több, a ruháit, tárgyait sem lobbantja lángra; befelé semmilyen hőhatást nem fejt ki. Ellenben azoknak, akik azAura védettjét megérinteni, puszta kézzel megütni szándékoznak - vagyis az Aurán átnyúlni kívánnak - égési sebet okoz, valamint a kívülről behatoló éghető anyagokat lángra lobbantja. Ez a sebzés minden benyúlási kísérlet esetén Erősségenként lkó Sp."
+  description: "A varázslat befejeztekor a tűzvarázslót - vagy azt a kizárólag egyetlenegy, Zónáján belül tartózkodó személyt, akit meghatároz - Tűzaura veszi körül. Ez úgy hat, mint valami lángokból álló vértezet: beborítja, védelmezi az illetőt. Testétől mintegy tíz ynevi hüvelyk távolságra lobog, védettjét a mozgásban és a látásban egyáltalán nem akadályozza, és nem is sebzi; mi több, a ruháit, tárgyait sem lobbantja lángra; befelé semmilyen hőhatást nem fejt ki. Ellenben azoknak, akik azAura védettjét megérinteni, puszta kézzel megütni szándékoznak - vagyis az Aurán átnyúlni kívánnak - égési sebet okoz, valamint a kívülről behatoló éghető anyagokat lángra lobbantja. Ez a sebzés minden benyúlási kísérlet esetén Erősségenként 1k6 Sp."
 }, {
   name: "Tűzcsóva",
   type: "Iskolaformák",
@@ -116,49 +116,49 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "3 kör",
-  description: "A varázslattal a tűzvarázsló lángokkal övezheti egy tetszés szerinti formájú fegyvert. A tűz körülöleli a pengét - akár a Tűzaura az embert -, és a fegyver sebzésén túl égési sebeket okoz, valamint lángra lobbantja a gyúlékony anyagokat, melyeket megérint.\n\nA Tüzkardot a markolatánál bárki megfoghatja és forgathatja; a harc során éppúgy viselkedik, akár egy hétköznapi fegyver: támadni szükséges vele, s éppúgy használható védekezésre is - a Harcrendszer szabályai szerint. Sebzés csak sikeres támadás esetén éri az áldozatot: a fegyver eredeti sebzésén túl a varázslat minden egyes E-je után lkő Sp. Azonban túlütés estén csak a fegyver sebez automatikusan Ép-t, a tűzvarázslat nem!"
+  description: "A varázslattal a tűzvarázsló lángokkal övezheti egy tetszés szerinti formájú fegyvert. A tűz körülöleli a pengét - akár a Tűzaura az embert -, és a fegyver sebzésén túl égési sebeket okoz, valamint lángra lobbantja a gyúlékony anyagokat, melyeket megérint.\n\nA Tűzkardot a markolatánál bárki megfoghatja és forgathatja; a harc során éppúgy viselkedik, akár egy hétköznapi fegyver: támadni szükséges vele, s éppúgy használható védekezésre is - a Harcrendszer szabályai szerint. Sebzés csak sikeres támadás esetén éri az áldozatot: a fegyver eredeti sebzésén túl a varázslat minden egyes E-je után 1k6 Sp. Azonban túlütés estén csak a fegyver sebez automatikusan Ép-t, a tűzvarázslat nem!"
 }, {
   name: "Tűzkitörés",
   type: "Iskolaformák",
   cost: "5",
   castingTime: "1 szegmens/E",
   duration: "Egyszeri",
-  description: "A tűzvarázsló a Zónáján belül eső területen meghatározhat egy tetszés szerinti pontot, amely a robbanás epicentrumaként fog szolgálni. A robbanás mindazoknál«, akik a középpont 1 ynevi láb körzetén belül tartózkodnak, minden E után lkő sebet fog okozni. Ha a tűzvarázsló a tűzkitörést - több Mp felhasználásával - nagyobb erősséggel idézi meg, akkor már a távolabb állók is részesülnek a hatásából - minél távolabb tartózkodnak, annál kevésbé. A sebzés az epicentrumtól távolodva lábanként 1k6-tál csökken."
+  description: "A tűzvarázsló a Zónáján belül eső területen meghatározhat egy tetszés szerinti pontot, amely a robbanás epicentrumaként fog szolgálni. A robbanás mindazoknál«, akik a középpont 1 ynevi láb körzetén belül tartózkodnak, minden E után 1k6 sebet fog okozni. Ha a tűzvarázsló a tűzkitörést - több Mp felhasználásával - nagyobb erősséggel idézi meg, akkor már a távolabb állók is részesülnek a hatásából - minél távolabb tartózkodnak, annál kevésbé. A sebzés az epicentrumtól távolodva lábanként 1k6-tál csökken."
 }, {
   name: "Tűznyíl",
   type: "Iskolaformák",
   cost: "4",
   castingTime: "1 szegmens/E",
   duration: "Egyszeri",
-  description: "A tűzvarázsló bal kezének mutatóujjából Tűznyíl csap elő. Ezzel akkor találja el ellenfelét, ha sikeres Célzó Dobást tesz. A Tűznyíl CÉ-je 30, amihez a tűzvarázsló fegyver nélküli CÉ-je is hozzáadódik, sebzése pedig Erősségenként lkő Sp."
+  description: "A tűzvarázsló bal kezének mutatóujjából Tűznyíl csap elő. Ezzel akkor találja el ellenfelét, ha sikeres Célzó Dobást tesz. A Tűznyíl CÉ-je 30, amihez a tűzvarázsló fegyver nélküli CÉ-je is hozzáadódik, sebzése pedig Erősségenként 1k6 Sp."
 }, {
   name: "Tűzszőnyeg",
   type: "Iskolaformák",
   cost: "8",
   castingTime: "1 szegmens/E",
   duration: "3 kör",
-  description: "A varázslattal a tűzvarázsló egy 5 ynevi láb sugarú körben fél ynevi láb magas Tűzszőnyeget hoz létre. Ezt úgy a legegyszerűbb elképzelni, mint egy hosszú szárú fűvel benőtt területet - csakhogy a fűszálak itt lobogó lángnyelvek. Mindazok, akik ebbe belekerülnek vagy belelépnek, a varázslat minden egyes E-je után körönként lkő Sp sebet szenvednek. Minden éghető anyag, melyet a szőnyeg lángnyelvei érnek, tüzet fog.\n\nA Tűzszőnyegnek csupán Erőssége és Időtartama növelhető, mérete nem."
+  description: "A varázslattal a tűzvarázsló egy 5 ynevi láb sugarú körben fél ynevi láb magas Tűzszőnyeget hoz létre. Ezt úgy a legegyszerűbb elképzelni, mint egy hosszú szárú fűvel benőtt területet - csakhogy a fűszálak itt lobogó lángnyelvek. Mindazok, akik ebbe belekerülnek vagy belelépnek, a varázslat minden egyes E-je után körönként 1k6 Sp sebet szenvednek. Minden éghető anyag, melyet a szőnyeg lángnyelvei érnek, tüzet fog.\n\nA Tűzszőnyegnek csupán Erőssége és Időtartama növelhető, mérete nem."
 }, {
   name: "Tűzgolyó",
   type: "Szabad elemi formák",
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "3 kör",
-  description: "A varázslat utolsó igéjének elhangzása után 1 ynevi láb átmérőjű Tűzgolyó jön létre a tűzvarázsló Zónáján belül eső, tetszés szerinti ponton. A tűzvarázsló a Zónáján belül az időtartam lejártáig tetszés szerint mozgathatja a golyót, mely körönként 20 ynevi lábat képes megtenni. Belsejében iszonyú forróság uralkodik - akit megérint, E-nként lkő Sp-t szenved el. Ha az áldozatok félreugrani igyekszenek a Tűzgolyó útjából, sikeres Gyorsaságpróbát kell tenniük, hogy elkerülhessék."
+  description: "A varázslat utolsó igéjének elhangzása után 1 ynevi láb átmérőjű Tűzgolyó jön létre a tűzvarázsló Zónáján belül eső, tetszés szerinti ponton. A tűzvarázsló a Zónáján belül az időtartam lejártáig tetszés szerint mozgathatja a golyót, mely körönként 20 ynevi lábat képes megtenni. Belsejében iszonyú forróság uralkodik - akit megérint, E-nként 1k6 Sp-t szenved el. Ha az áldozatok félreugrani igyekszenek a Tűzgolyó útjából, sikeres Gyorsaságpróbát kell tenniük, hogy elkerülhessék."
 }, {
   name: "Tűzgyűrű",
   type: "Szabad elemi formák",
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "4 kör",
-  description: "A varázslat létrejöttekor a tűzvarázsló egyetlen mozdulattal kijelöl egy 3 ynevi láb átmérőjű körívet, ahol Tűzgyűrű keletkezik, melynek lángnyelvei maximum húsz\n\nyneví hüvelyk magasak. Mikor bárki vagy bármi áthatolni kíván a gyűrűn, a tűz felcsap és lángba borítja a behatolót. Az éghető anyagok nyomban meggyulladnak, az élőlények Erősségenként 1k6 Sp sebet szenvednek el."
+  description: "A varázslat létrejöttekor a tűzvarázsló egyetlen mozdulattal kijelöl egy 3 ynevi láb átmérőjű körívet, ahol Tűzgyűrű keletkezik, melynek lángnyelvei maximum húsz\n\nynevi hüvelyk magasak. Mikor bárki vagy bármi áthatolni kíván a gyűrűn, a tűz felcsap és lángba borítja a behatolót. Az éghető anyagok nyomban meggyulladnak, az élőlények Erősségenként 1k6 Sp sebet szenvednek el."
 }, {
   name: "Tűzhenger",
   type: "Szabad elemi formák",
   cost: "5",
   castingTime: "1 szegmens/E",
   duration: "6 kör",
-  description: "A varázslat hatására a tűzvarázsló Zónáján belül bárhol egy 3 ynevi láb hosszú, 1 ynevi láb magas Tűzhenger keletkezik, s gurulni kezd. Haladásának iránya nem befolyásolható, az kizárólag a domborzati viszonyoktól függ. A henger haladási sebessége 10 lépés körönként. 6 kör múltán magától eltűnik, de amerre elhaladt, az éghető anyagok lángra kapnak - így a tűz könnyen elharapózhat. Akit a tűzhenger elér, az a varázslat minden egyes E-je után lkő Sp égési sebet szenved el."
+  description: "A varázslat hatására a tűzvarázsló Zónáján belül bárhol egy 3 ynevi láb hosszú, 1 ynevi láb magas Tűzhenger keletkezik, s gurulni kezd. Haladásának iránya nem befolyásolható, az kizárólag a domborzati viszonyoktól függ. A henger haladási sebessége 10 lépés körönként. 6 kör múltán magától eltűnik, de amerre elhaladt, az éghető anyagok lángra kapnak - így a tűz könnyen elharapózhat. Akit a tűzhenger elér, az a varázslat minden egyes E-je után 1k6 Sp égési sebet szenved el."
 }, {
   name: "Tűzhullám",
   type: "Szabad elemi formák",
@@ -177,9 +177,9 @@ export const FireMagicValues: FireMagicInfo[] = [{
   name: "Sárkány lehelete",
   type: "Tűzmágia magasiskolája",
   cost: "8",
-  castingTime: "1 szegmens",
+  castingTime: "1 szegmens/E",
   duration: "30 kör",
-  description: "A varázslat segítségével a tűzvarázsló az időtartam alatt három alkalommal lángot képes fújni a szájából, akárcsak az erről nevezetes sárkányok. A tűzcsóva egy láb széles és any- nyi ynevi láb hosszú, amennyi a varázslat Erőssége. E-nként lkő sebzést okoz."
+  description: "A varázslat segítségével a tűzvarázsló az időtartam alatt három alkalommal lángot képes fújni a szájából, akárcsak az erről nevezetes sárkányok. A tűzcsóva egy láb széles és any- nyi ynevi láb hosszú, amennyi a varázslat Erőssége. E-nként 1k6 sebzést okoz."
 }, {
   name: "Tűz ropogása",
   type: "Tűzmágia magasiskolája",
@@ -193,7 +193,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "1 kör/E",
-  description: "A tűzvarázsló bármely, a Zónáján belül eső nem mágikus fémtárgyat megjelölhet a varázslat célpontjául (de egyszerre csak egyet), mely ettől kezdve rohamos sebességgel forrósodni kezd. Az első körben még csak éget, a másodikban sötétvörösen, a harmadikban sárgán, a negyedikben fehéren izzik, az ötödikben megolvad, a hatodikban pedig már képlékennyé válik. Ha az érintett tárgyat valaki a testén viseli, akkor minden körben annyiszor lkő Sp-t veszít, ahányadik az adott kör a fentebb ismertetett fokozatok sorában.\n\nAbban az esetben, ha a tárgy kikerül a tűzvarázsló Zónájából, vagy az Időtartam lejár, körönként egy fokozatot hűl - és ennek megfelelően továbbra is sebez. Természetesen, ha újra izzítani kezdik, a folyamat nem elölről, hanem az éppen aktuális fokozattól folytatódik."
+  description: "A tűzvarázsló bármely, a Zónáján belül eső nem mágikus fémtárgyat megjelölhet a varázslat célpontjául (de egyszerre csak egyet), mely ettől kezdve rohamos sebességgel forrósodni kezd. Az első körben még csak éget, a másodikban sötétvörösen, a harmadikban sárgán, a negyedikben fehéren izzik, az ötödikben megolvad, a hatodikban pedig már képlékennyé válik. Ha az érintett tárgyat valaki a testén viseli, akkor minden körben annyiszor 1k6 Sp-t veszít, ahányadik az adott kör a fentebb ismertetett fokozatok sorában.\n\nAbban az esetben, ha a tárgy kikerül a tűzvarázsló Zónájából, vagy az Időtartam lejár, körönként egy fokozatot hűl - és ennek megfelelően továbbra is sebez. Természetesen, ha újra izzítani kezdik, a folyamat nem elölről, hanem az éppen aktuális fokozattól folytatódik."
 }, {
   name: "Forró nyom",
   type: "Tűzmágia magasiskolája",
@@ -284,7 +284,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "8",
   castingTime: "1 kör",
   duration: "1 óra",
-  description: "Miután a tűzvarázsló befejezte a varázslást, 1 kör áll rendelkezésre, hogy bal keze hüvelykujjával megjelöljön egy pontot, ahol érintése nyomán apró varázsjel vörösük föl. A jel érzékel minden előtte elhaladót és minden alkalommal akkora Erősségű Tűznyilat lő ki rá, mint a Tűzszem aktuális E-je. A varázslat minden kilőtt lövedék után egyet veszít Erősségéből (egy 24 Mp-os Tűzszem első elhaladáskor tehát 3k6, második alkalommal 21k6, harmadik alkalommal lkő Sp égési sebet okoz, majd szertefoszlik).\n\nAlapesetben a Tűznyíl 1 ynevi láb távolságig érzékel és hat, azonban ez a távolság kitolható, minden +1 Mp-ért egy lábbal. Az időtartam is növelhető, minden +1 Mp-ért egy órával tovább maradnak fönt a varázslatot egybetartó kötések.\n\nA Tűznyíl CÉ-je 30, mely alapértékkcl kell Célzó dobást tenni a sikeres találathoz. A nyíl csakis találat esetén okoz sebet."
+  description: "Miután a tűzvarázsló befejezte a varázslást, 1 kör áll rendelkezésre, hogy bal keze hüvelykujjával megjelöljön egy pontot, ahol érintése nyomán apró varázsjel vörösük föl. A jel érzékel minden előtte elhaladót és minden alkalommal akkora Erősségű Tűznyilat lő ki rá, mint a Tűzszem aktuális E-je. A varázslat minden kilőtt lövedék után egyet veszít Erősségéből (egy 24 Mp-os Tűzszem első elhaladáskor tehát 3k6, második alkalommal 2k6, harmadik alkalommal 1k6 Sp égési sebet okoz, majd szertefoszlik).\n\nAlapesetben a Tűznyíl 1 ynevi láb távolságig érzékel és hat, azonban ez a távolság kitolható, minden +1 Mp-ért egy lábbal. Az időtartam is növelhető, minden +1 Mp-ért egy órával tovább maradnak fönt a varázslatot egybetartó kötések.\n\nA Tűznyíl CÉ-je 30, mely alapértékkcl kell Célzó dobást tenni a sikeres találathoz. A nyíl csakis találat esetén okoz sebet."
 }, {
   name: "Fekete tűz",
   type: "Közönséges tüzek befolyásolása",
@@ -298,7 +298,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "2",
   castingTime: "2 szegmens",
   duration: "6 kör",
-  description: "A varázslat hatására a tűz fénye és hőjének nagy része maró füstté változik. Végrehajtása után a tűzvarázsló Zónájában\n\na kiválasztott tűz lelohad, szinte csak parázslik, sebzése is minimális lesz (például 1 Sp esetén 0, 1k6 Sp esetén 1, 2k6 Sp esetén 2 stb.).\n\nFényt nem ad, de fényerősségének határáig sűrű szürkés­fekete füstöt ereszt. A keletkező füst akadályozza a légzést, csípi a szemet és sűrűségéből adódóan a látótávolságot is rontja. A benne tartózkodók kötelesek a 0. szintű méregnek számító füst ellen Egészségpróbát dobni, s vétés esetén Rosz- szullét fogja el őket. Ha a Tulajdonságpróbát sikeresen megdobták, úgy csak az Émelygés szabályai vonatkoznak rájuk. Ezen kívül a füstben távolsági fegyvert használni, illetve a füstben állókra célozni csak -50 CÉ-vel lehet, mivel a benne tartózkodók alig láthatók. A füstben a közelharc is módosul, minden támadás TÉ-je 25-tel csökken.\n\nAkik kikerülnek a füstből, még lkő percig nyögik a füst szervezetre gyakorolt hatását. A füst az időtartam lejárta előtt csak mágiával oszlatható el, utána a légmozgás játékszerévé válik."
+  description: "A varázslat hatására a tűz fénye és hőjének nagy része maró füstté változik. Végrehajtása után a tűzvarázsló Zónájában\n\na kiválasztott tűz lelohad, szinte csak parázslik, sebzése is minimális lesz (például 1 Sp esetén 0, 1k6 Sp esetén 1, 2k6 Sp esetén 2 stb.).\n\nFényt nem ad, de fényerősségének határáig sűrű szürkés­fekete füstöt ereszt. A keletkező füst akadályozza a légzést, csípi a szemet és sűrűségéből adódóan a látótávolságot is rontja. A benne tartózkodók kötelesek a 0. szintű méregnek számító füst ellen Egészségpróbát dobni, s vétés esetén Rosz- szullét fogja el őket. Ha a Tulajdonságpróbát sikeresen megdobták, úgy csak az Émelygés szabályai vonatkoznak rájuk. Ezen kívül a füstben távolsági fegyvert használni, illetve a füstben állókra célozni csak -50 CÉ-vel lehet, mivel a benne tartózkodók alig láthatók. A füstben a közelharc is módosul, minden támadás TÉ-je 25-tel csökken.\n\nAkik kikerülnek a füstből, még 1k6 percig nyögik a füst szervezetre gyakorolt hatását. A füst az időtartam lejárta előtt csak mágiával oszlatható el, utána a légmozgás játékszerévé válik."
 }, {
   name: "Hidegtűz",
   type: "Közönséges tüzek befolyásolása",
@@ -355,9 +355,10 @@ export const FireMagicValues: FireMagicInfo[] = [{
   castingTime: "1 szegmens/E",
   duration: "Lásd a leírást!",
   description: [
-    "Misztikus varázslat, melynek segítségével a tűzvarázsló megváltoztathatja az Őstűz mágikus tulajdonságait, olyan praktika, melyet önmagában soha nem alkalmaznak, hanem mindig valamilyen tűzvarázslathoz fűznek hozzá, vagy már létező tűzmágiát alakítanak át vele. A varázslás idejénél feltüntetheti 1 szegmens/E mindig hozzáadandó az eredeti varázslat varázslási idejéhez.",
+    "Misztikus varázslat, melynek segítségével a tűzvarázsló megváltoztathatja az Őstűz mágikus tulajdonságait, olyan praktika, melyet önmagában soha nem alkalmaznak, hanem mindig valamilyen tűzvarázslathoz fűznek hozzá, vagy már létező tűzmágiát alakítanak át vele. A varázslás idejénél feltüntetett 1 szegmens/E mindig hozzáadandó az eredeti varázslat varázslási idejéhez.",
     "table:Szín\tHatás\tMp/E\n\nVakító fehér\tA tüzek E-jét magába olvasztja\t6\n\nKék\tŐsvíz ellen 2xE\t2\n\nMéregzöld\tCsak a célpontokra hat\t4+2\n\nAranysárga\tA tűzvarázslóra nem hat\t3\n\nBíborvörös\tFele sebzés, kétszeres időtartam\t2\n\nFekete\tCsak a tűzvarázslóra hat\tSpeciális",
-    // TODO: more text
+    "A fenti táblázat azt mutatja, hogy a tűzvarázsló által létrehozandó varázslat lángfestése mennyi Mp-ba kerül E-jének függvényében. A már létező varázslatok dupla annyi Mana pontért festhetők meg.\n\nHa a varázslathoz kevesebb E lángfestést alkalmaz, mint amekkora a tűz E-je, akkor a tűz színe feketére vált. Célszerű ezért vagy Őstűz észlelése vagy a Tűzelemzés varázslatokat alkalmazni, már amennyiben erre idő és lehetőség van. Nem egy tűzvarázsló végzete lett a kockáztatás...\n\nNagyon fontos, hogy a KM szigorúan ügyeljen a varázslat használatakor, ha értelmetlenül próbálják felhasználni, akkor a tűz mindenképpen visszaüt: Fekete színű lángok tűzkitörése kellő eszköz a Játékosok megfékezésére.",
+    "Az egyes színek bővebb magyarázatra szorulnak:\n\n**Vakító fehér** fényben tündöklő tűz a Zónában lévő összes természetes tüzet is Őstűzzé alakítja, magába olvasztva, ezáltal saját E-jét növeli. Ugyanezt teszi az összes olyan Őstűzzel, mellyel fizikailag érintkezik. Ha két Fehér láng találkozik, akkor a nagyobb E-jű magába olvasztja a kisebb E-jűt. Ha E-jük egyenlő, akkor egyik sem olvasztja magába a másikat. Ha a Fehér láng más festett lánggal találkozik, akkor a magába olvasztott tűz festése megszűnik, teljesen a Fehér tűz részévé válik. A Fehérre festett láng ötször annyi természetes, és háromszor annyi őstüzet tud magába olvasztani, mint a varázslat eredeti Erőssége.\n\n**A Kéken** lángoló tűz ellenállóbbá válik az őt egyébként kioltó Ősvíz ellen, E-je az ilyen hatások ellen kétszeresére növekszik.\n\n**A Zölden** lobogó tűz sajátossága, hogy csak a tűzvarázsló által megadott célpontokra, vagy csoportra hat. Mások hiába tartózkodnak a területén, rájuk a tűzmágia nem fejti ki hatását. A tűz zöldre festéséhez 4 Mp/E kell egy célpont ellen, és további 2 Mp/E célpontonként. Ha a tűzvarázsló mást talál el, azokra a tűz hatástalan.\n\n**Az Aranysárga** színezetű lángok pusztító ereje az őket létrehozó tűzvarázslóra, vagy az általa kijelölt célpontokra teljes mértékben hatástalan, ebben az esetben azonban minden további célpont többszörözi a varázslat Mp-igényét. Azaz 3 védett személy esetén a feltüntetett Mp-igény háromszorosa számolandó a színezett tűz minden egyes E-je után.\n\n**A Bíborvörös** tűz színe teljesen elsötétül, szinte már feketébe hajlik. A hőfoka (ezáltal a Sebzése) és a fényereje fele az ugyanolyan Erősségű tűznek. Azonban az Időtartama kétszerese az ugyanolyan erősségű varázslatnak. Ezzel a színnel nem színezhető az olyan tűz, amely Időtartam nélküli (mint például Tűznyíl, Tűzkitörés).\n\n**A Fekete** színű láng speciális eset, mely akkor jön létre, ha a tűzvarázsló a varázslat átalakításakor hibázott, megzavarta az érzékeny egyensúlyt. Ekkor a tűz kitöréssé alakul, csak őt fogja sebezni, függetlenül eredeti rendeltetésétől."
   ]
 }, {
   name: "Tűzkígyó",
@@ -385,7 +386,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   duration: "6 kör",
   combatModifier: "+25",
   size: "3",
-  description: "Egy lángnyelvekből álló fantom jelenik meg a varázslat eredményeképp, mely leginkább egy hatalmas fekete párducra emlékeztet. Körönként kétszer támad, fejével, mancsával, mintha harapna, vagy ütne, ha túlüti ellenfelét, akkor egy párducra jellemző ugrással átveti magát rajta."
+  description: "Egy lángnyelvekből álló fantom jelenik meg a varázslat eredményeképp, mely leginkább egy hatalmas fekete párducra emlékeztet. Körönként kétszer támad, fejével, mancsaival, mintha harapna, vagy ütne, ha túlüti ellenfelét, akkor egy párducra jellemző ugrással átveti magát rajta."
 }, {
   name: "Tűzpolip",
   type: "Tűzlények idézése",
@@ -412,7 +413,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   duration: "6 kör",
   combatModifier: "+30",
   size: "4",
-  description: "A tűzgólem nyúlánk majd' 3 ynevi láb magas humanoid alakú tűzlény, mely leginkább karjaival támad ellenfeleire, vagy megpróbál átrohanni rajtuk. Körönként kétszer képes támadni, azonban, ha a körben mindkét találata sikeres, akkor belekapaszkodik az ellenfelébe, és innentől kezdve az áldozatra a Harc helyhez kötve módosítók érvényesek. Szavadulni öleléséből csakis egy, a megidézett Őstűz E-jével megegyező mínuszokkal végrehajtott sikeres Erőpróbával lehet."
+  description: "A tűzgólem nyúlánk majd' 3 ynevi láb magas humanoid alakú tűzlény, mely leginkább karjaival támad ellenfeleire, vagy megpróbál átrohanni rajtuk. Körönként kétszer képes támadni, azonban, ha a körben mindkét találata sikeres, akkor belekapaszkodik az ellenfelébe, és innentől kezdve az áldozatra a Harc helyhez kötve módosítók érvényesek. Szabadulni öleléséből csakis egy, a megidézett Őstűz E-jével megegyező mínuszokkal végrehajtott sikeres Erőpróbával lehet."
 }, {
   name: "Lángdarazsak",
   type: "Tűzlények idézése",
