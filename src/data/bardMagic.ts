@@ -20,7 +20,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "Lásd a leírást!",
   save: ["Mentális"],
-  description: "A bárd lágy, dallomos énekének hatására azon célpontok, akik hallótávolságon beiül tartózkodnak és Mágiaellenállásuk sikertelen, fokozatosan elálmosodnak. A melankolikus dallam lassan kúszik be gondolataik közé, szempilláik elnehezülnek, nagyokat, álmosakat pislognak, majd ásítva elszenderednek. Az igazi alváshoz a bárd énekét legalább 1 percig kell hallgatniuk, a perc végére minden célpont mély álomba merül. Az alvás ezek után minden tekintetben természetesnek számít, az áldozatok akár hangos szóval vagy rázogatással is felébreszthetők."
+  description: "A bárd lágy, dallamos énekének hatására azon célpontok, akik hallótávolságon belül tartózkodnak és Mágiaellenállásuk sikertelen, fokozatosan elálmosodnak. A melankolikus dallam lassan kúszik be gondolataik közé, szempilláik elnehezülnek, nagyokat, álmosakat pislognak, majd ásítva elszenderednek. Az igazi alváshoz a bárd énekét legalább 1 percig kell hallgatniuk, a perc végére minden célpont mély álomba merül. Az alvás ezek után minden tekintetben természetesnek számít, az áldozatok akár hangos szóval vagy rázogatással is felébreszthetők."
 }, {
   name: "Bájolás dala",
   type: "Dalmágia",
@@ -29,7 +29,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "1 óra",
   save: ["Asztrális"],
-  description: "A bárd lágy, dallomos énekének hatására azon célpontok, akik hallótávolságon beiül tartózkodnak és Mágiaellenállásuk sikertelen, fokozatosan elálmosodnak. A melankolikus dallam lassan kúszik be gondolataik közé, szempilláik elnehezülnek, nagyokat, álmosakat pislognak, majd ásítva elszenderednek. Az igazi alváshoz a bárd énekét legalább 1 percig kell hallgatniuk, a perc végére minden célpont mély álomba merül. Az alvás ezek után minden tekintetben természetesnek számít, az áldozatok akár hangos szóval vagy rázogatással is felébreszthetők."
+  description: "A bárd énekének hatására azon célpontok, akik hallótávolságon belül tartózkodtak és Mágiaellenállásuk sikertelen, barátjukként tekintenek majd a bárdra. Ez azonban nem vak hűséget, csupán természetes szimpátiát jelent. Ha külön kéri őket rá, akár követni, s lehetőségük szerint segíteni fogják a bárdot, válaszolnak majd a bárd kérdéseire, de rájuk bízott komoly titkokat, rejtegetett tudást így sem osztanak meg vele. Mint ahogy nem árulják el barátaikat, feljebbvalójukat, és nem teljesítik a jellemükkel ellentétes kéréseket sem. Ilyesmit hiába is kérne tőlük a bárd. Azonban ha elég ügyesen palástolja szándékát, az áldozatok öntudatlanul is kikotyoghatnak olyan dolgokat, amit legfeljebb évek óta ismert kebelbarátjával vagy legjobb ivócimborájával oszt meg az ember.\n\nHa a bárd fenyegetően viselkedik, netán megtámadja a varázslat célpontját, arról azonnal lefoszlik a hatás (ugyancsak ez történik, ha a bárd olyan cselekvésre buzdítja az áldozatot, vagy olyan szituációba keveri, ahol az élete veszélyben forog)."
 }, {
   name: "Bátorság dala",
   type: "Dalmágia",
@@ -38,7 +38,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "A dal hossza + 10perc",
   save: ["Asztrális"],
-  description: "A bárd ezzel a varázslattal társainak harci kedvét növelheti (saját magát nem jelölheti meg célpontként). A dal általában pattogó, csatába hívó induló, de lehet akár lélekemelő hősi rege is. Minden olyan lény KÉ-je 5-tel, TÉ-je 10-zel nő, Bátorsága (NJK-k esetében) 3 ponttal emelkedik, aki a varázslás pillanatában a dalt hallotta.\n\nA Bátorság dalának hatása alatt álló személyek csak akkor válhatnak félelem alapú mágia alanyává, ha annak erőssége meghaladja a Bátorság daláét, illetve a magasabb erősítésű dalmágia semlegesíti az alacsonyabb erősítésű félelem alapú mágiák hatását. A varázslat manapontonként 2Et ad."
+  description: "A bárd ezzel a varázslattal társainak harci kedvét növelheti (saját magát nem jelölheti meg célpontként). A dal általában pattogó, csatába hívó induló, de lehet akár lélekemelő hősi rege is. Minden olyan lény KÉ-je 5-tel, TÉ-je 10-zel nő, Bátorsága (NJK-k esetében) 3 ponttal emelkedik, aki a varázslás pillanatában a dalt hallotta.\n\nA Bátorság dalának hatása alatt álló személyek csak akkor válhatnak félelem alapú mágia alanyává, ha annak erőssége meghaladja a Bátorság daláét, illetve a magasabb erősítésű dalmágia semlegesíti az alacsonyabb erősítésű félelem alapú mágiák hatását. A varázslat manapontonként 2 E-t ad."
 }, {
   name: "Bénítás dala",
   type: "Dalmágia",
@@ -55,7 +55,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "Az egyesített dalok hossza",
   range: "Hallótávolság",
   duration: "A dalok hossza",
-  description: "Ez a varázslat pusztán egy akkord, egy felütés, melynek segítségével két vagy akár több, különböző hatású dalból egyetlen, harmadik dal születik. A zene összetettebbé, bonyolultabbá válik, a két varázslat pedig egyszerre fejti ki hatasát. A varázslatok megidézéséhez annyi időre van szükség mint a dalok Varázslási ideje összesen, majd ezek után együtt működnek tovább. \n\nAz így született dal Manapont igénye megegyezik az összekötött varázslatok Manapont igényének összegével, plusz minden két dal közti dalegyesítő elem további 5 Manapontot emészt fel.\n\nIly módon kombinálható például a Nyugtatás és az Álom dala. A két együttesen ható varázslat minden tekintetben úgy működik, mintha a bárd egyenként használná őket. A Dalegyesítést a Mágia dalával együtt alkalmazva nem Dalmágia típusú, hanem Hangmágia alapú varázslatok is működhetnek a fenti módon."
+  description: "Ez a varázslat pusztán egy akkord, egy felütés, melynek segítségével két vagy akár több, különböző hatású dalból egyetlen, harmadik dal születik. A zene összetettebbé, bonyolultabbá válik, a két varázslat pedig egyszerre fejti ki hatását. A varázslatok megidézéséhez annyi időre van szükség mint a dalok Varázslási ideje összesen, majd ezek után együtt működnek tovább. \n\nAz így született dal Manapont igénye megegyezik az összekötött varázslatok Manapont igényének összegével, plusz minden két dal közti dalegyesítő elem további 5 Manapontot emészt fel.\n\nIly módon kombinálható például a Nyugtatás és az Álom dala. A két együttesen ható varázslat minden tekintetben úgy működik, mintha a bárd egyenként használná őket. A Dalegyesítést a Mágia dalával együtt alkalmazva nem Dalmágia típusú, hanem Hangmágia alapú varázslatok is működhetnek a fenti módon."
 }, {
   name: "Ellentétek dala",
   type: "Dalmágia",
@@ -64,7 +64,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "1k6 óra",
   save: ["Asztrális"],
-  description: "Az egyik legerősebb érzelmekre ható dal, mellyel a bárd rendelkezik, viszont egyszerre csak egyetlen célpontra alkalmazható. Minden érzelmet a visszájára fordíthat az áldozatban, ha annak Mágiaellenállása sikertelen volt. Az eddigi szeretetből gyűlölet lesz, a félelemből bátorság, a barátságból ellenszenv és megfordítva. Az áldozat minden erős érzelme íz ellentétére változik, de a semlegesek, vagy közel semlegesek nem alakulnak át.\n\nEgy ismerőst, akihez különösen erős érzelmek nem fűzték, most sem fog szeretni vagy gyűlölni. A varázslat a leghétköznapiob érzelmekre is hat, ennek következményei a legkevésbé megfoghatók. Például az a keleti barbár, aki eddig egy vagyont űzetett volna a vaddisznópörköltért, most viszolyogva fogja azt a kocsmáros ölébe borítani.\n\nHa az áldozatra egy másik, esetleg ugyanaz a bárd ezt a varázslatot még egyszer ráénekli, a célpont érzelmei eredeti állapotukba rendeződnek vissza, illetve ugyanez történik az időtartam lejártakor."
+  description: "Az egyik legerősebb érzelmekre ható dal, mellyel a bárd rendelkezik, viszont egyszerre csak egyetlen célpontra alkalmazható. Minden érzelmet a visszájára fordíthat az áldozatban, ha annak Mágiaellenállása sikertelen volt. Az eddigi szeretetből gyűlölet lesz, a félelemből bátorság, a barátságból ellenszenv és megfordítva. Az áldozat minden erős érzelme az ellentétére változik, de a semlegesek, vagy közel semlegesek nem alakulnak át.\n\nEgy ismerőst, akihez különösen erős érzelmek nem fűzték, most sem fog szeretni vagy gyűlölni. A varázslat a leghétköznapibb érzelmekre is hat, ennek következményei a legkevésbé megfoghatók. Például az a keleti barbár, aki eddig egy vagyont fizetett volna a vaddisznópörköltért, most viszolyogva fogja azt a kocsmáros ölébe borítani.\n\nHa az áldozatra egy másik, esetleg ugyanaz a bárd ezt a varázslatot még egyszer ráénekli, a célpont érzelmei eredeti állapotukba rendeződnek vissza, illetve ugyanez történik az időtartam lejártakor."
 }, {
   name: "Emlékek dala",
   type: "Dalmágia",
@@ -245,7 +245,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "Önmaga",
   duration: "Egyszeri",
-  description: "Összetett fénymágia, segítségével a bárd közelharcban zavarja meg ellenfelét. A bárd fegyvert forgató keze egyetlen támadás erejéig láthatatlanná halványul, illúzióképe elválik a valóságos kéztől, s harc közben egyéni életet él. Csak valósan végrehajtható mozgásokat végez, így elég nehezen fedezhető fel a csalás. Az illúziókéz és -fegyver természetesen nem okoz valódi sebzést, s ha a bárd nem ügyel eléggé, a fantomfegyver egyszerűen keresztülsiklik az ellenfél hárításra emelt pengéjén, leleplezve ezzel a szemfényvesztést.\n\nÁltalában ravasz támadáskombinációk befejezéséhez használják: két-három pengeváltás után az ellenfél hiába emeli hárításra a kardját az illúzió csapás ellen, a bárd fegyvere egészen máshonnan sújt le. Ebből fakadóan a bárd együk támadása meglepetésszerűnek számít (+30 TÉ és dobás nélkül is ő nyeri a kezdeményezé"
+  description: "Összetett fénymágia, segítségével a bárd közelharcban zavarja meg ellenfelét. A bárd fegyvert forgató keze egyetlen támadás erejéig láthatatlanná halványul, illúzióképe elválik a valóságos kéztől, s harc közben egyéni életet él. Csak valósan végrehajtható mozgásokat végez, így elég nehezen fedezhető fel a csalás. Az illúziókéz és -fegyver természetesen nem okoz valódi sebzést, s ha a bárd nem ügyel eléggé, a fantomfegyver egyszerűen keresztülsiklik az ellenfél hárításra emelt pengéjén, leleplezve ezzel a szemfényvesztést.\n\nÁltalában ravasz támadáskombinációk befejezéséhez használják: két-három pengeváltás után az ellenfél hiába emeli hárításra a kardját az illúzió csapás ellen, a bárd fegyvere egészen máshonnan sújt le. Ebből fakadóan a bárd egyik támadása meglepetésszerűnek számít (+30 TÉ és dobás nélkül is ő nyeri a kezdeményezést)."
 }, {
   name: "Délibáb",
   type: "Fénymágia",
@@ -524,7 +524,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   cost: "3",
   castingTime: "1 perc",
   range: "5 m",
-  duration: "1 Perc/szint ",
+  duration: "1 perc/szint",
   save: ["Asztrális"],
   description: "A varázslat segítségével a bárd egy ezüstösen ragyogó fény- gömböcskét teremthet, mely lassan imbolyogva mozog az áldozat szeme előtt. A fény hatása álomba, vagy hipnotikus állapotba ringathatja célpontját, a bárd óhaja szerint. Ha az áldozat elvéti Mágiaellenállását, akkor álomba merül, vagy félig öntudatlan állapotba kerül. Ha elalszik, akkor csak két óra elteltével lehet felébreszteni, addig szinte reménytelen; csakis Sp-t sebet okozó sérülés esetén ébred fel, vagy mágia segítségével ébreszthető fel. Ha hipnotikus állapotba került, akkor a bárd utasításokat adhat neki, melyeket teljesítenie kell. Az utasítások száma csakis a végrehajtásukhoz szükséges idő hosszától és a varázslat időtartamától függ. A parancs nem lehet olyan, mely öngyilkosságra sarkallja a célpontot, ilyen utasítás kiadása esetén azonnal szétfoszlik a varázslat."
 }, {
@@ -533,6 +533,6 @@ export const BardMagicValues: BardMagicInfo[] = [{
   cost: "30",
   castingTime: "1 kör",
   range: "20 m",
-  duration: "1 Perc/szint ",
+  duration: "1 perc/szint",
   description: "A varázslat egyszerre hat a hang- és a látványillúziók területén. A bárd ennek segítségével ellenfelei számára látszólagosan felgyorsíthatja az idő múlását, legalábbis környezetükben. Az illúzió lényege, hogy az áldozatok környezetében minden a felgyorsult idő szerint reagál. Például, ha az ellenfél egy erdei úton áll, akkor a növények szemmel látható sebességgel növekedni kezdenek, az állatok szinte követhetetlen gyorsasággal mozognak, a nap sebesen halad pályáján. Ha barlangban, földalatti folyosón járt láthatja, ahogy a por lerakódik a padlón, pókhálók terjeszkednek a sarokban. A múló idő persze csak illúzió, de hang és kép is tartozik hozzá A történések sebességét a bárd választhatja meg, de legfeljebb százszorosra gyorsíthatja az idő folyását A varázslat ideje alatt az áldozatok csupán az illúziót látják, s a normál tér hangjai is csak gyengén jutnak el hozzájuk. Azonban, ha valamelyik célpont elhagyja a kijelölt területet, akkor a varázslat feloszlik róla."
 }]
