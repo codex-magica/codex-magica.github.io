@@ -26,7 +26,7 @@ export const CombatValuesPanel = () => {
         <HStack onClick={rangedAttackModal.onOpen} cursor="pointer">
           <FormLabel width="120px" cursor="pointer">Hosszú íj</FormLabel>
           <Text textAlign="center" verticalAlign="middle" cursor="pointer">2k6+1</Text>
-          <Text textAlign="center" verticalAlign="middle" cursor="pointer">49</Text>
+          <Text textAlign="center" verticalAlign="middle" cursor="pointer">50</Text>
         </HStack>
       </Panel>
       <Panel title="Ammo" size="sm">
@@ -35,7 +35,7 @@ export const CombatValuesPanel = () => {
           <Text textAlign="center" verticalAlign="middle">25</Text>
         </HStack>
       </Panel>
-      <RangedAttackModal baseAttack={49} isOpen={rangedAttackModal.isOpen} onClose={rangedAttackModal.onClose} />
+      <RangedAttackModal baseAttack={50} isOpen={rangedAttackModal.isOpen} onClose={rangedAttackModal.onClose} />
       <MeleeAttackModal alapKÉ={34} alapTÉ={43} alapVÉ={93} isOpen={meleeAttackModal.isOpen} onClose={meleeAttackModal.onClose} />
     </Panel>
   );

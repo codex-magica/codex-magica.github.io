@@ -69,16 +69,19 @@ export const defaultCharacter : Character = {
     { skill: "Kultúra", skillSubtype:"Erion", level: 4 },
     { skill: "Helyismeret", skillSubtype:"Erion", level: 3 },
     { skill: "Legendaismeret", level: 3 },
-    { skill: "Lopódzás", level: 2 },
-    { skill: "Rejtőzködés", level: 2 },
+    { skill: "Lopódzás", level: 3 },
+    { skill: "Rejtőzködés", level: 3 },
     { skill: "Udvari etikett/intrika", level: 2 },
-    { skill: "Ékesszólás", level: 2 }
+    { skill: "Ékesszólás", level: 2 },
+    { skill: "Éberség", level: 1 },
+    { skill: "Időjóslás", level: 2 },
+    { skill: "Zárnyitás", level: 2 }
   ],
   vitals: {
     eletpont: { current: 14, max: 14 },
-    fajdalompont: { current: 29, max: 29 },
-    mana: { current: 8, max: 14 },
-    kegypont: { current: 3, max: 20 },
-    pszi: { current: 20, max: 25 },
+    fajdalompont: { current: 30, max: 30 },
+    mana: { current: 24, max: 24 },
+    kegypont: { current: 0, max: 20 },
+    pszi: { current: 0, max: 25 },
   },
 };
