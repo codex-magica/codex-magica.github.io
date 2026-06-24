@@ -72,7 +72,15 @@ const RAW: Raw[] = [
   { name: "Hadvezetés", cat: "Harci", diff: "III", attrs: ["Int", "Krz"], soft: ["Lélektan", "Térképészet"] },
   { name: "Harci láz", cat: "Harci", diff: "II", attrs: ["Áks", "Egs"] },
   { name: "Harcművészet", cat: "Harci", diff: "IV", attrs: ["Erő", "Gy", "Ügy", "Akr"] },
-  { name: "Harctéri gyakorlat", cat: "Harci", diff: "II", attrs: ["Gy", "Ügy", "Érz"] },
+  {
+    name: "Harctéri gyakorlat", cat: "Harci", diff: "II", attrs: ["Gy", "Ügy", "Érz"],
+    // Fok 3+ grants HM per level (book ch.16, line 470/474/480).
+    perFok: {
+      3: [{ kind: "resourcePerLevel", resource: "HM", amount: 1 }],
+      4: [{ kind: "resourcePerLevel", resource: "HM", amount: 2 }],
+      5: [{ kind: "resourcePerLevel", resource: "HM", amount: 3 }],
+    },
+  },
   { name: "Kétkezesharc", cat: "Harci", diff: "III", attrs: ["Gy", "Ügy"], hard: ["Fegyverhasználat"] },
   { name: "Pajzshasználat", cat: "Harci", diff: "II", attrs: ["Erő", "Ügy"] },
   { name: "Pusztakezes harc", cat: "Harci", diff: "II", attrs: ["Erő", "Ügy", "Áks"] },
@@ -135,7 +143,27 @@ const RAW: Raw[] = [
   { name: "Számtan/Mértan", cat: "Tudományos", diff: "III", attrs: ["Int"], soft: ["Írás/olvasás"] },
   { name: "Térképészet", cat: "Tudományos", diff: "III", attrs: ["Int"], hard: ["Számtan/Mértan"], soft: ["Művészetek"] },
   { name: "Történelem", cat: "Tudományos", diff: "II", attrs: ["Int"], soft: ["Írás/olvasás"] },
-  { name: "Vallásismeret", cat: "Tudományos", diff: "II", attrs: ["Int", "Aszt"], hard: ["Kultúra"] },
+  {
+    name: "Vallásismeret", cat: "Tudományos", diff: "II", attrs: ["Int", "Aszt"], hard: ["Kultúra"],
+    // Fok 3+ grants Kegy per level (needs the Kegyelt pool), plus per-level TME from faith.
+    perFok: {
+      3: [
+        { kind: "resourcePerLevel", resource: "Kegy", amount: 1 },
+        { kind: "derivedPerLevel", target: "MME", amount: 1 },
+        { kind: "derivedPerLevel", target: "AME", amount: 1 },
+      ],
+      4: [
+        { kind: "resourcePerLevel", resource: "Kegy", amount: 2 },
+        { kind: "derivedPerLevel", target: "MME", amount: 2 },
+        { kind: "derivedPerLevel", target: "AME", amount: 2 },
+      ],
+      5: [
+        { kind: "resourcePerLevel", resource: "Kegy", amount: 3 },
+        { kind: "derivedPerLevel", target: "MME", amount: 3 },
+        { kind: "derivedPerLevel", target: "AME", amount: 3 },
+      ],
+    },
+  },
 
   // ── Szociális ──────────────────────────────────────────────────────────────
   { name: "Ékesszólás", cat: "Szociális", diff: "II", attrs: ["Int", "Aszt", "Krz"], hard: ["Kultúra"], soft: ["Lélektan"] },
@@ -153,12 +181,27 @@ const RAW: Raw[] = [
   // ── Misztikus (magic-system skills — spells point back to these) ────────────
   { name: "Démonológia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"] },
   { name: "Drágakőmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Szakma"] },
-  { name: "Magasmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
+  {
+    name: "Magasmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"],
+    perFok: {
+      3: [{ kind: "resourcePerLevel", resource: "Mana", amount: 1 }],
+      4: [{ kind: "resourcePerLevel", resource: "Mana", amount: 2 }],
+      5: [{ kind: "resourcePerLevel", resource: "Mana", amount: 3 }],
+    },
+  },
   { name: "Nekromancia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Élettan"] },
   { name: "Őselemi mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
   { name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"] },
   { name: "Rúnamágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
-  { name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"] },
+  {
+    name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"],
+    // The empirical-magic skill grants Mana per level from fok 3 (the casting threshold).
+    perFok: {
+      3: [{ kind: "resourcePerLevel", resource: "Mana", amount: 1 }],
+      4: [{ kind: "resourcePerLevel", resource: "Mana", amount: 2 }],
+      5: [{ kind: "resourcePerLevel", resource: "Mana", amount: 3 }],
+    },
+  },
 ];
 
 export const SKILLS: SkillDef[] = RAW.map(build);

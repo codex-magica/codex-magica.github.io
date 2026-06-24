@@ -7,7 +7,7 @@ import { VitalKey } from "../model/character";
 
 const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <HStack justify="space-between">
-    <Text fontSize="sm" color="gray.600">{label}</Text>
+    <Text fontSize="sm" color="muted">{label}</Text>
     <Text fontSize="sm" fontWeight="bold">{value}</Text>
   </HStack>
 );
@@ -43,7 +43,7 @@ export const SheetPreview: React.FC<{ d: DerivedCharacter }> = ({ d }) => {
         <SimpleGrid columns={4} spacing={2}>
           {COMBAT.map((c) => (
             <VStack key={c} spacing={0}>
-              <Text fontSize="xs" color="gray.500">{c}</Text>
+              <Text fontSize="xs" color="muted">{c}</Text>
               <Text fontWeight="bold">{d.combat[c]}</Text>
             </VStack>
           ))}
@@ -78,7 +78,6 @@ export const SheetPreview: React.FC<{ d: DerivedCharacter }> = ({ d }) => {
         <Row label="Szint" value={d.level} />
         <Row label="KAP bevétel / szint" value={d.pools.kapIncomeByLevel.join(", ") || "—"} />
         <Row label="KAP egyenleg / szint" value={d.pools.kapBalanceByLevel.join(", ") || "—"} />
-        <Row label="Kp egyenleg" value={d.pools.kpBalance} />
         {pools.map((p) => (d.pools.magic[p] ? <Row key={p} label={`${p} tároló (max)`} value={d.pools.magic[p]!.max} /> : null))}
       </Box>
 
@@ -90,7 +89,7 @@ export const SheetPreview: React.FC<{ d: DerivedCharacter }> = ({ d }) => {
             <HStack key={i} justify="space-between">
               <Text fontSize="sm">
                 {s.skill}
-                {s.subtype ? <Text as="span" color="gray.500"> ({s.subtype})</Text> : null}
+                {s.subtype ? <Text as="span" color="muted"> ({s.subtype})</Text> : null}
               </Text>
               <Text fontSize="sm" fontWeight="bold">
                 {s.percent != null ? `${s.percent}%` : `${s.fok}. fok`}
@@ -108,7 +107,7 @@ export const SheetPreview: React.FC<{ d: DerivedCharacter }> = ({ d }) => {
             <VStack align="stretch" spacing={0}>
               {d.spells.map((sp, i) => (
                 <HStack key={i} justify="space-between">
-                  <Text fontSize="sm">{sp.name} <Text as="span" color="gray.500">({sp.pool} {sp.cost})</Text></Text>
+                  <Text fontSize="sm">{sp.name} <Text as="span" color="muted">({sp.pool} {sp.cost})</Text></Text>
                   <Badge colorScheme={sp.castableNow ? "green" : sp.known ? "yellow" : "gray"}>
                     {sp.castableNow ? "használható" : sp.known ? "ismert" : "zárt"}
                   </Badge>

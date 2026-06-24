@@ -7,6 +7,12 @@ const theme = extendTheme({
   fonts: {
     body: 'Warnock, sans-serif',
   },
+  semanticTokens: {
+    colors: {
+      // Adaptive muted/secondary text — readable in both light and dark mode.
+      muted: { default: 'gray.600', _dark: 'gray.400' },
+    },
+  },
   breakpoints: {
     base: "0px",
     md: "1200px",    // tablet + desktop are treated the same

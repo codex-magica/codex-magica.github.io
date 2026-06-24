@@ -34,7 +34,7 @@ export const AttributeEditor: React.FC<Props> = ({ record, onChange }) => {
           return (
             <HStack key={stat} justify="space-between">
               <Text w="120px" fontSize="sm">
-                {stat} <Text as="span" color="gray.500">({STAT_SHORT[stat]})</Text>
+                {stat} <Text as="span" color="muted">({STAT_SHORT[stat]})</Text>
               </Text>
               <HStack>
                 <Button size="xs" onClick={() => onChange(stat, value - 1)} isDisabled={value <= MIN}>
@@ -51,7 +51,7 @@ export const AttributeEditor: React.FC<Props> = ({ record, onChange }) => {
                 >
                   +
                 </Button>
-                <Text w="44px" fontSize="xs" color="gray.500" textAlign="right">
+                <Text w="44px" fontSize="xs" color="muted" textAlign="right">
                   max {cap}
                 </Text>
               </HStack>

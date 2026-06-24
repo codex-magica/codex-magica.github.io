@@ -6,7 +6,6 @@ import { RulesDB } from "../model/rulesDb";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { STAT_KEYS, Stats, sumStats } from "../model/attributes";
 import { CombatChannel, Effect, Pool } from "../model/effects";
-import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT, SkillDef } from "../model/skills";
 import { skillKey } from "../model/common";
 import { resolveChoiceGrants } from "../model/choices";
 import {
@@ -16,13 +15,12 @@ import {
   KAP_RATE,
   MAGIC_DEFENSE_OFFSET,
   POINT_BUY_TOTAL,
-  TEACHING_DISCOUNT_PER_FOK,
   VE_BASE,
 } from "./constants";
+import { Discount, skillKpCost, teachingUptoFor } from "./skillCost";
 import { Contribution, DerivedCharacter, Diagnostic, OwnedSkill, Severity } from "./types";
 
 type OwnedMap = Record<string, { skill: string; subtype?: string; fok: number; percent: number }>;
-type Discount = { skill?: string; category?: string; uptoLevel: number };
 
 const POOLS: Pool[] = ["Mana", "Psi", "Kegy"];
 
@@ -66,7 +64,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const perLevelEffects: { effect: Effect; source: string; level: number }[] = [];
   const bgCostAtLevel: Record<number, number> = {};
   const staticPerLevel: { resource: string; amount: number; fromLevel: number }[] = [];
+  const staticDerivedPerLevel: { target: string; amount: number; fromLevel: number }[] = [];
   const seenBg: Record<string, boolean> = {};
+  const grantedBg: Record<string, boolean> = {}; // backgrounds conferred via grantBackground (race/class)
 
   const pushActivation = (
     name: string | null,
@@ -89,7 +89,11 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           diag("warn", `Ismeretlen háttér: ${bgName}`, lvl);
           return;
         }
-        pushActivation(bgName, lvl, 0, def.grants, `${bgName} (kapott)`);
+        grantedBg[bgName] = true;
+        const grants = def.grantsFor
+          ? def.grantsFor({ level: def.costRange ? def.costRange[0] : def.cost })
+          : def.grants;
+        pushActivation(bgName, lvl, 0, grants, `${bgName} (kapott)`);
       } else {
         perLevelEffects.push({ effect: g.effect, source, level: lvl });
       }
@@ -111,8 +115,14 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       diag("warn", `Ismeretlen háttér: ${bg.background}`);
       return;
     }
-    const cost = bg.source === "granted" ? 0 : def.cost;
-    pushActivation(bg.background, bg.acquiredAtLevel, cost, def.grants, `Háttér: ${bg.background}`);
+    const magnitude = bg.level != null && def.costRange
+      ? Math.max(def.costRange[0], Math.min(bg.level, def.costRange[1]))
+      : def.costRange
+        ? def.costRange[0]
+        : def.cost;
+    const cost = bg.source === "granted" ? 0 : magnitude;
+    const grants = def.grantsFor ? def.grantsFor({ level: magnitude, option: bg.option }) : def.grants;
+    pushActivation(bg.background, bg.acquiredAtLevel, cost, grants, `Háttér: ${bg.background}`);
   });
 
   // ── Accumulators for the per-level fold ────────────────────────────────────
@@ -128,10 +138,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   let money = 0;
   const inventory = rec.inventory.slice();
   const discounts: Discount[] = [];
-  let kapBalance = 0;
-  let kpBalance = 0;
+  let kapBalance = 0; // skills (1 Kp = 1 KAP), HM/Fp/Mana/Psi/Kegy and attribute buys all draw from this
   const kapIncomeByLevel: number[] = [];
   const kapBalanceByLevel: number[] = [];
+  const hmGrantedByLevel: number[] = []; // free HM (from skills) per level — assignable at no cost
   let cumulativeBgCost = 0;
 
   const applyEffect = (e: Effect, source: string, level: number) => {
@@ -159,6 +169,11 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         poolMax[e.pool] += e.amount;
         addProv(e.pool, source, e.amount);
         break;
+      case "grantPoolFromStat":
+        poolExists[e.pool] = true;
+        poolMax[e.pool] += base[e.stat];
+        addProv(e.pool, `${source} (${e.stat})`, base[e.stat]);
+        break;
       case "statBonus":
         effective[e.stat] += e.amount;
         addProv(e.stat, source, e.amount);
@@ -183,6 +198,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       case "resourcePerLevel":
         staticPerLevel.push({ resource: e.resource, amount: e.amount, fromLevel: level });
         break;
+      case "derivedPerLevel":
+        staticDerivedPerLevel.push({ target: e.target, amount: e.amount, fromLevel: level });
+        break;
       case "restriction":
         diag("info", `Megkötés: ${e.text}`, level);
         break;
@@ -200,61 +218,33 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     return m;
   };
 
-  const discountApplies = (def: SkillDef, f: number, teachingUpto?: number): boolean => {
-    if (f > 4) return false;
-    if (teachingUpto != null && f <= teachingUpto) return true;
-    return discounts.some((d) => (d.skill ? d.skill === def.name : d.category === def.category) && f <= d.uptoLevel);
-  };
-
-  const skillKpCost = (
-    def: SkillDef,
-    from: number,
-    to: number,
-    teachingUpto: number | undefined
-  ): { kp: number; note?: string } => {
-    if (def.cost === "percentage") {
-      const taught = teachingUpto != null || discounts.some((d) => (d.skill ? d.skill === def.name : d.category === def.category));
-      const rate = taught ? PERCENT_KP_RATE_TAUGHT : PERCENT_KP_RATE;
-      const delta = Math.max(0, to - from);
-      return { kp: Math.ceil(delta / rate) };
-    }
-    const cum = def.cost;
-    let kp = 0;
-    for (let f = from + 1; f <= to; f++) {
-      const inc = cum[f - 1] - (f > 1 ? cum[f - 2] : 0);
-      const disc = discountApplies(def, f, teachingUpto) ? TEACHING_DISCOUNT_PER_FOK : 0;
-      kp += Math.max(1, inc - disc);
-    }
-    let penalty = 0;
-    def.attrs.forEach((a) => {
-      const need = 10 + to;
-      if (effective[a] < need) penalty += need - effective[a];
-    });
-    return { kp: kp + penalty, note: penalty > 0 ? `${def.name}: tulajdonság-hiány miatt +${penalty} Kp.` : undefined };
-  };
-
   // ── 4. Per-level fold ──────────────────────────────────────────────────────
   let maxGrantLevel = 1;
   perLevelEffects.forEach((p) => (maxGrantLevel = Math.max(maxGrantLevel, p.level)));
   const N = Math.max(rec.levels.length, maxGrantLevel, 1);
 
+  // Snapshot of skills owned purely from grants at level 1 (the floor the level-up UI can't go below).
+  let grantedSkillsSnapshot: { skill: string; subtype?: string; fok: number; percent: number }[] = [];
+
   for (let L = 1; L <= N; L++) {
     perLevelEffects.filter((p) => p.level === L).forEach((p) => applyEffect(p.effect, p.source, L));
+    if (L === 1) grantedSkillsSnapshot = Object.keys(owned).map((k) => ({ ...owned[k] }));
     cumulativeBgCost += bgCostAtLevel[L] || 0;
-    const income = BASE_KAP_PER_LEVEL - cumulativeBgCost;
+    // Level 1 only folds the starting Kp (= Intelligencia) into the shared KAP pool; later level-ups
+    // get the flat 50 − backgrounds. The Int pool funds skills or HM/Mana/Pszi/Kegy/Tulajdonság.
+    const income = BASE_KAP_PER_LEVEL + (L === 1 ? base.Intelligencia : 0) - cumulativeBgCost;
     kapBalance += income;
     kapIncomeByLevel.push(income);
 
     const lvlRec = rec.levels.find((l) => l.level === L);
-    let hmFromAlloc = 0;
 
     if (lvlRec) {
       for (const a of lvlRec.allocations) {
+        if (a.target === "Kp") continue; // skills draw KAP directly now — Kp allocations are obsolete
+        if (a.target === "HM") continue; // HM cost is derived from assignments minus granted HM (below)
         const spend = a.points * KAP_RATE[a.target];
         kapBalance -= spend;
-        if (a.target === "Kp") kpBalance += a.points;
-        else if (a.target === "Fp") fpGains += a.points;
-        else if (a.target === "HM") hmFromAlloc += a.points;
+        if (a.target === "Fp") fpGains += a.points;
         else {
           if (!poolExists[a.target]) diag("warn", `${a.target} vásárlása megfelelő háttér nélkül (${L}. szint).`, L);
           poolMax[a.target] += a.points;
@@ -275,15 +265,20 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           if (maxFok(r.skill) < sp.to - 1)
             diag("warn", `${sp.skill} ${sp.to}. fok: gyenge előfeltétel «${r.skill}» legalább ${sp.to - 1}. fok.`, L);
         }
-        const cost = skillKpCost(def, sp.from, sp.to, sp.teachingUpto);
-        kpBalance -= cost.kp;
-        if (cost.note) diag("info", cost.note, L);
         const key = skillKey(sp.skill, sp.subtype);
-        if (def.cost === "percentage") {
+        const cur = owned[key];
+        const isPct = def.cost === "percentage";
+        // `from` is whatever is already owned (grants + earlier purchases) unless explicitly given.
+        const from = sp.from != null ? sp.from : cur ? (isPct ? cur.percent : cur.fok) : 0;
+        const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(discounts, def);
+        const cost = skillKpCost(def, from, sp.to, tUpto, effective);
+        kapBalance -= cost.kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
+        if (cost.note) diag("info", cost.note, L);
+        if (isPct) {
           owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: 0, percent: sp.to };
         } else {
           owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: sp.to, percent: 0 };
-          if (sp.to >= 4 && sp.from < 4 && def.attrs.length > 0) {
+          if (sp.to >= 4 && from < 4 && def.attrs.length > 0) {
             const has = lvlRec.statIncreases.some((si) => si.source === "skillFok4" && si.refSkill === sp.skill);
             if (!has) diag("info", `${sp.skill}: 4. fok elérve — válassz +1 Tulajdonságot (${def.attrs.join(", ")}).`, L);
           }
@@ -309,21 +304,25 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       if (!effs) continue;
       for (const e of effs) {
         if (e.kind === "resourcePerLevel") resourceDeltas.push({ resource: e.resource, amount: e.amount });
+        else if (e.kind === "derivedPerLevel") derivedBonus[e.target] += e.amount;
       }
     }
     for (const s of staticPerLevel) {
       if (s.fromLevel <= L) resourceDeltas.push({ resource: s.resource, amount: s.amount });
     }
+    for (const s of staticDerivedPerLevel) {
+      if (s.fromLevel <= L) derivedBonus[s.target] += s.amount;
+    }
     for (const d of resourceDeltas) {
       if (d.resource === "HM") hmFromSkills += d.amount;
       else if (d.resource === "Fp") fpGains += d.amount;
-      else if (d.resource === "Kp") kpBalance += d.amount;
+      else if (d.resource === "Kp") kapBalance += d.amount; // skill-granted Kp = bonus KAP
       else if (d.resource === "Mana" || d.resource === "Psi" || d.resource === "Kegy") {
         if (poolExists[d.resource as Pool]) poolMax[d.resource as Pool] += d.amount;
       }
     }
 
-    const hmAvailable = hmFromAlloc + hmFromSkills;
+    // HM: skill-granted HM is free; everything assigned beyond it is bought at KAP_RATE.HM each.
     let assigned = 0;
     if (lvlRec) {
       lvlRec.hmAssignments.forEach((h) => {
@@ -332,8 +331,11 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         assigned += h.amount;
       });
     }
-    if (hmAvailable !== assigned)
-      diag("warn", `${L}. szint: ${hmAvailable} HM érhető el, de ${assigned} lett elosztva (KÉ/TÉ/VÉ/CÉ).`, L);
+    hmGrantedByLevel.push(hmFromSkills);
+    const boughtHm = Math.max(0, assigned - hmFromSkills);
+    kapBalance -= boughtHm * KAP_RATE.HM;
+    if (assigned < hmFromSkills)
+      diag("info", `${L}. szint: ${hmFromSkills - assigned} kapott HM még nincs elosztva (KÉ/TÉ/VÉ/CÉ).`, L);
     if (kapBalance < 0) diag("warn", `${L}. szint: a KAP egyenleg negatív (${kapBalance}).`, L);
 
     kapBalanceByLevel.push(kapBalance);
@@ -343,7 +345,6 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   rec.kmAdjustments.forEach((adj) => {
     adj.effects.forEach((e) => applyEffect(e, `KM: ${adj.reason}`, adj.atLevel || N));
   });
-  if (kpBalance < 0) diag("info", `A teljes Kp-egyenleg negatív (${kpBalance}) — túlköltött képzettségek.`);
 
   // ── 6/7. Effective stats, combat, derived, vitals, spells ──────────────────
   const combat: Record<CombatChannel, number> = {
@@ -402,6 +403,19 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     return { name: sp.name, pool: sp.pool, cost: sp.cost, known, castableNow: known && cur >= sp.cost };
   });
 
+  // Skills owned purely from grants (the level-up floor) + the teacher level available per skill.
+  const grantedSkills = grantedSkillsSnapshot.map((o) => ({
+    skill: o.skill,
+    subtype: o.subtype,
+    fok: o.fok,
+    percent: o.percent || undefined,
+  }));
+  const teaching: Record<string, number> = {};
+  Object.keys(db.skills).forEach((name) => {
+    const u = teachingUptoFor(discounts, db.skills[name]);
+    if (u > 0) teaching[name] = u;
+  });
+
   return {
     level: rec.levels.length || 1,
     baseStats: base,
@@ -409,10 +423,13 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     combat,
     derived,
     vitals,
-    pools: { kapIncomeByLevel, kapBalanceByLevel, kpBalance, magic },
+    pools: { kapIncomeByLevel, kapBalanceByLevel, hmGrantedByLevel, magic },
     skills,
+    grantedSkills,
+    teaching,
     spells,
     tags: Object.keys(tags),
+    grantedBackgrounds: Object.keys(grantedBg),
     money,
     inventory,
     provenance,

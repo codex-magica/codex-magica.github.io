@@ -26,8 +26,10 @@ export type Effect =
   | { kind: "teachingDiscount"; skill?: string; category?: SkillCategory; uptoLevel: SkillFok }
   | { kind: "grantBackground"; background: string }
   | { kind: "resourcePerLevel"; resource: Resource; amount: number }
+  | { kind: "derivedPerLevel"; target: DerivedKey; amount: number } // e.g. +N MME/AME each level (faith, Mágiatagadás)
   | { kind: "poolAccess"; pool: Pool }
   | { kind: "grantPoolPoints"; pool: Pool; amount: number } // KM grant, e.g. +Kegy for roleplay
+  | { kind: "grantPoolFromStat"; pool: Pool; stat: Stat } // e.g. Pszi érzékenység → Psi = Int (one-time)
   | { kind: "statBonus"; stat: Stat; amount: number }
   | { kind: "combatBonus"; channel: CombatChannel; amount: number }
   | { kind: "derivedBonus"; target: DerivedKey; amount: number }

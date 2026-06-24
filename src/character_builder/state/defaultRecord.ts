@@ -1,9 +1,9 @@
 import { CharacterRecord, SCHEMA_VERSION } from "../model/character";
 
 // A seed level-1 Elf Bárd that exercises the whole engine (granted skills, a Mana pool from the
-// Mágikus fogékonyság background, bought Kp/Fp/HM/Mana, HM assigned to combat channels).
+// Mágikus fogékonyság background, bought Fp/HM/Mana, HM assigned to channels, skills paid from KAP).
 //
-// Level-1 KAP budget = 50 − (Elf 1 + Bárd 6) = 43. Spent below: Kp 14 + Fp 4 + HM 6×2 + Mana 4×3 = 42.
+// Level-1 KAP pool = Int(15) + 50 − (Elf 1 + Bárd 6) = 58. Skills draw KAP directly (1 Kp = 1 KAP).
 
 export const defaultRecord: CharacterRecord = {
   schemaVersion: SCHEMA_VERSION,
@@ -31,7 +31,6 @@ export const defaultRecord: CharacterRecord = {
     {
       level: 1,
       allocations: [
-        { target: "Kp", points: 14 },
         { target: "Fp", points: 4 },
         { target: "HM", points: 6 },
         { target: "Mana", points: 4 },

@@ -19,6 +19,8 @@ export interface ChosenBackground {
   background: string;
   source: "chosen" | "granted";
   acquiredAtLevel: number; // 1 = at creation; cost applies from this level onward
+  level?: number; // for ranged backgrounds (Vagyon, Manalátó…) the chosen magnitude = KAP cost
+  option?: string; // a sub-choice, e.g. which attribute Adottság raises
 }
 
 // One KAP allocation: buy `points` of `target`. KAP spent = points × KAP_RATE[target].
@@ -27,13 +29,14 @@ export interface KapAllocation {
   points: number;
 }
 
-// A skill bought/raised this level. from = current owned fok/percent (0 = unowned). Order matters.
+// A skill bought/raised this level. `to` is the target fok/percent; `from` is optional — when omitted
+// the engine uses whatever is already owned (grants + earlier purchases). Order matters.
 export interface SkillPurchase {
   skill: string;
   subtype?: string;
-  from: number;
+  from?: number;
   to: number;
-  teachingUpto?: SkillFok; // an oktatás bonus applies up to this fok
+  teachingUpto?: SkillFok; // explicit oktatás override (otherwise resolved from class teaching)
 }
 
 export interface HmAssignment {

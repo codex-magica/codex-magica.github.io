@@ -44,12 +44,15 @@ export interface DerivedCharacter {
   pools: {
     kapIncomeByLevel: number[];
     kapBalanceByLevel: number[];
-    kpBalance: number;
+    hmGrantedByLevel: number[];
     magic: Partial<Record<Pool, { max: number }>>;
   };
   skills: OwnedSkill[];
+  grantedSkills: { skill: string; subtype?: string; fok: number; percent?: number }[]; // grant-only floor
+  teaching: Record<string, number>; // skill name → teacher (oktatás) level available
   spells: SpellView[];
   tags: string[];
+  grantedBackgrounds: string[]; // backgrounds conferred free by race/class (locked in the UI)
   money: number;
   inventory: InventoryItem[];
   provenance: Record<string, Contribution[]>;
