@@ -55,6 +55,25 @@ export const BACKGROUNDS: Record<string, BackgroundDef> = {
   },
   // NOTE: Adottság is no longer a selectable background — it is now expressed directly in the
   // attribute editor: any point raised above the racial cap (up to 20) is an Adottság point (1 KAP).
+  // (Faj and Klán/rend/iskola are also book Hátterek, handled by the race and class selectors.)
+  "Holtak szeme": {
+    name: "Holtak szeme",
+    cost: 1,
+    grants: [grant({ kind: "tag", tag: "Holtak szeme" })],
+    description: "20 láb körzetben mágia nélkül érzékeli a túlvilági lényeket és az 1 napnál nem régebbi halált.",
+  },
+  Léleklenyomat: {
+    name: "Léleklenyomat",
+    cost: 1,
+    grants: [grant({ kind: "tag", tag: "Léleklenyomat" })],
+    description: "Felfedezi mások aurájának lenyomatát személyes aurájú vagy erős érzelmekkel bíró tárgyakon (tudatosan Asztrálpróbával).",
+  },
+  Művésztehetség: {
+    name: "Művésztehetség",
+    cost: 1,
+    grants: [grant({ kind: "note", text: "Egy választott Művészet a 4. fok fölé emelhető." })],
+    description: "Egy választott művészetben a karakter 4. fok fölé emelkedhet.",
+  },
   Rang: {
     name: "Rang",
     cost: 1,

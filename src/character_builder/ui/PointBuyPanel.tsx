@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Box, Button, Divider, Heading, HStack, IconButton, Select, Text, VStack } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+import { Box, Heading, HStack, Select, Text } from "@chakra-ui/react";
 import { CharacterRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { CombatChannel, Pool, Resource } from "../model/effects";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { RACES } from "../model/races";
 import { ATTR_KAP_COST, KAP_RATE } from "../engine/constants";
+import { Stepper } from "./Stepper";
 
 interface Props {
   level: number;
@@ -24,23 +24,16 @@ const PSEUDO: { pool: Pool; label: string }[] = [
   { pool: "Kegy", label: "Kegy" },
 ];
 
-// One buy row: label, current amount, +/- with cost and a disabled state.
-const BuyRow: React.FC<{
-  label: React.ReactNode;
-  value: number;
-  cost: number;
-  onDec: () => void;
-  onInc: () => void;
-  decDisabled?: boolean;
-  incDisabled?: boolean;
-}> = ({ label, value, cost, onDec, onInc, decDisabled, incDisabled }) => (
-  <HStack justify="space-between">
-    <Text fontSize="sm" noOfLines={1} minW={0}>{label}</Text>
-    <HStack spacing={1} flexShrink={0}>
-      <Button size="xs" variant="outline" colorScheme="gray" onClick={onDec} isDisabled={decDisabled}>−</Button>
-      <Text w="40px" textAlign="center" fontWeight="bold" fontSize="sm">{value}</Text>
-      <Button size="xs" colorScheme="blue" variant="outline" onClick={onInc} isDisabled={incDisabled} title={`${cost} KAP`}>+ {cost}</Button>
-    </HStack>
+const FS_NAME = { base: "19px", md: "16px" };
+const ROW_PY = { base: "11px", md: "8px" };
+const BTN_H = { base: "44px", md: "34px" };
+
+const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNode }> = ({ children, trailing }) => (
+  <HStack justify="space-between" mt="13px" mb="1px" align="center" minH="24px">
+    <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx">
+      {children}
+    </Text>
+    {trailing}
   </HStack>
 );
 
@@ -56,116 +49,164 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
   const hmAssigned = lvl ? lvl.hmAssignments.reduce((s, h) => s + h.amount, 0) : 0;
   const existingPools = PSEUDO.filter(({ pool }) => derived.pools.magic[pool]);
 
-  // Attribute buy (rare, 20 KAP): an empty list you add rows to.
   const [adding, setAdding] = useState(false);
   const boughtStats = STAT_KEYS.filter((s) => statBuyOf(s) > 0);
   const availableForDraft = STAT_KEYS.filter((s) => statBuyOf(s) === 0 && !(caps && derived.effectiveStats[s] >= caps[s]));
 
+  const buyRow = (
+    key: string,
+    label: React.ReactNode,
+    value: React.ReactNode,
+    incLabel: string,
+    onDec: () => void,
+    onInc: () => void,
+    decDisabled: boolean,
+    incDisabled: boolean,
+    trailing?: React.ReactNode
+  ) => (
+    <HStack key={key} py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center" spacing="9px">
+      <Text fontSize={FS_NAME} color="fg" noOfLines={1}>{label}</Text>
+      <Box flex="1" minW="8px" />
+      <Stepper value={value} incLabel={incLabel} onDec={onDec} onInc={onInc} decDisabled={decDisabled} incDisabled={incDisabled} />
+      {trailing}
+    </HStack>
+  );
+
+  const deleteBtn = (onClick: () => void) => (
+    <Box as="button" type="button" h={BTN_H} minW={BTN_H} border="1px solid" borderColor="hair" borderRadius="8px" color="fgFaint" display="flex" alignItems="center" justifyContent="center" fontSize="15px" flexShrink={0} onClick={onClick}>
+      ✕
+    </Box>
+  );
+
+  const selectStyle = {
+    size: "sm" as const,
+    bg: "fieldBg",
+    borderColor: "fieldBd",
+    borderRadius: "9px",
+    color: "fg",
+    focusBorderColor: "accent",
+  };
+
   return (
     <Box>
-      <Heading size="sm" mb={1}>Pontvásárlás — {level}. szint</Heading>
-      <Text fontSize="xs" color="muted" mb={2}>
-        Közös KAP-ból ({level === 1 ? "Int + 50" : "50"} − hátterek) a Képzettségek panellel. KAP maradék:{" "}
-        <b style={{ color: kap < 0 ? "#e53e3e" : "inherit" }}>{kap}</b>
-      </Text>
+      <HStack justify="space-between" mb={1} align="center">
+        <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">Pontvásárlás</Heading>
+        <Text fontFamily="system-ui" fontSize="13px" fontWeight={700} color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
+          KAP: {kap}
+        </Text>
+      </HStack>
 
-      {/* Harcérték (HM) — kapott HM ingyen, fölötte KAP_RATE.HM/pont */}
-      <Text fontSize="xs" fontWeight="bold" color="muted" textTransform="uppercase" mb={1}>
+      {/* Harcérték (HM) + Fp */}
+      <SubHeader>
         Harcérték (HM · {KAP_RATE.HM} KAP){hmGranted > 0 ? ` · ${hmGranted} kapott ingyen` : ""}
-      </Text>
-      <VStack align="stretch" spacing={0} mb={2}>
-        {CHANNELS.map((c) => {
-          const v = hmOf(c);
-          const nextCost = hmAssigned < hmGranted ? 0 : KAP_RATE.HM;
-          return (
-            <BuyRow
-              key={c}
-              label={<>{c} <Text as="span" color="muted">(= {derived.combat[c]})</Text></>}
-              value={v}
-              cost={nextCost}
-              onDec={() => onHm(level, c, Math.max(0, v - 1))}
-              onInc={() => onHm(level, c, v + 1)}
-              decDisabled={v <= 0}
-              incDisabled={kap < nextCost}
-            />
-          );
-        })}
-        <BuyRow
-          label={<>Fp <Text as="span" color="muted">(= {derived.derived.Fp})</Text></>}
-          value={resOf("Fp")}
-          cost={KAP_RATE.Fp}
-          onDec={() => onResource(level, "Fp", Math.max(0, resOf("Fp") - 1))}
-          onInc={() => onResource(level, "Fp", resOf("Fp") + 1)}
-          decDisabled={resOf("Fp") <= 0}
-          incDisabled={kap < KAP_RATE.Fp}
-        />
-      </VStack>
+      </SubHeader>
+      {CHANNELS.map((c) => {
+        const v = hmOf(c);
+        const nextCost = hmAssigned < hmGranted ? 0 : KAP_RATE.HM;
+        return buyRow(
+          c,
+          <>{c} <Text as="span" color="fgFaint">(= {derived.combat[c]})</Text></>,
+          v,
+          String(nextCost),
+          () => onHm(level, c, Math.max(0, v - 1)),
+          () => onHm(level, c, v + 1),
+          v <= 0,
+          kap < nextCost
+        );
+      })}
+      {buyRow(
+        "Fp",
+        <>Fp <Text as="span" color="fgFaint">(= {derived.derived.Fp})</Text></>,
+        resOf("Fp"),
+        String(KAP_RATE.Fp),
+        () => onResource(level, "Fp", Math.max(0, resOf("Fp") - 1)),
+        () => onResource(level, "Fp", resOf("Fp") + 1),
+        resOf("Fp") <= 0,
+        kap < KAP_RATE.Fp
+      )}
 
-      {/* Mágikus pontok — only the pools the character actually has */}
+      {/* Mágikus pontok — only pools the character has */}
       {existingPools.length > 0 && (
         <>
-          <Divider mb={2} />
-          <Text fontSize="xs" fontWeight="bold" color="muted" textTransform="uppercase" mb={1}>Mágikus pontok</Text>
-          <VStack align="stretch" spacing={0} mb={2}>
-            {existingPools.map(({ pool, label }) => (
-              <BuyRow
-                key={pool}
-                label={label}
-                value={resOf(pool)}
-                cost={KAP_RATE[pool]}
-                onDec={() => onResource(level, pool, Math.max(0, resOf(pool) - 1))}
-                onInc={() => onResource(level, pool, resOf(pool) + 1)}
-                decDisabled={resOf(pool) <= 0}
-                incDisabled={kap < KAP_RATE[pool]}
-              />
-            ))}
-          </VStack>
+          <SubHeader>Mágikus pontok</SubHeader>
+          {existingPools.map(({ pool, label }) =>
+            buyRow(
+              pool,
+              label,
+              resOf(pool),
+              String(KAP_RATE[pool]),
+              () => onResource(level, pool, Math.max(0, resOf(pool) - 1)),
+              () => onResource(level, pool, resOf(pool) + 1),
+              resOf(pool) <= 0,
+              kap < KAP_RATE[pool]
+            )
+          )}
         </>
       )}
 
-      <Divider mb={2} />
-
-      {/* Tulajdonság (+1 · 20 KAP) — empty list; "+" adds a row where you pick the attribute */}
-      <HStack justify="space-between" mb={1}>
-        <Text fontSize="xs" fontWeight="bold" color="muted" textTransform="uppercase">Tulajdonság (+1 · {ATTR_KAP_COST} KAP)</Text>
-        <Button size="xs" variant="outline" colorScheme="blue" isDisabled={adding || availableForDraft.length === 0 || kap < ATTR_KAP_COST} onClick={() => setAdding(true)}>+</Button>
-      </HStack>
-      <VStack align="stretch" spacing={1}>
-        {boughtStats.map((s) => {
-          const amount = statBuyOf(s);
-          const atCap = caps ? derived.effectiveStats[s] >= caps[s] : false;
-          return (
-            <HStack key={s} spacing={1}>
-              <Text fontSize="sm" flex="1" noOfLines={1}>{s} <Text as="span" color="muted">(= {derived.effectiveStats[s]})</Text></Text>
-              <Button size="xs" variant="outline" colorScheme="gray" onClick={() => onStat(level, s, amount - 1)}>−</Button>
-              <Text w="22px" textAlign="center" fontWeight="bold" fontSize="sm">+{amount}</Text>
-              <Button size="xs" variant="outline" colorScheme="blue" isDisabled={atCap || kap < ATTR_KAP_COST} onClick={() => onStat(level, s, amount + 1)}>+</Button>
-              <IconButton aria-label="törlés" size="xs" variant="ghost" colorScheme="red" icon={<DeleteIcon />} onClick={() => onStat(level, s, 0)} />
-            </HStack>
-          );
-        })}
-        {adding && (
-          <HStack spacing={1}>
-            <Select
-              size="xs"
-              flex="1"
-              placeholder="válassz tulajdonságot…"
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  onStat(level, e.target.value as Stat, 1);
-                  setAdding(false);
-                }
-              }}
-            >
-              {availableForDraft.map((o) => (
-                <option key={o} value={o}>{o} ({derived.effectiveStats[o]})</option>
-              ))}
-            </Select>
-            <IconButton aria-label="mégse" size="xs" variant="ghost" icon={<DeleteIcon />} onClick={() => setAdding(false)} />
-          </HStack>
-        )}
-      </VStack>
+      {/* Tulajdonság (+1 · 20 KAP) — progressively disclosed list */}
+      <SubHeader
+        trailing={
+          <Box
+            as="button"
+            type="button"
+            w="34px"
+            h="34px"
+            border="1px solid"
+            borderColor="accent"
+            bg="accentSoft"
+            color="accentTx"
+            borderRadius="9px"
+            fontWeight={700}
+            fontSize="18px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            opacity={adding || availableForDraft.length === 0 || kap < ATTR_KAP_COST ? 0.45 : 1}
+            onClick={() => !(adding || availableForDraft.length === 0 || kap < ATTR_KAP_COST) && setAdding(true)}
+          >
+            +
+          </Box>
+        }
+      >
+        Tulajdonság (+1 · {ATTR_KAP_COST} KAP)
+      </SubHeader>
+      {boughtStats.map((s) => {
+        const amount = statBuyOf(s);
+        const atCap = caps ? derived.effectiveStats[s] >= caps[s] : false;
+        return buyRow(
+          s,
+          <>{s} <Text as="span" color="fgFaint">(= {derived.effectiveStats[s]})</Text></>,
+          `+${amount}`,
+          String(ATTR_KAP_COST),
+          () => onStat(level, s, amount - 1),
+          () => onStat(level, s, amount + 1),
+          amount <= 1,
+          atCap || kap < ATTR_KAP_COST,
+          deleteBtn(() => onStat(level, s, 0))
+        );
+      })}
+      {adding && (
+        <HStack py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center" spacing="9px">
+          <Select
+            {...selectStyle}
+            placeholder="válassz tulajdonságot…"
+            value=""
+            onChange={(e) => {
+              if (e.target.value) {
+                onStat(level, e.target.value as Stat, 1);
+                setAdding(false);
+              }
+            }}
+          >
+            {availableForDraft.map((o) => (
+              <option key={o} value={o}>{o} ({derived.effectiveStats[o]})</option>
+            ))}
+          </Select>
+          <Box flex="1" minW="8px" />
+          {deleteBtn(() => setAdding(false))}
+        </HStack>
+      )}
     </Box>
   );
 };
