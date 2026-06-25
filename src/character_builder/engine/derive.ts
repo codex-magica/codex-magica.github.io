@@ -21,7 +21,7 @@ import {
 import { Discount, skillKpCost, teachingUptoFor } from "./skillCost";
 import { Contribution, DerivedCharacter, Diagnostic, OwnedSkill, Severity } from "./types";
 
-type OwnedMap = Record<string, { skill: string; subtype?: string; fok: number; percent: number }>;
+type OwnedMap = Record<string, { skill: string; subtype?: string; fok: number; percent: number; origSubtype?: string }>;
 
 const POOLS: Pool[] = ["Mana", "Psi", "Kegy"];
 
@@ -152,18 +152,26 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const hmGrantedByLevel: number[] = []; // free HM (from skills) per level — assignable at no cost
   let cumulativeBgCost = 0;
 
+  // A granted subtype may be renamed by the player (placeholders like "anyanyelv"/"szülőföld").
+  // The override is keyed by the ORIGINAL granted subtype (stable); `origSubtype` is kept so the UI
+  // can keep editing it.
+  const effSubtype = (skill: string, orig?: string): string | undefined =>
+    rec.subtypeOverrides?.[skillKey(skill, orig)] ?? orig;
+
   const applyEffect = (e: Effect, source: string, level: number) => {
     switch (e.kind) {
       case "grantSkill": {
-        const key = skillKey(e.skill, e.subtype);
+        const eff = effSubtype(e.skill, e.subtype);
+        const key = skillKey(e.skill, eff);
         const cur = owned[key];
-        if (!cur || cur.fok < e.level) owned[key] = { skill: e.skill, subtype: e.subtype, fok: e.level, percent: 0 };
+        if (!cur || cur.fok < e.level) owned[key] = { skill: e.skill, subtype: eff, fok: e.level, percent: 0, origSubtype: e.subtype };
         break;
       }
       case "grantSkillPercent": {
-        const key = skillKey(e.skill, e.subtype);
+        const eff = effSubtype(e.skill, e.subtype);
+        const key = skillKey(e.skill, eff);
         const cur = owned[key];
-        owned[key] = { skill: e.skill, subtype: e.subtype, fok: 0, percent: (cur ? cur.percent : 0) + e.percent };
+        owned[key] = { skill: e.skill, subtype: eff, fok: 0, percent: (cur ? cur.percent : 0) + e.percent, origSubtype: e.subtype };
         break;
       }
       case "teachingDiscount":
@@ -232,7 +240,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const N = Math.max(rec.levels.length, maxGrantLevel, 1);
 
   // Snapshot of skills owned purely from grants at level 1 (the floor the level-up UI can't go below).
-  let grantedSkillsSnapshot: { skill: string; subtype?: string; fok: number; percent: number }[] = [];
+  let grantedSkillsSnapshot: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent: number }[] = [];
 
   for (let L = 1; L <= N; L++) {
     perLevelEffects.filter((p) => p.level === L).forEach((p) => applyEffect(p.effect, p.source, L));
@@ -397,6 +405,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     return {
       skill: o.skill,
       subtype: o.subtype,
+      origSubtype: o.origSubtype,
       fok: o.fok,
       percent: isPct ? o.percent : undefined,
       checkMod: isPct ? o.percent : FOK_CHECK_MOD[o.fok] || 0,
@@ -415,6 +424,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const grantedSkills = grantedSkillsSnapshot.map((o) => ({
     skill: o.skill,
     subtype: o.subtype,
+    origSubtype: o.origSubtype,
     fok: o.fok,
     percent: o.percent || undefined,
   }));

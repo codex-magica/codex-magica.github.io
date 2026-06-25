@@ -21,6 +21,10 @@ export interface CharacterBuilderApi {
   setBackgroundOption: (name: string, option: string) => void;
   upsertSkillPurchase: (level: number, skill: string, subtype: string | undefined, to: number) => void;
   removeSkillPurchase: (level: number, skill: string, subtype: string | undefined) => void;
+  addSkillVariant: (level: number, skill: string) => void;
+  patchPurchaseById: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => void;
+  removePurchaseById: (level: number, id: string) => void;
+  setSubtypeOverride: (originalKey: string, value: string) => void;
   setResourceAllocation: (level: number, target: Resource, points: number) => void;
   setHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
@@ -100,6 +104,27 @@ export function useCharacterBuilder(initial: CharacterRecord = defaultRecord): C
     patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => !sameSkill(p, skill, subtype)) });
   };
 
+  // A user-added variant (its own subtype + a branch fok). Stored with a stable id so the subtype
+  // can be edited freely without losing identity.
+  const genId = () => Math.random().toString(36).slice(2, 9);
+  const addSkillVariant = (level: number, skill: string) => {
+    const lvl = record.levels.find((l) => l.level === level);
+    if (!lvl) return;
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([{ id: genId(), skill, subtype: "", from: 0, to: 1 }]) });
+  };
+  const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => {
+    const lvl = record.levels.find((l) => l.level === level);
+    if (!lvl) return;
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
+  };
+  const removePurchaseById = (level: number, id: string) => {
+    const lvl = record.levels.find((l) => l.level === level);
+    if (!lvl) return;
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => p.id !== id) });
+  };
+  const setSubtypeOverride = (originalKey: string, value: string) =>
+    setRecord({ ...record, subtypeOverrides: { ...record.subtypeOverrides, [originalKey]: value } });
+
   // Generic KAP allocation (Mana / Psi / Kegy / Fp …). HM and Kp have their own dedicated setters.
   const setResourceAllocation = (level: number, target: Resource, points: number) => {
     const lvl = record.levels.find((l) => l.level === level);
@@ -141,6 +166,10 @@ export function useCharacterBuilder(initial: CharacterRecord = defaultRecord): C
     setBackgroundOption,
     upsertSkillPurchase,
     removeSkillPurchase,
+    addSkillVariant,
+    patchPurchaseById,
+    removePurchaseById,
+    setSubtypeOverride,
     setResourceAllocation,
     setHmChannel,
     setStatBuy,

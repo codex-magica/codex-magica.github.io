@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Box,
+  BoxProps,
   Divider,
   Heading,
   HStack,
@@ -27,11 +28,11 @@ import { PointBuyPanel } from "./PointBuyPanel";
 import { SheetPreview } from "./SheetPreview";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
 
-const Panel: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const Panel: React.FC<BoxProps> = ({ children, ...rest }) => {
   const bg = useColorModeValue("white", "gray.700");
   const borderColor = useColorModeValue("gray.200", "gray.600");
   return (
-    <Box borderWidth="1px" borderColor={borderColor} borderRadius="md" p={4} bg={bg} boxShadow="sm">
+    <Box borderWidth="1px" borderColor={borderColor} borderRadius="md" p={4} bg={bg} boxShadow="sm" {...rest}>
       {children}
     </Box>
   );
@@ -50,6 +51,10 @@ export const CharacterBuilder: React.FC = () => {
     setBackgroundOption,
     upsertSkillPurchase,
     removeSkillPurchase,
+    addSkillVariant,
+    patchPurchaseById,
+    removePurchaseById,
+    setSubtypeOverride,
     setResourceAllocation,
     setHmChannel,
     setStatBuy,
@@ -173,6 +178,10 @@ export const CharacterBuilder: React.FC = () => {
               derived={derived}
               onUpsert={upsertSkillPurchase}
               onRemove={removeSkillPurchase}
+              onAddVariant={addSkillVariant}
+              onPatchVariant={patchPurchaseById}
+              onRemoveVariant={removePurchaseById}
+              onOverride={setSubtypeOverride}
             />
           </Panel>
 
@@ -192,8 +201,8 @@ export const CharacterBuilder: React.FC = () => {
           </Panel>
         </VStack>
 
-        {/* ── Right: live sheet ── */}
-        <Panel>
+        {/* ── Right: live sheet (scrolls independently) ── */}
+        <Panel maxH={{ base: "none", md: "calc(100vh - 96px)" }} overflowY={{ base: "visible", md: "auto" }}>
           <Heading size="sm" mb={3}>Karakterlap (élő)</Heading>
           <Divider mb={3} />
           <SheetPreview d={derived} />

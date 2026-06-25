@@ -30,8 +30,11 @@ export interface KapAllocation {
 }
 
 // A skill bought/raised this level. `to` is the target fok/percent; `from` is optional — when omitted
-// the engine uses whatever is already owned (grants + earlier purchases). Order matters.
+// the engine uses whatever is already owned (grants + earlier purchases). For a branched variant
+// (e.g. a second weapon specialized from a sibling), `from` is the branch fok inherited for free.
+// `id` makes a user-added variant identifiable while its subtype is being edited.
 export interface SkillPurchase {
+  id?: string;
   skill: string;
   subtype?: string;
   from?: number;
@@ -95,6 +98,7 @@ export interface CharacterRecord {
 
   pointBuy: Stats; // the 135 base allocation, each ≤ racial cap
   adottsag?: Partial<Record<keyof Stats, number>>; // points above the racial cap (1 KAP each)
+  subtypeOverrides?: Record<string, string>; // rename a granted subtype, keyed by `skill|originalSubtype`
 
   levels: LevelRecord[];
   kmAdjustments: Adjustment[];

@@ -18,6 +18,7 @@ export interface Diagnostic {
 export interface OwnedSkill {
   skill: string;
   subtype?: string;
+  origSubtype?: string; // original granted subtype (the stable key for renaming)
   fok: number; // 0 for percentage skills
   percent?: number; // for percentage skills
   checkMod: number; // attribute-test modifier (or current percent for %-skills)
@@ -48,7 +49,7 @@ export interface DerivedCharacter {
     magic: Partial<Record<Pool, { max: number }>>;
   };
   skills: OwnedSkill[];
-  grantedSkills: { skill: string; subtype?: string; fok: number; percent?: number }[]; // grant-only floor
+  grantedSkills: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }[]; // grant-only floor
   teaching: Record<string, number>; // skill name → teacher (oktatás) level available
   spells: SpellView[];
   tags: string[];
