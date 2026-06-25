@@ -14,6 +14,7 @@ export interface CharacterBuilderApi {
   setRecord: (r: CharacterRecord) => void;
   update: (patch: Partial<CharacterRecord>) => void;
   patchPointBuy: (stat: keyof CharacterRecord["pointBuy"], value: number) => void;
+  setAdottsag: (stat: Stat, value: number) => void;
   setSelection: (choiceId: string, option: string) => void;
   toggleBackground: (name: string) => void;
   setBackgroundLevel: (name: string, level: number) => void;
@@ -35,6 +36,9 @@ export function useCharacterBuilder(initial: CharacterRecord = defaultRecord): C
 
   const patchPointBuy = (stat: keyof CharacterRecord["pointBuy"], value: number) =>
     setRecord({ ...record, pointBuy: { ...record.pointBuy, [stat]: value } });
+
+  const setAdottsag = (stat: Stat, value: number) =>
+    setRecord({ ...record, adottsag: { ...record.adottsag, [stat]: Math.max(0, value) } });
 
   const setSelection = (choiceId: string, option: string) =>
     setRecord({ ...record, selections: { ...record.selections, [choiceId]: option } });
@@ -130,6 +134,7 @@ export function useCharacterBuilder(initial: CharacterRecord = defaultRecord): C
     setRecord,
     update,
     patchPointBuy,
+    setAdottsag,
     setSelection,
     toggleBackground,
     setBackgroundLevel,

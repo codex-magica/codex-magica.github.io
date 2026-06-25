@@ -4,12 +4,13 @@
 
 import { RulesDB } from "../model/rulesDb";
 import { CharacterRecord, VitalKey } from "../model/character";
-import { STAT_KEYS, Stats, sumStats } from "../model/attributes";
+import { STAT_KEYS, Stats } from "../model/attributes";
 import { CombatChannel, Effect, Pool } from "../model/effects";
 import { skillKey } from "../model/common";
 import { resolveChoiceGrants } from "../model/choices";
 import {
   ATTR_KAP_COST,
+  ATTR_MAX,
   BASE_KAP_PER_LEVEL,
   FOK_CHECK_MOD,
   KAP_RATE,
@@ -35,21 +36,23 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   };
 
   // ── 1. Base attributes ─────────────────────────────────────────────────────
+  // pointBuy may exceed the racial cap: the part up to the cap spends the 135 base budget; the part
+  // above the cap (≤ 20) is Adottság — each such point costs 1 KAP (a Háttér, reducing per-level KAP).
   const race = db.races[rec.race];
   const base: Stats = { ...rec.pointBuy };
-  const sum = sumStats(base);
-  if (sum !== POINT_BUY_TOTAL) {
-    diag("warn", `A pontvásárlás összege ${sum}, a szükséges ${POINT_BUY_TOTAL}.`);
-  }
+  let baseBudget = 0;
+  let adottsagPoints = 0;
   if (!race) {
     diag("error", `Ismeretlen faj: ${rec.race}`);
   } else {
     STAT_KEYS.forEach((k) => {
       const cap = race.statLimits[k];
-      if (base[k] > cap) {
-        diag("warn", `${k} (${base[k]}) meghaladja a faji maximumot (${cap}).`);
-        base[k] = cap;
-      }
+      const pbBase = Math.min(rec.pointBuy[k], cap); // 135-budget part (≤ racial cap)
+      // Above-cap part: explicit Adottság + any pointBuy beyond the cap (legacy), to ATTR_MAX.
+      const adott = Math.min(ATTR_MAX - cap, (rec.adottsag?.[k] || 0) + Math.max(0, rec.pointBuy[k] - cap));
+      base[k] = pbBase + adott;
+      baseBudget += pbBase;
+      adottsagPoints += adott;
     });
     const ageCat = race.ageCategories.find((a) => a.name === rec.identity.ageCategory);
     if (ageCat) {
@@ -58,6 +61,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         if (m) base[k] += m;
       });
     }
+  }
+  if (baseBudget !== POINT_BUY_TOTAL) {
+    diag("warn", `Az alappontok összege ${baseBudget}, a szükséges ${POINT_BUY_TOTAL} (faji max alatti rész).`);
   }
 
   // ── 2/3. Collect background activations + flatten grants by level ───────────
@@ -124,6 +130,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     const grants = def.grantsFor ? def.grantsFor({ level: magnitude, option: bg.option }) : def.grants;
     pushActivation(bg.background, bg.acquiredAtLevel, cost, grants, `Háttér: ${bg.background}`);
   });
+  // Adottság: every attribute point above the racial cap is a 1-KAP Háttér point (level-1 cost).
+  if (adottsagPoints > 0) bgCostAtLevel[1] = (bgCostAtLevel[1] || 0) + adottsagPoints;
 
   // ── Accumulators for the per-level fold ────────────────────────────────────
   const effective: Stats = { ...base };

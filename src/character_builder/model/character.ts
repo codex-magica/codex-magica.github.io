@@ -93,7 +93,8 @@ export interface CharacterRecord {
   selections: Record<string, string>; // choiceId → option name (class specialization tree)
   backgrounds: ChosenBackground[];
 
-  pointBuy: Stats;
+  pointBuy: Stats; // the 135 base allocation, each ≤ racial cap
+  adottsag?: Partial<Record<keyof Stats, number>>; // points above the racial cap (1 KAP each)
 
   levels: LevelRecord[];
   kmAdjustments: Adjustment[];

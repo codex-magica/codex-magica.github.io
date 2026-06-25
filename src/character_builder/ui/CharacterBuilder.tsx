@@ -43,6 +43,7 @@ export const CharacterBuilder: React.FC = () => {
     derived,
     update,
     patchPointBuy,
+    setAdottsag,
     setSelection,
     toggleBackground,
     setBackgroundLevel,
@@ -147,7 +148,12 @@ export const CharacterBuilder: React.FC = () => {
           </Panel>
 
           <Panel>
-            <AttributeEditor record={record} onChange={(s: Stat, v: number) => patchPointBuy(s, v)} />
+            <AttributeEditor
+              record={record}
+              derived={derived}
+              onChange={(s: Stat, v: number) => patchPointBuy(s, v)}
+              onAdottsag={setAdottsag}
+            />
           </Panel>
 
           <Panel>

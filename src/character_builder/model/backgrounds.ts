@@ -53,16 +53,8 @@ export const BACKGROUNDS: Record<string, BackgroundDef> = {
     grantsFor: ({ level }) => [grant({ kind: "grantMoney", amount: level >= 3 ? 250 : level === 2 ? 75 : 30 })],
     description: "Induló vagyon. 1: 20–40, 2: 50–100, 3: 200–300 arany.",
   },
-  Adottság: {
-    name: "Adottság",
-    cost: 1,
-    costRange: [1, 5],
-    optionKind: "stat",
-    grants: [],
-    // Pontonként +1 a választott Tulajdonságra (faji max fölé is, de 20 fölé nem).
-    grantsFor: ({ level, option }) => (option ? [grant({ kind: "statBonus", stat: option as any, amount: level })] : []),
-    description: "Pontonként +1 egy választott Tulajdonságra (faji max fölé is, de 20 fölé nem).",
-  },
+  // NOTE: Adottság is no longer a selectable background — it is now expressed directly in the
+  // attribute editor: any point raised above the racial cap (up to 20) is an Adottság point (1 KAP).
   Rang: {
     name: "Rang",
     cost: 1,
