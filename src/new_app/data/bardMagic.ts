@@ -33,7 +33,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
 }, {
   name: "Bátorság dala",
   type: "Dalmágia",
-  cost: "1",
+  cost: "1/2 E",
   castingTime: "1 perc",
   range: "Hallótávolság",
   duration: "A dal hossza + 10perc",
@@ -51,7 +51,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
 }, {
   name: "Dalegyesítés",
   type: "Dalmágia",
-  cost: "5",
+  cost: "+5 Mp",
   castingTime: "Az egyesített dalok hossza",
   range: "Hallótávolság",
   duration: "A dalok hossza",
@@ -112,7 +112,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
 }, {
   name: "Távolság dala",
   type: "Dalmágia",
-  cost: "6",
+  cost: "Lásd a leírást!",
   castingTime: "1 szegmens",
   range: "Hallótávolság",
   duration: "A dal hossza",

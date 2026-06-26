@@ -4,7 +4,7 @@ export type SkillDifficulty = "I" | "II" | "III" | "IV";
 export type SkillType = "Harci" | "Alvilági" | "Világi" | "Tudományos" | "Szociális" | "Misztikus";
 
 export interface SkillInfo {
-  name: Skill;
+  name: string; // keys must match the new model's skill names (model/skills.ts) for the modal lookup
   skillType: SkillType;
   skillDifficulty: SkillDifficulty;
   softReq: Skill[];
@@ -131,7 +131,7 @@ export const SkillValues : SkillInfo[] = [
 
     },
     {
-      name: "Kétkezes harc",
+      name: "Kétkezesharc",
       skillType: "Harci",
       skillDifficulty: "III",
       softReq: [],
@@ -460,7 +460,7 @@ export const SkillValues : SkillInfo[] = [
 
     },
     {
-      name: "Csapdaállitás",
+      name: "Csapdaállítás",
       skillType: "Világi",
       skillDifficulty: "II",
       softReq: ["Mechanika", "Csomózás"],
@@ -720,7 +720,9 @@ export const SkillValues : SkillInfo[] = [
       hardReq: [],
       stats: ["Erő", "Ügyesség"],
       description: [
-        "A Képzettség a fák, falak, sziklaormok megmászásához szükséges jártasságot fedi. Az igazán gyakorlott falmászók hihetetlenül sima felületeken is képesek kapaszkodót, támaszt találni, így fürgén és biztosan kúsznak fel az átlagember számára megmászhatatlannak ítélt meredélyeken is.","Nem jelentenek számukra akadályt a várak, lakóházak falai, a függőleges, vagy akár kifelé dőlő sziklák sem.\n\nA Mászás leginkább a tolvajok és fejvadászok sajátja, de sokan űzik még magas szinten.","A felszerelés 20 fontonként 1-gyel csökkenti a Képzettség aktuális fokát.\n\nA módosítók nélküli Mászás dobás olyan fára, falra, meredélyre vonatkozik, mellyel egy képzett átlagember is megbirkózik. Átlagos nehézségűnek minősül a függőleges, egymásra rakott dinnyényi kövekből halmozott várfal, ahol a kiálló kövek, és a repedések sűrű és könnyű kapaszkodót kínálnak. A karakter minden megtett 25 láb, vagy 3 perc tétlen kapaszkodás után próbát kell tegyen, így egy 50 láb magas várfal leküzdése két sikeres próbát igényel. Sikertelen próbálkozás esetén, feltéve, hogy a karakter nem volt valamilyen módon biztosítva, számolhat a zuhanásból származó sérülésekkel. Folyamatosan annyi percen át képes mászni a karakter, amennyi az Állóképessége. Aki mászik, kiszolgáltatott helyzetbe kerül. Ekkor a Harc helyhez kötve szabályai vonatkoznak rá."
+        "A Képzettség a fák, falak, sziklaormok megmászásához szükséges jártasságot fedi. Az igazán gyakorlott falmászók hihetetlenül sima felületeken is képesek kapaszkodót, támaszt találni, így fürgén és biztosan kúsznak fel az átlagember számára megmászhatatlannak ítélt meredélyeken is.","Nem jelentenek számukra akadályt a várak, lakóházak falai, a függőleges, vagy akár kifelé dőlő sziklák sem.\n\nA Mászás leginkább a tolvajok és fejvadászok sajátja, de sokan űzik még magas szinten.","A felszerelés 20 fontonként 1-gyel csökkenti a Képzettség aktuális fokát.\n\nA módosítók nélküli Mászás dobás olyan fára, falra, meredélyre vonatkozik, mellyel egy képzett átlagember is megbirkózik. Átlagos nehézségűnek minősül a függőleges, egymásra rakott dinnyényi kövekből halmozott várfal, ahol a kiálló kövek, és a repedések sűrű és könnyű kapaszkodót kínálnak. A karakter minden megtett 25 láb, vagy 3 perc tétlen kapaszkodás után próbát kell tegyen, így egy 50 láb magas várfal leküzdése két sikeres próbát igényel. Sikertelen próbálkozás esetén, feltéve, hogy a karakter nem volt valamilyen módon biztosítva, számolhat a zuhanásból származó sérülésekkel. Folyamatosan annyi percen át képes mászni a karakter, amennyi az Állóképessége. Aki mászik, kiszolgáltatott helyzetbe kerül. Ekkor a Harc helyhez kötve szabályai vonatkoznak rá.",
+        "Az alábbi táblázat megmutatja, hogy egy kör alatt hány ynevi láb távolságot képes a felsorolt körülmények között megtenni a mászó.",
+        "table:Felszín\tYnevi láb/kör\tPróba módosítója\n\nCsúszós, síkos felület\t0,1\t-80 %\n\nTeljesen sima felület\t0,1\t-50 %\n\nRepedezett felület\t0,5\t-15 %\n\nDurva felület\t0,5\t0\n\nKiszögelléses felület\t0,5\t+5 %\n\nFerde fal\t1\t+15 %\n\nKötél\t2\t+40 %\n\nFa\t3\t+30 %"
       ],
       lvl_1: "A szántóvető fia, aki képes felmászni a fára a meggyért.",
       lvl_2: "Frissen képzett tolvaj, aki már megbirkózik egy mászható nyolc-tíz lábnyi fallal.",
@@ -729,31 +731,13 @@ export const SkillValues : SkillInfo[] = [
       lvl_5: "A karakter kezei akár az acélsatuk, lábával bármilyen apró rést megtalál: bármilyen feladattal megbirkózik, ami fizikailag lehetséges."
     },
     {
-      name: "Éberség",
+      name: "Veszélyérzék",
       skillType: "Világi",
       skillDifficulty: "III",
       softReq: [],
       hardReq: [],
       stats: ["Érzékelés"],
-      description: ["Megmutatja, hogy egy karakter mennyire figyel fel a környezetében fellépő rendellenességekre, rá " +
-      "leselkedő veszélyekre. Segíthet felfigyelni a követőkre, a rejtőzködőkre, az álruhás rablókra, " +
-      "tolvajokra, a ruha alá rejtett fegyverre, a helyükről elmozdított tárgyakra, a tömegből elővillanó " +
-      "ismerős arcokra, rosszban sántikáló idegenekre, a háztetőn lapuló íjászra, a mérgezett bor " +
-      "szokatlan színére. Birtokában megtalálhat rejtett átjárókat, titkosajtókat, eldugott rekeszeket és " +
-      "egyéb rejtekhelyeket vagy különféle csapdákat.",
-        "A Képzettség használata nem igényel hosszabb időt, leszámítva, mikor a karakter csapdákat, vagy " +
-        "rejtekhelyeket keres. Ekkor a legtöbb esetben a hagyományos módszerekhez fordul: falakat, " +
-        "padlókat kopogtat döngő szakaszokat keresve, rések, repedések után vizsgálódik. Ekképp kénytelen " +
-        "türelemmel, aprólékosan átvizsgálni a gyanús terület.",
-        "A titkos ajtó, vagy csapda felfedezése nem egyenlő annak kinyitásával, illetve hatástalanításával. Az " +
-        "ajtókat őrizheti egyszerű retesz, zár, netán ravasz mechanizmus, a csapdákat pedig bizonyos " +
-        "alkalmakkor nem elegendő egyszerűen elkerülni. Ezekben az esetekben a Zárnyitás és " +
-        "Csapdaállítás lehet a karakter segítségére.",
-        "Amennyiben Képzettség ellenében használja valaki az Éberséget (észreveszi-e, hogy követik, " +
-        "meglátja-e a rejtőzködőt, meghallja-e a lopakodót), a két próba egymás ellen irányul: az a fél nyer, " +
-        "aki nagyobb sikert ér el a Képzettség-ellenpróba során. Meglehetősen alkalmazzák az " +
-        "Álcázás/Álruha ellen, hisz rengeteg esetben próbálnak segítségével elrejteni helyeket, csapdákat, " +
-        "vagy rejtőznek el merénylők egy ártatlan személy alakját magukra öltve."],
+      description: "A karakter összeszedett figyelmét, képzett megfigyelőkészségét %-ban mérő képzettség, tolvajok, fejvadászok, testőrök sajátja. A kezdők 20, hivatásos, alaposan megfizetett társaik majd 60-70%-kal rendelkeznek.",
       lvl_1: "Fiatal utcagyerek. Környezetét csak felszínesen figyeli meg, és jó eséllyel téves " +
         "következtetésre jut. Ezek az illetők gyakran kiáltanak farkast a legártatlanabb helyzetben is, és így " +
         "könnyen céltáblájává válnak mások haragjának. „Megérzéseik” könnyedén megcsalhatják őket, s " +
@@ -784,6 +768,24 @@ export const SkillValues : SkillInfo[] = [
         "Az Éberség nem alkalmazható távoli fenyegetéssel kapcsolatban: nem fogja jelezni egy egyén " +
         "hirtelen hangulatváltozásait, egy politikai lépés vagy bármilyen cselekedet következményeit."
 
+    },
+    {
+      name: "Csapdakeresés",
+      skillType: "Alvilági",
+      skillDifficulty: "I",
+      softReq: [],
+      hardReq: [],
+      stats: ["Érzékelés"],
+      description: "A csapdák felkutatásának képessége %-ban mérve. A képzettség 30%-os ismerete még zsenge kezdőt jelent, az igazi kalandorok és tolvajok képessége 50% felett mozog.",
+    },
+    {
+      name: "Rejtekhely kutatás",
+      skillType: "Alvilági",
+      skillDifficulty: "I",
+      softReq: [],
+      hardReq: [],
+      stats: ["Érzékelés"],
+      description: "A karakter titkosajtó- és egyéb rejtekhelykutató képessége %-ban mérve. A perlekedő, házsártos feleség, ki ura eldugott pálinkáját rendszeresen felkutatja 20%-kal bír, míg egy képzett besurranó már 60%-ot is birtokolhat.",
     },
     {
       name: "Alkímia",
@@ -845,7 +847,7 @@ export const SkillValues : SkillInfo[] = [
 
     },
     {
-      name: "Írás/Olvasás",
+      name: "Írás/olvasás",
       skillType: "Tudományos",
       skillDifficulty: "III",
       softReq: [],

@@ -246,7 +246,7 @@ export const PrayerValues: PrayerInfo[] = [{
   range: "20 m",
   duration: "3 kör",
   save: ["Mentális"],
-  description: "A pap ezzel a fohásszal részlegesen megbéníthatja az ellenfél mozgásirányító központját. Rá kell mutatnia a kiszemelt áldozatra, majd ki kell mondania a fohász megidézéséhez szükséges szavakat. A mágia hatására, amennyiben a Mágiaellenállása sikertelen volt, az áldozat a következő módosítókat szenvedi el:\n\nErő: -8 Gyorsaság: -8 Ügyesség: -8\n\nKÉ: -30 TÉ: -40 VÉ:-35 CÉ: -15\n\nValamint képtelenné válik varázsolni. A Bénítás jól alkalmazható szinte minden harci helyzetben, s további előnye még, hogy időtartama alatt az ellenfél sem varázslatait, sem fohászait nem hívhatja segítségül."
+  description: "A pap ezzel a fohásszal részlegesen megbéníthatja az ellenfél mozgásirányító központját. Rá kell mutatnia a kiszemelt áldozatra, majd ki kell mondania a fohász megidézéséhez szükséges szavakat. A mágia hatására, amennyiben a Mágiaellenállása sikertelen volt, az áldozat a következő módosítókat szenvedi el:\n\nErő: -8 Gyorsaság: -8 Ügyesség: -8\n\nKÉ: -40 TÉ: -40 VÉ: -35 CÉ: -15\n\nValamint képtelenné válik varázsolni. A Bénítás jól alkalmazható szinte minden harci helyzetben, s további előnye még, hogy időtartama alatt az ellenfél sem varázslatait, sem fohászait nem hívhatja segítségül."
 }, {
   name: "Csapás",
   domains: ["Halál", "Természet"],
@@ -468,9 +468,9 @@ export const PrayerValues: PrayerInfo[] = [{
   domains: ["Lélek"],
   type: "Litánia",
   source: "Kis Arkánum",
-  cost: "10",
+  cost: "10 + 1/E",
   castingTime: "1 kör",
-  range: "Speciális",
+  range: "15 ynevi mérföld szintenként",
   duration: "10 perc",
   save: ["Mentális"],
   description: "A fohász lehetővé teszi, hogy a pap tárgyak vagy személyek irányát felderítse. A fohász hatására a papnak felfedi a keresett tárgyak vagy személyek helyét, illetve irányát. Ez nem jelenti a távolság tökéletes ismeretét és az irányzók teljes pontosságát, ám ha a pap az isteni gondviselésre bízza magát, megérzései mindig a helyes útra vezérlik. A fohász időtartamának lejártáig hozzávetőlegesen érzi, hogy milyen messze és merrefelé lehet a célja, majd az érzések elvesznek - de a már így betájolt irányban tovább haladhatnak. Megjegyzendő, hogy a fohásszal nemcsak tárgyak, de városok, épületek is kereshetőek, így a pap nemigen tévedhet el. Hasznos tudomány Ynev hatalmas világában.\n\nTárgyak kereséséhez igen pontos leírással kell rendelkezni. Elbeszélés alapján csak igen érzékletes leírás esetén van esély a megtalálására, a biztos sikerhez egy rajzra vagy emlékképre van szükség. Nem egy esetben megtörtént, hogy a kísérletező papot hasonló, de nem a keresett tárgyhoz vezette el a fohász.\n\nSzemély keresése esetén tudni kell az illető életkorát, hozzávetőleges kinézetét, és azt a nevét, amit születésekor a névadás szertartás keretében adományoztak neki. Később felvett álnevek esetén a varázslat csak a leírásra támaszkodik, s könnyen tévútra vezetheti alkalmazóját.\n\nA keresett személy Mágiaellenállásra jogosult a fohász ellen, ha ez sikeres, jelenléte titokban marad."
@@ -721,7 +721,7 @@ export const PrayerValues: PrayerInfo[] = [{
   source: "Nagy Arkánum",
   cost: "65",
   castingTime: "10 perc",
-  range: "1 óra",
+  range: "—",
   duration: "1 óra",
   description: "A fohász megidéz egy energiákból szőtt kocsit, melyet két légelementál vontat. A kocsin legfeljebb hat személy utazhat, s akit a pap nem enged fel a kocsira, az egyszerűen átesik rajta. A szekér jogosult utasai ezzel szemben teljes biztonságban érezhetik magukat, az energiaszövedék biztosan tartja őket a levegőben. A kocsi messziről alig látható, s közelről is inkább csak a levegő furcsa vibrálásához hasonlítható. A két elementál is teljesen átlátszó, de lehetséges megérinteni őket. A szekér képes repülni, és akár égen, akár szárazföldön 40 ynevi mérföldet képes megtenni óránként. Ha a két légelementált elpusztítják, a kocsi lassan ereszkedni kezd, s egy percen belül földet ér."
 }, {
@@ -761,7 +761,7 @@ export const PrayerValues: PrayerInfo[] = [{
   source: "Nagy Arkánum",
   cost: "55",
   castingTime: "1 szegmens",
-  range: "Egyszeri",
+  range: "—",
   duration: "Egyszeri",
   description: "Ezzel a fohásszal a pap minden körülmények között visszakerül abba a templomba, ahol pappá avatták. A visszatérés az Elsődleges Anyagi Sík minden pontjáról megtörténhet, a fohásznak nem szab gátat egyetlen mágiaforma sem. A fohász szavainak kimondása után a pap azonnal teleportál, s a templom oltára előtt találja magát."
 }, {
@@ -968,7 +968,7 @@ export const PrayerValues: PrayerInfo[] = [{
 }, {
   name: "Gyilkos tréfa",
   domains: ["Halál", "Lélek"],
-  type: "Rituálé",
+  type: "Litánia",
   source: "Darton",
   cost: "4",
   castingTime: "1 kör",
@@ -979,12 +979,12 @@ export const PrayerValues: PrayerInfo[] = [{
 }, {
   name: "Méregizzadás",
   domains: ["Halál"],
-  type: "Rituálé",
+  type: "Litánia",
   source: "Darton",
   cost: "6",
   castingTime: "1 kör/méreg szintje",
   range: "Önmaga",
-  duration: "1 kör/IP",
+  duration: "1 kör/a méreg szintje",
   description: "Darton szolgája ily módon képes eltávolítani a szervezetébe került mérget, hacsak az lehetetlenné nem teszi fohászok használatát. A fohász mindig annyi körig tart, ahányadik szintű az adott méreg volt, s ez határozza meg a fohász Kegy pont szükségletét is. Ha a pap nincs tisztában a méreg erősségével, csak találgathat, és addig kell folytatnia a fohászkodást, míg a mérget sikeresen el nem távolítja a testéből. Ha hatalma ehhez nem elegendő, a fohász minden E-je egy szinttel csökkenti a méreg erősségét.\n\nTehát egy 3. szintű méreg legyőzése 18 Kegy pont, azonban ha a papnak csak 12 Kegy pontja van, a mérget nem sikerül maradéktalanul eltávolítania, viszont Erőssége 1. szintre esik vissza. A pap ilyenkor újabb Egészségpróbára jogosult, immár a méreg csökkentett Erősségével szemben.\n\nHa sikerül felülkerekednie a mérgező anyagon, azt kiizzadva eltávolítja szervezetéből, s minden eddigi káros hatását megszünteti. Az ily módon hatástalanított anyag újbóli felhasználása lehetetlen.\n\n"
 }, {
   name: "Holt beszéd",

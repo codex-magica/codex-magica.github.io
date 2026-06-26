@@ -27,7 +27,7 @@ const CATS: SkillCategory[] = ["Harci", "Alvilági", "Világi", "Tudományos", "
 const skillGroups = CATS.map((cat) => ({
   group: cat,
   rows: SKILLS.filter((s) => s.category === cat).slice().sort((a, b) => a.name.localeCompare(b.name, "hu"))
-    .map((s) => ({ name: s.name, diff: s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(", ") || "–" })),
+    .map((s) => ({ name: s.name, diff: s.cost === "percentage" ? "%" : s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(", ") || "–" })),
 })).filter((g) => g.rows.length > 0);
 
 export const Compendium: React.FC<Props> = ({ compTab, onOpenModal }) => {

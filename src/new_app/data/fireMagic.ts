@@ -316,7 +316,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
 }, {
   name: "Tűzébresztés/tűzlohasztás",
   type: "Közönséges tüzek befolyásolása",
-  cost: "2",
+  cost: "Lásd a leírást!",
   castingTime: "2 szegmens",
   duration: "2 kör",
   description: "A tűzvarázsló ezen varázslata többek szerint átmenet az Elemi Tűz Idézése és a Közönséges Tüzek Befolyásolása közt. A mágia segítségével a tüzek nagysága változtatható meg, bárminemű éghető anyag hozzáadása nélkül. A tűz csak néhány pillanatra nő vagy csökken a kívánt mértékben, majd a természet újra kézbe veszi a dolgok irányítását, és minden visszatér az eredeti állapotba.\n\nA tűzvarázsló tehát Mana pontok befektetésével 2 kör erejéig a tűz kategóriáját változtathatja meg, még egy gyertya lángjából is készíthet - legalábbis\n\nrövid időre - tábortüzet. A varázslat Mana pont igénye a kiindulási és a kívánt kategóriák különbségétől függ.\n\nHa a különbség csupán egy Erősség, a befektetendő Mp-k száma 2. Két kategóriánál 4, háromnál 8, négynél 16. Ebből is látható, hogy fáklyából könnyen lehet kandallóban égő láng, de máglya már sokkal nehezebben. A fenti különbségek a tűz kioltására is vonatkoznak, azaz egy fáklya fénye 2 Mp ráfordításával tompítható gyertyányi lánggá. A Tűz- lohasztás több előnnyel is bír, például kezdődő tűzvészek előzhetőek meg vele.\n\nA tüzek befolyásolása - bármelyik hasonló varázslattal\n\nminden esetben megváltoztatja az adott hely fény-árnyék viszonyait. Így a tüzek tompításával a rejtőzés könnyebbé, vagy ellenkezőleg, erősítésükkel nehezebbé válik. A tűzvarázsló ennek segítségével meglehetősen könnyen fedezheti fél az árnyakban lapuló ellenfeleit, mivel a tüzek méretének\n\nazaz az árnyékoknak - a megváltozása kívülállók számára kiszámíthatatlan, azonnal létrejövő hatás."

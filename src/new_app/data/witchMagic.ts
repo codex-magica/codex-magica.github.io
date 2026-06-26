@@ -787,7 +787,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
 }, {
   name: "Betegség átadása",
   type: "Az ölelés mágiája",
-  cost: "12",
+  cost: "12 + 10/szint",
   castingTime: "5 sz",
   range: "Érintés",
   duration: "Lásd a leírást!",
@@ -1043,7 +1043,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   duration: "Végleges",
   ingredientsCost: "10 arany",
   sellPrice: "150 arany",
-  description: "A boszorkányok ezen italának hatása szinte mindenben megegyezik a Szerelemvarázzsal. Két dologban azonban mégis különbözik. Egyrészt a hatás végleges, másrészt a folyadékot elfogyasztó személy nem abba szeret bele, akit az ellentétes nem tagjai közül először megpillant, hanem abba, akinek elrendeltetett - ha nem is a sors, a boszorkány szándéka szerint. Ez azt jelenti, hogy az ital elkészítésekor az éppen forrásban lévő"
+  description: "A boszorkányok ezen italának hatása szinte mindenben megegyezik a Szerelemvarázzsal. Két dologban azonban mégis különbözik. Egyrészt a hatás végleges, másrészt a folyadékot elfogyasztó személy nem abba szeret bele, akit az ellentétes nem tagjai közül először megpillant, hanem abba, akinek elrendeltetett - ha nem is a sors, a boszorkány szándéka szerint. Ez azt jelenti, hogy az ital elkészítésekor az éppen forrásban lévő folyadékba bele kell keverni egy, a kívánt személlyel szimpatikus viszonyban álló tárgyat — természetesen a boszorkányok Szimpatikus mágiája szerint a fizikai test egykori részét. Az áldozat Asztrális Mágiaellenállásra jogosult az ital elfogyasztásakor, 50E erősség ellen. Ha az ellenállás sikertelen, az áldozat egy szempillantás töredékéig meginog, mintha eszméletét vesztené el. Ezek után megjelenik előtte a mágikus italba szőtt személy képe, akinek arcát, alakját soha sem lesz képes elfelejteni.\n\nTöbbször megtörtént, hogy boszorkányok merő gonoszságból már elhunytak hajának, körmének segítségével készítettek italt, majd ezt itatták meg kísérletük alanyával. A szerencsétlen sorsú áldozatok több éven át utaztak, kóboroltak szerte Yneven, hogy megleljék álmaik választottját — persze sikertelenül."
 }, {
   name: "Szépség itala",
   type: "Bájitalok",

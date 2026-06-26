@@ -257,12 +257,12 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   name: "Élőholt idézés",
   cost: "10",
   castingTime: "1 kör",
-    range: "Érintés",
+    range: "100 láb",
   duration: "1 perc/szint",
   description: "A varázslat segítségével a boszorkánymester egy képletes „kiáltást” hallat a síkok között, amire halandó fül nem, csak az életből távozott, de a léthez mindennél jobban kapaszkodó lelkek figyelnek fel.\n\nA boszorkánymester egyetlen módon csábíthatja 1k10magához: a vér, a velő, az élet ígéretével.\n\nA különböző típusú élőholtak közös tulajdonsága ugyanis, hogy határtalanul és engesztelhetetlenül gyűlölik mindazokat, akiknek még megadatott az élet élvezete.\n\nA 100 ynevi láb sugarú kör területén a boszorkánymester magához szólíthat minden élőholtat.\n\nAzok köré gyűlnek, de csak akkor engedelmeskednek parancsainak, ha önálló akarattal nem rendelkeznek, pusztán annyi értelemmel, hogy a parancs tartalmát felfogják (például közönséges éji rémek, amilyen az Izar, a Bosszúálló vagy a Múmia).\n\nŐket a boszorkánymester könnyedén befolyásolhatja, és pislákoló tudatukat sem nehéz maga alá gyűrnie, így azok vakon engedelmeskednek neki.\n\nA varázslattal maximum Tapasztalati szintjével megegyező számú élőholtra terjesztheti ki hatalmát, választása szerint.\n\nA többi teremtmény, 1k10szintén a boszorkánymester köré gyűltek, de nem kerültek a varázslat hatása alá, törvényszerűen megtámadják őt, amiért zaklatta síron túli nyugalmukat.\n\nÍgy egy boszorkánymester százszor is meggondolja, hogy egy élőhalottak megszállta területen alkalmazza-e a varázslatot vagy sem.\n\nAz intelligens élőholtak akkor engedelmeskednek, ha érdekeik is ezt kívánják (például az életerővel táplálkozó szellemek, amilyen a Lesath és a Hatyasa).\n\nA boszorkánymester, ha megfelelő módon tárgyal velük, és kellő ellenszolgáltatást ígér, netán képes megfélemlíteni őket, ideiglenesen elnyerheti szolgálatukat.\n\nÁm jobb, ha mindig észben tartja, hogy az önálló akarattal rendelkező élőholtak velejéig romlottak, lelkűket annyira elgyötörte a lét nélküli lét, hogy gondolati sémáik az álnokság legmélyebb vermeiben merítkeztek meg."
 }, {
   type: "Necrográfia",
-  name: "Élőholt parancsolása",
+  name: "Élőholt parancsnoklás",
   cost: "2",
   castingTime: "1 szegmens",
   range: "20 m",
@@ -612,6 +612,11 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   castingTime: "1 perc/E",
   duration: "1 óra",
   description: "A varázslat csak nagyobb vízfelületeken, tavon és tengeren, nagyobb folyamokon használható. 10-es Erősség mellett a varázslat hatására heves szél támad, a víz viharossá válik, sós permet szitál, a haragvó tenger tarajos hullámokat vet.\n\nA feltornyosuló víztömeg felborítja, vagy összetöri az 5 yne- vi lábnál rövidebb csónakokat, megrongálja a kikötőben veszteglő hajókat, és komoly megpróbáltatást jelent még a mélymerülésű hadihajók számára is.\n\nA hajózást teljesen lehetetlenné és életveszélyessé teszi.\n\nA vihar 1 ynevi mérföld sugarú körön belül tombol, átvészeléséhez legalább 4. fokú Hajózás képzettség szükséges, míg a vízbe került áldozatoknak csak legalább 4. fokú Úszás képzettséggel van esélyük a túlélésre.\n\n15-ös Erősség mellett akár örvény is képezhető. A hatalmas (50 ynevi láb átmérőjű víztölcsér) mélybe rántja a 10 ynevi lábnál rövidebb hajókat-csónakokat, vízbe kerülő embereket, állatokat.\n\nA legalább 4. fokon úszni tudó emberek körönként sikeres Állóképesség-próbát kell, hogy dobjanak, ellenkező esetben 5 ynevi lábbal közelebb kerülnek az örvény közepéhez, s ha azt elérik, sorsuk megpecsételődött.\n\nAz örvény elmúltával a tenger újra kisimul, s a felszínre okádja mindazt, amit korábban oly mohón emésztett el: holttesteket, törmelékfát, szétzúzott hajódeszkákat.\n\n20-as Erősség esetén a varázslat szökőárat idéz elő.\n\nA víz lassú hullámokat vet, amelyek vészes sebességgel nőnek egyre hatalmasabbra, majd szinte a semmiből szökőár emelkedik húsz ynevi lábbal a vízszint fölé, és elemi erővel árasztja el a partokat vagy a hajót.\n\nErősségétől függően csónakokat, hajókat boríthat fél vagy medréből kiöntve kikötőket, falvakat söpörhet el.\n\nIszonytató dühe azonban ezután sem csillapodik, háromszor sújt végig a területen haragos fekete hullámtaréjaival, a víz levonultával tócsákat, sártengert, s elsősorban romokat hagyva hátra."
+}, {
+  name: "Szökőár",
+  type: "Természeti mágia",
+  cost: "5/E",
+  description: "A varázslattal a boszorkánymester szökőárat idéz elő. A víz lassú hullámokat vet, amelyek vészes sebességgel nőnek egyre hatalmasabbra, majd szinte a semmiből szökőár emelkedik húsz ynevi lábbal a vízszint fölé, és elemi erővel árasztja el a partokat vagy a hajót. Erősségétől függően csónakokat, hajókat boríthat fel vagy medréből kiöntve kikötőket, falvakat söpörhet el. Iszonytató dühe azonban ezután sem csillapodik, háromszor sújt végig a területen haragos fekete hullámtaréjaival, a víz levonultával tócsákat, sártengert, s elsősorban romokat hagyva hátra.",
 }, {
   type: "Természeti mágia",
   name: "Jégverés",
