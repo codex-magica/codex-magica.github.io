@@ -111,12 +111,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           onOpenWeapon={setWeaponModal}
         />
       ) : (
-        <Compendium
-          compTab={compTab}
-          onOpenSkill={(name, sub) => openSkillModal(name, sub, 0)}
-          onOpenSpell={(name, school, time) => openSpellModal(name, school, null, time)}
-          onOpenWeapon={setWeaponModal}
-        />
+        <Compendium compTab={compTab} onOpenModal={setModal} />
       )}
 
       {/* Detail modal — peek that never navigates */}
