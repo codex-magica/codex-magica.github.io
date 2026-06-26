@@ -19,9 +19,11 @@ const theme = extendTheme({
       accent: { default: 'oklch(0.5 0.06 255)', _dark: 'oklch(0.7 0.05 250)' },
       accentTx: { default: 'oklch(0.46 0.07 258)', _dark: 'oklch(0.82 0.06 250)' },
       accentSoft: { default: 'oklch(0.93 0.025 250)', _dark: 'oklch(0.31 0.03 252)' },
+      accentBd: { default: 'oklch(0.83 0.035 252)', _dark: 'oklch(0.42 0.04 250)' },
       accentFg: { default: 'oklch(0.99 0.005 250)', _dark: 'oklch(0.16 0.012 255)' },
       good: { default: 'oklch(0.5 0.11 152)', _dark: 'oklch(0.76 0.12 155)' },
       bad: { default: 'oklch(0.52 0.19 27)', _dark: 'oklch(0.7 0.16 25)' },
+      badSoft: { default: 'oklch(0.95 0.04 27)', _dark: 'oklch(0.32 0.06 25)' },
       // Warm-neutral chrome (borders, fields, steppers, tracks) — sits on the parchment.
       hair: { default: 'oklch(0.89 0.009 84)', _dark: 'oklch(0.34 0.011 95)' },
       hairSoft: { default: 'oklch(0.93 0.006 252)', _dark: 'oklch(0.29 0.013 257)' },

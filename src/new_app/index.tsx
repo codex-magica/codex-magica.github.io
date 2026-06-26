@@ -1,8 +1,9 @@
-// The new MAGUS app: a uniform parchment design across three reachable screens — the live character
-// sheet, the compendium, and the character creator (a right-side drawer). MainContainer renders
-// <AppShell />. Data, model, engine and UI all live under this folder.
+// The new MAGUS app: a uniform parchment design across the roster (welcome), the live character
+// sheet, the compendium, and a full-screen character creator. MainContainer renders <RootApp />.
+// Data, model, engine and UI all live under this folder.
 
-export { AppShell, default } from "./ui/AppShell";
+export { RootApp, default } from "./ui/RootApp";
+export { AppShell } from "./ui/AppShell";
 export { CharacterBuilder } from "./ui/CharacterBuilder";
 export { derive } from "./engine/derive";
 export { RULES } from "./model/rulesDb";

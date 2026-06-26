@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppShell } from "@/new_app";
+import { RootApp } from "@/new_app";
 
 // --- Existing app (temporarily disabled while building the new character builder) ---
 // import SnappyTabs from "@/components/ui/SnappyTabs";
@@ -17,7 +17,7 @@ import { AppShell } from "@/new_app";
 
 function MainContainer() {
 
-  return <AppShell />;
+  return <RootApp />;
 
   // return (
   //   <SnappyTabs tabs={['Karakter', 'Képzettségek', 'Bárdmágia', 'Szakrális Mágia', 'Boszorkánymágia', 'Boszorkánymesteri mágia', 'Tűzmágia', 'Pszi', 'Fegyverek', 'Páncélok']}>

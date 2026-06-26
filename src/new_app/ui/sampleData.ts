@@ -126,6 +126,25 @@ export const spellBody = (name: string): string[] => [
 // The character's base combat values (for seeding the weapon calculator from the sheet).
 export const charCombat = { KE: 29, VE: 88, CE: 31 };
 
+// Welcome / roster sample — saved characters on the front door.
+export interface RosterPip { k: string; cur: number; max: number; kind: string }
+export interface RosterChar { id: string; name: string; race: string; cls: string; sub: string; level: number; pips: RosterPip[] }
+
+export const roster: RosterChar[] = [
+  { id: "yh", name: "Yhendorn Ularis", race: "Elf", cls: "Bárd", sub: "Magányos Mester", level: 6,
+    pips: [{ k: "ÉP", cur: 14, max: 14, kind: "hp" }, { k: "FP", cur: 30, max: 30, kind: "fp" }, { k: "MANA", cur: 18, max: 24, kind: "mana" }, { k: "PSZI", cur: 16, max: 25, kind: "pszi" }] },
+  { id: "da", name: "Darton Vasököl", race: "Ember", cls: "Harcos", sub: "Pyarroni kardvívó", level: 8,
+    pips: [{ k: "ÉP", cur: 9, max: 22, kind: "hp" }, { k: "FP", cur: 41, max: 58, kind: "fp" }, { k: "KÉ", cur: 62, max: 62, kind: "mana" }] },
+  { id: "sh", name: "Shaale'an", race: "Elf", cls: "Tűzvarázsló", sub: "Lángmester", level: 5,
+    pips: [{ k: "ÉP", cur: 11, max: 13, kind: "hp" }, { k: "FP", cur: 24, max: 26, kind: "fp" }, { k: "MANA", cur: 47, max: 62, kind: "mana" }] },
+  { id: "go", name: "Gorlon, a Néma", race: "Ork", cls: "Fejvadász", sub: "Méregmester", level: 7,
+    pips: [{ k: "ÉP", cur: 18, max: 20, kind: "hp" }, { k: "FP", cur: 52, max: 55, kind: "fp" }, { k: "PSZI", cur: 8, max: 30, kind: "pszi" }] },
+  { id: "me", name: "Merean Holdfény", race: "Félelf", cls: "Papnő", sub: "Gyógyító irányzat", level: 4,
+    pips: [{ k: "ÉP", cur: 10, max: 12, kind: "hp" }, { k: "FP", cur: 19, max: 22, kind: "fp" }, { k: "KEGY", cur: 21, max: 28, kind: "kegy" }] },
+  { id: "br", name: "Brando Kópé", race: "Ember", cls: "Tolvaj", sub: "Útonálló iskola", level: 3,
+    pips: [{ k: "ÉP", cur: 8, max: 10, kind: "hp" }, { k: "FP", cur: 15, max: 18, kind: "fp" }] },
+];
+
 export interface Weapon {
   name: string;
   kind: "melee" | "ranged";

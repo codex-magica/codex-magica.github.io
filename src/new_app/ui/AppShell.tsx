@@ -1,12 +1,17 @@
 import React, { useState } from "react";
-import { Box, Flex, Heading, HStack, IconButton, Spacer, Text, useColorMode } from "@chakra-ui/react";
-import { EditIcon, ArrowUpIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { Box, Flex, HStack, IconButton, Spacer, Text, useColorMode } from "@chakra-ui/react";
+import { EditIcon, ArrowUpIcon, ArrowBackIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { CharacterSheet } from "./CharacterSheet";
 import { Compendium } from "./Compendium";
-import { CharacterBuilder } from "./CharacterBuilder";
 import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
 import { identity, compNames, skillBody, spellBody } from "./sampleData";
+
+interface AppShellProps {
+  onBack: () => void; // back to the roster
+  onEdit: () => void; // open the full-screen creator in edit mode
+  onLevelup: () => void; // open it in level-up mode
+}
 
 const SIDE = { base: "20px", md: "16px" };
 
@@ -31,10 +36,9 @@ const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: bo
   </Box>
 );
 
-export const AppShell: React.FC = () => {
+export const AppShell: React.FC<AppShellProps> = ({ onBack, onEdit, onLevelup }) => {
   const [view, setView] = useState<"sheet" | "compendium">("sheet");
   const [compTab, setCompTab] = useState(0);
-  const [creatorOpen, setCreatorOpen] = useState(false);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [weaponModal, setWeaponModal] = useState<WeaponModalState | null>(null);
   const { colorMode, toggleColorMode } = useColorMode();
@@ -56,6 +60,7 @@ export const AppShell: React.FC = () => {
       {/* Top app bar */}
       <Box flexShrink={0} bg="page" borderBottom="1px solid" borderColor="hair">
         <HStack px={SIDE} py="9px" gap="14px" flexWrap="wrap" align="center">
+          <IconButton aria-label="Vissza a karakterekhez" title="Karakterek" size="sm" variant="outline" borderColor="hair" bg="fieldBg" color="muted" icon={<ArrowBackIcon boxSize="16px" />} onClick={onBack} flexShrink={0} _hover={{ borderColor: "accent" }} />
           <HStack gap="3px" bg="fieldBg" border="1px solid" borderColor="hair" borderRadius="10px" p="3px" flexShrink={0}>
             <ZoneBtn active={isSheet} onClick={() => setView("sheet")}>Karakter</ZoneBtn>
             <ZoneBtn active={!isSheet} onClick={() => goComp()}>Kompendium</ZoneBtn>
@@ -65,8 +70,8 @@ export const AppShell: React.FC = () => {
               <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" whiteSpace="nowrap">{identity.name} · {identity.subLine}</Text>
               <Spacer />
               <HStack gap="8px">
-                <ActBtn onClick={() => setCreatorOpen(true)} icon={<EditIcon boxSize="14px" />}>Szerkesztés</ActBtn>
-                <ActBtn onClick={() => setCreatorOpen(true)} icon={<ArrowUpIcon boxSize="16px" />} accent>Szintlépés</ActBtn>
+                <ActBtn onClick={onEdit} icon={<EditIcon boxSize="14px" />}>Szerkesztés</ActBtn>
+                <ActBtn onClick={onLevelup} icon={<ArrowUpIcon boxSize="16px" />} accent>Szintlépés</ActBtn>
                 {darkToggle}
               </HStack>
             </>
@@ -99,26 +104,6 @@ export const AppShell: React.FC = () => {
           onOpenSpell={(name, school, time) => openSpellModal(name, school, null, time)}
           onOpenWeapon={setWeaponModal}
         />
-      )}
-
-      {/* Creator drawer (Szerkesztés / Szintlépés) */}
-      {creatorOpen && (
-        <Box position="fixed" inset={0} zIndex={50} bg="rgba(16,14,24,.5)" display="flex" justifyContent="flex-end" onClick={() => setCreatorOpen(false)}>
-          <Flex direction="column" onClick={(e: React.MouseEvent) => e.stopPropagation()} w="min(760px, 100%)" h="100%" bg="page" boxShadow="-8px 0 44px rgba(0,0,0,.42)" overflow="hidden">
-            <HStack flexShrink={0} justify="space-between" gap="12px" px="18px" py="11px" borderBottom="1px solid" borderColor="hair">
-              <HStack gap="9px" minW={0}>
-                <Heading fontSize={{ base: "21px", md: "18px" }} fontWeight={700} color="fg">Karakteralkotó</Heading>
-                <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" noOfLines={1}>Karakter szerkesztése</Text>
-              </HStack>
-              <Box as="button" type="button" onClick={() => setCreatorOpen(false)} display="inline-flex" alignItems="center" gap="7px" px="14px" py="7px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accent" color="white" fontWeight={700} fontSize="14px" flexShrink={0}>
-                Kész
-              </Box>
-            </HStack>
-            <Box flex="1 1 auto" minH={0} overflowY="auto">
-              <CharacterBuilder />
-            </Box>
-          </Flex>
-        </Box>
       )}
 
       {/* Detail modal — peek that never navigates */}

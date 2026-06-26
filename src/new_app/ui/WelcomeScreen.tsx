@@ -1,0 +1,176 @@
+import React, { useState } from "react";
+import { Box, Flex, Heading, HStack, IconButton, Text, useColorMode } from "@chakra-ui/react";
+import { MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
+import { roster, RosterChar } from "./sampleData";
+
+interface Props {
+  onOpenCharacter: (id: string) => void;
+  onNew: () => void;
+  onEdit: (id: string) => void;
+}
+
+const SIDE = { base: "32px", md: "32px" };
+const VIT: Record<string, string> = { hp: "vitHp", fp: "vitFp", mana: "vitMana", kegy: "vitKegy", pszi: "vitPszi" };
+
+// icons
+const PlusIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+);
+const KebabIcon = (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></svg>
+);
+const PencilIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+);
+const RenameIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M4 13.5V18a1 1 0 0 0 1 1h4.5L18 10.5a2.12 2.12 0 0 0-3-3z" /></svg>
+);
+const CopyIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+);
+const TrashIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+);
+const ImportIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+);
+
+const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: boolean; children: React.ReactNode }> = ({ icon, onClick, danger, children }) => (
+  <Box as="button" type="button" onClick={onClick} display="flex" alignItems="center" gap="11px" w="100%" textAlign="left" px="13px" py="11px" borderRadius="9px" border="none" bg="transparent" color={danger ? "bad" : "fg"} fontWeight={600} fontSize="15px" _hover={{ bg: danger ? "badSoft" : "accentSoft" }}>
+    {icon}{children}
+  </Box>
+);
+
+export const WelcomeScreen: React.FC<Props> = ({ onOpenCharacter, onNew, onEdit }) => {
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const { colorMode, toggleColorMode } = useColorMode();
+  const hoverShadow = useParchmentHoverShadow();
+  const menuChar: RosterChar | undefined = roster.find((c) => c.id === menuId);
+
+  return (
+    <Box position="relative" h="100vh" overflowY="auto" bg="page" color="fg" fontFamily="Warnock, serif">
+      <Box maxW={{ base: "1080px", md: "1080px" }} mx="auto" px={SIDE} pt={{ base: "52px", md: "40px" }} pb="90px">
+        {/* dark toggle, top-right */}
+        <Box position="absolute" top="14px" right="18px">
+          <IconButton aria-label="Sötét mód váltása" size="sm" variant="ghost" color="muted" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
+        </Box>
+
+        {/* hero */}
+        <Box textAlign="center" mb={{ base: "44px", md: "36px" }}>
+          <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
+          <Heading as="h1" fontSize={{ base: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
+          <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
+            Válassz egy hőst a folytatáshoz, vagy teremts újat. A karaktereid helyben, ezen az eszközön tárolódnak.
+          </Text>
+        </Box>
+
+        {/* section header */}
+        <HStack align="baseline" justify="space-between" gap="14px" mb="13px" px="2px">
+          <Heading as="h2" fontFamily="system-ui" fontSize="11.5px" fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint">
+            Mentett karakterek <Text as="span" color="muted">· {roster.length}</Text>
+          </Heading>
+          <Box as="button" type="button" onClick={onNew} display="inline-flex" alignItems="center" gap="7px" px="13px" py="7px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx" fontWeight={700} fontSize="13.5px" whiteSpace="nowrap">
+            {PlusIcon}Új karakter
+          </Box>
+        </HStack>
+
+        {/* card grid */}
+        <Box display="grid" gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(auto-fill, minmax(300px, 1fr))" }} gap={{ base: "20px", md: "16px" }}>
+          {roster.map((c) => (
+            <ParchPanel
+              key={c.id}
+              as="button"
+              onClick={() => onOpenCharacter(c.id)}
+              display="flex"
+              flexDirection="column"
+              textAlign="left"
+              cursor="pointer"
+              w="100%"
+              transition="box-shadow .16s, border-color .16s"
+              _hover={{ borderColor: "accentBd", boxShadow: hoverShadow }}
+            >
+              <HStack align="flex-start" justify="space-between" gap="10px">
+                <Box minW={0} textAlign="left">
+                  <Text fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg" lineHeight="1.12" noOfLines={2}>{c.name}</Text>
+                  <Text fontFamily="system-ui" fontSize="12.5px" color="muted" mt="3px">{c.race} · {c.cls} · {c.sub}</Text>
+                </Box>
+                <Box flexShrink={0} display="inline-flex" flexDirection="column" alignItems="center" justifyContent="center" w="46px" h="46px" borderRadius="11px" bg="accentSoft" border="1px solid" borderColor="accentBd">
+                  <Text fontFamily="system-ui" fontSize="8.5px" fontWeight={700} letterSpacing=".08em" textTransform="uppercase" color="accentTx" lineHeight="1">Szint</Text>
+                  <Text fontWeight={700} fontSize="19px" color="accentTx" lineHeight="1.1" sx={{ fontVariantNumeric: "tabular-nums" }}>{c.level}</Text>
+                </Box>
+              </HStack>
+
+              <Box h="1px" bg="rule" my="13px" />
+
+              <HStack gap="7px" mb="3px" align="stretch">
+                {c.pips.map((p) => {
+                  const pct = p.max > 0 ? Math.max(4, Math.min(100, (p.cur / p.max) * 100)) : 0;
+                  return (
+                    <Box key={p.k} flex="1 1 0" minW={0}>
+                      <HStack justify="space-between" align="baseline" gap="4px" mb="4px">
+                        <Text fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".04em" color="fgFaint">{p.k}</Text>
+                        <Text fontFamily="system-ui" fontSize="10.5px" fontWeight={600} color="muted" sx={{ fontVariantNumeric: "tabular-nums" }}>{p.cur}/{p.max}</Text>
+                      </HStack>
+                      <Box h="4px" borderRadius="3px" bg="vitTrack" overflow="hidden">
+                        <Box h="100%" w={`${pct}%`} bg={VIT[p.kind]} borderRadius="3px" />
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </HStack>
+
+              <HStack justify="flex-end" mt="11px">
+                <Box
+                  as="span"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e: React.MouseEvent) => { e.stopPropagation(); setMenuId(c.id); }}
+                  title="További műveletek"
+                  display="inline-flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  w="30px"
+                  h="30px"
+                  mr="-5px"
+                  borderRadius="8px"
+                  color="fgFaint"
+                  cursor="pointer"
+                  _hover={{ bg: "accentSoft", color: "fg" }}
+                >
+                  {KebabIcon}
+                </Box>
+              </HStack>
+            </ParchPanel>
+          ))}
+        </Box>
+
+        {/* footer */}
+        <HStack justify="center" gap="18px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint">
+          <Box as="button" type="button" display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
+          <Text as="span" opacity={0.5}>·</Text>
+          <Text as="span">{roster.length} / 12 hely felhasználva</Text>
+        </HStack>
+      </Box>
+
+      {/* kebab menu */}
+      {menuChar && (
+        <Flex position="fixed" inset={0} zIndex={40} bg="rgba(16,14,24,.5)" align="center" justify="center" p="28px" onClick={() => setMenuId(null)}>
+          <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w="min(340px, 100%)" overflow="hidden" style={{ boxShadow: "0 22px 60px rgba(0,0,0,.4)" }}>
+            <Box px="22px" pt="18px" pb="14px" borderBottom="1px solid" borderColor="rule" textAlign="center">
+              <Text fontSize="20px" fontWeight={700} color="fg">{menuChar.name}</Text>
+              <Text fontFamily="system-ui" fontSize="12px" color="muted" mt="2px">{menuChar.race} · {menuChar.cls} · {menuChar.level}. szint</Text>
+            </Box>
+            <Box p="8px">
+              <MenuItem icon={PencilIcon} onClick={() => { const id = menuChar.id; setMenuId(null); onEdit(id); }}>Szerkesztés</MenuItem>
+              <MenuItem icon={RenameIcon} onClick={() => setMenuId(null)}>Átnevezés</MenuItem>
+              <MenuItem icon={CopyIcon} onClick={() => setMenuId(null)}>Másolat készítése</MenuItem>
+              <Box h="1px" bg="rule" mx="10px" my="6px" />
+              <MenuItem icon={TrashIcon} onClick={() => setMenuId(null)} danger>Törlés</MenuItem>
+            </Box>
+          </ParchPanel>
+        </Flex>
+      )}
+    </Box>
+  );
+};
