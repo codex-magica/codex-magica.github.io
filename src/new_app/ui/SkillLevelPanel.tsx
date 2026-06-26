@@ -98,9 +98,31 @@ export const SkillLevelPanel: React.FC<Props> = ({
     />
   );
 
+  // Branch a skill (add a specialized variant) — the splitting-arrows icon from the design.
   const agButton = (name: string) => (
-    <Box as="button" type="button" color="accentTx" fontWeight={600} fontSize="13px" whiteSpace="nowrap" px="3px" flexShrink={0} onClick={() => onAddVariant(level, name)}>
-      +ág
+    <Box
+      as="button"
+      type="button"
+      title="Ág hozzáadása"
+      aria-label="Ág hozzáadása"
+      color="accentTx"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      lineHeight={0}
+      p="3px"
+      borderRadius="6px"
+      flexShrink={0}
+      _hover={{ bg: "accentSoft" }}
+      onClick={() => onAddVariant(level, name)}
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2.5 12H10" />
+        <path d="M10 12 18.5 6.4" />
+        <path d="M14.2 5.2 18.5 6.4 17.2 10.6" />
+        <path d="M10 12 18.5 17.6" />
+        <path d="M14.2 18.8 18.5 17.6 17.2 13.4" />
+      </svg>
     </Box>
   );
 
@@ -110,9 +132,34 @@ export const SkillLevelPanel: React.FC<Props> = ({
     </Box>
   );
 
+  // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected").
   const tanulBtn = (name: string) => (
-    <Box as="button" type="button" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx" px="14px" py="8px" borderRadius="9px" fontWeight={600} fontSize={{ base: "16.5px", md: "15px" }} whiteSpace="nowrap" flexShrink={0} onClick={() => onUpsert(level, name, undefined, 1)}>
-      + tanul
+    <Box
+      as="button"
+      type="button"
+      title="Képzettség tanulása"
+      border="1px solid"
+      borderColor="fieldBd"
+      bg="transparent"
+      color="accentTx"
+      px="13px"
+      py="7px"
+      borderRadius="9px"
+      fontWeight={600}
+      fontSize={{ base: "16.5px", md: "15px" }}
+      whiteSpace="nowrap"
+      flexShrink={0}
+      display="inline-flex"
+      alignItems="center"
+      gap="7px"
+      _hover={{ borderColor: "accent", bg: "accentSoft" }}
+      onClick={() => onUpsert(level, name, undefined, 1)}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H2z" />
+        <path d="M22 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H22z" />
+      </svg>
+      Tanul
     </Box>
   );
 
@@ -239,7 +286,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
   return (
     <Box>
       <HStack justify="space-between" mb={2} align="center">
-        <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">Képzettségek</Heading>
+        <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">
+          Képzettségek <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
+        </Heading>
         <Text fontFamily="system-ui" fontSize="13px" fontWeight={700} color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
           KAP: {kap}
         </Text>
