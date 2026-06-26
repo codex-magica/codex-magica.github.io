@@ -195,10 +195,10 @@ export const SkillLevelPanel: React.FC<Props> = ({
     <HStack key={key} spacing="9px" py={ROW_PY} pl={isPrimary ? 0 : "26px"} borderBottom="1px solid" borderColor="hair" align="center">
       {left}
       {subtype}
+      {trailing}
       {kapott}
       <Box flex="1 1 auto" minW="8px" />
       {stepper}
-      {trailing}
     </HStack>
   );
 
@@ -218,7 +218,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
       keyOf(inst.skill, inst.origSubtype) + ":g",
       isPrimary,
       left,
-      inst.subtype ? subtypeInput(inst.subtype, (e) => onOverride(keyOf(inst.skill, inst.origSubtype), e.target.value)) : null,
+      // Show the editable subtype whenever this instance was originally subtyped (origSubtype set),
+      // even if the player cleared the text — otherwise a granted branch can't be renamed back.
+      inst.subtype || inst.origSubtype
+        ? subtypeInput(inst.subtype || "", (e) => onOverride(keyOf(inst.skill, inst.origSubtype), e.target.value), "altípus")
+        : null,
       floor > 0 ? <KapottBadge /> : null,
       <Stepper
         value={isPct ? `${cur}%` : `${cur}.`}

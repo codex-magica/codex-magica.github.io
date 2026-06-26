@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CharacterRecord, LevelRecord } from "../model/character";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { CombatChannel, Resource } from "../model/effects";
@@ -6,7 +6,6 @@ import { Stat } from "../model/attributes";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
 import { DerivedCharacter } from "../engine/types";
-import { defaultRecord } from "./defaultRecord";
 
 export interface CharacterBuilderApi {
   record: CharacterRecord;
@@ -30,10 +29,9 @@ export interface CharacterBuilderApi {
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
 }
 
-// Minimal state container: holds the record, re-derives the sheet on every change.
-export function useCharacterBuilder(initial: CharacterRecord = defaultRecord): CharacterBuilderApi {
-  const [record, setRecord] = useState<CharacterRecord>(initial);
-
+// Controlled: the caller owns the record (so each character edits its own, persisted via the roster).
+// Re-derives the sheet on every change.
+export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: CharacterRecord) => void): CharacterBuilderApi {
   const derived = useMemo(() => derive(RULES, record), [record]);
 
   const update = (patch: Partial<CharacterRecord>) => setRecord({ ...record, ...patch });

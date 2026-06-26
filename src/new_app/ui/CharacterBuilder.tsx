@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Heading, HStack, Input, Select, Text, VStack } from "@chakra-ui/react";
-import { useCharacterBuilder } from "../state/useCharacterBuilder";
+import { CharacterBuilderApi } from "../state/useCharacterBuilder";
 import { RACES, RACE_NAMES } from "../model/races";
 import { CLASSES, CLASS_NAMES } from "../model/classes";
 import { activeChoices, defaultSelections } from "../model/choices";
@@ -26,9 +26,9 @@ const BalanceChip: React.FC<{ caption: string; value: number; numColor: string; 
   </Box>
 );
 
-// The character creator — the left editor column. Rendered inside the app-shell drawer (which
-// provides the scroll container, the "Karakteralkotó" header and the Kész button).
-export const CharacterBuilder: React.FC = () => {
+// The character creator — the left editor column. Rendered inside the full-screen creator (which
+// provides the scroll container, the header and the confirm button). Controlled by `api`.
+export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }) => {
   const {
     record,
     derived,
@@ -48,7 +48,7 @@ export const CharacterBuilder: React.FC = () => {
     setResourceAllocation,
     setHmChannel,
     setStatBuy,
-  } = useCharacterBuilder();
+  } = api;
 
   const onRaceChange = (race: string) => {
     const caps = RACES[race].statLimits;

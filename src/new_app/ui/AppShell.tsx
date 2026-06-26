@@ -1,16 +1,21 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Box, Flex, HStack, IconButton, Spacer, Text, useColorMode } from "@chakra-ui/react";
 import { EditIcon, ArrowUpIcon, ArrowBackIcon, MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { CharacterSheet } from "./CharacterSheet";
 import { Compendium } from "./Compendium";
 import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
-import { identity, compNames, skillBody, spellBody } from "./sampleData";
+import { compNames, skillBody, spellBody } from "./sampleData";
+import { CharacterRecord, VitalKey } from "../model/character";
+import { RULES } from "../model/rulesDb";
+import { derive } from "../engine/derive";
 
 interface AppShellProps {
+  record: CharacterRecord;
   onBack: () => void; // back to the roster
   onEdit: () => void; // open the full-screen creator in edit mode
   onLevelup: () => void; // open it in level-up mode
+  onPatchRecord: (record: CharacterRecord) => void; // persist play-state edits (vitals…)
 }
 
 const SIDE = { base: "20px", md: "16px" };
@@ -36,12 +41,17 @@ const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: bo
   </Box>
 );
 
-export const AppShell: React.FC<AppShellProps> = ({ onBack, onEdit, onLevelup }) => {
+export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLevelup, onPatchRecord }) => {
   const [view, setView] = useState<"sheet" | "compendium">("sheet");
   const [compTab, setCompTab] = useState(0);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [weaponModal, setWeaponModal] = useState<WeaponModalState | null>(null);
   const { colorMode, toggleColorMode } = useColorMode();
+
+  const derived = useMemo(() => derive(RULES, record), [record]);
+  const subLine = `${record.name} · ${record.race} ${record.class} · ${record.levels.length}. szint`;
+  const setVital = (key: VitalKey, value: number) =>
+    onPatchRecord({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
 
   const isSheet = view === "sheet";
   const goComp = (tab?: number) => { setView("compendium"); if (tab != null) setCompTab(tab); setModal(null); };
@@ -67,7 +77,7 @@ export const AppShell: React.FC<AppShellProps> = ({ onBack, onEdit, onLevelup })
           </HStack>
           {isSheet ? (
             <>
-              <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" whiteSpace="nowrap">{identity.name} · {identity.subLine}</Text>
+              <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" whiteSpace="nowrap">{subLine}</Text>
               <Spacer />
               <HStack gap="8px">
                 <ActBtn onClick={onEdit} icon={<EditIcon boxSize="14px" />}>Szerkesztés</ActBtn>
@@ -93,6 +103,9 @@ export const AppShell: React.FC<AppShellProps> = ({ onBack, onEdit, onLevelup })
       {/* Body */}
       {isSheet ? (
         <CharacterSheet
+          record={record}
+          derived={derived}
+          onSetVital={setVital}
           onOpenSkill={(name, level) => openSkillModal(name, "", level)}
           onOpenSpell={(name, school, mana, time) => openSpellModal(name, school, mana, time)}
           onOpenWeapon={setWeaponModal}

@@ -13,6 +13,16 @@ export interface InventoryItem {
   name: string;
   qty?: number;
   note?: string;
+  equipped?: boolean;
+}
+
+// A transient status effect during play (Mérgezett, Szédült, Bénult …). Play-state, NOT part of the
+// build ledger — it changes at the table, not when you spend points.
+export interface CharacterCondition {
+  id: string;
+  name: string;
+  note?: string;
+  appliedAtLevel?: number;
 }
 
 export interface ChosenBackground {
@@ -100,11 +110,13 @@ export interface CharacterRecord {
   adottsag?: Partial<Record<keyof Stats, number>>; // points above the racial cap (1 KAP each)
   subtypeOverrides?: Record<string, string>; // rename a granted subtype, keyed by `skill|originalSubtype`
 
-  levels: LevelRecord[];
+  levels: LevelRecord[]; // the build ledger (ordered per-level decisions)
   kmAdjustments: Adjustment[];
 
+  // ── play-state (separate from the ledger; mutated at the table, not when spending points) ──
   inventory: InventoryItem[];
-  vitalsState: Partial<Record<VitalKey, number>>;
+  vitalsState: Partial<Record<VitalKey, number>>; // current Ép/Fp/Mana/Psi/Kegy
+  conditions?: CharacterCondition[]; // active status effects
 }
 
 export const emptyLevel = (level: number): LevelRecord => ({
