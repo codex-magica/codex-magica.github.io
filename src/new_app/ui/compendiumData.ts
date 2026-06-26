@@ -49,19 +49,17 @@ const statsBody = (desc: string | string[], pairs: [string, unknown][]): string[
 
 type Field = [string, (s: any) => string, ("center" | "right")?];
 
-// generic spell table: grouped by `groupKey`, columns from `fields`, click → detail modal.
+// generic spell table: grouped by `groupKey`; columns from `fields` but trimmed PER TABLE to the
+// ones that actually carry data in that group (so a school's table shows only its real columns,
+// like the book — no padded-empty columns). Click → detail modal.
 function spellBlocks(values: any[], groupKey: string, nameLabel: string, school: string, unit: string, fields: Field[]): TableBlock[] {
-  const columns: TableCol[] = fields.map(([label, , align]) => ({ label, align: align || "center" }));
-  return group(values, (s) => s[groupKey]).map((g) => ({
-    title: g.name,
-    nameLabel,
-    columns,
-    rows: g.items.map((s) => ({
+  return group(values, (s) => s[groupKey]).map((g) => {
+    const items = g.items.map((s) => ({
       name: s.name,
-      cells: fields.map(([, acc]) => acc(s)),
-      open: "modal" as const,
+      cellsAll: fields.map(([, acc]) => acc(s)),
       modalSub: `${school} · ${/^\d+$/.test(String(s.cost)) ? `${s.cost} ${unit}` : s.cost}`,
       body: statsBody(s.description, [
+        ["Erősség", s.erosseg],
         ["Időigény", s.castingTime],
         ["Hatótáv", s.range],
         ["Lappangás", s.incubationPeriod],
@@ -73,8 +71,16 @@ function spellBlocks(values: any[], groupKey: string, nameLabel: string, school:
         ["Eladási ár", s.sellPrice],
         ["Mágiaellenállás", Array.isArray(s.save) ? s.save.join(", ") : s.save],
       ]),
-    })),
-  }));
+    }));
+    const keep = fields.map((_, ci) => items.some((it) => it.cellsAll[ci] !== "—" && it.cellsAll[ci] !== ""));
+    const columns: TableCol[] = fields.filter((_, ci) => keep[ci]).map(([label, , align]) => ({ label, align: align || "center" }));
+    return {
+      title: g.name,
+      nameLabel,
+      columns,
+      rows: items.map((it) => ({ name: it.name, cells: it.cellsAll.filter((_, ci) => keep[ci]), open: "modal" as const, modalSub: it.modalSub, body: it.body })),
+    };
+  });
 }
 
 const mana = (s: any) => `${s.cost} Mp`;
@@ -86,7 +92,7 @@ const magasCost = (s: any) => {
   if (c === "—") return "—";
   return /\d/.test(c) && !/mp/i.test(c) ? `${c} Mp` : c;
 };
-const MAGAS: Field[] = [["Mana", magasCost], ["Idő", (s) => dash(s.castingTime)], ["Hatótáv", (s) => dash(s.range)], ["Időtartam", (s) => dash(s.duration)], ["ME", (s) => join(s.save)]];
+const MAGAS: Field[] = [["Mana", magasCost], ["Erősség", (s) => dash(s.erosseg)], ["Idő", (s) => dash(s.castingTime)], ["Hatótáv", (s) => dash(s.range)], ["Időtartam", (s) => dash(s.duration)], ["ME", (s) => join(s.save)]];
 
 export function tabBlocks(tab: number): TableBlock[] {
   switch (tab) {
@@ -190,12 +196,12 @@ export function tabBlocks(tab: number): TableBlock[] {
 // ── full skill descriptions (with per-fok text) for the skill modal ──
 const PCT_SKILLS = new Set(SKILLS.filter((s) => s.cost === "percentage").map((s) => s.name));
 const skillByName = new Map(SkillValues.map((s) => [s.name as string, s]));
-const stripTable = (p: string) => (p.startsWith("table:") ? p.replace(/^table:\s*/, "") : p);
 
 export function skillModalBody(name: string): string[] {
   const s = skillByName.get(name);
   if (!s) return ["A képzettség részletes leírása a kompendiumban hamarosan elérhető."];
-  const desc = (Array.isArray(s.description) ? s.description : [s.description]).map(stripTable);
+  // keep `table:` entries verbatim — the modal renders them as real tables
+  const desc = Array.isArray(s.description) ? s.description : [s.description];
   const foks: string[] = [];
   // Percentage skills have no discrete foks in the book — show only the general description.
   if (!PCT_SKILLS.has(name)) {

@@ -11,6 +11,7 @@ export const magas4 = [
   },
   {
     name: `Kirekesztő Varázskörök`,
+    erosseg: `Végtelennek számít`,
     type: `Rúnamágia`,
     cost: `Lásd a leírást!`,
     castingTime: `—`,
@@ -23,6 +24,7 @@ export const magas4 = [
   },
   {
     name: `Bebörtönző varázskörök`,
+    erosseg: `Végtelen`,
     type: `Rúnamágia`,
     cost: `Lásd a leírást!`,
     castingTime: `—`,
@@ -33,6 +35,7 @@ export const magas4 = [
   },
   {
     name: `Védő varázskörök`,
+    erosseg: `Lásd a leírást!`,
     type: `Rúnamágia`,
     cost: `Lásd a leírást!`,
     castingTime: `—`,
@@ -48,6 +51,7 @@ export const magas4 = [
   },
   {
     name: `Körbezáró Varázskörök`,
+    erosseg: `Lásd a leírást!`,
     type: `Rúnamágia`,
     cost: `Lásd a leírást!`,
     castingTime: `—`,
@@ -60,6 +64,7 @@ export const magas4 = [
   },
   {
     name: `Végrehajtó varázskör`,
+    erosseg: `amennyi a beleírt varázslaté`,
     type: `Rúnamágia`,
     cost: `40 - a varázslat`,
     castingTime: `—`,
@@ -83,6 +88,7 @@ export const magas4 = [
   },
   {
     name: `Változás varázsjel`,
+    erosseg: `Mint az azonos hatású mozaik esetében`,
     type: `Rúnamágia`,
     cost: `Háromszor annyi Mp, mint az azonos hatású mozaik esetében`,
     castingTime: `—`,
@@ -257,6 +263,7 @@ export const magas4 = [
   },
   {
     name: `Asztrálbélyeg`,
+    erosseg: `Végtelen erősségű`,
     type: `Rúnamágia`,
     cost: `Lásd a leírást!`,
     castingTime: `—`,
@@ -267,6 +274,7 @@ export const magas4 = [
   },
   {
     name: `Mentálbélyeg`,
+    erosseg: `Végtelen erősségű`,
     type: `Rúnamágia`,
     cost: `Lásd a leírást!`,
     castingTime: `—`,
@@ -277,6 +285,7 @@ export const magas4 = [
   },
   {
     name: `Változás bélyege`,
+    erosseg: `Mint az azonos hatású mozaik esetében`,
     type: `Rúnamágia`,
     cost: `Háromszor annyi Mp, mint az azonos hatású mozaik esetében`,
     castingTime: `—`,
