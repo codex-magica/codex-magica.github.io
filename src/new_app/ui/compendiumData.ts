@@ -11,6 +11,7 @@ import { FireMagicValues } from "../data/fireMagic";
 import { WeaponValues } from "../data/weapons";
 import { ArmorValues, ShieldValues } from "../data/armor";
 import { SkillValues } from "../data/skillsText";
+import { MagasMagiaValues } from "../data/magasMagia";
 import { SKILLS } from "../model/skills";
 
 export interface TableCol { label: string; align?: "center" | "right" }
@@ -79,6 +80,14 @@ function spellBlocks(values: any[], groupKey: string, nameLabel: string, school:
 const mana = (s: any) => `${s.cost} Mp`;
 const COMMON: Field[] = [["Mana", mana], ["Idő", (s) => dash(s.castingTime)], ["Hatótáv", (s) => dash(s.range)], ["Időtartam", (s) => dash(s.duration)], ["ME", (s) => join(s.save)]];
 
+// Magasmágia costs come as "3/E", a bare number, "Lásd a leírást!", or "-" — only append "Mp" when numeric.
+const magasCost = (s: any) => {
+  const c = dash(s.cost);
+  if (c === "—") return "—";
+  return /\d/.test(c) && !/mp/i.test(c) ? `${c} Mp` : c;
+};
+const MAGAS: Field[] = [["Mana", magasCost], ["Idő", (s) => dash(s.castingTime)], ["Hatótáv", (s) => dash(s.range)], ["Időtartam", (s) => dash(s.duration)], ["ME", (s) => join(s.save)]];
+
 export function tabBlocks(tab: number): TableBlock[] {
   switch (tab) {
     case 1: // Bárdmágia
@@ -118,7 +127,9 @@ export function tabBlocks(tab: number): TableBlock[] {
         ["Időtartam", (s) => dash(s.duration)],
         ["ME", (s) => join(s.save)],
       ]);
-    case 7: // Fegyverek → calculator (full column set, like the old app — scrolls if cramped)
+    case 7: // Magasmágia
+      return spellBlocks(MagasMagiaValues, "type", "Varázslat", "Magasmágia", "Mp", MAGAS);
+    case 8: // Fegyverek → calculator (full column set, like the old app — scrolls if cramped)
       return group(WeaponValues, (w) => w.subType).map((g) => ({
         title: g.name,
         nameLabel: "Fegyver",
@@ -144,7 +155,7 @@ export function tabBlocks(tab: number): TableBlock[] {
           ]),
         })),
       }));
-    case 8: // Páncélok
+    case 9: // Páncélok
       return [
         {
           title: "Páncélok",

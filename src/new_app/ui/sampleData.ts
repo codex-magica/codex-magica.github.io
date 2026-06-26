@@ -92,7 +92,7 @@ export const equipment = [
 // Compendium reference (skills catalog).
 export const compNames = [
   "Képzettségek", "Bárdmágia", "Szakrális Mágia", "Boszorkánymágia",
-  "Boszorkánymesteri mágia", "Tűzmágia", "Pszi", "Fegyverek", "Páncélok",
+  "Boszorkánymesteri mágia", "Tűzmágia", "Pszi", "Magasmágia", "Fegyverek", "Páncélok",
 ];
 
 export const refSkillGroups = [

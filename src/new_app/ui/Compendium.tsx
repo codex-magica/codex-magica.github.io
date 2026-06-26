@@ -112,7 +112,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onOpenModal }) => {
           </Box>
         ) : (
           <Box display="flex" flexDirection="column" gap="22px">
-            {blocks.map((b) => renderBlock(b, compTab === 7))}
+            {blocks.map((b) => renderBlock(b, compTab === 8))}
           </Box>
         )}
       </Box>
