@@ -197,6 +197,30 @@ export function tabBlocks(tab: number): TableBlock[] {
 const PCT_SKILLS = new Set(SKILLS.filter((s) => s.cost === "percentage").map((s) => s.name));
 const skillByName = new Map(SkillValues.map((s) => [s.name as string, s]));
 
+const skillModel = new Map(SKILLS.map((s) => [s.name as string, s]));
+// the compendium skill modal's sub-line — "(difficulty – attrs)" — reused by the character sheet
+export function skillModalSub(name: string): string {
+  const s = skillModel.get(name);
+  if (!s) return "";
+  const diff = s.cost === "percentage" ? "%" : s.difficulty;
+  return `(${diff} – ${s.attrs.join(", ") || "–"})`;
+}
+
+// Every spell row (tabs 1–7) indexed by name → the SAME modalSub + body the compendium renders, so
+// the character sheet can open an identical modal just from a spell name.
+const spellIndex = (() => {
+  const m = new Map<string, { sub: string; body: string[] }>();
+  for (const tab of [1, 2, 3, 4, 5, 6, 7]) {
+    for (const block of tabBlocks(tab)) {
+      for (const r of block.rows) if (!m.has(r.name)) m.set(r.name, { sub: r.modalSub || "", body: r.body || [] });
+    }
+  }
+  return m;
+})();
+export function spellModalByName(name: string): { sub: string; body: string[] } | null {
+  return spellIndex.get(name) || null;
+}
+
 export function skillModalBody(name: string): string[] {
   const s = skillByName.get(name);
   if (!s) return ["A képzettség részletes leírása a kompendiumban hamarosan elérhető."];

@@ -540,7 +540,7 @@ export const CLASSES: Record<string, ClassDef> = {
       restrict("Merev fémpáncél sosem viselhető."),
     ],
     baseSkills: [
-      gs("Pszi", 3, "Slan út"),
+      gs("Pszi", 3, "slan"),
       gs("Írás/olvasás", 1),
       gs("Orvoslás", 2),
       gs("Élettan", 2),
@@ -649,7 +649,7 @@ export const CLASSES: Record<string, ClassDef> = {
         opt("Dreina-paplovag (Oroszlánszív)", [gs("Számtan/Mértan", 2), gs("Szakma", 2, "birtokigazgatás"), gs("Jog/Törvénykezés", 2), gs("Politika/diplomácia", 2), equip("Acél teljesvértezet, sisak, acélpajzs, lovagkard")]),
         opt("Krad-paplovag (Aranykör lovag)", [gs("Írás/olvasás", 3), gs("Történelem", 3), gs("Térképészet", 2), gs("Legendaismeret", 2), gs("Számtan/Mértan", 2), equip("Acél félvértezet, sisak, acélpajzs, hosszúkard")]),
         opt("Ranagol-paplovag", [gs("Fegyverhasználat", 2, "nyeles fegyverek"), gs("Élettan", 2), gs("Kínzás", 2), gs("Orvtámadás", 2), gs("Méregkeverés/semlegesítés", 2), equip("Acél félvértezet, acélpajzs, lovagkard, nehézlovas kopja")]),
-        opt("Sogron-paplovag", [gs("Tapasztalati mágia", 2, "tűzvarázsló"), gs("Taktika", 2), gs("Hadvezetés", 2), equip("Lángkard + acél pikkelyvértezet + kobra sisak"), restrict("Tűzmágia Kegy pontból; 3. fok fegyver: lángkard.")]),
+        opt("Sogron-paplovag", [gs("Tapasztalati mágia", 2, "tűzmágia"), gs("Taktika", 2), gs("Hadvezetés", 2), equip("Lángkard + acél pikkelyvértezet + kobra sisak"), restrict("Tűzmágia Kegy pontból; 3. fok fegyver: lángkard.")]),
         opt("Uwel-paplovag", [gs("Térképészet", 2), gs("Jog/Törvénykezés", 2), gs("Pusztítás", 2), gs("Számtan/Mértan", 2), gs("Élettan", 2), equip("Acél félvértezet + sisak")]),
       ]),
     ],
@@ -783,7 +783,7 @@ export const CLASSES: Record<string, ClassDef> = {
       restrict("Fegyver: egykezes kard / tőr; Ordani szabályok."),
     ],
     baseSkills: [
-      gs("Tapasztalati mágia", 3, "tűz"),
+      gs("Tapasztalati mágia", 3, "tűzmágia"),
       gs("Őselemi mágia", 2, "tűz"),
       gs("Fegyverhasználat", 2, "egykezes kardok"),
       gs("Fegyverhasználat", 2, "tőr jellegű fegyverek"),
@@ -828,7 +828,7 @@ export const CLASSES: Record<string, ClassDef> = {
     ],
     choices: [
       choice("iskola", "Iskola", "additive", [
-        opt("Lar-Dor", [gs("Pszi", 3, "Godoni Örökség"), restrict("Belsőszigeti/Északi: Pszi (kyr) helyett Pszi (Godoni Örökség) 3; Nekromancia/Démonológia max 2. fok.")]),
+        opt("Lar-Dor", [gs("Pszi", 3, "godoni"), restrict("Belsőszigeti/Északi: Pszi (kyr) helyett Pszi (Godoni Örökség) 3; Nekromancia/Démonológia max 2. fok.")]),
         opt("Pyarroni Varázslórend", [bg("Manalátó", 3), restrict("3. Tsz+ rend; varázslóbot (E = Tsz/3); tiszta asztráltest.")]),
         opt("Doran", [gs("Magasmágia", 3, "Tér-/Idő-/Idézőmágia"), equip("Élő varázslóbot (1. Tsz)"), restrict("Nekromancia/Démonidézés engedett; bot saját Pszi/Mp-vel.")]),
       ]),

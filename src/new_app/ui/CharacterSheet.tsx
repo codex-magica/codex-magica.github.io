@@ -12,8 +12,8 @@ interface Props {
   record: CharacterRecord;
   derived: DerivedCharacter;
   onSetVital: (key: VitalKey, value: number) => void;
-  onOpenSkill: (name: string, level: number) => void;
-  onOpenSpell: (name: string, school: string, mana: number, time: string) => void;
+  onOpenSkill: (name: string, fok: number, percent?: number | null) => void;
+  onOpenSpell: (name: string) => void;
   onOpenWeapon: (w: WeaponModalState) => void;
 }
 
@@ -34,6 +34,8 @@ const VITAL_META: { key: VitalKey; label: string; kind: string }[] = [
 ];
 const CATEGORIES: SkillCategory[] = ["Harci", "Alvilági", "Világi", "Tudományos", "Szociális", "Misztikus"];
 const POOL_UNIT: Record<string, string> = { Mana: "Mp", Psi: "Ψp", Kegy: "Kp" };
+// one sheet panel per spell list the character has unlocked, in this order
+const SCHOOL_ORDER = ["Bárdmágia", "Tűzmágia", "Boszorkánymágia", "Boszorkánymesteri", "Magasmágia", "Pszi", "Szakrális"];
 
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => <ParchPanel flex="0 0 auto">{children}</ParchPanel>;
 const SecHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -145,26 +147,23 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
     key: m.key, label: m.label, kind: m.kind, cur: derived.vitals[m.key].current, max: derived.vitals[m.key].max,
   }));
 
-  const derivedRows = [
-    { k: "Életpont (Ép)", v: derived.derived.Ép },
-    { k: "Fájdalom (Fp)", v: derived.derived.Fp },
-    { k: "Mozgás", v: derived.derived.Mozgás },
-    { k: "Sebzésbónusz", v: derived.derived.Sebzésbónusz },
+  const combatRows: { k: string; v: React.ReactNode }[] = [
+    ...(["KÉ", "TÉ", "VÉ", "CÉ"] as const).map((c) => ({ k: c as string, v: derived.combat[c] as React.ReactNode })),
     { k: "MME", v: derived.derived.MME },
     { k: "AME", v: derived.derived.AME },
+    ...(derived.derived.Sebzésbónusz > 0 ? [{ k: "Sebzésbónusz", v: `+${derived.derived.Sebzésbónusz}` }] : []),
   ];
-  const combatRows = (["KÉ", "TÉ", "VÉ", "CÉ"] as const).map((c) => ({ k: c, v: derived.combat[c] }));
 
   const skillGroups = CATEGORIES.map((cat) => ({
     name: cat,
     items: derived.skills
       .filter((s) => SKILL_BY_NAME[s.skill]?.category === cat)
-      .map((s) => ({ key: s.skill + (s.subtype || ""), name: s.subtype ? `${s.skill} (${s.subtype})` : s.skill, val: s.percent != null ? `${s.percent}%` : `${s.fok}`, open: () => onOpenSkill(s.skill, s.fok) })),
+      .map((s) => ({ key: s.skill + (s.subtype || ""), name: s.subtype ? `${s.skill} (${s.subtype})` : s.skill, val: s.percent != null ? `${s.percent}%` : `${s.fok}`, open: () => onOpenSkill(s.skill, s.fok, s.percent) })),
   })).filter((g) => g.items.length > 0);
 
   const known = derived.spells.filter((sp) => sp.known);
-  const spellGroups = (["Mana", "Psi", "Kegy"] as const)
-    .map((pool) => ({ name: pool === "Psi" ? "Pszi" : pool, pool, items: known.filter((sp) => sp.pool === pool) }))
+  const spellSchools = SCHOOL_ORDER
+    .map((school) => ({ school, items: known.filter((sp) => sp.school === school) }))
     .filter((g) => g.items.length > 0);
 
   return (
@@ -183,26 +182,16 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         </Card>
 
         <VitalsCard rows={vitalRows} onSetVital={onSetVital} />
+      </Col>
 
+      {/* Column 2 */}
+      <Col>
         <Card>
           <SecHead>Tulajdonságok</SecHead>
           {STAT_KEYS.map((s) => (
             <Box key={s} {...rowProps} justifyContent="space-between" gap="14px">
               <Text color="fg" fontSize={FS}>{s}</Text>
               <ValNum>{derived.effectiveStats[s]}</ValNum>
-            </Box>
-          ))}
-        </Card>
-      </Col>
-
-      {/* Column 2 */}
-      <Col>
-        <Card>
-          <SecHead>Származtatott értékek</SecHead>
-          {derivedRows.map((d) => (
-            <Box key={d.k} {...rowProps} justifyContent="space-between" gap="14px">
-              <Text color="muted" fontSize={FS}>{d.k}</Text>
-              <ValNum>{d.v}</ValNum>
             </Box>
           ))}
         </Card>
@@ -246,25 +235,20 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         </Card>
       </Col>
 
-      {/* Column 4 — Spells */}
-      {spellGroups.length > 0 && (
-        <Col>
+      {/* Spell lists — one panel per unlocked school, side by side (scroll horizontally) */}
+      {spellSchools.map((g) => (
+        <Col key={g.school}>
           <Card>
-            <SecHead>Varázslatok</SecHead>
-            {spellGroups.map((g) => (
-              <Box key={g.pool}>
-                <SubHead>{g.name}</SubHead>
-                {g.items.map((sp) => (
-                  <Box as="button" type="button" key={sp.name} onClick={() => onOpenSpell(sp.name, g.name, sp.cost, "—")} display="flex" alignItems="baseline" w="100%" textAlign="left" gap="10px" py={ROWPY} px="5px" mx="-5px" borderRadius="5px" _hover={{ bg: "accentSoft" }}>
-                    <Text flex="1 1 auto" color="fg" fontSize={FS} lineHeight="1.25">{sp.name}</Text>
-                    <Text flexShrink={0} fontWeight={600} color="accentTx" fontSize={FS_NAME} sx={{ fontVariantNumeric: "tabular-nums" }}>{sp.cost} {POOL_UNIT[g.pool]}</Text>
-                  </Box>
-                ))}
+            <SecHead>{g.school}</SecHead>
+            {g.items.map((sp, i) => (
+              <Box as="button" type="button" key={sp.name + i} onClick={() => onOpenSpell(sp.name)} display="flex" alignItems="baseline" w="100%" textAlign="left" gap="10px" py={ROWPY} px="5px" mx="-5px" borderRadius="5px" _hover={{ bg: "accentSoft" }}>
+                <Text flex="1 1 auto" color="fg" fontSize={FS} lineHeight="1.25">{sp.name}</Text>
+                <Text flexShrink={0} fontWeight={600} color="accentTx" fontSize={FS_NAME} sx={{ fontVariantNumeric: "tabular-nums" }}>{sp.cost > 0 ? `${sp.cost} ${POOL_UNIT[sp.pool]}` : "—"}</Text>
               </Box>
             ))}
           </Card>
         </Col>
-      )}
+      ))}
 
       {/* Column 5 — Inventory */}
       <Col>

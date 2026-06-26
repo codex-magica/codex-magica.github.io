@@ -234,6 +234,17 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     return m;
   };
 
+  // Subtype-aware fok lookup for spell gating: when a spell requires a specific subtype
+  // (e.g. Tapasztalati mágia "bárd"), only the matching instance counts.
+  const fokFor = (skill: string, subtype?: string): number => {
+    let m = 0;
+    Object.keys(owned).forEach((k) => {
+      const o = owned[k];
+      if (o.skill === skill && (subtype == null || o.subtype === subtype) && o.fok > m) m = o.fok;
+    });
+    return m;
+  };
+
   // ── 4. Per-level fold ──────────────────────────────────────────────────────
   let maxGrantLevel = 1;
   perLevelEffects.forEach((p) => (maxGrantLevel = Math.max(maxGrantLevel, p.level)));
@@ -415,9 +426,13 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   skills.sort((a, b) => a.skill.localeCompare(b.skill, "hu"));
 
   const spells = db.spells.map((sp) => {
-    const known = maxFok(sp.requires.skill) >= sp.requires.fok;
+    // Pool existence is the background proxy: a list is castable only if its pool (Mana/Pszi/Kegy)
+    // exists — itself gated by Mágikus fogékonyság / Pszi érzékenység / Kegyelt háttér.
+    const hasPool = vitals[sp.pool].max > 0;
+    // ALL requirements must hold (e.g. Magasmágia 3 AND the category's governing skill 3).
+    const known = hasPool && sp.requires.every((req) => fokFor(req.skill, req.subtype) >= req.fok);
     const cur = vitals[sp.pool].current;
-    return { name: sp.name, pool: sp.pool, cost: sp.cost, known, castableNow: known && cur >= sp.cost };
+    return { name: sp.name, school: sp.school, pool: sp.pool, cost: sp.cost, known, castableNow: known && cur >= sp.cost };
   });
 
   // Skills owned purely from grants (the level-up floor) + the teacher level available per skill.

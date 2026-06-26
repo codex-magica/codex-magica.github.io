@@ -7,14 +7,13 @@ export interface ModalState {
   name: string;
   sub?: string;
   levelStrip?: string; // character-aware strip ("A te fokod: 3. fok" / "Mana: 2 Mp · …")
+  currentFok?: number; // character's current fok — foks above it are greyed out
   body: string[];
-  compLink?: boolean; // show the quiet "Teljes leírás a kompendiumban →" escalation
 }
 
 interface Props {
   modal: ModalState | null;
   onClose: () => void;
-  onOpenComp: () => void;
 }
 
 // Description paragraphs carry inline kind-tokens from the source data:
@@ -73,7 +72,8 @@ const TableBlock: React.FC<{ raw: string }> = ({ raw }) => {
 };
 
 // One description block — dispatches on the leading kind-token (table / small) or renders prose.
-const BodyPart: React.FC<{ text: string }> = ({ text }) => {
+// `currentFok`: when set, "N. fok" paragraphs above it are greyed (the character hasn't reached them).
+const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text, currentFok }) => {
   if (isTable(text)) return <TableBlock raw={text} />;
   if (/^small:/i.test(text)) {
     return (
@@ -82,25 +82,26 @@ const BodyPart: React.FC<{ text: string }> = ({ text }) => {
       </Text>
     );
   }
-  // bold the "N. fok" lead in skill descriptions
-  const fok = text.match(/^(\d+\.\s*fok\b)([\s\S]*)$/);
+  // bold the "N. fok" lead in skill descriptions; grey foks the character hasn't reached
+  const fok = text.match(/^(\d+)\.\s*fok\b([\s\S]*)$/);
+  if (fok) {
+    const reached = currentFok == null || parseInt(fok[1], 10) <= currentFok;
+    return (
+      <Text mb="13px" fontSize={{ base: "17px", md: "15.5px" }} lineHeight="1.6" color={reached ? "fg" : "fgFaint"} opacity={reached ? 1 : 0.55} textAlign="justify">
+        <Box as="span" fontWeight={700}>{fok[1]}. fok</Box>
+        {fok[2]}
+      </Text>
+    );
+  }
   return (
     <Text mb="13px" fontSize={{ base: "17px", md: "15.5px" }} lineHeight="1.6" color="fg" textAlign="justify">
-      {fok ? (
-        <>
-          <Box as="span" fontWeight={700}>{fok[1]}</Box>
-          {fok[2]}
-        </>
-      ) : (
-        text
-      )}
+      {text}
     </Text>
   );
 };
 
-// A single reusable overlay that opens OVER the current screen and closes back to it — it never
-// navigates. The compLink is the only opt-in escalation to the Kompendium zone.
-export const DetailModal: React.FC<Props> = ({ modal, onClose, onOpenComp }) => {
+// A single reusable overlay that opens OVER the current screen and closes back to it — it never navigates.
+export const DetailModal: React.FC<Props> = ({ modal, onClose }) => {
   if (!modal) return null;
   return (
     <Box
@@ -157,13 +158,8 @@ export const DetailModal: React.FC<Props> = ({ modal, onClose, onOpenComp }) => 
         </Box>
         <Box flex="1 1 auto" overflowY="auto" px="28px" pt="20px" pb="26px">
           {modal.body.map((p, i) => (
-            <BodyPart key={i} text={p} />
+            <BodyPart key={i} text={p} currentFok={modal.currentFok} />
           ))}
-          {modal.compLink && (
-            <Box as="button" type="button" onClick={onOpenComp} mt="4px" color="accentTx" fontFamily="system-ui" fontSize="13px" fontWeight={700}>
-              Teljes leírás a kompendiumban →
-            </Box>
-          )}
         </Box>
       </ParchPanel>
     </Box>

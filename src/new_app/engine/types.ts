@@ -27,6 +27,7 @@ export interface OwnedSkill {
 
 export interface SpellView {
   name: string;
+  school: string;
   pool: Pool;
   cost: number;
   known: boolean;

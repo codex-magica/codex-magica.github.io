@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Heading, HStack, Input, Text } from "@chakra-ui/react";
+import { Box, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
 import { CharacterRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { SKILLS, SKILL_BY_NAME } from "../model/skills";
@@ -97,6 +97,32 @@ export const SkillLevelPanel: React.FC<Props> = ({
       _focus={{ borderColor: "accent", boxShadow: "0 0 0 2px var(--chakra-colors-accentSoft)" }}
     />
   );
+
+  // Subtype editor: a closed dropdown when the skill declares a fixed `subtypes` set, else free text.
+  const subtypeControl = (skill: string, value: string, setValue: (v: string) => void) => {
+    const opts = SKILL_BY_NAME[skill]?.subtypes;
+    if (opts && opts.length) {
+      return (
+        <Select
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="altípus…"
+          w={SUBW}
+          flexShrink={0}
+          size="sm"
+          bg="fieldBg"
+          borderColor="fieldBd"
+          borderRadius="7px"
+          color="fg"
+          fontSize="13.5px"
+          focusBorderColor="accent"
+        >
+          {opts.map((o) => <option key={o} value={o}>{o}</option>)}
+        </Select>
+      );
+    }
+    return subtypeInput(value, (e) => setValue(e.target.value), "altípus");
+  };
 
   // Branch a skill (add a specialized variant) — the splitting-arrows icon from the design.
   const agButton = (name: string) => (
@@ -221,7 +247,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       // Show the editable subtype whenever this instance was originally subtyped (origSubtype set),
       // even if the player cleared the text — otherwise a granted branch can't be renamed back.
       inst.subtype || inst.origSubtype
-        ? subtypeInput(inst.subtype || "", (e) => onOverride(keyOf(inst.skill, inst.origSubtype), e.target.value), "altípus")
+        ? subtypeControl(inst.skill, inst.subtype || "", (v) => onOverride(keyOf(inst.skill, inst.origSubtype), v))
         : null,
       floor > 0 ? <KapottBadge /> : null,
       <Stepper
@@ -252,7 +278,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       p.id!,
       isPrimary,
       left,
-      subtypeInput(p.subtype || "", (e) => onPatchVariant(level, p.id!, { subtype: e.target.value }), "altípus"),
+      subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v })),
       null,
       <Stepper
         value={isPct ? `${p.to}%` : `${p.to}.`}

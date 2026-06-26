@@ -19,6 +19,7 @@ export interface SkillDef {
   hardReq: SkillRef[]; // strong prereq — must be owned at >= target fok
   softReq: SkillRef[]; // weak prereq   — must be owned at >= target fok − 1
   perFokEffects?: Partial<Record<SkillFok, Effect[]>>;
+  subtypes?: string[]; // closed set of allowed subtypes (a dropdown in the editor); else free text
 }
 
 // Default cumulative cost curves by difficulty (book ch.16). Used unless a skill overrides.
@@ -42,6 +43,7 @@ type Raw = {
   hard?: string[];
   soft?: string[];
   perFok?: Partial<Record<SkillFok, Effect[]>>;
+  subtypes?: string[];
 };
 
 const ref = (s: string): SkillRef => ({ skill: s });
@@ -55,6 +57,7 @@ const build = (r: Raw): SkillDef => ({
   hardReq: (r.hard ?? []).map(ref),
   softReq: (r.soft ?? []).map(ref),
   perFokEffects: r.perFok,
+  subtypes: r.subtypes,
 });
 
 const RAW: Raw[] = [
@@ -145,6 +148,8 @@ const RAW: Raw[] = [
   { name: "Történelem", cat: "Tudományos", diff: "II", attrs: ["Int"], soft: ["Írás/olvasás"] },
   {
     name: "Vallásismeret", cat: "Tudományos", diff: "II", attrs: ["Int", "Aszt"], hard: ["Kultúra"],
+    // Subtype = the deity; a priest's Vallásismeret(deity) opens that god's szakrális prayers.
+    subtypes: ["Arel", "Darton", "Domvik", "Dreina", "Krad", "Kyel", "Ranagol", "Sogron", "Tharr", "Uwel"],
     // Fok 3+ grants Kegy per level (needs the Kegyelt pool), plus per-level TME from faith.
     perFok: {
       3: [
@@ -191,10 +196,12 @@ const RAW: Raw[] = [
   },
   { name: "Nekromancia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Élettan"] },
   { name: "Őselemi mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
-  { name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"] },
+  { name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], subtypes: ["pyarroni", "kyr", "godoni", "slan"] },
   { name: "Rúnamágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
   {
     name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"],
+    // Empirical magic — one skill, one tradition per subtype. Each (at fok 3) unlocks its whole list.
+    subtypes: ["bárd", "tűzmágia", "boszorkány", "boszorkánymester"],
     // The empirical-magic skill grants Mana per level from fok 3 (the casting threshold).
     perFok: {
       3: [{ kind: "resourcePerLevel", resource: "Mana", amount: 1 }],

@@ -5,7 +5,8 @@ import { CharacterSheet } from "./CharacterSheet";
 import { Compendium } from "./Compendium";
 import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
-import { compNames, skillBody, spellBody } from "./sampleData";
+import { compNames } from "./sampleData";
+import { skillModalBody, skillModalSub, spellModalByName } from "./compendiumData";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
@@ -56,10 +57,18 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   const isSheet = view === "sheet";
   const goComp = (tab?: number) => { setView("compendium"); if (tab != null) setCompTab(tab); setModal(null); };
 
-  const openSkillModal = (name: string, sub: string, level: number) =>
-    setModal({ kind: "skill", name, sub, levelStrip: level > 0 ? `A te fokod: ${level}. fok` : undefined, body: skillBody(name), compLink: level > 0 });
-  const openSpellModal = (name: string, school: string, mana: number | null, time: string) =>
-    setModal({ kind: "spell", name, sub: `Bárdmágia · ${school}`, levelStrip: mana != null ? `Mana: ${mana} Mp · Időigény: ${time}` : undefined, body: spellBody(name), compLink: mana != null });
+  // Same modal content the compendium shows, plus a character-aware strip and (for fok skills) the
+  // current fok so the modal greys out the levels the character hasn't reached yet.
+  const openSkillModal = (name: string, fok: number, percent?: number | null) =>
+    setModal({
+      kind: "skill", name, sub: skillModalSub(name), body: skillModalBody(name),
+      levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
+      currentFok: percent == null && fok > 0 ? fok : undefined,
+    });
+  const openSpellModal = (name: string) => {
+    const sp = spellModalByName(name);
+    setModal({ kind: "spell", name, sub: sp?.sub, body: sp?.body || [] });
+  };
 
   const darkToggle = (
     <IconButton aria-label="Sötét mód váltása" size="sm" variant="ghost" color="muted" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
@@ -106,8 +115,8 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           record={record}
           derived={derived}
           onSetVital={setVital}
-          onOpenSkill={(name, level) => openSkillModal(name, "", level)}
-          onOpenSpell={(name, school, mana, time) => openSpellModal(name, school, mana, time)}
+          onOpenSkill={(name, fok, percent) => openSkillModal(name, fok, percent)}
+          onOpenSpell={(name) => openSpellModal(name)}
           onOpenWeapon={setWeaponModal}
         />
       ) : (
@@ -115,7 +124,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
       )}
 
       {/* Detail modal — peek that never navigates */}
-      <DetailModal modal={modal} onClose={() => setModal(null)} onOpenComp={() => { goComp(modal?.kind === "spell" ? 1 : 0); }} />
+      <DetailModal modal={modal} onClose={() => setModal(null)} />
 
       {/* Weapon attack calculator (key forces a fresh state per weapon) */}
       {weaponModal && <WeaponModal key={`${weaponModal.kind}:${weaponModal.name}`} weapon={weaponModal} onClose={() => setWeaponModal(null)} />}
