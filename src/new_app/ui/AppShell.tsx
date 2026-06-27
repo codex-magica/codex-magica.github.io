@@ -53,6 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   const subLine = `${record.name} · ${record.race} ${record.class} · ${record.levels.length}. szint`;
   const setVital = (key: VitalKey, value: number) =>
     onPatchRecord({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
+  const setInventoryText = (text: string) => onPatchRecord({ ...record, inventoryText: text });
 
   const isSheet = view === "sheet";
   const goComp = (tab?: number) => { setView("compendium"); if (tab != null) setCompTab(tab); setModal(null); };
@@ -115,6 +116,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           record={record}
           derived={derived}
           onSetVital={setVital}
+          onSetInventory={setInventoryText}
           onOpenSkill={(name, fok, percent) => openSkillModal(name, fok, percent)}
           onOpenSpell={(name) => openSpellModal(name)}
           onOpenWeapon={setWeaponModal}

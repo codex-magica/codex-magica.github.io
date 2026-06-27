@@ -115,6 +115,7 @@ export interface CharacterRecord {
 
   // ── play-state (separate from the ledger; mutated at the table, not when spending points) ──
   inventory: InventoryItem[];
+  inventoryText?: string; // free-text equipment list (one item per line; lines starting with a number = qty)
   vitalsState: Partial<Record<VitalKey, number>>; // current Ép/Fp/Mana/Psi/Kegy
   conditions?: CharacterCondition[]; // active status effects
 }
