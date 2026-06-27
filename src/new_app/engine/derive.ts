@@ -409,6 +409,13 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     if (poolExists[p]) magic[p] = { max: poolMax[p] };
   });
 
+  // Enumerated-subtype skills (Tapasztalati mágia, Pszi, Vallásismeret…) require a chosen subtype.
+  for (const k of Object.keys(owned)) {
+    const o = owned[k];
+    if ((db.skills[o.skill]?.subtypes?.length ?? 0) > 0 && !o.subtype)
+      diag("warn", `«${o.skill}» — kötelező altípust választani.`);
+  }
+
   const skills: OwnedSkill[] = Object.keys(owned).map((k) => {
     const o = owned[k];
     const def = db.skills[o.skill];
@@ -432,7 +439,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     // ALL requirements must hold (e.g. Magasmágia 3 AND the category's governing skill 3).
     const known = hasPool && sp.requires.every((req) => fokFor(req.skill, req.subtype) >= req.fok);
     const cur = vitals[sp.pool].current;
-    return { name: sp.name, school: sp.school, pool: sp.pool, cost: sp.cost, known, castableNow: known && cur >= sp.cost };
+    return { name: sp.name, school: sp.school, category: sp.category, pool: sp.pool, cost: sp.cost, castingTime: sp.castingTime, known, castableNow: known && cur >= sp.cost };
   });
 
   // Skills owned purely from grants (the level-up floor) + the teacher level available per skill.

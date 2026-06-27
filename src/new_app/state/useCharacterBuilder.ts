@@ -24,6 +24,7 @@ export interface CharacterBuilderApi {
   patchPurchaseById: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => void;
   removePurchaseById: (level: number, id: string) => void;
   setSubtypeOverride: (originalKey: string, value: string) => void;
+  setLearnedSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
   setResourceAllocation: (level: number, target: Resource, points: number) => void;
   setHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
@@ -122,6 +123,20 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
   };
   const setSubtypeOverride = (originalKey: string, value: string) =>
     setRecord({ ...record, subtypeOverrides: { ...record.subtypeOverrides, [originalKey]: value } });
+  // Specialise a GENERAL (origSubtype-undefined) primary in place: set both the grant override (keyed by
+  // the bare skill name, where a general grant looks it up) AND any matching learned primary purchase, in
+  // ONE update — so a granted + leveled-up skill collapses to a single key instead of splitting in two.
+  const setLearnedSubtype = (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => {
+    const levels = record.levels.map((l) =>
+      l.level !== level
+        ? l
+        : { ...l, skillPurchases: l.skillPurchases.map((p) => (!p.id && sameSkill(p, skill, oldSubtype) ? { ...p, subtype: newSubtype || undefined } : p)) }
+    );
+    const subtypeOverrides = { ...record.subtypeOverrides };
+    if (newSubtype) subtypeOverrides[skill] = newSubtype;
+    else delete subtypeOverrides[skill]; // unspecialise → drop the override so a general grant reverts cleanly
+    setRecord({ ...record, subtypeOverrides, levels });
+  };
 
   // Generic KAP allocation (Mana / Psi / Kegy / Fp …). HM and Kp have their own dedicated setters.
   const setResourceAllocation = (level: number, target: Resource, points: number) => {
@@ -168,6 +183,7 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
     patchPurchaseById,
     removePurchaseById,
     setSubtypeOverride,
+    setLearnedSubtype,
     setResourceAllocation,
     setHmChannel,
     setStatBuy,

@@ -45,6 +45,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
     patchPurchaseById,
     removePurchaseById,
     setSubtypeOverride,
+    setLearnedSubtype,
     setResourceAllocation,
     setHmChannel,
     setStatBuy,
@@ -171,6 +172,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
             onPatchVariant={patchPurchaseById}
             onRemoveVariant={removePurchaseById}
             onOverride={setSubtypeOverride}
+            onSetSubtype={setLearnedSubtype}
           />
         </ParchPanel>
 

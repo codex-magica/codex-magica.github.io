@@ -25,8 +25,10 @@ export type SpellReq = { skill: string; subtype?: string; fok: SkillFok };
 export interface SpellDef {
   name: string;
   school: string; // the spell list it belongs to → one panel per school on the sheet
+  category: string; // subcategory within the school (e.g. Dalmágia) → a subhead group on the sheet
   pool: Pool;
   cost: number;
+  castingTime: string; // Időigény column
   requires: SpellReq[]; // ALL must be satisfied (AND), e.g. Magasmágia 3 AND the governing skill 3
 }
 
@@ -37,8 +39,12 @@ const num = (c: unknown): number => {
 };
 const clampFok = (n: number): SkillFok => Math.min(5, Math.max(1, n)) as SkillFok;
 
-const build = (values: any[], school: string, pool: Pool, req: (s: any) => SpellReq[]): SpellDef[] =>
-  values.map((s) => ({ name: s.name as string, school, pool, cost: num(s.cost), requires: req(s) }));
+const ct = (s: any): string => {
+  const v = String(s.castingTime ?? "").trim();
+  return v || "—";
+};
+const build = (values: any[], school: string, pool: Pool, req: (s: any) => SpellReq[], cat: (s: any) => string = (s) => s.type || "—"): SpellDef[] =>
+  values.map((s) => ({ name: s.name as string, school, category: cat(s) || "—", pool, cost: num(s.cost), castingTime: ct(s), requires: req(s) }));
 
 // ── A. Tapasztalati mágia — one subtype per tradition; the whole list casts at fok 3 ──
 const tap = (subtype: string): SpellReq[] => [{ skill: "Tapasztalati mágia", subtype, fok: 3 }];
@@ -99,6 +105,6 @@ const prayerReq = (s: any): SpellReq[] => {
   if (src === "Nagy Arkánum") return [{ skill: "Vallásismeret", fok: 5 }];
   return [{ skill: "Vallásismeret", fok: 3 }]; // Általános, Kis Arkánum
 };
-const prayers = build(PrayerValues, "Szakrális", "Kegy", prayerReq);
+const prayers = build(PrayerValues, "Szakrális", "Kegy", prayerReq, (s) => s.source || "—");
 
 export const SPELLS: SpellDef[] = [...bard, ...fire, ...witch, ...warlock, ...psi, ...magas, ...prayers];

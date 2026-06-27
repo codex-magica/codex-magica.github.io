@@ -28,8 +28,10 @@ export interface OwnedSkill {
 export interface SpellView {
   name: string;
   school: string;
+  category: string;
   pool: Pool;
   cost: number;
+  castingTime: string;
   known: boolean;
   castableNow: boolean;
 }

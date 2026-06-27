@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Box, Heading, HStack, Text } from "@chakra-ui/react";
+import { TimeIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "./ParchPanel";
 import { WeaponModalState } from "./WeaponModal";
 import { CharacterRecord, VitalKey } from "../model/character";
@@ -44,6 +45,23 @@ const SecHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const SubHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Box fontSize={FS_SUB} fontWeight={700} color="muted" letterSpacing=".02em" pb="3px" mt="13px" mb="3px" borderBottom="1px solid" borderColor="hair">{children}</Box>
 );
+// spell table: name (takes the slack) | Mana(/Ψp/Kp) | Időigény (clock) — the two value columns are
+// narrow, fixed-width and tucked tightly together at the right, with their headers + values centred.
+const SPELL_COLS = "minmax(0,1fr) 32px 46px";
+const SPELL_GAP = "5px";
+// Compact the Időigény for the narrow clock column: szegmens → sz, perc → p, and collapse anything
+// still long (e.g. "Lásd a leírást!", "Rajzolás hossza", ranges) to "…" — full text stays in the modal.
+const shortTime = (raw: string): string => {
+  const t = (raw || "").trim();
+  if (!t || t === "—") return "—";
+  const c = t
+    .replace(/szegmens/gi, "sz")
+    .replace(/perc/gi, "p")
+    .replace(/(\d)\s*sz\b/gi, "$1 sz")
+    .replace(/\s+/g, " ")
+    .trim();
+  return c.length > 7 ? "…" : c;
+};
 const ValNum: React.FC<{ children: React.ReactNode } & Record<string, unknown>> = ({ children, ...rest }) => (
   <Text fontWeight={600} color="fg" fontSize={FS_NAME} flexShrink={0} sx={{ fontVariantNumeric: "tabular-nums" }} {...rest}>{children}</Text>
 );
@@ -161,7 +179,9 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
       .map((s) => ({ key: s.skill + (s.subtype || ""), name: s.subtype ? `${s.skill} (${s.subtype})` : s.skill, val: s.percent != null ? `${s.percent}%` : `${s.fok}`, open: () => onOpenSkill(s.skill, s.fok, s.percent) })),
   })).filter((g) => g.items.length > 0);
 
-  const known = derived.spells.filter((sp) => sp.known);
+  // always drop spells whose cost exceeds the character's MAX pool (never affordable).
+  // cost 0 = variable/"Lásd a leírást!" → always kept.
+  const known = derived.spells.filter((sp) => sp.known && (sp.cost === 0 || sp.cost <= derived.vitals[sp.pool].max));
   const spellSchools = SCHOOL_ORDER
     .map((school) => ({ school, items: known.filter((sp) => sp.school === school) }))
     .filter((g) => g.items.length > 0);
@@ -235,20 +255,35 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         </Card>
       </Col>
 
-      {/* Spell lists — one panel per unlocked school, side by side (scroll horizontally) */}
-      {spellSchools.map((g) => (
-        <Col key={g.school}>
-          <Card>
-            <SecHead>{g.school}</SecHead>
-            {g.items.map((sp, i) => (
-              <Box as="button" type="button" key={sp.name + i} onClick={() => onOpenSpell(sp.name)} display="flex" alignItems="baseline" w="100%" textAlign="left" gap="10px" py={ROWPY} px="5px" mx="-5px" borderRadius="5px" _hover={{ bg: "accentSoft" }}>
-                <Text flex="1 1 auto" color="fg" fontSize={FS} lineHeight="1.25">{sp.name}</Text>
-                <Text flexShrink={0} fontWeight={600} color="accentTx" fontSize={FS_NAME} sx={{ fontVariantNumeric: "tabular-nums" }}>{sp.cost > 0 ? `${sp.cost} ${POOL_UNIT[sp.pool]}` : "—"}</Text>
-              </Box>
-            ))}
-          </Card>
-        </Col>
-      ))}
+      {/* Spell lists — one panel per unlocked school, grouped into subcategories, side by side */}
+      {spellSchools.map((g) => {
+        const unit = POOL_UNIT[g.items[0].pool];
+        const cats = Array.from(new Set(g.items.map((s) => s.category))); // subcategories, in book order
+        return (
+          <Col key={g.school}>
+            <Card>
+              <SecHead>{g.school}</SecHead>
+              {cats.map((cat) => (
+                <Box key={cat}>
+                  {/* subcategory header — column indicators (clock = Időigény, unit = pool) sit inline on the right */}
+                  <Box display="grid" gridTemplateColumns={SPELL_COLS} gap={SPELL_GAP} alignItems="center" pb="3px" mt="13px" mb="3px" borderBottom="1px solid" borderColor="hair">
+                    <Box fontSize={FS_SUB} fontWeight={700} color="muted" letterSpacing=".02em">{cat}</Box>
+                    <Box as="span" justifySelf="center" fontFamily="system-ui" fontSize="11px" fontWeight={700} color="fgFaint" sx={{ fontVariantNumeric: "tabular-nums" }}>{unit}</Box>
+                    <TimeIcon justifySelf="center" boxSize="11px" color="fgFaint" />
+                  </Box>
+                  {g.items.filter((s) => s.category === cat).map((sp, i) => (
+                    <Box as="button" type="button" key={sp.name + i} onClick={() => onOpenSpell(sp.name)} display="grid" gridTemplateColumns={SPELL_COLS} gap={SPELL_GAP} w="100%" textAlign="left" alignItems="baseline" py={ROWPY} borderRadius="5px" _hover={{ bg: "accentSoft" }}>
+                      <Text color="fg" fontSize={FS} lineHeight="1.2" noOfLines={2}>{sp.name}</Text>
+                      <Text textAlign="center" fontWeight={600} color="accentTx" fontSize={FS} sx={{ fontVariantNumeric: "tabular-nums" }}>{sp.cost > 0 ? sp.cost : "—"}</Text>
+                      <Text textAlign="center" color="muted" fontSize="12px" isTruncated title={sp.castingTime} sx={{ fontVariantNumeric: "tabular-nums" }}>{shortTime(sp.castingTime)}</Text>
+                    </Box>
+                  ))}
+                </Box>
+              ))}
+            </Card>
+          </Col>
+        );
+      })}
 
       {/* Column 5 — Inventory */}
       <Col>

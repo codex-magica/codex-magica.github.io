@@ -19,6 +19,7 @@ interface Props {
   onPatchVariant: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => void;
   onRemoveVariant: (level: number, id: string) => void;
   onOverride: (originalKey: string, value: string) => void;
+  onSetSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
 }
 
 const CATEGORIES: SkillCategory[] = ["Harci", "Alvilági", "Világi", "Tudományos", "Szociális", "Misztikus"];
@@ -51,8 +52,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
   onPatchVariant,
   onRemoveVariant,
   onOverride,
+  onSetSubtype,
 }) => {
   const [view, setView] = useState<View>("learned");
+  // Skills whose general (no-subtype) primary the user is currently specialising — reveals its subtype input.
+  const [specializing, setSpecializing] = useState<Set<string>>(new Set());
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
   const lvl = record.levels.find((l) => l.level === level);
   const purchases = lvl?.skillPurchases ?? [];
@@ -68,6 +72,18 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const teacherOf = (skill: string) => derived.teaching[skill] || 0;
   const stepCost = (skill: string, from: number, to: number) =>
     skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill), derived.effectiveStats).kp;
+
+  // Branch button: first press on a still-general skill specialises the EXISTING instance (reveals its
+  // subtype input); only once that instance is specific does a further press add a separate branch.
+  const branchClick = (name: string) => {
+    const primary = ownedInstances.find((s) => s.skill === name);
+    const enumerated = (SKILL_BY_NAME[name]?.subtypes?.length ?? 0) > 0;
+    const general = primary && !primary.subtype && !primary.origSubtype && !enumerated;
+    // First press on a general skill (learned OR granted) specialises the existing instance in place;
+    // only once it's specific does a further press add a separate branch.
+    if (general && !specializing.has(name)) setSpecializing((s) => new Set(s).add(name));
+    else onAddVariant(level, name);
+  };
 
   const skillHasContent = (name: string) =>
     ownedInstances.some((s) => s.skill === name) || variants.some((p) => p.skill === name);
@@ -99,19 +115,23 @@ export const SkillLevelPanel: React.FC<Props> = ({
   );
 
   // Subtype editor: a closed dropdown when the skill declares a fixed `subtypes` set, else free text.
+  // For enumerated skills the subtype is MANDATORY — an empty one is flagged invalid (red).
   const subtypeControl = (skill: string, value: string, setValue: (v: string) => void) => {
     const opts = SKILL_BY_NAME[skill]?.subtypes;
     if (opts && opts.length) {
+      const invalid = !value;
       return (
         <Select
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="altípus…"
+          placeholder="altípus kötelező…"
+          isInvalid={invalid}
+          errorBorderColor="bad"
           w={SUBW}
           flexShrink={0}
           size="sm"
           bg="fieldBg"
-          borderColor="fieldBd"
+          borderColor={invalid ? "bad" : "fieldBd"}
           borderRadius="7px"
           color="fg"
           fontSize="13.5px"
@@ -140,7 +160,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       borderRadius="6px"
       flexShrink={0}
       _hover={{ bg: "accentSoft" }}
-      onClick={() => onAddVariant(level, name)}
+      onClick={() => branchClick(name)}
     >
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <path d="M2.5 12H10" />
@@ -244,10 +264,17 @@ export const SkillLevelPanel: React.FC<Props> = ({
       keyOf(inst.skill, inst.origSubtype) + ":g",
       isPrimary,
       left,
-      // Show the editable subtype whenever this instance was originally subtyped (origSubtype set),
-      // even if the player cleared the text — otherwise a granted branch can't be renamed back.
-      inst.subtype || inst.origSubtype
-        ? subtypeControl(inst.skill, inst.subtype || "", (v) => onOverride(keyOf(inst.skill, inst.origSubtype), v))
+      // Show the editable subtype when this instance was originally subtyped (origSubtype set, even if
+      // cleared), when the skill has a mandatory fixed subtype set, or when the user is specialising this
+      // general skill via the branch button. Granted subtypes go through the override; a learned primary
+      // edits its own purchase atomically.
+      inst.subtype || inst.origSubtype || (SKILL_BY_NAME[inst.skill]?.subtypes?.length ?? 0) > 0 || (isPrimary && specializing.has(inst.skill))
+        ? subtypeControl(inst.skill, inst.subtype || "", (v) =>
+            // A subtyped grant edits via its origSubtype-keyed override; a general instance (learned,
+            // granted, or both) goes through the combined setter that updates override + purchase at once.
+            inst.origSubtype != null
+              ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
+              : onSetSubtype(level, inst.skill, inst.subtype, v))
         : null,
       floor > 0 ? <KapottBadge /> : null,
       <Stepper
@@ -258,7 +285,18 @@ export const SkillLevelPanel: React.FC<Props> = ({
         onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, inst.subtype) : onUpsert(level, inst.skill, inst.subtype, cur - step))}
         onInc={() => onUpsert(level, inst.skill, inst.subtype, cur + step)}
       />,
-      null
+      // "Unspecialise" X — only for an in-place-specialised GENERAL skill (not a granted subtype, not a
+      // mandatory enumerated one): clears the subtype back to general and hides the input.
+      inst.origSubtype == null && (SKILL_BY_NAME[inst.skill]?.subtypes?.length ?? 0) === 0 && (inst.subtype || specializing.has(inst.skill))
+        ? deleteBtn(() => {
+            onSetSubtype(level, inst.skill, inst.subtype, undefined);
+            setSpecializing((s) => {
+              const n = new Set(s);
+              n.delete(inst.skill);
+              return n;
+            });
+          })
+        : null
     );
   };
 
