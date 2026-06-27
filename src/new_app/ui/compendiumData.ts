@@ -44,7 +44,8 @@ const statsBody = (desc: string | string[], pairs: [string, unknown][]): string[
     .filter(([, v]) => v !== undefined && v !== null && v !== "" && v !== "-")
     .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
     .join(" · ");
-  return line ? [line, ...arr(desc)] : arr(desc);
+  // tag with "stats:" so the modal renders it as an accentuated stat block (label/value chips)
+  return line ? [`stats:${line}`, ...arr(desc)] : arr(desc);
 };
 
 type Field = [string, (s: any) => string, ("center" | "right")?];

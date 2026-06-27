@@ -71,9 +71,34 @@ const TableBlock: React.FC<{ raw: string }> = ({ raw }) => {
   );
 };
 
-// One description block — dispatches on the leading kind-token (table / small) or renders prose.
+// The spell/weapon stat line ("stats:Időigény: 1 perc · Hatótáv: … · …") rendered as accentuated
+// label/value chips instead of a plain paragraph.
+const StatBlock: React.FC<{ raw: string }> = ({ raw }) => {
+  const pairs = raw
+    .replace(/^stats:\s*/i, "")
+    .split(" · ")
+    .map((p) => {
+      const i = p.indexOf(": ");
+      return i >= 0 ? [p.slice(0, i), p.slice(i + 2)] : ["", p];
+    });
+  return (
+    <Box display="flex" flexWrap="wrap" gap="7px" mb="18px">
+      {pairs.map(([k, v], i) => (
+        <Box key={i} bg="chipBg" border="1px solid" borderColor="chipBd" borderRadius="9px" px="11px" py="6px">
+          {k && (
+            <Text fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".07em" textTransform="uppercase" color="accentTx" lineHeight="1.3">{k}</Text>
+          )}
+          <Text fontSize="14.5px" fontWeight={600} color="fg" lineHeight="1.3" sx={{ fontVariantNumeric: "tabular-nums" }}>{v}</Text>
+        </Box>
+      ))}
+    </Box>
+  );
+};
+
+// One description block — dispatches on the leading kind-token (stats / table / small) or renders prose.
 // `currentFok`: when set, "N. fok" paragraphs above it are greyed (the character hasn't reached them).
 const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text, currentFok }) => {
+  if (/^stats:/i.test(text)) return <StatBlock raw={text} />;
   if (isTable(text)) return <TableBlock raw={text} />;
   if (/^small:/i.test(text)) {
     return (
