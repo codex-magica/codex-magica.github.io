@@ -1,14 +1,16 @@
 import React from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { ParchPanel } from "./ParchPanel";
+import { Markdown } from "./Markdown";
 
 export interface ModalState {
-  kind: "skill" | "spell";
+  kind: "skill" | "spell" | "rules";
   name: string;
   sub?: string;
   levelStrip?: string; // character-aware strip ("A te fokod: 3. fok" / "Mana: 2 Mp · …")
   currentFok?: number; // character's current fok — foks above it are greyed out
   body: string[];
+  markdown?: string; // when set, the body is a Markdown document (rules text) rendered as-is
 }
 
 interface Props {
@@ -182,9 +184,11 @@ export const DetailModal: React.FC<Props> = ({ modal, onClose }) => {
           )}
         </Box>
         <Box flex="1 1 auto" overflowY="auto" px="28px" pt="20px" pb="26px">
-          {modal.body.map((p, i) => (
-            <BodyPart key={i} text={p} currentFok={modal.currentFok} />
-          ))}
+          {modal.markdown != null ? (
+            <Markdown source={modal.markdown} />
+          ) : (
+            modal.body.map((p, i) => <BodyPart key={i} text={p} currentFok={modal.currentFok} />)
+          )}
         </Box>
       </ParchPanel>
     </Box>

@@ -1,5 +1,5 @@
 export type WarlockMagicType = "Alap varázslat" | "Villámmágia" | "Anyagmágia" | "Nekromancia" | "Necrográfia"
-  | "Életerő manipulálás" | "Átok" | "Betegségmágia" | "Méregmágia" | "Természeti mágia" | "Asztrál- és Mentálmágia"
+  | "Életerő manipulálás" | "Rontások" | "Átkok" | "Betegségmágia" | "Méregmágia" | "Természeti mágia" | "Asztrál- és Mentálmágia"
 export type WarlockMagicSave = "Mentális" | "Asztrális" | "Asztrális és Mentális" | "Egészségpróba"
 
 export interface WarlockMagicInfo {
@@ -350,7 +350,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
     duration: "1 szegmens/E",
   description: "Az Életerő raktározása egyike azon boszorkánymesteri varázslatoknak, melyek varázserőn kívül egyéb kellékeket is megkövetelnek.\n\nAz Életerő raktározásához ugyanis drágakőre vagy varázsjelre van szükség, hogy az elorzott Életerőt abban tárolja el.\n\nA drágakőnek alkalmasnak kell lennie az életerő befogadására, így erre a célra kizárólag smaragd használható.\n\nA karátok száma megmutatja a maximálisan tárolható Ép-k és Fp-k számát.\n\nEgy karát 1 Ép avagy 5 Fp befogadására alkalmas. A varázslat első része mindenben megegyezik az Életerőszívással.\n\nA második rész, a nyert életerő felhasználása különös - a boszorkánymester ugyanis az energiát az előkészített drágakőben helyezheti el.\n\nA kőből csak a boszorkánymester nyerheti vissza az életerőt, azaz kizárólag saját maga gyógyítására alkalmazhatja.\n\nA belehelyezett életerő korlátlan ideig a kőben maradhat, állandóan jelenlévő forrást jelentve veszély esetére.\n\nAz Ép-k és Fp-k kinyerése Mana pontot nem igényel, a szükséges koncentráció is csak 1 szegmens hosszú, és használata közben bal kezével meg kell érintenie a követ.\n\nA másik lehetőség, hogy rajzolatban tárolja el a begyűjtött életerőt.\n\nA drágakővel ellentétben aminek tiszta szerkezete Önmagában is képes az életerő tárolására itt a rajzolatba foglalt rúnáknak kell megkötniük a nyers életenergiát.\n\nA boszorkánymesterek tudástárából azonban régen kikoptak azok a formulák, melyek önmagukban képesek lettek volna erre, ezért az egyre inkább torzuló rúnajelek felhasználásával új módszereket kellett keresniük, s így alakult ki a boszorkánymesteri Tetoválásmágia (bővebben lásd később)."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Agyhalál",
   cost: "30",
   range: "Érintés v 20 m",
@@ -359,7 +359,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslattal egy lény elméjének Mentális Képességei csökkenthetőek ha az elvétette a betegség szintjének megfelelő Egészségpróbát.\n\nA varázslat a keringési rendszert támadja meg, s amíg jelen van, meggátolja az agy vérellátását, minek következményeként az áldozat annyi pontot veszít maradandóan az Intelligenciájából, amennyi az adott súlyossági fokon szerepel a táblázatban.\n\nA betegség olyan gyors lefolyású, hogy gyakorlatilag semmilyen gyógymód nem alkalmazható ellene. "
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Álomkór",
   cost: "8",
   range: "Érintés v 20 m",
@@ -368,7 +368,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A fertőzött áldozat egyre többet fog aludni, s aktív cselekvésre egyre kevesebb ideje marad.\n\nElőször napi 8, majd a betegség súlyossági szintjével megegyező órával több alvásra lesz szüksége a pihenéshez.\n\nHa erre nincs módja, minden egyes hiányzó óra után 5-tel csökken KÉ-je, TÉ-je, VÉ-je, CÉ-je és százalékos jártasságai (ha tehát 11 órát kellett volna aludnia, de csak hetet aludt, a következő nap -20-as módosítóval kénytelen harcolni)."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Bélsorvadás",
   cost: "12",
   range: "Érintés v 20 m",
@@ -377,14 +377,14 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A boszorkánymester ezen varázslata elpusztítja az áldozat bélrendszerét.\n\nA mágia azonnal hat, de csak a Válságos vagy azt meghaladó súlyossági állapotban veszedelmes igazán.\n\nHa a beteg állapota ezt a fokot nem is éri el, belei sorvadásnak indulnak, miáltal szüntelen hasmenés gyötri, s alig képes szilárd táplálékot megemészteni.\n\nHa a betegség eleve Válságos súlyossági fokon, vagy még erősebben hat, egyetlen kör alatt elsorvadnak a belei, ami iszonyú kínnal jár.\n\nEttől kezdve bármennyit eszik is, lassan éhen hal.\n\nEgy ember általában kétszer annyi napig bírja élelem nélkül, amennyi az Állóképessége.\n\nA Bélsorvadás emésztőrendszert károsító betegség;a borsos keserűfű hideg kivonatának rendszeres fogyasztásával a romlás a súlyosság fokával megegyező számú hónap alatt visszafordítható."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Bűvragály",
   cost: "+10",
   castingTime: "+5 szegmens",
   range: "Érintés v 20 m",
   description: "Eme varázslat segítségével a Rontásnál leírt kórságok java fertőzővé tehető.\n\nA Bűvragály áldozata, legyen akár ember, akár állat, annyi további élőlényre lesz képes érintéssel ráragasztani betegségét, amennyi a Rontás szintje.\n\nA Rontás szintje a másodlagos, harmadlagos stb. fertőzötteknél mindig eggyel csökken, s a Bűvragály egészen addig terjed, amíg a varázslat frissen megfertőzött áldozatainál a betegség szintje 0-ra csökken.\n\nEzután a mágikusan gerjesztett járvány kimerül.\n\nA Bűvragály áldozatainak holttestei még egy teljes napon keresztül a betegség hordozói maradnak. Ha a boszorkánymester óvatlan, akár saját varázslata áldozatául is eshet."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Fekete halál",
   cost: "30",
   range: "Érintés v 20 m",
@@ -393,7 +393,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "Ynev egyik legrettegettebb fertőzését, a Fekete halált idézi elő áldozata szervezetében.\n\nSikertelen Egészségpróba esetén a bőr azonnali megfeketedésével, majd 10 perc múltán, kómával, azután az Fp-k elfogytával halállal végződik az esetek 75%-ában.\n\nAz áldozat Halállalfenyegető állapotban óránként 1k10 Fp-t, Halálos esetben óránként 2k10 Fp-t, végül Biztosan halálos lefolyás estén percenként 1k3 Fp-t veszít.\n\nA maradék 25% is csak gondolja, hogy rá nem hatott a szörnyű kórság de nagyot téved. Hordozóvá válik, s minden vele érintkező személynek Egészségpróbát kell dobnia a betegség szintjének függvényében, különben elkapja a fertőzést.\n\nA beteg állapota magától soha nem javul, ám óránként romlik."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Idegroncsolás",
   cost: "25",
   range: "Érintés v 20 m",
@@ -402,7 +402,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat által okozott betegség az idegrendszerre hat.\n\nHa az áldozat elvéti Egészségpróbáját, a betegség befészkeli magát a szervezetébe.\n\nHatására 10 körön keresztül zavaró ingerek kerülnek az áldozat mozgásért felelős idegeibe, ami az Izzó Idegekhez hasonló görcsös rángatózást eredményez.\n\nSikertelen Egészségpróba esetén az első körben 10% az esélye, hogy a görcs bekövetkezzék, a másodikban 20, a harmadikban 30, és így tovább a 10. körig és 100%-ig.\n\nHa a görcs lecsap az áldozatra, a hatóidő leteltével még 1 percig izomgörcsök rázzák a testét, aztán a hatás nyomtalanul elenyészik Ha azonban a Rontás súlyossága Halálos, az áldozatnak már csak ez az egy perce van hátra a végső hatásig.\n\nHa ezalatt sem gyógyítják meg, a betegség véglegesen szétroncsolja idegeit, miáltal teljes teste megbénul Beszélni, enni, mozdulni nem képes."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Izomsorvadás",
   cost: "20",
   range: "Érintés v 20 m",
@@ -411,7 +411,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat Izomsorvadás betegséget juttat az áldozat szervezetébe, ha az elvéti a fertőzés elleni Egészségpróbáját.\n\nHatására az áldozat izmai rohamos sorvadásnak indulnak, melynek következtében az Erő és Gyorsaság, Állóképesség a súlyosságnak megfelelő módon csökken.\n\nA csökkenés eredménye minden, a tulajdonsághoz kapcsolódó értékben és képzettségben megjelenik.\n\nA beteg állapota magától nem javul, sőt a fent említett módon rohamosan romlik. Ha akármelyik képessége nullára csökken, szíve megbénul, és belehal a kórságba."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Izzó idegek",
   cost: "8",
   range: "Érintés v 20 m",
@@ -420,7 +420,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat szokatlan betegséget okoz áldozatának, ha az elvéti Egészségpróbáját.\n\nAz idegrendszert stimuláló betegség hatására az áldozat érző és mozgatóidegeibe véletlenszerű, ismeretlen jelek érkeznek, hatásukra a test rángatózni kezd.\n\nHa a betegség nem éri el a Válságos stádiumot és immunrendszere nem sérült, gyorsan legyűri a szervezetbe jutott kórokozót, egyetlen perc alatt utóhatás nélkül meggyógyul.A kérdéses időtartam alatt azonban az áldozat a földre zuhanva vonaglik, arcát hideg verejték veri ki, ajkáról nyál csorog és artikulálatlanul nyögdécsel, tagjain görcsös rángások futnak végig.\n\nSemmilyen fizikai cselekvésre vagy varázslásra nem képes, de pszit használhat.\n\nAmennyiben az immunrendszere sérült - tehát valamilyen betegségben szenved -, vagy a súlyosság eléri a Válságos állapotot, akkor a varázslat hatására 1k6 órára lebénul."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Lepra",
   cost: "20",
   range: "Érintés v 20 m",
@@ -429,7 +429,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslattal a boszorkánymester leprával fertőzheti meg áldozatát ha az elvéti a fertőzés elleni Egészségpróbáját.\n\nLepra esetén a végtagok lassan érzéketlenné válnak.\n\nA Válságos állapotú leprás a fájdalmat már nem is érzi, így Fájdalomtűrés pontjai gyakorlatilag végtelenek.\n\nA végtagok érzéketlensége miatt minden finom, érzékeny kézmozgást és tapintást igénylő művelet eleve kudarcra van ítélve.\n\nHa a betegség eléri a Halálos stádiumot, előbb csak az ujjak, a fül vagy az orr, majd a végtagok heges forradásokat hagyva leválnak, s a beteg másnapra belehal.\n\nA betegség Fp-vesztéssel nem jár, ellenben az Erő, Gyorsaság és Ügyesség Tulajdonságok a súlyosság függvényében csökkennek.\n\nA beteg állapota magától nem javul, csak naponta romlik."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Nyelvrohadás",
   cost: "15",
   range: "Érintés v 20 m",
@@ -438,7 +438,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslattal az egyik legkíméletlenebb, leggyalázatosabb betegség okozható, amit csak az orvostudomány ismer.\n\nHatására súlyossági fokonként az áldozat nyelve elszíneződik, lehelete kibírhatatlan rothadásszagot áraszt, elveszti ízlelő képességét, majd a nyelv elfeketedik.\n\nBeszélni ekkorra már nem tud, s a Válságos stádiumba érve nyelve maradék nélkül elrohad.\n\nA betegség magától nem javul, ám a herbaiisták harmatfű teájával való napi öblögetés megállítja a romlást."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Rútság",
   cost: "5",
   range: "Érintés v 20 m",
@@ -447,7 +447,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat sikertelen Egészségpróba esetén súlyos betegséget ragaszt az áldozatra.\n\nHatására csak a Karizma csökken a súlyosság függvényében: mély ráncok jelennek meg a bőrön, a szemek méretei, színük, tengelyük iránya eltorzul, kelések, hólyagok tűnnek elő az arcon, testen, haja hullásnak indul, fogai elszíneződnek, majd lassan elrohadnak.\n\nA betegség mágiával vagy kenderkefű tinktúrából készült borogatással gyógyítható. Ez utóbbi +5-öt ad az Egészség-próbára."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Szívbénítás",
   cost: "30",
   range: "Érintés v 20 m",
@@ -456,7 +456,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "Ezzel a varázslattal a boszorkánymester áldozatánál szívrohamot idézhet elő.\n\nA betegség a súlyosságtól függően magas vérnyomást, ijesztő, szúró fájdalmat okoz a mellkas tájékán, a Válságos szintet elérve pedig az áldozat szíve nyomban megáll,\n\naz illető egy kör múltán elveszíti eszméletét, és ha a következő egy percben a Szakrális mágia Gyógyítás varázslatával nem kezdik meg kezelését, menthetetlenül meghal."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Tüdősorvadás",
   cost: "16",
   range: "Érintés v 20 m",
@@ -465,7 +465,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslattal Tüdősorvadás betegség okozható ha a kiszemelt áldozat elvéti a fertőzés elleni Egészségpróbáját.\n\nA betegség a tüdő térfogatát csökkenti, miáltal az izmok és az agy levegőellátása jelentősen csökkenni fog.\n\nSúlyosságtól függően Állóképesség-csökkenést, heveny légszomjat, szédülést, véres köhögést idéz elő, s Halálos stádiumba érve az áldozat egyszerűen megfullad.\n\nA Tüdősorvadás frissen tépett kender, vérfű és boróka forrázatának inhalálásával orvosolható. Ez utóbbi gyógymód +3-at ad az Egészségpróbára."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Vakságokozás",
   cost: "15",
   range: "Érintés v 20 m",
@@ -474,7 +474,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat olyan mágikus természetű kórokozót juttat az áldozat szervezetébe, amely - ha az illető elvétette Egészség-próbáját - megbénítja a látóidegeket.\n\nSúlyosságától függően az Érzékelés Tulajdonság csökkenését, homályos látást, a szemre ereszkedő hályogot idéz elő.\n\nHa a Rontás eléri a Válságos stádiumot, az áldozat időlegesen megvakul, s csak akkor nyeri vissza újból a szeme világát, ha a betegség meggyógyul, vagy súlyossága a Válságos kategória alá csökken.\n\nA Válságos állapotig a gyógyulás nadragulya kenőcs alkalmazásával lassan visszafordítható (+6 az Egészségpróbára)."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Végtagsorvasztás",
   cost: "15",
   range: "Érintés v 20 m",
@@ -483,7 +483,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat hatására olyan kórokozó kerül az áldozat szervezetébe, mely az Egészségpróba elvétése esetén az illető egyik végtagjában izomsorvadást idéz elő.\n\nA végtagot a boszorkánymester választhatja ki - de csak valamelyik kar vagy láb lehet.\n\nA beteget azon végtagjával végzett cselekvésénél Erő, Gyorsaság és Ügyesség negatívumok sújtják az adott súlyossági foknak megfelelően.\n\nHa a beteg állapota eléri a Válságos stádiumot, a végtag izmai véglegesen elsorvadnak, miáltal az teljesen használhatatlanná, bénává válik."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Vérdermesztés",
   cost: "10",
   range: "Érintés v 20 m",
@@ -492,7 +492,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A boszorkánymester ezzel a varázslattal megalvaszthatja a vért az erekben, vagy azon kívül.\n\nKét alkalmazása lehetséges, az egyik a boszorkánymesterre, a másik egy áldozatra használható.\n\nA boszorkánymester ha a varázslatot saját magára használja sokkal gyorsabban forrasztja be friss sebeit, mert a vér az erekből kilépve szinte azonnal megalvad, s nem okoz több vérveszteséget.\n\nEnnek következtében minden, a varázslat létrehozása előtt és a rákövetkező 10 percben elszenvedett éles vagy hegyes fegyver okozta sebe ötszörös sebességgel gyógyul.\n\nA másik alkalmazáskor az áldozat vére már az erekben alvadni kezd, s a súlyosságnak megfelelő negatív Tulajdonságmódosítót szenved el.\n\nHa Álló-képessége vagy Intelligenciája 0-ra csökken, a vér áramlása teljesen leáll a szervezetben."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Vérzékenység",
   cost: "20",
   range: "Érintés v 20 m",
@@ -501,7 +501,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat okozta betegség a véralvadás képességét gátolja meg az áldozat szervezetében természetesen csak akkor, ha az illető a fertőzés elleni Egészségpróbát elvétette.\n\nHatására, ha az áldozat éles vagy hegyes fegyver ejtette sebet kap, az el nem álló vérzés következtében percenként annyi Fp-t veszít, amennyit a fegyver sebzése okozott.\n\nHa Fp-i elfogynak, elájul. A vérzés sikeres Egészségpróba esetén magától eláll, ellenkező esetben Fp-i elfogytával a sebződés Életerő pontjaiból vonódik le.\n\nA próbát minden eltelt perc után meg lehet ismételni.A vérzés egyébként csak sikeres Orvosláspróbával, vagy herbaiista által készített körömvirágkenőccsel állítható el.\n\nEzzel az adott Fp-vesztés is véget ér, ám a betegség nem múlik el: a következő seb újabb bonyodalmat okoz.\n\nSokkal veszedelmesebbek a zúzófegyverek okozta Ép-sebzések, mert ezek minden esetben belső vérzéssel járnak.\n\nIlyen esetben az áldozat percenként a súlyossági foknak megfelelő Fp-t veszít. Fp-i elfogytával a sebződés Életerő pontjaiból vonódik le.\n\nAz efféle vérzés csak Szakrális mágiával, vagy -4 módosítóval megdobott sikeres Orvoslás képzettségpróbával állítható el."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Veszettség",
   cost: "15",
   range: "Érintés v 20 m",
@@ -510,7 +510,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   save: "Egészségpróba",
   description: "A varázslat az állatok által terjesztett Veszettséget plántálja az áldozat szervezetébe.\n\nA betegség a lefolyási idő elteltéig észrevétlen marad, lappang.\n\nUtána az izmok görcsösebbé válnak, a száj szélén fehér hab jelenik meg, az áldozat pedig egyre szomjasabb és vadabb lesz.\n\nA súlyossági foktól függően csupán hordozó lesz, vagy hetente rohamokban jön rá az őrjöngés, a Válságos stádiumot elérve azonban megtámad minden körülötte fellelhető élőlényt, de nem fegyverrel vagy mágiával, hanem foggal, körömmel.\n\nA megsebzett lényeknek Egészségpróbát kell dobniuk, különben ők is elkapják a veszettséget.\n\nA beteg állapota magától soha nem javul, s ha eléri a Halálos fokozatot, az áldozat menthetetlenül elpusztul."
 }, {
-  type: "Átok",
+  type: "Rontások",
   name: "Vörös halál",
   cost: "60",
   range: "Érintés v 20 m",
@@ -577,7 +577,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   description: "A boszorkánymester bal tenyere a varázslat elmormolása után izzadni kezd, és apró verejtékcseppek jelennek meg rajta.\n\nHa képes áldozata bőrfélületét teljes tenyérrel megérinteni, a testében felgyülemlett méreg (akárha kontaktméreg lenne) egy töredékmásodperc alatt átáramlik az áldozat testébe.\n\nAz érintés helyén még egy percen keresztül vörhenyes kiütések rajzolják ki a boszorkánymester keze nyomát.\n\nA varázslat a méreg addigi hatásait természetesen nem semlegesíti, az áldozatban azonban a méreg minden tekintetben úgy fog működni, mint a boszorkánymester szervezetében.\n\nAmennyiben egy méreg hatása egyszeri volt (például azonnali Fp-vesztés), a varázslatot a mérgezést követő 10 körön belül érdemes alkalmazni, utána ugyanis a szervezet semlegesíti az ártalmas anyagot.\n\nHa a méreg hatása görcs, bénulás vagy hasonló állapot előidézése volt, a varázslat alkalmazásával a hatás a boszorkánymesteren azonnal megszűnik, az áldozat testébe pedig teljes értékű méreg kerül.\n\nHa a boszorkánymester megmérgezésekor sikeres Egészségpróbát dobott, tehát a méreg rajta nem fejtette ki hatását, még 10 körön át elegendő mennyiségben áll rendelkezésre a szervezetben ahhoz, hogy a varázslat alkalmazható legyen.\n\nA 10. kör leteltével a méreg lebomlik, és nem adható tovább. Az áldozat ellenállhat a varázslatnak, sikeres Egészségpróbával. A próba módosítójának meghatározásakor mindig a méreg szintje a mérvadó."
 }, {
   name: "Átokvarázs",
-  type: "Átok",
+  type: "Átkok",
   cost: "Lásd a leírást!",
   castingTime: "4 szegmens",
   range: "Hallótávolság",
@@ -589,7 +589,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
     "small:A hatás nem azonnal teljesedik ki, hanem napról-napra egy fokozattal romlik (tehát minden egyes nappal 1-gyel csökken a Tulajdonság, 2-vel a max. Fp, 4-gyel a harcértékek) egészen a varázslat kiteljesedéséig, majd egy egész holdhónapig ül az áldozaton, s csak utána foszlik szét. Két azonos természetű átok módosítói nem adódnak össze, hanem csak az erősebb hatása érvényesül.\n\nAz átok Erőssége egyenlő befektetett Mana pont mennyiségével.\n\nTehát egy 36 Mana pontos átok 6 ponttal csökkent egy Tulajdonságot vagy 9 ponttal a maximális Fp-t vagy 18-cal az áldozat Támadó és Védő értékét, az Erőssége pedig 36 lesz.\n\nHa a boszorkánymester a halálán van, Mana pont feláldozása nélkül - vagy Mana pontok hiányában - is elmondhat egy átkot.\n\nEz esetben az átok mindig a lehető legnagyobb E-vel jön létre, s elemészti a boszorkánymester minden maradék Mana pontját és életerejét.\n\n\n\n1 Fp = 1 Mp, 1 TSZ = 3 Mp, 1 Ép = 5 Mp\n\n\n\nAz ilyen átok nem egy hónapig, hanem addig ül a meg-átkozott személyen, míg mágiával el nem oszlatják (Szakrális, vagy boszorkánymesteri Átokűzéssel, esetleg varázslói Destrukcióval) - így akár egy életre is megkeserítheti az áldozat mindennapjait.\n\nElőfordul azonban, hogy a boszorkánymester halálakor nem a fentebb taglalt levonásokkal bünteti meg ellenfelét, hanem olyan átkot mond rá, hogy az valóban gyilkosa hátralévő életének minden pillanatát megkeserítse.\n\nA lehetőségeknek csak a boszorkánymester fantáziája és elvetemültsége szab határt, az Erősségtől függően a KM belátására van bízva, milyen módon fogan meg az átok."
   ]
 }, {
-  type: "Átok",
+  type: "Átkok",
   name: "Átokfejtés",
   cost: "10",
   castingTime: "10 kör",
@@ -597,7 +597,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   duration: "1 személy vizsgálata",
   description: "A varázslat más boszorkánymesterek átkainak felfedésére, mibenlétük kiderítésére szolgál.\n\nSegítségével kifürkészhető az átkot szóró neve, valamint nyilvánvalóvá lesz az átok valódi természete, erőssége és az átok teljes szövege is.\n\nAzonban csak boszorkánymesterek átkai fedhetők fel általa, a boszorkányok és papok átkairól semmit sem árul el.\n\nAlkalmazása szinte elengedhetetlen feltétele az Átokűzés varázslatnak, hisz a boszorkánymester csak így tudhatja meg pontosan, mivel is kell szembenéznie."
 }, {
-  type: "Átok",
+  type: "Átkok",
   name: "Átokűzés",
   cost: "1",
   castingTime: "10 kör",

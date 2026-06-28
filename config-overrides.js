@@ -1,27 +1,18 @@
 const { override, addWebpackAlias } = require('customize-cra');
 const path = require('path');
 
-// // Function to add Workbox InjectManifest plugin
-// const addInjectManifest = () => config => {
-//   // Look for the existing GenerateSW plugin and replace it with InjectManifest
-//   config.plugins = config.plugins.map(plugin => {
-//     if (plugin.constructor.name === 'GenerateSW') {
-//       return new InjectManifest({
-//         swSrc: './src/service-worker.js',
-//         swDest: 'service-worker.js',
-//       });
-//     }
-//     return plugin;
-//   });
-//   return config;
-// };
+// Import *.md files as raw source strings (webpack 5 asset/source). Inserted at the front of CRA's
+// `oneOf` so it wins over the catch-all file-loader (which would otherwise return a URL).
+const addMarkdownRawRule = () => (config) => {
+  const oneOfRule = config.module.rules.find((r) => Array.isArray(r.oneOf));
+  if (oneOfRule) oneOfRule.oneOf.unshift({ test: /\.md$/, type: 'asset/source' });
+  return config;
+};
 
 module.exports = override(
   // Existing configuration for alias
   addWebpackAlias({
     ['@']: path.resolve(__dirname, 'src'),
   }),
-
-  // // Add the InjectManifest plugin
-  // addInjectManifest()
+  addMarkdownRawRule(),
 );

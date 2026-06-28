@@ -5,7 +5,6 @@ import { CharacterSheet } from "./CharacterSheet";
 import { Compendium } from "./Compendium";
 import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
-import { compNames } from "./sampleData";
 import { skillModalBody, skillModalSub, spellModalByName } from "./compendiumData";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
@@ -23,13 +22,6 @@ const SIDE = { base: "20px", md: "16px" };
 
 const ZoneBtn: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
   <Box as="button" type="button" onClick={onClick} px="15px" py="7px" borderRadius="8px" fontWeight={700} fontSize="14px" whiteSpace="nowrap"
-    bg={active ? "accentSoft" : "transparent"} color={active ? "accentTx" : "muted"} transition="background .12s, color .12s">
-    {children}
-  </Box>
-);
-
-const PillBtn: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <Box as="button" type="button" onClick={onClick} px="13px" py="6px" borderRadius="8px" fontWeight={600} fontSize="13.5px" whiteSpace="nowrap"
     bg={active ? "accentSoft" : "transparent"} color={active ? "accentTx" : "muted"} transition="background .12s, color .12s">
     {children}
   </Box>
@@ -97,13 +89,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
             </>
           ) : (
             <>
-              <Box flex="1 1 auto" display="flex" justifyContent="center">
-                <HStack flexWrap="wrap" justify="center" gap="3px" bg="fieldBg" border="1px solid" borderColor="hair" borderRadius="11px" p="4px">
-                  {compNames.map((n, i) => (
-                    <PillBtn key={n} active={i === compTab} onClick={() => setCompTab(i)}>{n}</PillBtn>
-                  ))}
-                </HStack>
-              </Box>
+              <Spacer />
               {darkToggle}
             </>
           )}
@@ -122,7 +108,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           onOpenWeapon={setWeaponModal}
         />
       ) : (
-        <Compendium compTab={compTab} onOpenModal={setModal} />
+        <Compendium compTab={compTab} onSelectTab={setCompTab} onOpenModal={setModal} />
       )}
 
       {/* Detail modal — peek that never navigates */}

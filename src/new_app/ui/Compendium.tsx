@@ -1,16 +1,49 @@
 import React from "react";
-import { Box, Heading, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, Input, Text } from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "./ParchPanel";
 import { ModalState } from "./DetailModal";
+import { Markdown } from "./Markdown";
 import { compNames } from "./sampleData";
 import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
+import { MAGIC_RULES, stripLeadingH1 } from "../data/magicRules";
 import { SKILLS } from "../model/skills";
 import { SkillCategory } from "../model/common";
+import introMd from "../../book/01-bevezeto.md";
+import charMd from "../../book/02-karakteralkotas.md";
+
+// rulebook chapters shown via the Markdown renderer; tab indices start at CHAPTER_BASE (after the data tabs)
+const CHAPTER_BASE = 10;
+const CHAPTERS = [
+  { name: "Bevezető", md: introMd },
+  { name: "Karakteralkotás", md: charMd },
+];
 
 interface Props {
   compTab: number;
+  onSelectTab: (tab: number) => void;
   onOpenModal: (m: ModalState) => void;
 }
+
+// sidebar nav groups (indices into compNames): Képzettségek stands alone, then Mágia, then Felszerelés
+const MAGIC_TABS = [1, 2, 3, 4, 5, 6, 7];
+const GEAR_TABS = [8, 9];
+
+const NavSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Box display="flex" alignItems="center" gap="10px" mt="20px" mb="6px">
+    <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint" flexShrink={0}>{children}</Text>
+    <Box flex="1 1 auto" h="1px" bg="hair" />
+  </Box>
+);
+// full-bleed item: bg spans the whole sidebar width, text stays inset to align with the headers
+const NavItem: React.FC<{ active: boolean; prominent?: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, prominent, onClick, children }) => (
+  <Box as="button" type="button" onClick={onClick} position="relative" display="block" textAlign="left" mx="-14px" px="14px" py={prominent ? "9px" : "7px"}
+    bg={active ? "accentSoft" : "transparent"} color={active ? "fg" : "muted"} fontWeight={active || prominent ? 700 : 500} fontSize={prominent ? "17px" : "15.5px"}
+    transition="background .12s, color .12s" _hover={{ bg: active ? "accentSoft" : "band", color: "fg" }}>
+    {active && <Box position="absolute" left="0" top="0" bottom="0" w="3px" bg="accent" />}
+    {children}
+  </Box>
+);
 
 const PAD = { base: "18px", md: "16px" };
 const SKILL_GRID = "minmax(0,2.1fr) 50px minmax(0,1.4fr) minmax(0,1.3fr) minmax(0,2.2fr)";
@@ -22,6 +55,18 @@ const GroupHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Heading as="h3" textAlign="center" fontSize={{ base: "19px", md: "17px" }} fontWeight={700} color="fg" mb="9px">{children}</Heading>
 );
 
+// quiet "Szabályok" chip placed next to a heading that has rules prose; opens the rules modal
+const RulesChip: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <Box as="button" type="button" onClick={onClick} display="inline-flex" alignItems="center" gap="4px" px="9px" py="3px" borderRadius="999px"
+    border="1px solid" borderColor="accentBd" bg="accentSoft" color="accentTx" fontFamily="system-ui" fontSize="11px" fontWeight={700} whiteSpace="nowrap"
+    flexShrink={0} _hover={{ borderColor: "accent" }}>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H4z" /><path d="M20 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H20z" />
+    </svg>
+    Szabályok
+  </Box>
+);
+
 // skill catalog from the new model (book-original)
 const CATS: SkillCategory[] = ["Harci", "Alvilági", "Világi", "Tudományos", "Szociális", "Misztikus"];
 const skillGroups = CATS.map((cat) => ({
@@ -30,12 +75,18 @@ const skillGroups = CATS.map((cat) => ({
     .map((s) => ({ name: s.name, diff: s.cost === "percentage" ? "%" : s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(", ") || "–" })),
 })).filter((g) => g.rows.length > 0);
 
-export const Compendium: React.FC<Props> = ({ compTab, onOpenModal }) => {
+export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal }) => {
+  const chapter = compTab >= CHAPTER_BASE ? CHAPTERS[compTab - CHAPTER_BASE] : null;
   const title = compNames[compTab];
   const isSkills = compTab === 0;
-  const blocks: TableBlock[] = isSkills ? [] : tabBlocks(compTab);
+  const blocks: TableBlock[] = isSkills || chapter ? [] : tabBlocks(compTab);
 
   const openRow = (r: TableRow) => onOpenModal({ kind: "spell", name: r.name, sub: r.modalSub, body: r.body || [] });
+
+  // rules prose for the current school (if any), plus a helper to open it in the markdown modal
+  const schoolRules = MAGIC_RULES[title];
+  const openRules = (name: string, sub: string, md: string) =>
+    onOpenModal({ kind: "rules", name, sub, body: [], markdown: stripLeadingH1(md) });
 
   // dense = cram all columns to fit the container (no horizontal scroll) — used for the wide
   // weapons table; value columns shrink to share the width.
@@ -68,9 +119,13 @@ export const Compendium: React.FC<Props> = ({ compTab, onOpenModal }) => {
       </Box>
     );
 
+    const subRules = schoolRules?.sub?.[block.title];
     return (
       <Box key={block.title}>
-        <GroupHead>{block.title}</GroupHead>
+        <Box display="flex" alignItems="center" justifyContent="center" gap="10px" mb="9px">
+          <Heading as="h3" textAlign="center" fontSize={{ base: "19px", md: "17px" }} fontWeight={700} color="fg">{block.title}</Heading>
+          {subRules && <RulesChip onClick={() => openRules(block.title, "Szabályok", subRules)} />}
+        </Box>
         <ParchPanel p={0} overflow="hidden">
           {dense ? inner : <Box overflowX="auto">{inner}</Box>}
         </ParchPanel>
@@ -79,9 +134,38 @@ export const Compendium: React.FC<Props> = ({ compTab, onOpenModal }) => {
   };
 
   return (
-    <Box flex="1 1 auto" minH={0} overflowY="auto" bg="page">
+    <Flex flex="1 1 auto" minH={0} bg="page" overflow="hidden">
+      {/* Left sidebar navigation — grouped (Képzettségek · Mágia · Felszerelés) */}
+      <Box as="nav" w={{ base: "180px", md: "248px" }} flexShrink={0} h="100%" overflowY="auto" borderRight="1px solid" borderColor="hair" px="14px" py={{ base: "16px", md: "20px" }}>
+        <Box position="relative">
+          <SearchIcon position="absolute" left="11px" top="50%" transform="translateY(-50%)" boxSize="13px" color="fgFaint" pointerEvents="none" />
+          <Input placeholder="Keresés…" size="sm" pl="32px" bg="fieldBg" borderColor="fieldBd" borderRadius="9px" color="fg" fontSize="13.5px" _placeholder={{ color: "fgFaint" }} focusBorderColor="accent" />
+        </Box>
+        <Box mt="18px" mb="12px">
+          <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".16em" textTransform="uppercase" color="fgFaint">Kompendium</Text>
+          <Heading as="p" fontSize="21px" fontStyle="italic" fontWeight={600} color="fg" lineHeight="1.1">Tartalom</Heading>
+        </Box>
+        {CHAPTERS.map((c, i) => (
+          <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => onSelectTab(CHAPTER_BASE + i)}>{c.name}</NavItem>
+        ))}
+        <NavItem active={compTab === 0} onClick={() => onSelectTab(0)}>{compNames[0]}</NavItem>
+        <NavSection>Mágia</NavSection>
+        {MAGIC_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => onSelectTab(i)}>{compNames[i]}</NavItem>)}
+        <NavSection>Felszerelés</NavSection>
+        {GEAR_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => onSelectTab(i)}>{compNames[i]}</NavItem>)}
+      </Box>
+
+      {/* Content */}
+      <Box flex="1 1 auto" minH={0} overflowY="auto">
       <Box maxW={{ base: "100%", md: "1040px" }} mx="auto" px={{ base: "16px", md: "20px" }} pt={{ base: "26px", md: "24px" }} pb="90px">
-        <Heading as="h2" fontSize={{ base: "24px", md: "21px" }} fontWeight={700} color="fg" textAlign="center" mb="4px">{title}</Heading>
+        {chapter ? (
+        <Box maxW="780px" mx="auto"><Markdown source={chapter.md} /></Box>
+        ) : (
+        <>
+        <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb="4px">
+          <Heading as="h2" fontSize={{ base: "24px", md: "21px" }} fontWeight={700} color="fg" textAlign="center">{title}</Heading>
+          {schoolRules?.rules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", schoolRules.rules!)} />}
+        </Box>
         <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
         </Text>
@@ -115,7 +199,10 @@ export const Compendium: React.FC<Props> = ({ compTab, onOpenModal }) => {
             {blocks.map((b) => renderBlock(b, compTab === 8))}
           </Box>
         )}
+        </>
+        )}
       </Box>
-    </Box>
+      </Box>
+    </Flex>
   );
 };
