@@ -6,7 +6,7 @@ import { ModalState } from "./DetailModal";
 import { Markdown } from "./Markdown";
 import { compNames } from "./sampleData";
 import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
-import { MAGIC_RULES, stripLeadingH1 } from "../data/magicRules";
+import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
 import { SKILLS } from "../model/skills";
 import { SkillCategory } from "../model/common";
 import introMd from "../../book/01-bevezeto.md";
@@ -86,7 +86,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
   // rules prose for the current school (if any), plus a helper to open it in the markdown modal
   const schoolRules = MAGIC_RULES[title];
   const openRules = (name: string, sub: string, md: string) =>
-    onOpenModal({ kind: "rules", name, sub, body: [], markdown: stripLeadingH1(md) });
+    onOpenModal({ kind: "rules", name, sub, body: [], markdown: stripTitleHeading(md, name) });
 
   // dense = cram all columns to fit the container (no horizontal scroll) — used for the wide
   // weapons table; value columns shrink to share the width.

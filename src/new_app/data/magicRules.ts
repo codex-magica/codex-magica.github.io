@@ -24,5 +24,10 @@ export const MAGIC_RULES: Record<string, SchoolRules> = {
   "Magasmágia": magicRules7,
 };
 
-// The modal shows the title separately, so drop a leading H1 to avoid a duplicate heading.
-export const stripLeadingH1 = (md: string): string => md.replace(/^\s*#\s+[^\n]*\n+/, "");
+// The modal shows the title separately, so drop a leading heading (any level) when its text matches
+// the title — avoids a duplicate heading at the top of the modal body.
+export const stripTitleHeading = (md: string, title: string): string => {
+  const m = md.match(/^\s*#{1,6}\s+(.+?)\s*\n+/);
+  if (m && m[1].trim().toLowerCase() === title.trim().toLowerCase()) return md.slice(m[0].length);
+  return md;
+};
