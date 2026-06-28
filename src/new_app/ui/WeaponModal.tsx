@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Box, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
-import { ParchPanel } from "./ParchPanel";
+import { ModalShell, ModalHeader } from "./Modal";
+import { FIELD_SX } from "./tokens";
 
 // ── the situational data (transcribed verbatim from the old combat modals) ──
 type KeMod = number | "támadóé" | "nincs";
@@ -58,19 +59,17 @@ const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0"
 const num = (v: number | string) => (typeof v === "number" ? `${v}`.replace("-", "−") : v);
 
 // ── small building blocks ──
-const fieldSx = { bg: "fieldBg", borderColor: "fieldBd", borderRadius: "9px", color: "fg", focusBorderColor: "accent" } as const;
-
 const NumField: React.FC<{ label: string; value: number; onChange: (n: number) => void }> = ({ label, value, onChange }) => (
   <Box flex="1" minW="64px">
     <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="fgFaint" mb="3px">{label}</Text>
-    <Input {...fieldSx} size="sm" type="number" value={Number.isFinite(value) ? value : 0} onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)} sx={{ fontVariantNumeric: "tabular-nums" }} />
+    <Input {...FIELD_SX} size="sm" type="number" value={Number.isFinite(value) ? value : 0} onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)} sx={{ fontVariantNumeric: "tabular-nums" }} />
   </Box>
 );
 
 const Dropdown: React.FC<{ label: string; options: [string, number][]; value: number; onChange: (n: number) => void }> = ({ label, options, value, onChange }) => (
   <Box>
     <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="fgFaint" mb="3px">{label}</Text>
-    <Select {...fieldSx} size="sm" value={value} onChange={(e) => onChange(parseInt(e.target.value, 10))}>
+    <Select {...FIELD_SX} size="sm" value={value} onChange={(e) => onChange(parseInt(e.target.value, 10))}>
       {options.map(([name, mod]) => (
         <option key={name} value={mod}>{name}{mod !== 0 ? ` (${sign(mod)})` : ""}</option>
       ))}
@@ -148,30 +147,17 @@ export const WeaponModal: React.FC<{ weapon: WeaponModalState; onClose: () => vo
   const minRoll = Math.max(Math.min(targetVE - finalCE, 100), 2);
 
   return (
-    <Box position="fixed" inset={0} zIndex={45} bg="rgba(16,14,24,.55)" display="flex" alignItems="center" justifyContent="center" p="20px" onClick={onClose}>
-      <ParchPanel
-        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-        borderRadius="12px"
-        p={0}
-        w="min(560px, 100%)"
-        maxH="90vh"
-        display="flex"
-        flexDirection="column"
-        overflow="hidden"
-        style={{ boxShadow: "0 24px 64px rgba(0,0,0,.42)" }}
-      >
-        {/* header */}
-        <Box position="relative" px="26px" pt="20px" pb="14px" borderBottom="1px solid" borderColor="rule" textAlign="center">
-          <Box as="button" type="button" onClick={onClose} position="absolute" top="14px" right="16px" w="32px" h="32px" borderRadius="8px" border="1px solid" borderColor="hair" bg="fieldBg" color="muted" fontSize="15px" display="inline-flex" alignItems="center" justifyContent="center">✕</Box>
-          <Heading as="h3" fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">{weapon.name}</Heading>
-          <Text mt="3px" fontFamily="system-ui" fontSize="12px" color="fgFaint">
-            {isMelee ? "Közelharci kalkulátor" : "Távolsági kalkulátor"}
-            {weapon.dmg ? ` · Sebzés: ${weapon.dmg}` : ""}
-            {weapon.range ? ` · Lőtáv: ${weapon.range}` : ""}
-          </Text>
-        </Box>
+    <ModalShell onClose={onClose} width="min(560px, 100%)" maxH="90vh">
+      <ModalHeader onClose={onClose} closeSize="md" px="26px" pt="20px" pb="14px">
+        <Heading as="h3" fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">{weapon.name}</Heading>
+        <Text mt="3px" fontFamily="system-ui" fontSize="12px" color="fgFaint">
+          {isMelee ? "Közelharci kalkulátor" : "Távolsági kalkulátor"}
+          {weapon.dmg ? ` · Sebzés: ${weapon.dmg}` : ""}
+          {weapon.range ? ` · Lőtáv: ${weapon.range}` : ""}
+        </Text>
+      </ModalHeader>
 
-        <Box flex="1 1 auto" overflowY="auto" px="26px" pt="16px" pb="24px">
+      <Box flex="1 1 auto" overflowY="auto" px="26px" pt="16px" pb="24px">
           {/* results */}
           {isMelee ? (
             <HStack gap="10px" align="stretch">
@@ -234,8 +220,7 @@ export const WeaponModal: React.FC<{ weapon: WeaponModalState; onClose: () => vo
               </Box>
             </Box>
           )}
-        </Box>
-      </ParchPanel>
-    </Box>
+      </Box>
+    </ModalShell>
   );
 };

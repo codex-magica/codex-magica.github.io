@@ -11,6 +11,7 @@ import { SkillLevelPanel } from "./SkillLevelPanel";
 import { PointBuyPanel } from "./PointBuyPanel";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import { ParchPanel } from "./ParchPanel";
+import { FIELD_SX } from "./tokens";
 
 // A balance chip in the sticky header (KAP maradék / Alappont) — the eye's anchor point.
 const BalanceChip: React.FC<{ caption: string; value: number; numColor: string; bg: string; borderColor?: string }> = ({
@@ -81,14 +82,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
       {control}
     </HStack>
   );
-  const selectProps = {
-    size: "sm" as const,
-    bg: "fieldBg",
-    borderColor: "fieldBd",
-    borderRadius: "9px",
-    color: "fg",
-    focusBorderColor: "accent",
-  };
+  const selectProps = { ...FIELD_SX, size: "sm" as const };
 
   return (
     <Box p={{ base: "16px", md: "14px" }} bg="page" color="fg">

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Box, Heading, HStack, Select, Text } from "@chakra-ui/react";
-import { CharacterRecord } from "../model/character";
+import { CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { CombatChannel, Pool, Resource } from "../model/effects";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { RACES } from "../model/races";
 import { ATTR_KAP_COST, KAP_RATE } from "../engine/constants";
 import { Stepper } from "./Stepper";
+import { DeleteButton } from "./controls";
+import { FIELD_SX, FS_NAME, ROW_PY } from "./tokens";
 
 interface Props {
   level: number;
@@ -24,10 +26,6 @@ const PSEUDO: { pool: Pool; label: string }[] = [
   { pool: "Kegy", label: "Kegy" },
 ];
 
-const FS_NAME = { base: "19px", md: "16px" };
-const ROW_PY = { base: "11px", md: "8px" };
-const BTN_H = { base: "44px", md: "34px" };
-
 const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNode }> = ({ children, trailing }) => (
   <HStack justify="space-between" mt="13px" mb="1px" align="center" minH="24px">
     <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx">
@@ -38,7 +36,7 @@ const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNod
 );
 
 export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, onResource, onStat }) => {
-  const lvl = record.levels.find((l) => l.level === level);
+  const lvl = getLevelRecord(record, level);
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
 
   const hmOf = (c: CombatChannel) => lvl?.hmAssignments.find((h) => h.channel === c)?.amount ?? 0;
@@ -72,20 +70,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
     </HStack>
   );
 
-  const deleteBtn = (onClick: () => void) => (
-    <Box as="button" type="button" h={BTN_H} minW={BTN_H} border="1px solid" borderColor="hair" borderRadius="8px" color="fgFaint" display="flex" alignItems="center" justifyContent="center" fontSize="15px" flexShrink={0} onClick={onClick}>
-      ✕
-    </Box>
-  );
-
-  const selectStyle = {
-    size: "sm" as const,
-    bg: "fieldBg",
-    borderColor: "fieldBd",
-    borderRadius: "9px",
-    color: "fg",
-    focusBorderColor: "accent",
-  };
+  const selectStyle = { ...FIELD_SX, size: "sm" as const };
 
   return (
     <Box>
@@ -184,7 +169,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
           () => onStat(level, s, amount + 1),
           amount <= 1,
           atCap || kap < ATTR_KAP_COST,
-          deleteBtn(() => onStat(level, s, 0))
+          <DeleteButton onClick={() => onStat(level, s, 0)} />
         );
       })}
       {adding && (
@@ -205,7 +190,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
             ))}
           </Select>
           <Box flex="1" minW="8px" />
-          {deleteBtn(() => setAdding(false))}
+          <DeleteButton onClick={() => setAdding(false)} />
         </HStack>
       )}
     </Box>

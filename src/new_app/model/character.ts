@@ -127,3 +127,8 @@ export const emptyLevel = (level: number): LevelRecord => ({
   hmAssignments: [],
   statIncreases: [],
 });
+
+// The level ledger entry for `level`, or undefined. Centralizes the `levels.find(l => l.level === …)`
+// lookup that was duplicated across the builder hook, the panels, and the engine.
+export const getLevelRecord = (record: CharacterRecord, level: number): LevelRecord | undefined =>
+  record.levels.find((l) => l.level === level);

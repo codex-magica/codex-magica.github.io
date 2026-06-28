@@ -3,9 +3,9 @@
 //   known   = every requirement's skill is owned at its fok AND the spell's pool exists (the pool is the
 //             background proxy: Mágikus fogékonyság / Pszi érzékenység / Kegyelt háttér gate the pool).
 //   castable = known AND the pool currently holds >= cost.
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pool } from "./effects";
 import { SkillFok } from "./common";
+import { SpellLike } from "../data/types";
 import { BardMagicValues } from "../data/bardMagic";
 import { FireMagicValues } from "../data/fireMagic";
 import { WitchMagicValues } from "../data/witchMagic";
@@ -39,12 +39,12 @@ const num = (c: unknown): number => {
 };
 const clampFok = (n: number): SkillFok => Math.min(5, Math.max(1, n)) as SkillFok;
 
-const ct = (s: any): string => {
+const ct = (s: SpellLike): string => {
   const v = String(s.castingTime ?? "").trim();
   return v || "—";
 };
-const build = (values: any[], school: string, pool: Pool, req: (s: any) => SpellReq[], cat: (s: any) => string = (s) => s.type || "—"): SpellDef[] =>
-  values.map((s) => ({ name: s.name as string, school, category: cat(s) || "—", pool, cost: num(s.cost), castingTime: ct(s), requires: req(s) }));
+const build = (values: SpellLike[], school: string, pool: Pool, req: (s: SpellLike) => SpellReq[], cat: (s: SpellLike) => string = (s) => s.type || "—"): SpellDef[] =>
+  values.map((s) => ({ name: s.name, school, category: cat(s) || "—", pool, cost: num(s.cost), castingTime: ct(s), requires: req(s) }));
 
 // ── A. Tapasztalati mágia — one subtype per tradition; the whole list casts at fok 3 ──
 const tap = (subtype: string): SpellReq[] => [{ skill: "Tapasztalati mágia", subtype, fok: 3 }];
@@ -60,7 +60,7 @@ const PSI_TRAD: Record<string, string> = {
   "Godoni örökség": "godoni",
   "Slan útja": "slan",
 };
-const psi = build(PsiValues, "Pszi", "Psi", (s) => [{ skill: "Pszi", subtype: PSI_TRAD[s.type], fok: clampFok(s.level) }]);
+const psi = build(PsiValues, "Pszi", "Psi", (s) => [{ skill: "Pszi", subtype: PSI_TRAD[s.type ?? ""], fok: clampFok(s.level ?? 1) }]);
 
 // ── C. Magasmágia — the book gates each category on Magasmágia 3 AND its governing skill 3. The AND
 //        condition is what keeps a non-mage (e.g. someone with Alkímia 3 + a Mana pool) out of high magic. ──
@@ -92,14 +92,14 @@ const FOK_BY_GOV: Record<string, Record<string, number>> = {
 };
 const magas = build(MagasMagiaValues, "Magasmágia", "Mana", (s) => {
   const reqs: SpellReq[] = [{ skill: "Magasmágia", fok: 3 }]; // umbrella stays at the casting threshold
-  const gov = MAGAS_GOV[s.type];
+  const gov = MAGAS_GOV[s.type ?? ""];
   if (gov) reqs.push({ skill: gov, fok: clampFok(FOK_BY_GOV[gov]?.[s.name] ?? 3) });
   return reqs;
 });
 
 // ── E. Prayers — deity-specific need Vallásismeret(deity); Általános/Kis Arkánum at fok 3, Nagy Arkánum at fok 5 ──
 const DEITIES = new Set(["Arel", "Darton", "Domvik", "Dreina", "Krad", "Kyel", "Ranagol", "Sogron", "Tharr", "Uwel"]);
-const prayerReq = (s: any): SpellReq[] => {
+const prayerReq = (s: SpellLike): SpellReq[] => {
   const src = s.source as string;
   if (DEITIES.has(src)) return [{ skill: "Vallásismeret", subtype: src, fok: 3 }];
   if (src === "Nagy Arkánum") return [{ skill: "Vallásismeret", fok: 5 }];

@@ -1,7 +1,7 @@
 // Compendium content adapters. Maps the (duplicated, book-faithful) reference data into table blocks
 // whose columns mirror the old app's screens. Skills (tab 0) are handled in Compendium.tsx from the
 // new model.
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { SpellLike } from "../data/types";
 import { BardMagicValues } from "../data/bardMagic";
 import { PrayerValues } from "../data/prayers";
 import { PsiValues } from "../data/psi";
@@ -48,13 +48,13 @@ const statsBody = (desc: string | string[], pairs: [string, unknown][]): string[
   return line ? [`stats:${line}`, ...arr(desc)] : arr(desc);
 };
 
-type Field = [string, (s: any) => string, ("center" | "right")?];
+type Field = [string, (s: SpellLike) => string, ("center" | "right")?];
 
 // generic spell table: grouped by `groupKey`; columns from `fields` but trimmed PER TABLE to the
 // ones that actually carry data in that group (so a school's table shows only its real columns,
 // like the book — no padded-empty columns). Click → detail modal.
-function spellBlocks(values: any[], groupKey: string, nameLabel: string, school: string, unit: string, fields: Field[]): TableBlock[] {
-  return group(values, (s) => s[groupKey]).map((g) => {
+function spellBlocks(values: SpellLike[], groupKey: "type" | "source", nameLabel: string, school: string, unit: string, fields: Field[]): TableBlock[] {
+  return group(values, (s) => s[groupKey] ?? "").map((g) => {
     const items = g.items.map((s) => ({
       name: s.name,
       cellsAll: fields.map(([, acc]) => acc(s)),
@@ -84,11 +84,11 @@ function spellBlocks(values: any[], groupKey: string, nameLabel: string, school:
   });
 }
 
-const mana = (s: any) => `${s.cost} Mp`;
+const mana = (s: SpellLike) => `${s.cost} Mp`;
 const COMMON: Field[] = [["Mana", mana], ["Idő", (s) => dash(s.castingTime)], ["Hatótáv", (s) => dash(s.range)], ["Időtartam", (s) => dash(s.duration)], ["ME", (s) => join(s.save)]];
 
 // Magasmágia costs come as "3/E", a bare number, "Lásd a leírást!", or "-" — only append "Mp" when numeric.
-const magasCost = (s: any) => {
+const magasCost = (s: SpellLike) => {
   const c = dash(s.cost);
   if (c === "—") return "—";
   return /\d/.test(c) && !/mp/i.test(c) ? `${c} Mp` : c;
@@ -231,7 +231,7 @@ export function skillModalBody(name: string): string[] {
   // Percentage skills have no discrete foks in the book — show only the general description.
   if (!PCT_SKILLS.has(name)) {
     for (let i = 1; i <= 5; i++) {
-      const t = (s as any)[`lvl_${i}`];
+      const t = s[`lvl_${i}` as "lvl_1" | "lvl_2" | "lvl_3" | "lvl_4" | "lvl_5"];
       if (t) foks.push(`${i}. fok — ${t}`);
     }
   }

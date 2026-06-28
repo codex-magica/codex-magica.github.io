@@ -9,7 +9,7 @@ import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumDat
 import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
 import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
-import { SkillCategory } from "../model/common";
+import { SKILL_CATEGORIES } from "../model/common";
 import introMd from "../../book/01-bevezeto.md";
 import charMd from "../../book/02-karakteralkotas.md";
 
@@ -69,8 +69,7 @@ const RulesChip: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 );
 
 // skill catalog from the new model (book-original)
-const CATS: SkillCategory[] = ["Harci", "Alvilági", "Világi", "Tudományos", "Szociális", "Misztikus"];
-const skillGroups = CATS.map((cat) => ({
+const skillGroups = SKILL_CATEGORIES.map((cat) => ({
   group: cat,
   rows: SKILLS.filter((s) => s.category === cat).slice().sort((a, b) => a.name.localeCompare(b.name, "hu"))
     .map((s) => ({ name: s.name, diff: s.cost === "percentage" ? "%" : s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(", ") || "–" })),

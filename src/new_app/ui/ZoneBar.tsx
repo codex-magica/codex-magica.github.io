@@ -1,18 +1,12 @@
 import React from "react";
 import { Box, HStack, IconButton, Spacer, useColorMode } from "@chakra-ui/react";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { ZoneBtn } from "./controls";
 
 // Shared top bar with the Karakter / Kompendium zone switch + dark-mode toggle. Used by the welcome
 // (roster) screen and the standalone compendium screen so the compendium is reachable without a
 // character open. (AppShell keeps its own richer bar for the in-character context.)
 const SIDE = { base: "20px", md: "16px" };
-
-const ZoneBtn: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <Box as="button" type="button" onClick={onClick} px="15px" py="7px" borderRadius="8px" fontWeight={700} fontSize="14px" whiteSpace="nowrap"
-    bg={active ? "accentSoft" : "transparent"} color={active ? "accentTx" : "muted"} transition="background .12s, color .12s">
-    {children}
-  </Box>
-);
 
 export const ZoneBar: React.FC<{
   active: "karakter" | "kompendium";

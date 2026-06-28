@@ -3,6 +3,7 @@ import { Box, Checkbox, Heading, HStack, Select, Text } from "@chakra-ui/react";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { CharacterRecord } from "../model/character";
 import { STAT_KEYS } from "../model/attributes";
+import { FS_NAME, ROW_PY } from "./tokens";
 
 interface Props {
   record: CharacterRecord;
@@ -11,9 +12,6 @@ interface Props {
   onLevel: (name: string, level: number) => void;
   onOption: (name: string, option: string) => void;
 }
-
-const FS_NAME = { base: "19px", md: "16px" };
-const ROW_PY = { base: "11px", md: "8px" };
 
 const costLabel = (cost: number, range?: [number, number]): string =>
   range ? `${range[0]}–${range[1]} KAP` : `${cost} KAP`;

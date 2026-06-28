@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { CharacterRecord, LevelRecord } from "../model/character";
+import { CharacterRecord, LevelRecord, getLevelRecord } from "../model/character";
+import { genId } from "./storage";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { CombatChannel, Resource } from "../model/effects";
 import { Stat } from "../model/attributes";
@@ -88,7 +89,7 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
     a.skill === skill && (a.subtype || "") === (subtype || "");
 
   const upsertSkillPurchase = (level: number, skill: string, subtype: string | undefined, to: number) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     const exists = lvl.skillPurchases.some((p) => sameSkill(p, skill, subtype));
     const skillPurchases = exists
@@ -98,26 +99,25 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
   };
 
   const removeSkillPurchase = (level: number, skill: string, subtype: string | undefined) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => !sameSkill(p, skill, subtype)) });
   };
 
   // A user-added variant (its own subtype + a branch fok). Stored with a stable id so the subtype
   // can be edited freely without losing identity.
-  const genId = () => Math.random().toString(36).slice(2, 9);
   const addSkillVariant = (level: number, skill: string) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
-    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([{ id: genId(), skill, subtype: "", from: 0, to: 1 }]) });
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([{ id: genId("v"), skill, subtype: "", from: 0, to: 1 }]) });
   };
   const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     patchLevel(level, { skillPurchases: lvl.skillPurchases.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
   };
   const removePurchaseById = (level: number, id: string) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => p.id !== id) });
   };
@@ -140,7 +140,7 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
 
   // Generic KAP allocation (Mana / Psi / Kegy / Fp …). HM and Kp have their own dedicated setters.
   const setResourceAllocation = (level: number, target: Resource, points: number) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     const allocations = lvl.allocations.filter((a) => a.target !== target);
     if (points > 0) allocations.push({ target, points });
@@ -150,7 +150,7 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
   // Assign HM to a channel. The engine derives the KAP cost (assigned − free granted HM), so we
   // only store the channel distribution here.
   const setHmChannel = (level: number, channel: CombatChannel, amount: number) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     const hmAssignments = lvl.hmAssignments.filter((h) => h.channel !== channel);
     if (amount > 0) hmAssignments.push({ channel, amount });
@@ -159,7 +159,7 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
 
   // Buy +N to an attribute with KAP (20 KAP each) — separate from the 135 base point-buy.
   const setStatBuy = (level: number, stat: Stat, amount: number) => {
-    const lvl = record.levels.find((l) => l.level === level);
+    const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     const statIncreases = lvl.statIncreases.filter((si) => !(si.stat === stat && si.source === "kap"));
     if (amount > 0) statIncreases.push({ stat, amount, source: "kap" });

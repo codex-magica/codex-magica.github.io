@@ -11,7 +11,8 @@ import { defaultRecord } from "./defaultRecord";
 
 const KEY = "magus.roster.v1";
 
-export const genId = (): string => `c_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+// Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
+export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
 export const loadRoster = (): CharacterRecord[] => {
   try {

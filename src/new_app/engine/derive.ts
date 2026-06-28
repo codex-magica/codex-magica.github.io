@@ -3,7 +3,7 @@
 // Nothing here throws on bad input; problems surface as diagnostics so the builder can warn.
 
 import { RulesDB } from "../model/rulesDb";
-import { CharacterRecord, VitalKey } from "../model/character";
+import { CharacterRecord, VitalKey, getLevelRecord } from "../model/character";
 import { STAT_KEYS, Stats } from "../model/attributes";
 import { CombatChannel, Effect, Pool } from "../model/effects";
 import { skillKey } from "../model/common";
@@ -263,7 +263,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     kapBalance += income;
     kapIncomeByLevel.push(income);
 
-    const lvlRec = rec.levels.find((l) => l.level === L);
+    const lvlRec = getLevelRecord(rec, L);
 
     if (lvlRec) {
       for (const a of lvlRec.allocations) {

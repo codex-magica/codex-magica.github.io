@@ -6,6 +6,7 @@ import { ATTR_MAX, POINT_BUY_TOTAL } from "../engine/constants";
 import { CharacterRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { Stepper } from "./Stepper";
+import { FS_NAME } from "./tokens";
 
 interface Props {
   record: CharacterRecord;
@@ -15,7 +16,6 @@ interface Props {
 }
 
 const STEPW = { base: "136px", md: "108px" };
-const FS_NAME = { base: "19px", md: "16px" };
 
 // Two columns: the base value (135 point-buy, ≤ racial cap) and the maximum (racial cap, which the
 // Adottság column raises — 1 KAP per point). Effective value = base + Adottság.

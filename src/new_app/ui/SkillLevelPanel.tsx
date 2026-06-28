@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Box, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
-import { CharacterRecord } from "../model/character";
+import { CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { SKILLS, SKILL_BY_NAME } from "../model/skills";
-import { SkillCategory } from "../model/common";
+import { SkillCategory, SKILL_CATEGORIES } from "../model/common";
 import { skillKpCost } from "../engine/skillCost";
 import { Stepper } from "./Stepper";
+import { DeleteButton } from "./controls";
+import { FS_NAME, ROW_PY } from "./tokens";
 
 type View = "learned" | "taught" | "all";
 
@@ -22,13 +24,9 @@ interface Props {
   onSetSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
 }
 
-const CATEGORIES: SkillCategory[] = ["Harci", "Alvilági", "Világi", "Tudományos", "Szociális", "Misztikus"];
 const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
 
-const FS_NAME = { base: "19px", md: "16px" };
-const ROW_PY = { base: "11px", md: "8px" };
 const SUBW = { base: "170px", md: "128px" };
-const BTN_H = { base: "44px", md: "34px" };
 
 // ── shared inline bits (tokenized to the "Kódex" system) ──
 const TeacherBadge: React.FC<{ n: number }> = ({ n }) => (
@@ -58,7 +56,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // Skills whose general (no-subtype) primary the user is currently specialising — reveals its subtype input.
   const [specializing, setSpecializing] = useState<Set<string>>(new Set());
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
-  const lvl = record.levels.find((l) => l.level === level);
+  const lvl = getLevelRecord(record, level);
   const purchases = lvl?.skillPurchases ?? [];
   const variants = purchases.filter((p) => p.id);
   const variantKeys = new Set(variants.map((p) => keyOf(p.skill, p.subtype)));
@@ -172,12 +170,6 @@ export const SkillLevelPanel: React.FC<Props> = ({
     </Box>
   );
 
-  const deleteBtn = (onClick: () => void) => (
-    <Box as="button" type="button" h={BTN_H} minW={BTN_H} border="1px solid" borderColor="hair" borderRadius="8px" color="fgFaint" display="flex" alignItems="center" justifyContent="center" fontSize="15px" flexShrink={0} onClick={onClick}>
-      ✕
-    </Box>
-  );
-
   // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected").
   const tanulBtn = (name: string) => (
     <Box
@@ -288,14 +280,14 @@ export const SkillLevelPanel: React.FC<Props> = ({
       // "Unspecialise" X — only for an in-place-specialised GENERAL skill (not a granted subtype, not a
       // mandatory enumerated one): clears the subtype back to general and hides the input.
       inst.origSubtype == null && (SKILL_BY_NAME[inst.skill]?.subtypes?.length ?? 0) === 0 && (inst.subtype || specializing.has(inst.skill))
-        ? deleteBtn(() => {
+        ? <DeleteButton onClick={() => {
             onSetSubtype(level, inst.skill, inst.subtype, undefined);
             setSpecializing((s) => {
               const n = new Set(s);
               n.delete(inst.skill);
               return n;
             });
-          })
+          }} />
         : null
     );
   };
@@ -326,7 +318,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
         onDec={() => onPatchVariant(level, p.id!, { to: p.to - step })}
         onInc={() => onPatchVariant(level, p.id!, { to: p.to + step })}
       />,
-      deleteBtn(() => onRemoveVariant(level, p.id!))
+      <DeleteButton onClick={() => onRemoveVariant(level, p.id!)} />
     );
   };
 
@@ -369,7 +361,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       </HStack>
 
       <Box>
-        {CATEGORIES.map((cat) => {
+        {SKILL_CATEGORIES.map((cat) => {
           const skills = visibleInCat(cat);
           if (skills.length === 0) return null;
           return (

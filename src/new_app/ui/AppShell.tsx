@@ -9,6 +9,7 @@ import { skillModalBody, skillModalSub, spellModalByName } from "./compendiumDat
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
+import { ZoneBtn } from "./controls";
 
 interface AppShellProps {
   record: CharacterRecord;
@@ -19,13 +20,6 @@ interface AppShellProps {
 }
 
 const SIDE = { base: "20px", md: "16px" };
-
-const ZoneBtn: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <Box as="button" type="button" onClick={onClick} px="15px" py="7px" borderRadius="8px" fontWeight={700} fontSize="14px" whiteSpace="nowrap"
-    bg={active ? "accentSoft" : "transparent"} color={active ? "accentTx" : "muted"} transition="background .12s, color .12s">
-    {children}
-  </Box>
-);
 
 const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: boolean; children: React.ReactNode }> = ({ onClick, icon, accent, children }) => (
   <Box as="button" type="button" onClick={onClick} display="inline-flex" alignItems="center" gap="7px" px="13px" py="8px" borderRadius="9px"
