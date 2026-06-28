@@ -7,6 +7,7 @@ import { Markdown } from "./Markdown";
 import { compNames } from "./sampleData";
 import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
 import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
+import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
 import { SkillCategory } from "../model/common";
 import introMd from "../../book/01-bevezeto.md";
@@ -85,6 +86,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
 
   // rules prose for the current school (if any), plus a helper to open it in the markdown modal
   const schoolRules = MAGIC_RULES[title];
+  // chapter-level rules for the main heading: skills have their own; magic schools use schoolRules
+  const headingRules = isSkills ? skillsRules : schoolRules?.rules;
   const openRules = (name: string, sub: string, md: string) =>
     onOpenModal({ kind: "rules", name, sub, body: [], markdown: stripTitleHeading(md, name) });
 
@@ -164,7 +167,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
         <>
         <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb="4px">
           <Heading as="h2" fontSize={{ base: "24px", md: "21px" }} fontWeight={700} color="fg" textAlign="center">{title}</Heading>
-          {schoolRules?.rules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", schoolRules.rules!)} />}
+          {headingRules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", headingRules)} />}
         </Box>
         <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért

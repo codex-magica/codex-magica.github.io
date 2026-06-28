@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { Box, Flex, Heading, HStack, IconButton, Text, useColorMode } from "@chakra-ui/react";
-import { MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { Box, Flex, Heading, HStack, Text } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
+import { ZoneBar } from "./ZoneBar";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
@@ -13,6 +13,7 @@ interface Props {
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
+  onOpenCompendium: () => void;
 }
 
 const SIDE = { base: "32px", md: "32px" };
@@ -37,9 +38,8 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
   </Box>
 );
 
-export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete }) => {
+export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onOpenCompendium }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
-  const { colorMode, toggleColorMode } = useColorMode();
   const hoverShadow = useParchmentHoverShadow();
 
   const views: CardView[] = useMemo(
@@ -57,12 +57,10 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const menuView = views.find((v) => v.id === menuId);
 
   return (
-    <Box position="relative" h="100vh" overflowY="auto" bg="page" color="fg" fontFamily="Warnock, serif">
-      <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "52px", md: "40px" }} pb="90px">
-        <Box position="absolute" top="14px" right="18px">
-          <IconButton aria-label="Sötét mód váltása" size="sm" variant="ghost" color="muted" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
-        </Box>
-
+    <Flex direction="column" h="100vh" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+      <ZoneBar active="karakter" onKarakter={() => {}} onKompendium={onOpenCompendium} />
+      <Box flex="1 1 auto" overflowY="auto" position="relative">
+      <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "32px", md: "30px" }} pb="90px">
         <Box textAlign="center" mb={{ base: "44px", md: "36px" }}>
           <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
           <Heading as="h1" fontSize={{ base: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
@@ -132,6 +130,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text as="span">{records.length} / 12 hely felhasználva</Text>
         </HStack>
       </Box>
+      </Box>
 
       {menuView && (
         <Flex position="fixed" inset={0} zIndex={40} bg="rgba(16,14,24,.5)" align="center" justify="center" p="28px" onClick={() => setMenuId(null)}>
@@ -150,6 +149,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           </ParchPanel>
         </Flex>
       )}
-    </Box>
+    </Flex>
   );
 };

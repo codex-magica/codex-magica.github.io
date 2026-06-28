@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { AppShell } from "./AppShell";
+import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
 import { useRoster } from "../state/useRoster";
 import { createBlankRecord } from "../state/storage";
@@ -11,7 +12,7 @@ import { CharacterRecord } from "../model/character";
 // via the roster; the creator commits a working copy on save.
 export const RootApp: React.FC = () => {
   const roster = useRoster();
-  const [screen, setScreen] = useState<"roster" | "sheet">("roster");
+  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
 
@@ -40,6 +41,8 @@ export const RootApp: React.FC = () => {
           onLevelup={() => setCreator({ mode: "levelup", record: current })}
           onPatchRecord={roster.upsert}
         />
+      ) : screen === "compendium" ? (
+        <CompendiumScreen onExit={() => setScreen("roster")} />
       ) : (
         <WelcomeScreen
           records={roster.records}
@@ -48,6 +51,7 @@ export const RootApp: React.FC = () => {
           onEdit={editChar}
           onDuplicate={roster.duplicate}
           onDelete={roster.remove}
+          onOpenCompendium={() => setScreen("compendium")}
         />
       )}
 
