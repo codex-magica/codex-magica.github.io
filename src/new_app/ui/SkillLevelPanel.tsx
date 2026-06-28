@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
 import { CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
@@ -25,6 +25,8 @@ interface Props {
 }
 
 const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
+// Shown when the user taps a − that's locked because a branch depends on that fok (touch-reachable note).
+const BRANCH_NOTICE = "Egy ág innen ágazik — előbb csökkentsd vagy töröld az ágat.";
 
 const SUBW = { base: "170px", md: "128px" };
 
@@ -38,6 +40,12 @@ const KapottBadge: React.FC<{ text?: string }> = ({ text = "kapott" }) => (
   <Box as="span" fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".08em" textTransform="uppercase" px="6px" py="2px" borderRadius="5px" bg="kapottBg" color="kapottTx" whiteSpace="nowrap" flexShrink={0}>
     {text}
   </Box>
+);
+// The ↳ corner arrow that marks a branch row (in the from-pill and on granted-branch instances).
+const BranchArrow: React.FC<{ size?: number }> = ({ size = 13 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="15 10 20 15 15 20" /><path d="M4 4v7a4 4 0 0 0 4 4h12" />
+  </svg>
 );
 
 export const SkillLevelPanel: React.FC<Props> = ({
@@ -55,6 +63,15 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const [view, setView] = useState<View>("learned");
   // Skills whose general (no-subtype) primary the user is currently specialising — reveals its subtype input.
   const [specializing, setSpecializing] = useState<Set<string>>(new Set());
+  // The variant id whose "branches from which fok?" popover is open (only one at a time), or null.
+  const [fromOpen, setFromOpen] = useState<string | null>(null);
+  // Transient note shown when a − is tapped that's locked by a dependent branch (auto-dismisses).
+  const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 4000);
+    return () => clearTimeout(t);
+  }, [notice]);
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
   const lvl = getLevelRecord(record, level);
   const purchases = lvl?.skillPurchases ?? [];
@@ -201,14 +218,50 @@ export const SkillLevelPanel: React.FC<Props> = ({
     </Box>
   );
 
-  const agFromControl = (from: number, max: number, onDec: () => void, onInc: () => void) => (
-    <HStack spacing="2px" flexShrink={0} align="center" title="ágazási fok (innen örökölt, ingyen)">
-      <Box as="span" fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".06em" textTransform="uppercase" color="catTx">ág</Box>
-      <Box as="button" type="button" px="3px" fontSize="15px" color="muted" opacity={from <= 0 ? 0.4 : 1} onClick={from <= 0 ? undefined : onDec}>−</Box>
-      <Text fontSize="xs" w="12px" textAlign="center" color="accentTx" sx={{ fontVariantNumeric: "tabular-nums" }}>{from}</Text>
-      <Box as="button" type="button" px="3px" fontSize="15px" color="muted" opacity={from >= max ? 0.4 : 1} onClick={from >= max ? undefined : onInc}>+</Box>
-    </HStack>
-  );
+  // Branch-fok selector: a pill showing "↳ N. foktól ▾" that opens a popover to pick which fok of the
+  // parent the branch inherits from (1…parent fok, free). Picking a fok above the current target bumps
+  // the target up so it never sits below its inherited floor.
+  const branchFromPill = (p: { id?: string; from?: number; to: number }, from: number, maxFrom: number) => {
+    const open = fromOpen === p.id;
+    const pick = (n: number) => { onPatchVariant(level, p.id!, { from: n, to: Math.max(p.to, n) }); setFromOpen(null); };
+    return (
+      <Box position="relative" flexShrink={0}>
+        <Box as="button" type="button" title="Hányadik foktól ágazik?" onClick={() => setFromOpen(open ? null : p.id!)}
+          display="inline-flex" alignItems="center" gap="5px" px="10px" py="6px" borderRadius="8px"
+          bg="accentSoft" color="accentTx" border="1px solid" borderColor="accentBd"
+          fontFamily="system-ui" fontSize="12.5px" fontWeight={700} whiteSpace="nowrap"
+          _hover={{ borderColor: "accent" }}>
+          <BranchArrow />
+          {from}. foktól
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </Box>
+        {open && (
+          <>
+            <Box position="fixed" inset={0} zIndex={29} onClick={() => setFromOpen(null)} />
+            <Box position="absolute" top="calc(100% + 6px)" left={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW="max-content" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
+              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">
+                Hányadik foktól ágazik?
+              </Text>
+              <HStack gap="7px">
+                {Array.from({ length: maxFrom }, (_, i) => i + 1).map((n) => (
+                  <Box as="button" key={n} type="button" onClick={() => pick(n)}
+                    w={{ base: "46px", md: "42px" }} h={{ base: "46px", md: "42px" }} borderRadius="9px" border="1px solid"
+                    borderColor={n === from ? "accent" : "fieldBd"} bg={n === from ? "accentSoft" : "fieldBg"}
+                    color={n === from ? "accentTx" : "fg"} fontWeight={700} fontSize="17px"
+                    display="flex" alignItems="center" justifyContent="center" sx={{ fontVariantNumeric: "tabular-nums" }}
+                    _hover={{ borderColor: "accent" }}>
+                    {n}.
+                  </Box>
+                ))}
+              </HStack>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  };
 
   const nameGroup = (name: string, showBranch: boolean) => {
     const teacher = teacherOf(name);
@@ -240,8 +293,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
     </HStack>
   );
 
-  // a granted / simple owned instance
-  const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }, isPrimary: boolean, showBranch: boolean) => {
+  // a granted / simple owned instance. `branchFloor` (= highest dependent branch's from + 1, or null) is
+  // the fok the trunk must stay at. `mainFok`/`topCount` identify which instance actually sets that ceiling:
+  // the UNIQUE highest one — lowering it drops the group max and orphans a branch, so block it (even if it's
+  // a non-primary sibling). A tied-for-highest instance can be lowered freely (the max survives).
+  const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }, isPrimary: boolean, showBranch: boolean, mainFok: number, topCount: number, branchFloor: number | null) => {
     const isPct = inst.percent != null;
     const cur = isPct ? inst.percent! : inst.fok;
     const floor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0;
@@ -249,8 +305,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const step = isPct ? (teacher > 0 ? 5 : 3) : 1;
     const atMax = isPct ? cur >= 100 : cur >= 5;
     const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step);
+    const decBlocked = !isPct && branchFloor != null && cur === mainFok && topCount === 1 && cur > floor && cur <= branchFloor;
     const left = isPrimary ? nameGroup(inst.skill, showBranch) : (
-      <Box as="span" fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".06em" textTransform="uppercase" color="catTx" flexShrink={0}>ág</Box>
+      <Box as="span" color="catTx" flexShrink={0} display="inline-flex" alignItems="center" lineHeight={0} title="Ág">
+        <BranchArrow size={15} />
+      </Box>
     );
     return rowShell(
       keyOf(inst.skill, inst.origSubtype) + ":g",
@@ -273,6 +332,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
         value={isPct ? `${cur}%` : `${cur}.`}
         incLabel={atMax ? undefined : String(cost)}
         decDisabled={cur <= floor}
+        decBlocked={decBlocked}
+        onDecBlocked={() => setNotice(BRANCH_NOTICE)}
         incDisabled={atMax || cost > kap}
         onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, inst.subtype) : onUpsert(level, inst.skill, inst.subtype, cur - step))}
         onInc={() => onUpsert(level, inst.skill, inst.subtype, cur + step)}
@@ -292,8 +353,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
     );
   };
 
-  // a user-added variant (editable subtype + branch fok + delete)
-  const varRow = (p: { id?: string; skill: string; subtype?: string; from?: number; to: number }, isPrimary: boolean, showBranch: boolean) => {
+  // a user-added variant (editable subtype + branch fok + delete). `mainFok` is the trunk level (highest
+  // instance of this skill); a branch diverges strictly below it, so it can branch from 1…(mainFok − 1).
+  const varRow = (p: { id?: string; skill: string; subtype?: string; from?: number; to: number }, isPrimary: boolean, showBranch: boolean, mainFok: number, branchFloor: number | null) => {
     const def = SKILL_BY_NAME[p.skill];
     const isPct = def.cost === "percentage";
     const from = p.from || 0;
@@ -301,9 +363,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const step = isPct ? (teacher > 0 ? 5 : 3) : 1;
     const atMax = isPct ? p.to >= 100 : p.to >= 5;
     const cost = atMax ? 0 : stepCost(p.skill, p.to, p.to + step);
+    const maxFrom = Math.max(1, Math.min(5, (mainFok || p.to) - 1));
+    // When this variant is itself the trunk (no owned instance), block lowering below a dependent branch.
+    const decBlocked = isPrimary && branchFloor != null && p.to > from && p.to <= branchFloor;
     const left = isPrimary
       ? nameGroup(p.skill, showBranch)
-      : agFromControl(from, Math.min(p.to, 5), () => onPatchVariant(level, p.id!, { from: from - 1 }), () => onPatchVariant(level, p.id!, { from: from + 1 }));
+      : branchFromPill(p, from, maxFrom);
     return rowShell(
       p.id!,
       isPrimary,
@@ -314,6 +379,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
         value={isPct ? `${p.to}%` : `${p.to}.`}
         incLabel={atMax ? undefined : String(cost)}
         decDisabled={p.to <= from}
+        decBlocked={decBlocked}
+        onDecBlocked={() => setNotice(BRANCH_NOTICE)}
         incDisabled={atMax || cost > kap}
         onDec={() => onPatchVariant(level, p.id!, { to: p.to - step })}
         onInc={() => onPatchVariant(level, p.id!, { to: p.to + step })}
@@ -383,11 +450,20 @@ export const SkillLevelPanel: React.FC<Props> = ({
                     </HStack>
                   );
                 }
+                // Trunk level = highest owned (fok) instance (or the highest variant if none). Dependent
+                // branches = the user variants (all of them when there's an owned trunk, else all but the
+                // first). The trunk can't drop below the highest branch's `from` (+1); `topCount` is how many
+                // instances tie at the top, so we only block the lone highest one.
+                const ownedFoks = insts.filter((s) => s.percent == null).map((s) => s.fok);
+                const mainFok = ownedFoks.length ? Math.max(...ownedFoks) : Math.max(0, ...vars.map((v) => v.to));
+                const topCount = ownedFoks.filter((f) => f === mainFok).length;
+                const branchVars = insts.length > 0 ? vars : vars.slice(1);
+                const branchFloor = branchVars.length ? Math.max(...branchVars.map((v) => v.from || 0)) + 1 : null;
                 let i = 0;
                 return (
                   <Box key={def.name}>
-                    {insts.map((inst) => instRow(inst, i++ === 0, showBranch))}
-                    {vars.map((p) => varRow(p, i++ === 0, showBranch))}
+                    {insts.map((inst) => instRow(inst, i++ === 0, showBranch, mainFok, topCount, branchFloor))}
+                    {vars.map((p) => varRow(p, i++ === 0, showBranch, mainFok, branchFloor))}
                   </Box>
                 );
               })}
@@ -395,6 +471,15 @@ export const SkillLevelPanel: React.FC<Props> = ({
           );
         })}
       </Box>
+
+      {notice && (
+        <Box position="fixed" bottom="20px" left="50%" transform="translateX(-50%)" zIndex={50}
+          bg="band" border="1px solid" borderColor="accentBd" borderRadius="10px" px="16px" py="11px"
+          maxW="min(380px, 90vw)" cursor="pointer" onClick={() => setNotice(null)}
+          sx={{ boxShadow: "0 12px 32px rgba(0,0,0,.32)" }}>
+          <Text fontFamily="system-ui" fontSize="13px" color="fg" lineHeight="1.45">{notice}</Text>
+        </Box>
+      )}
     </Box>
   );
 };

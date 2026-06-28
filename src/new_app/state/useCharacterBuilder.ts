@@ -109,7 +109,7 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
   const addSkillVariant = (level: number, skill: string) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
-    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([{ id: genId("v"), skill, subtype: "", from: 0, to: 1 }]) });
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([{ id: genId("v"), skill, subtype: "", from: 1, to: 1 }]) });
   };
   const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => {
     const lvl = getLevelRecord(record, level);

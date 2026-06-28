@@ -10,6 +10,10 @@ interface StepperProps {
   incLabel?: string; // cost shown after the "+", e.g. "8" → "+ 8"
   fullWidth?: boolean; // fill the parent box (attribute columns) for column alignment
   valueMuted?: boolean; // Adottság column — secondary value color
+  // "Locked by a dependency" — the − is NOT lowerable, but unlike `decDisabled` (greyed / at its floor)
+  // it's accent-styled and tappable so the reason is reachable on touch (iPad) via `onDecBlocked`.
+  decBlocked?: boolean;
+  onDecBlocked?: () => void;
 }
 
 // Touch-friendly: 44/46px on iPad (base), 34px on desktop (md).
@@ -27,6 +31,8 @@ export const Stepper: React.FC<StepperProps> = ({
   incLabel,
   fullWidth,
   valueMuted,
+  decBlocked,
+  onDecBlocked,
 }) => (
   <Box
     display={fullWidth ? "flex" : "inline-flex"}
@@ -43,16 +49,17 @@ export const Stepper: React.FC<StepperProps> = ({
     <Box
       as="button"
       type="button"
-      onClick={decDisabled ? undefined : onDec}
-      disabled={decDisabled}
+      onClick={decBlocked ? onDecBlocked : decDisabled ? undefined : onDec}
+      disabled={decDisabled && !decBlocked}
+      title={decBlocked ? "Egy ág innen ágazik" : undefined}
       minW={W}
       borderRight="1px solid"
       borderColor="fieldBd"
-      bg="transparent"
+      bg={decBlocked ? "accentSoft" : "transparent"}
       fontSize="18px"
-      color={decDisabled ? "fgFaint" : "muted"}
-      opacity={decDisabled ? 0.5 : 1}
-      cursor={decDisabled ? "default" : "pointer"}
+      color={decBlocked ? "accentTx" : decDisabled ? "fgFaint" : "muted"}
+      opacity={decDisabled && !decBlocked ? 0.5 : 1}
+      cursor={decBlocked || !decDisabled ? "pointer" : "default"}
       display="flex"
       alignItems="center"
       justifyContent="center"

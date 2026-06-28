@@ -301,10 +301,12 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const cost = skillKpCost(def, from, sp.to, tUpto, effective);
         kapBalance -= cost.kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
         if (cost.note) diag("info", cost.note, L);
+        // Carry forward the granted subtype's stable key: raising a granted-subtyped skill must keep its
+        // origSubtype, else it looks self-specialised (a spurious "unspecialise" ✕ that corrupts on click).
         if (isPct) {
-          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: 0, percent: sp.to };
+          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: 0, percent: sp.to, origSubtype: cur?.origSubtype };
         } else {
-          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: sp.to, percent: 0 };
+          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: sp.to, percent: 0, origSubtype: cur?.origSubtype };
           if (sp.to >= 4 && from < 4 && def.attrs.length > 0) {
             const has = lvlRec.statIncreases.some((si) => si.source === "skillFok4" && si.refSkill === sp.skill);
             if (!has) diag("info", `${sp.skill}: 4. fok elérve — válassz +1 Tulajdonságot (${def.attrs.join(", ")}).`, L);
