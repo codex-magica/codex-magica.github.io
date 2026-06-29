@@ -1,5 +1,5 @@
 import { Stats } from "../model/attributes";
-import { CombatChannel, Pool } from "../model/effects";
+import { CombatChannel, Pool, Resource } from "../model/effects";
 import { InventoryItem, VitalKey } from "../model/character";
 
 export interface Contribution {
@@ -66,4 +66,8 @@ export interface DerivedCharacter {
   ledgerCosts: Record<string, number>;
   // The running value an operation changed, before → after (same keys as ledgerCosts).
   ledgerDelta: Record<string, { before: number; after: number }>;
+  // Per-level resources granted by skills at their current fok (fok 3→+1, 4→+2, 5→+3), for the last level —
+  // e.g. Harctéri gyakorlat (4. fok) → +2 HM/szint. Drives the Szintlépési nyereségek panel. HM grants are
+  // distributed via the per-level grantedHmAssignments; the rest already fold into the pools/Fp totals.
+  resourceGrants: { source: string; resource: Resource; amount: number }[];
 }

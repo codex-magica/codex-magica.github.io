@@ -43,8 +43,6 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
   const resOf = (t: Resource) => lvl?.allocations.find((a) => a.target === t)?.points ?? 0;
   const statBuyOf = (s: Stat) => lvl?.statIncreases.find((si) => si.stat === s && si.source === "kap")?.amount ?? 0;
   const caps = RACES[record.race]?.statLimits;
-  const hmGranted = derived.pools.hmGrantedByLevel[level - 1] ?? 0;
-  const hmAssigned = lvl ? lvl.hmAssignments.reduce((s, h) => s + h.amount, 0) : 0;
   const existingPools = PSEUDO.filter(({ pool }) => derived.pools.magic[pool]);
 
   const [adding, setAdding] = useState(false);
@@ -86,22 +84,20 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
         Közös KAP-ból (Int + 50 − hátterek) a Képzettségek panellel.
       </Text>
 
-      {/* Harcérték (HM) + Fp */}
-      <SubHeader>
-        Harcérték (HM · {KAP_RATE.HM} KAP){hmGranted > 0 ? ` · ${hmGranted} kapott ingyen` : ""}
-      </SubHeader>
+      {/* Harcérték (HM) + Fp — extra HM bought with KAP. The FREE skill-granted HM is distributed in the
+          Szintlépési nyereségek panel; the (= N) value below is the total combat value (granted + bought). */}
+      <SubHeader>Harcérték (HM · {KAP_RATE.HM} KAP · extra)</SubHeader>
       {CHANNELS.map((c) => {
         const v = hmOf(c);
-        const nextCost = hmAssigned < hmGranted ? 0 : KAP_RATE.HM;
         return buyRow(
           c,
           <>{c} <Text as="span" color="fgFaint">(= {derived.combat[c]})</Text></>,
           v,
-          String(nextCost),
+          String(KAP_RATE.HM),
           () => onHm(level, c, Math.max(0, v - 1)),
           () => onHm(level, c, v + 1),
           v <= 0,
-          kap < nextCost
+          kap < KAP_RATE.HM
         );
       })}
       {buyRow(

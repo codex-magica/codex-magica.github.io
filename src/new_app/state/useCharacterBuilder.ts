@@ -47,6 +47,7 @@ export interface CharacterBuilderApi {
   setLearnedSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
   setResourceAllocation: (level: number, target: Resource, points: number) => void;
   setHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
+  setGrantedHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
   setSkillFok4Stat: (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => void;
 }
@@ -169,14 +170,22 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     patchLevel(level, { allocations });
   };
 
-  // Assign HM to a channel. The engine derives the KAP cost (assigned − free granted HM), so we
-  // only store the channel distribution here.
+  // Assign KAP-BOUGHT HM to a channel (Pontvásárlás). Each point is paid; the engine charges KAP_RATE.HM.
   const setHmChannel = (level: number, channel: CombatChannel, amount: number) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     const hmAssignments = lvl.hmAssignments.filter((h) => h.channel !== channel);
     if (amount > 0) hmAssignments.push({ channel, amount });
     patchLevel(level, { hmAssignments });
+  };
+
+  // Distribute the FREE skill-granted HM to a channel (Szintlépési nyereségek panel). No KAP cost.
+  const setGrantedHmChannel = (level: number, channel: CombatChannel, amount: number) => {
+    const lvl = getLevelRecord(record, level);
+    if (!lvl) return;
+    const grantedHmAssignments = (lvl.grantedHmAssignments ?? []).filter((h) => h.channel !== channel);
+    if (amount > 0) grantedHmAssignments.push({ channel, amount });
+    patchLevel(level, { grantedHmAssignments });
   };
 
   // Buy +N to an attribute with KAP (20 KAP each) — separate from the 135 base point-buy.
@@ -217,6 +226,7 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     setLearnedSubtype,
     setResourceAllocation,
     setHmChannel,
+    setGrantedHmChannel,
     setStatBuy,
     setSkillFok4Stat,
   };

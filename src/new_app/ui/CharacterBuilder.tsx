@@ -9,6 +9,7 @@ import { AttributeEditor } from "./AttributeEditor";
 import { BackgroundSelector } from "./BackgroundSelector";
 import { SkillLevelPanel } from "./SkillLevelPanel";
 import { PointBuyPanel } from "./PointBuyPanel";
+import { LevelGainsPanel } from "./LevelGainsPanel";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import { LedgerPanel } from "./LedgerPanel";
 import { ParchPanel } from "./ParchPanel";
@@ -52,6 +53,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
     setHmChannel,
     setStatBuy,
     setSkillFok4Stat,
+    setGrantedHmChannel,
   } = api;
 
   const onRaceChange = (race: string) => {
@@ -146,11 +148,11 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
         </ParchPanel>
 
         <ParchPanel>
-          <AttributeEditor record={record} derived={derived} onChange={(s: Stat, v: number) => patchPointBuy(s, v)} onAdottsag={setAdottsag} />
+          <BackgroundSelector record={record} granted={derived.grantedBackgrounds} onToggle={toggleBackground} onLevel={setBackgroundLevel} onOption={setBackgroundOption} />
         </ParchPanel>
 
         <ParchPanel>
-          <BackgroundSelector record={record} granted={derived.grantedBackgrounds} onToggle={toggleBackground} onLevel={setBackgroundLevel} onOption={setBackgroundOption} />
+          <AttributeEditor record={record} derived={derived} onChange={(s: Stat, v: number) => patchPointBuy(s, v)} onAdottsag={setAdottsag} />
         </ParchPanel>
 
         <ParchPanel>
@@ -167,6 +169,10 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
             onSetSubtype={setLearnedSubtype}
             onSetFok4Stat={setSkillFok4Stat}
           />
+        </ParchPanel>
+
+        <ParchPanel>
+          <LevelGainsPanel level={1} record={record} derived={derived} onGrantedHm={setGrantedHmChannel} />
         </ParchPanel>
 
         <ParchPanel>

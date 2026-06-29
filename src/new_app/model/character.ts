@@ -80,7 +80,8 @@ export interface LevelRecord {
   level: number;
   allocations: KapAllocation[];
   skillPurchases: SkillPurchase[];
-  hmAssignments: HmAssignment[];
+  hmAssignments: HmAssignment[]; // KAP-BOUGHT HM (Pontvásárlás) — each point paid at KAP_RATE.HM
+  grantedHmAssignments?: HmAssignment[]; // free HM from skill grants, distributed in the Szintlépési nyereségek panel
   statIncreases: StatIncrease[];
   notes?: string;
 }

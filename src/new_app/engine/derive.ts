@@ -5,7 +5,7 @@
 import { RulesDB } from "../model/rulesDb";
 import { CharacterRecord, VitalKey, getLevelRecord } from "../model/character";
 import { STAT_KEYS, Stats } from "../model/attributes";
-import { CombatChannel, Effect, Pool } from "../model/effects";
+import { CombatChannel, Effect, Pool, Resource } from "../model/effects";
 import { skillKey } from "../model/common";
 import { resolveChoiceGrants } from "../model/choices";
 import {
@@ -152,6 +152,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const hmGrantedByLevel: number[] = []; // free HM (from skills) per level — assignable at no cost
   const ledgerCosts: Record<string, number> = {}; // KAP charged per ledger op, keyed `L:kind:id` (for the ledger view)
   const ledgerDelta: Record<string, { before: number; after: number }> = {}; // running value before→after per op
+  let resourceGrants: { source: string; resource: Resource; amount: number }[] = []; // skill-fok grants, last level
   let cumulativeBgCost = 0;
 
   // A granted subtype may be renamed by the player (placeholders like "anyanyelv"/"szülőföld").
@@ -362,6 +363,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     // Collected into a flat delta list, then applied with plain for-loops (no functions-in-loop).
     let hmFromSkills = 0;
     const resourceDeltas: { resource: string; amount: number }[] = [];
+    resourceGrants = []; // rebuilt each level; after the loop it holds the last (current) level's grants
     for (const k of Object.keys(owned)) {
       const o = owned[k];
       const def = db.skills[o.skill];
@@ -369,8 +371,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       const effs = (def.perFokEffects as Partial<Record<number, Effect[]>>)[o.fok];
       if (!effs) continue;
       for (const e of effs) {
-        if (e.kind === "resourcePerLevel") resourceDeltas.push({ resource: e.resource, amount: e.amount });
-        else if (e.kind === "derivedPerLevel") derivedBonus[e.target] += e.amount;
+        if (e.kind === "resourcePerLevel") {
+          resourceDeltas.push({ resource: e.resource, amount: e.amount });
+          resourceGrants.push({ source: `${o.skill}${o.subtype ? ` (${o.subtype})` : ""} ${o.fok}. fok`, resource: e.resource, amount: e.amount });
+        } else if (e.kind === "derivedPerLevel") derivedBonus[e.target] += e.amount;
       }
     }
     for (const s of staticPerLevel) {
@@ -388,27 +392,35 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       }
     }
 
-    // HM: skill-granted HM is free; everything assigned beyond it is bought at KAP_RATE.HM each. The free
-    // pool is consumed by the assignments in order, so each line's recorded cost is what it actually paid.
-    let assigned = 0;
-    let freeHm = hmFromSkills;
+    // HM is allocated from two distinct sources (each targeting KÉ/TÉ/VÉ/CÉ):
+    //  • grantedHmAssignments — the free HM skills grant (distributed in the Szintlépési nyereségek panel),
+    //  • hmAssignments        — extra HM bought with KAP in the Pontvásárlás panel, paid per point.
+    let grantedAssigned = 0;
+    if (lvlRec?.grantedHmAssignments) {
+      lvlRec.grantedHmAssignments.forEach((h) => {
+        const before = combatAcc[h.channel];
+        combatAcc[h.channel] += h.amount;
+        ledgerDelta[`${L}:ghm:${h.channel}`] = { before, after: before + h.amount };
+        addProv(h.channel, `HM (kapott) L${L}`, h.amount);
+        ledgerCosts[`${L}:ghm:${h.channel}`] = 0; // free
+        grantedAssigned += h.amount;
+      });
+    }
     if (lvlRec) {
       lvlRec.hmAssignments.forEach((h) => {
-        const hmBefore = combatAcc[h.channel];
+        const before = combatAcc[h.channel];
         combatAcc[h.channel] += h.amount;
-        ledgerDelta[`${L}:hm:${h.channel}`] = { before: hmBefore, after: hmBefore + h.amount };
-        addProv(h.channel, `HM L${L}`, h.amount);
-        assigned += h.amount;
-        const freeUsed = Math.min(freeHm, h.amount);
-        freeHm -= freeUsed;
-        ledgerCosts[`${L}:hm:${h.channel}`] = (h.amount - freeUsed) * KAP_RATE.HM;
+        ledgerDelta[`${L}:hm:${h.channel}`] = { before, after: before + h.amount };
+        addProv(h.channel, `HM (vett) L${L}`, h.amount);
+        ledgerCosts[`${L}:hm:${h.channel}`] = h.amount * KAP_RATE.HM;
+        kapBalance -= h.amount * KAP_RATE.HM;
       });
     }
     hmGrantedByLevel.push(hmFromSkills);
-    const boughtHm = Math.max(0, assigned - hmFromSkills);
-    kapBalance -= boughtHm * KAP_RATE.HM;
-    if (assigned < hmFromSkills)
-      diag("info", `${L}. szint: ${hmFromSkills - assigned} kapott HM még nincs elosztva (KÉ/TÉ/VÉ/CÉ).`, L);
+    if (grantedAssigned > hmFromSkills)
+      diag("warn", `${L}. szint: ${grantedAssigned - hmFromSkills} HM túl van osztva (csak ${hmFromSkills} kapott HM jár).`, L);
+    else if (grantedAssigned < hmFromSkills)
+      diag("info", `${L}. szint: ${hmFromSkills - grantedAssigned} kapott HM még nincs elosztva (KÉ/TÉ/VÉ/CÉ).`, L);
     if (kapBalance < 0) diag("warn", `${L}. szint: a KAP egyenleg negatív (${kapBalance}).`, L);
 
     kapBalanceByLevel.push(kapBalance);
@@ -536,5 +548,6 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     diagnostics,
     ledgerCosts,
     ledgerDelta,
+    resourceGrants,
   };
 }

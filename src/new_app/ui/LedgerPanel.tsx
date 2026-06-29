@@ -86,7 +86,8 @@ const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; de
     items.push({ tag: "tul", text: fmtStat(s), cost: s.source === "kap" ? (costs[`${L}:stat:${s.stat}:${s.source}`] ?? 0) : 0, delta: fmtDelta(`${L}:stat:${s.stat}:${s.source}`) });
   }
   items.push(...skillItems);
-  for (const h of lvl.hmAssignments) items.push({ tag: "hm", text: h.channel, cost: costs[`${L}:hm:${h.channel}`] ?? 0, delta: fmtDelta(`${L}:hm:${h.channel}`) });
+  for (const h of lvl.grantedHmAssignments ?? []) items.push({ tag: "hm", text: `${h.channel} (kapott)`, cost: costs[`${L}:ghm:${h.channel}`] ?? 0, delta: fmtDelta(`${L}:ghm:${h.channel}`) });
+  for (const h of lvl.hmAssignments) items.push({ tag: "hm", text: `${h.channel} (vett)`, cost: costs[`${L}:hm:${h.channel}`] ?? 0, delta: fmtDelta(`${L}:hm:${h.channel}`) });
   for (const a of lvl.allocations) items.push({ tag: a.target, text: a.target, cost: costs[`${L}:alloc:${a.target}`] ?? 0, delta: fmtDelta(`${L}:alloc:${a.target}`) });
   if (lvl.notes) items.push({ tag: "jegyz", text: lvl.notes });
 
@@ -158,6 +159,18 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
                   {b.skill}{b.subtype ? ` (${b.subtype})` : ""}  ·  +1 {STAT_SHORT[b.stat as Stat]}
                 </Line>
               ))}
+            </>
+          )}
+
+          {/* Per-level resource grants from skill levels (read-only; folded into the pool/Fp totals and,
+              for HM, distributed in the Szintlépési nyereségek panel). Shown only when the character has any. */}
+          {derived.resourceGrants.length > 0 && (
+            <>
+              <Cat>Szintlépési nyereségek (/ szint)</Cat>
+              {derived.resourceGrants.map((g, i) => {
+                const rl = g.resource === "Psi" ? "Pszi" : g.resource;
+                return <Line key={i} n={i + 1} tag={rl}>{g.source}  ·  +{g.amount} {rl}</Line>;
+              })}
             </>
           )}
 
