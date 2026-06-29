@@ -7,6 +7,8 @@ import { SkillCategory, SKILL_CATEGORIES } from "../model/common";
 import { skillKpCost } from "../engine/skillCost";
 import { Stepper } from "./Stepper";
 import { DeleteButton } from "./controls";
+import { DetailModal, ModalState } from "./DetailModal";
+import { skillModalSub, skillModalBody } from "./compendiumData";
 import { FS_NAME, ROW_PY } from "./tokens";
 
 type View = "learned" | "taught" | "all";
@@ -72,6 +74,22 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const t = setTimeout(() => setNotice(null), 4000);
     return () => clearTimeout(t);
   }, [notice]);
+  // Skill-details modal (same content as the compendium / sheet), opened by clicking a skill name.
+  const [skillModal, setSkillModal] = useState<ModalState | null>(null);
+  const openSkillModal = (name: string) => {
+    const owned = derived.skills.filter((s) => s.skill === name);
+    const isPct = owned.some((s) => s.percent != null);
+    const percent = isPct ? Math.max(0, ...owned.map((s) => s.percent ?? 0)) : null;
+    const fok = isPct ? 0 : Math.max(0, ...owned.map((s) => s.fok));
+    setSkillModal({
+      kind: "skill",
+      name,
+      sub: skillModalSub(name),
+      body: skillModalBody(name),
+      levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
+      currentFok: percent == null && fok > 0 ? fok : undefined,
+    });
+  };
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
   const lvl = getLevelRecord(record, level);
   const purchases = lvl?.skillPurchases ?? [];
@@ -267,7 +285,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const teacher = teacherOf(name);
     return (
       <HStack spacing="7px" flex="0 1 auto" minW={0}>
-        <Text fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap">{name}</Text>
+        <Box as="button" type="button" onClick={() => openSkillModal(name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{name}</Box>
         {teacher > 0 && <TeacherBadge n={teacher} />}
         {showBranch && agButton(name)}
       </HStack>
@@ -427,7 +445,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
         {filterSeg("all", "Mind")}
       </HStack>
 
-      <Box>
+      <Box sx={{
+        // separators between items only — drop the trailing one (the deepest last leaf row, whether the
+        // last category's last skill is a plain row or a trunk+branches group).
+        "& > div:last-child > :last-child": { borderBottom: "none" },
+        "& > div:last-child > :last-child > :last-child": { borderBottom: "none" },
+      }}>
         {SKILL_CATEGORIES.map((cat) => {
           const skills = visibleInCat(cat);
           if (skills.length === 0) return null;
@@ -444,7 +467,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
                 if (!learned) {
                   return (
                     <HStack key={def.name} spacing="9px" py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center">
-                      <Text fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap">{def.name}</Text>
+                      <Box as="button" type="button" onClick={() => openSkillModal(def.name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{def.name}</Box>
                       <Box flex="1 1 auto" minW="8px" />
                       {tanulBtn(def.name)}
                     </HStack>
@@ -480,6 +503,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
           <Text fontFamily="system-ui" fontSize="13px" color="fg" lineHeight="1.45">{notice}</Text>
         </Box>
       )}
+
+      <DetailModal modal={skillModal} onClose={() => setSkillModal(null)} />
     </Box>
   );
 };

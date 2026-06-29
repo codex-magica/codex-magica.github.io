@@ -26,12 +26,17 @@ const CLOSE = {
   md: { box: "32px", top: "14px", right: "16px", fs: "15px" },
 };
 
-// The absolute "✕" in a modal header. `size` is the only thing that varied between dialogs.
+// The absolute close "✕" in a modal header. `size` is the only thing that varied between dialogs.
+// Drawn as an SVG cross (not the ✕ glyph, whose font metrics sit slightly above optical center) so it
+// lands dead-centre in the button.
 export const ModalCloseButton: React.FC<{ onClose: () => void; size?: "sm" | "md" }> = ({ onClose, size = "sm" }) => {
   const c = CLOSE[size];
   return (
-    <Box as="button" type="button" onClick={onClose} position="absolute" top={c.top} right={c.right} w={c.box} h={c.box} borderRadius="8px" border="1px solid" borderColor="hair" bg="fieldBg" color="muted" fontSize={c.fs} display="inline-flex" alignItems="center" justifyContent="center">
-      ✕
+    <Box as="button" type="button" onClick={onClose} aria-label="Bezárás" position="absolute" top={c.top} right={c.right} w={c.box} h={c.box} borderRadius="8px" border="1px solid" borderColor="hair" bg="fieldBg" color="muted" display="inline-flex" alignItems="center" justifyContent="center" lineHeight={0}>
+      <svg width={c.fs} height={c.fs} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
     </Box>
   );
 };

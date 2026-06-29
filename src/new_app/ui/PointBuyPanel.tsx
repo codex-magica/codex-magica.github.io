@@ -74,12 +74,16 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
 
   return (
     <Box>
-      <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg" mb={1}>
-        Pontvásárlás <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
-      </Heading>
+      <HStack justify="space-between" mb={1} align="center">
+        <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">
+          Pontvásárlás <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
+        </Heading>
+        <Text fontFamily="system-ui" fontSize="13px" fontWeight={700} color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
+          KAP: {kap}
+        </Text>
+      </HStack>
       <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={2} maxW="62ch">
-        Közös KAP-ból (Int + 50 − hátterek) a Képzettségek panellel. KAP maradék:{" "}
-        <Text as="b" color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>{kap}</Text>
+        Közös KAP-ból (Int + 50 − hátterek) a Képzettségek panellel.
       </Text>
 
       {/* Harcérték (HM) + Fp */}

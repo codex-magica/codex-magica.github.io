@@ -47,7 +47,7 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
       <HStack justify="space-between" mb={1}>
         <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">Tulajdonságok</Heading>
         <Text fontFamily="system-ui" fontSize="13px" fontWeight={700} color={baseRemaining === 0 ? "good" : baseRemaining < 0 ? "bad" : "muted"} sx={{ fontVariantNumeric: "tabular-nums" }}>
-          Alappont: {baseRemaining}
+          Tulajdonságpontok: {baseRemaining}
         </Text>
       </HStack>
       <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mb={3} lineHeight="1.5">

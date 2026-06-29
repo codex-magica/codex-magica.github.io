@@ -69,11 +69,8 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
   const choiceList = klass ? activeChoices(klass.choices, record.selections) : [];
   const raceAllowed = klass ? klass.allowedRaces.indexOf(record.race) >= 0 : true;
 
-  // Header balance anchors.
+  // Header balance anchor. (The base point-buy budget lives on the Tulajdonságok panel itself.)
   const kap = derived.pools.kapBalanceByLevel[0] ?? 0;
-  const cap = RACES[record.race]?.statLimits;
-  const baseUsed = STAT_KEYS.reduce((sum, s) => sum + Math.min(record.pointBuy[s], cap ? cap[s] : record.pointBuy[s]), 0);
-  const alappont = 135 - baseUsed;
   const subLine = `${record.race} ${record.class} · ${record.levels.length}. szint`;
 
   const fieldRow = (label: string, control: React.ReactNode, last?: boolean) => (
@@ -98,7 +95,6 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
             </Box>
             <HStack gap="8px">
               <BalanceChip caption="KAP maradék" value={kap} numColor={kap < 0 ? "bad" : "accentTx"} bg="chipBg" borderColor="chipBd" />
-              <BalanceChip caption="Alappont" value={alappont} numColor={alappont === 0 ? "good" : alappont < 0 ? "bad" : "fg"} bg="kapottBg" />
             </HStack>
           </HStack>
         </ParchPanel>

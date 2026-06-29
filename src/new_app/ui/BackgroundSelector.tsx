@@ -42,7 +42,7 @@ export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle,
       <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mb={2} lineHeight="1.5">
         Minden választott háttér csökkenti a szintenkénti KAP-ot. A kaszt által adottak zároltak.
       </Text>
-      <Box>
+      <Box sx={{ "& > *:last-child": { borderBottom: "none" } }}>
         {Object.keys(BACKGROUNDS).map((name) => {
           const bg = BACKGROUNDS[name];
           const isGranted = granted.indexOf(name) >= 0;
