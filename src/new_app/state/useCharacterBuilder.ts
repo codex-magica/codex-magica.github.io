@@ -29,6 +29,7 @@ export interface CharacterBuilderApi {
   setResourceAllocation: (level: number, target: Resource, points: number) => void;
   setHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
+  setSkillFok4Stat: (level: number, refKey: string, stat: Stat | null) => void;
 }
 
 // Controlled: the caller owns the record (so each character edits its own, persisted via the roster).
@@ -166,6 +167,16 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
     patchLevel(level, { statIncreases });
   };
 
+  // The +1 attribute a fok-4 skill instance grants (multi-attr skills; single-attr auto-apply in the
+  // engine). Stored as a skillFok4 statIncrease keyed by the INSTANCE key (`refKey`); null clears it.
+  const setSkillFok4Stat = (level: number, refKey: string, stat: Stat | null) => {
+    const lvl = getLevelRecord(record, level);
+    if (!lvl) return;
+    const statIncreases = lvl.statIncreases.filter((si) => !(si.source === "skillFok4" && si.refSkill === refKey));
+    if (stat) statIncreases.push({ stat, amount: 1, source: "skillFok4", refSkill: refKey });
+    patchLevel(level, { statIncreases });
+  };
+
   return {
     record,
     derived,
@@ -187,5 +198,6 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
     setResourceAllocation,
     setHmChannel,
     setStatBuy,
+    setSkillFok4Stat,
   };
 }

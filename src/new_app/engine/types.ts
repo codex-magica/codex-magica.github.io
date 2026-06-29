@@ -19,6 +19,7 @@ export interface OwnedSkill {
   skill: string;
   subtype?: string;
   origSubtype?: string; // original granted subtype (the stable key for renaming)
+  variantId?: string; // set on user-added branch instances (so they never collide with the trunk)
   fok: number; // 0 for percentage skills
   percent?: number; // for percentage skills
   checkMod: number; // attribute-test modifier (or current percent for %-skills)

@@ -50,6 +50,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
     setResourceAllocation,
     setHmChannel,
     setStatBuy,
+    setSkillFok4Stat,
   } = api;
 
   const onRaceChange = (race: string) => {
@@ -163,6 +164,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
             onRemoveVariant={removePurchaseById}
             onOverride={setSubtypeOverride}
             onSetSubtype={setLearnedSubtype}
+            onSetFok4Stat={setSkillFok4Stat}
           />
         </ParchPanel>
 

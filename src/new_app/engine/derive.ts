@@ -21,7 +21,7 @@ import {
 import { Discount, skillKpCost, teachingUptoFor } from "./skillCost";
 import { Contribution, DerivedCharacter, Diagnostic, OwnedSkill, Severity } from "./types";
 
-type OwnedMap = Record<string, { skill: string; subtype?: string; fok: number; percent: number; origSubtype?: string }>;
+type OwnedMap = Record<string, { skill: string; subtype?: string; fok: number; percent: number; origSubtype?: string; variantId?: string }>;
 
 const POOLS: Pool[] = ["Mana", "Psi", "Kegy"];
 
@@ -252,6 +252,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
 
   // Snapshot of skills owned purely from grants at level 1 (the floor the level-up UI can't go below).
   let grantedSkillsSnapshot: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent: number }[] = [];
+  // Skills that already received their one-time fok-4 attribute bonus (so it applies exactly once).
+  const fok4Bonused = new Set<string>();
 
   for (let L = 1; L <= N; L++) {
     perLevelEffects.filter((p) => p.level === L).forEach((p) => applyEffect(p.effect, p.source, L));
@@ -292,7 +294,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           if (maxFok(r.skill) < sp.to - 1)
             diag("warn", `${sp.skill} ${sp.to}. fok: gyenge előfeltétel «${r.skill}» legalább ${sp.to - 1}. fok.`, L);
         }
-        const key = skillKey(sp.skill, sp.subtype);
+        // A user-added branch (sp.id) is keyed by its id so it forms its own instance and never collides
+        // with the general trunk or another branch — even before the player has typed a distinct subtype.
+        const key = sp.id != null ? `var:${sp.id}` : skillKey(sp.skill, sp.subtype);
         const cur = owned[key];
         const isPct = def.cost === "percentage";
         // `from` is whatever is already owned (grants + earlier purchases) unless explicitly given.
@@ -304,20 +308,40 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         // Carry forward the granted subtype's stable key: raising a granted-subtyped skill must keep its
         // origSubtype, else it looks self-specialised (a spurious "unspecialise" ✕ that corrupts on click).
         if (isPct) {
-          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: 0, percent: sp.to, origSubtype: cur?.origSubtype };
+          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: 0, percent: sp.to, origSubtype: cur?.origSubtype, variantId: sp.id };
         } else {
-          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: sp.to, percent: 0, origSubtype: cur?.origSubtype };
-          if (sp.to >= 4 && from < 4 && def.attrs.length > 0) {
-            const has = lvlRec.statIncreases.some((si) => si.source === "skillFok4" && si.refSkill === sp.skill);
-            if (!has) diag("info", `${sp.skill}: 4. fok elérve — válassz +1 Tulajdonságot (${def.attrs.join(", ")}).`, L);
-          }
+          owned[key] = { skill: sp.skill, subtype: sp.subtype, fok: sp.to, percent: 0, origSubtype: cur?.origSubtype, variantId: sp.id };
         }
       }
 
       for (const si of lvlRec.statIncreases) {
+        if (si.source === "skillFok4") continue; // applied (and validity-checked) by the fok-4 pass below
         effective[si.stat] += si.amount;
         addProv(si.stat as string, `${si.source}${si.refSkill ? ` (${si.refSkill})` : ""} L${L}`, si.amount);
         if (si.source === "kap") kapBalance -= si.amount * ATTR_KAP_COST;
+      }
+
+      // Fok-4 bonus: a fok-based skill with attribute requirements grants +1 to one of its attributes the
+      // first level it reaches fok 4. Single-attr skills auto-target it; multi-attr use the player's stored
+      // choice (a skillFok4 statIncrease, looked up across levels). Applied here — after the level's
+      // purchases — so it lowers the cost of skills priced at later levels. Once per skill via `fok4Bonused`;
+      // a skill dropped back below fok 4 simply isn't seen here, so its bonus disappears (no phantom +1).
+      for (const k of Object.keys(owned)) {
+        const o = owned[k];
+        const def = db.skills[o.skill];
+        // Per INSTANCE (keyed by the owned key `k`): the trunk and each branch each earn their own bonus
+        // the level they reach fok 4. Multi-attr uses the choice stored against this same instance key.
+        if (!def || def.cost === "percentage" || def.attrs.length === 0 || o.fok < 4 || fok4Bonused.has(k)) continue;
+        fok4Bonused.add(k);
+        const choice = def.attrs.length === 1
+          ? def.attrs[0]
+          : rec.levels.flatMap((l) => l.statIncreases).find((si) => si.source === "skillFok4" && si.refSkill === k)?.stat;
+        if (choice) {
+          effective[choice] += 1;
+          addProv(choice as string, `skillFok4 (${o.skill}) L${L}`, 1);
+        } else {
+          diag("info", `${o.skill}: 4. fok elérve — válassz +1 tulajdonságot (${def.attrs.join(", ")}).`, L);
+        }
       }
     }
 
@@ -426,6 +450,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       skill: o.skill,
       subtype: o.subtype,
       origSubtype: o.origSubtype,
+      variantId: o.variantId,
       fok: o.fok,
       percent: isPct ? o.percent : undefined,
       checkMod: isPct ? o.percent : FOK_CHECK_MOD[o.fok] || 0,

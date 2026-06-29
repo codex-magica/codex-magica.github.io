@@ -3,6 +3,7 @@ import { Box, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
 import { CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { SKILLS, SKILL_BY_NAME } from "../model/skills";
+import { Stat, STAT_SHORT } from "../model/attributes";
 import { SkillCategory, SKILL_CATEGORIES } from "../model/common";
 import { skillKpCost } from "../engine/skillCost";
 import { Stepper } from "./Stepper";
@@ -24,6 +25,7 @@ interface Props {
   onRemoveVariant: (level: number, id: string) => void;
   onOverride: (originalKey: string, value: string) => void;
   onSetSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
+  onSetFok4Stat: (level: number, skill: string, stat: Stat | null) => void;
 }
 
 const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
@@ -61,12 +63,15 @@ export const SkillLevelPanel: React.FC<Props> = ({
   onRemoveVariant,
   onOverride,
   onSetSubtype,
+  onSetFok4Stat,
 }) => {
   const [view, setView] = useState<View>("learned");
   // Skills whose general (no-subtype) primary the user is currently specialising — reveals its subtype input.
   const [specializing, setSpecializing] = useState<Set<string>>(new Set());
   // The variant id whose "branches from which fok?" popover is open (only one at a time), or null.
   const [fromOpen, setFromOpen] = useState<string | null>(null);
+  // The skill name whose fok-4 "+1 attribute" popover is open, or null.
+  const [fok4Open, setFok4Open] = useState<string | null>(null);
   // Transient note shown when a − is tapped that's locked by a dependent branch (auto-dismisses).
   const [notice, setNotice] = useState<string | null>(null);
   useEffect(() => {
@@ -94,14 +99,15 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const lvl = getLevelRecord(record, level);
   const purchases = lvl?.skillPurchases ?? [];
   const variants = purchases.filter((p) => p.id);
-  const variantKeys = new Set(variants.map((p) => keyOf(p.skill, p.subtype)));
 
   const grantedFloor: Record<string, number> = {};
   derived.grantedSkills.forEach((g) => {
     grantedFloor[keyOf(g.skill, g.subtype)] = g.percent != null ? g.percent : g.fok;
   });
 
-  const ownedInstances = derived.skills.filter((s) => !variantKeys.has(keyOf(s.skill, s.subtype)));
+  // User-added branches carry a variantId in the derived list; everything else is a "real" owned instance
+  // (trunk / grant). This is collision-proof — an unnamed branch no longer masquerades as the trunk.
+  const ownedInstances = derived.skills.filter((s) => s.variantId == null);
   const teacherOf = (skill: string) => derived.teaching[skill] || 0;
   const stepCost = (skill: string, from: number, to: number) =>
     skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill), derived.effectiveStats).kp;
@@ -281,6 +287,56 @@ export const SkillLevelPanel: React.FC<Props> = ({
     );
   };
 
+  // The player's stored fok-4 +1 choice for a specific INSTANCE (keyed by refKey) at this level.
+  const fok4Stat = (refKey: string): Stat | undefined =>
+    getLevelRecord(record, level)?.statIncreases.find((si) => si.source === "skillFok4" && si.refSkill === refKey)?.stat as Stat | undefined;
+
+  // The "4. fok: +1 tulajdonság" badge for one fok-4 instance (`refKey` is its identity — trunk vs each
+  // branch). Single-attr → a quiet info chip (auto-applied by the engine); multi-attr → a popover picker,
+  // loud (red) until a choice is made. Every fok-4 instance carries its own.
+  const fok4Badge = (skill: string, refKey: string) => {
+    const attrs = SKILL_BY_NAME[skill]?.attrs ?? [];
+    if (attrs.length === 0) return null;
+    if (attrs.length === 1) {
+      return (
+        <Box as="span" fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".04em" px="6px" py="2px" borderRadius="5px" bg="accentSoft" color="accentTx" whiteSpace="nowrap" flexShrink={0} title={`4. fok: +1 ${attrs[0]}`}>
+          +1 {STAT_SHORT[attrs[0]]}
+        </Box>
+      );
+    }
+    const chosen = fok4Stat(refKey);
+    const open = fok4Open === refKey;
+    return (
+      <Box position="relative" flexShrink={0}>
+        <Box as="button" type="button" title="4. fok: válassz +1 tulajdonságot" onClick={() => setFok4Open(open ? null : refKey)}
+          display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
+          fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
+          bg={chosen ? "accentSoft" : "badSoft"} color={chosen ? "accentTx" : "bad"} borderColor={chosen ? "accentBd" : "bad"}>
+          {chosen ? `+1 ${STAT_SHORT[chosen]}` : "+1 tul."}
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+        </Box>
+        {open && (
+          <>
+            <Box position="fixed" inset={0} zIndex={29} onClick={() => setFok4Open(null)} />
+            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW="max-content" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
+              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">+1 tulajdonság (4. fok)</Text>
+              <HStack gap="7px">
+                {attrs.map((a) => (
+                  <Box as="button" key={a} type="button" onClick={() => { onSetFok4Stat(level, refKey, a); setFok4Open(null); }}
+                    px="12px" h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
+                    borderColor={a === chosen ? "accent" : "fieldBd"} bg={a === chosen ? "accentSoft" : "fieldBg"} color={a === chosen ? "accentTx" : "fg"}
+                    fontWeight={700} fontSize="14px" display="flex" alignItems="center" justifyContent="center" whiteSpace="nowrap" _hover={{ borderColor: "accent" }}>
+                    {a}
+                  </Box>
+                ))}
+              </HStack>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  };
+
   const nameGroup = (name: string, showBranch: boolean) => {
     const teacher = teacherOf(name);
     return (
@@ -324,6 +380,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const atMax = isPct ? cur >= 100 : cur >= 5;
     const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step);
     const decBlocked = !isPct && branchFloor != null && cur === mainFok && topCount === 1 && cur > floor && cur <= branchFloor;
+    // This instance earns its own fok-4 bonus once it hits fok 4; its choice is keyed by its owned key.
+    const showFok4 = !isPct && cur >= 4;
     const left = isPrimary ? nameGroup(inst.skill, showBranch) : (
       <Box as="span" color="catTx" flexShrink={0} display="inline-flex" alignItems="center" lineHeight={0} title="Ág">
         <BranchArrow size={15} />
@@ -345,7 +403,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
               ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
               : onSetSubtype(level, inst.skill, inst.subtype, v))
         : null,
-      floor > 0 ? <KapottBadge /> : null,
+      <>{floor > 0 && <KapottBadge />}{showFok4 && fok4Badge(inst.skill, keyOf(inst.skill, inst.subtype))}</>,
       <Stepper
         value={isPct ? `${cur}%` : `${cur}.`}
         incLabel={atMax ? undefined : String(cost)}
@@ -384,6 +442,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const maxFrom = Math.max(1, Math.min(5, (mainFok || p.to) - 1));
     // When this variant is itself the trunk (no owned instance), block lowering below a dependent branch.
     const decBlocked = isPrimary && branchFloor != null && p.to > from && p.to <= branchFloor;
+    // This branch earns its own fok-4 bonus once it hits fok 4; its choice is keyed by its variant id.
+    const showFok4 = !isPct && p.to >= 4;
     const left = isPrimary
       ? nameGroup(p.skill, showBranch)
       : branchFromPill(p, from, maxFrom);
@@ -392,7 +452,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       isPrimary,
       left,
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v })),
-      null,
+      showFok4 ? fok4Badge(p.skill, `var:${p.id}`) : null,
       <Stepper
         value={isPct ? `${p.to}%` : `${p.to}.`}
         incLabel={atMax ? undefined : String(cost)}
