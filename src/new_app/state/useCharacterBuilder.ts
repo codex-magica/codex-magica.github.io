@@ -4,9 +4,28 @@ import { genId } from "./storage";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { CombatChannel, Resource } from "../model/effects";
 import { Stat } from "../model/attributes";
+import { skillKey } from "../model/common";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
 import { DerivedCharacter } from "../engine/types";
+
+// Ephemeral match key for a skill instance (a branch by variantId, else skill+subtype). Used only for
+// in-memory matching — never stored (fok4Bonuses keeps the structured fields).
+const instanceKey = (variantId: string | undefined, skill: string, subtype: string | undefined): string =>
+  variantId ? `v:${variantId}` : `s:${skillKey(skill, subtype)}`;
+
+// A fok-4 choice is tied to a skill INSTANCE being at fok ≥ 4. If that instance drops below 4 (or is
+// removed), the stored choice is stale — drop it so it stops counting and leaves the ledger.
+const pruneStaleFok4 = (rec: CharacterRecord): CharacterRecord => {
+  if (!rec.fok4Bonuses?.length) return rec;
+  const derived = derive(RULES, rec);
+  const valid = new Set<string>();
+  for (const s of derived.skills) {
+    if (s.percent == null && s.fok >= 4) valid.add(instanceKey(s.variantId, s.skill, s.subtype));
+  }
+  const filtered = rec.fok4Bonuses.filter((b) => valid.has(instanceKey(b.variantId, b.skill, b.subtype)));
+  return filtered.length === rec.fok4Bonuses.length ? rec : { ...rec, fok4Bonuses: filtered };
+};
 
 export interface CharacterBuilderApi {
   record: CharacterRecord;
@@ -29,12 +48,14 @@ export interface CharacterBuilderApi {
   setResourceAllocation: (level: number, target: Resource, points: number) => void;
   setHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
-  setSkillFok4Stat: (level: number, refKey: string, stat: Stat | null) => void;
+  setSkillFok4Stat: (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => void;
 }
 
 // Controlled: the caller owns the record (so each character edits its own, persisted via the roster).
 // Re-derives the sheet on every change.
-export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: CharacterRecord) => void): CharacterBuilderApi {
+export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: CharacterRecord) => void): CharacterBuilderApi {
+  // Every write goes through pruning so stale fok-4 choices can't linger after a skill is lowered.
+  const setRecord = (r: CharacterRecord) => rawSetRecord(pruneStaleFok4(r));
   const derived = useMemo(() => derive(RULES, record), [record]);
 
   const update = (patch: Partial<CharacterRecord>) => setRecord({ ...record, ...patch });
@@ -168,13 +189,12 @@ export function useCharacterBuilder(record: CharacterRecord, setRecord: (r: Char
   };
 
   // The +1 attribute a fok-4 skill instance grants (multi-attr skills; single-attr auto-apply in the
-  // engine). Stored as a skillFok4 statIncrease keyed by the INSTANCE key (`refKey`); null clears it.
-  const setSkillFok4Stat = (level: number, refKey: string, stat: Stat | null) => {
-    const lvl = getLevelRecord(record, level);
-    if (!lvl) return;
-    const statIncreases = lvl.statIncreases.filter((si) => !(si.source === "skillFok4" && si.refSkill === refKey));
-    if (stat) statIncreases.push({ stat, amount: 1, source: "skillFok4", refSkill: refKey });
-    patchLevel(level, { statIncreases });
+  // engine). Stored structurally in record.fok4Bonuses, keyed by the instance; null clears it.
+  const setSkillFok4Stat = (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => {
+    const key = instanceKey(variantId, skill, subtype);
+    const list = (record.fok4Bonuses ?? []).filter((b) => instanceKey(b.variantId, b.skill, b.subtype) !== key);
+    if (stat) list.push({ skill, subtype, variantId, stat });
+    setRecord({ ...record, fok4Bonuses: list });
   };
 
   return {

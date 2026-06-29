@@ -10,6 +10,7 @@ import { BackgroundSelector } from "./BackgroundSelector";
 import { SkillLevelPanel } from "./SkillLevelPanel";
 import { PointBuyPanel } from "./PointBuyPanel";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
+import { LedgerPanel } from "./LedgerPanel";
 import { ParchPanel } from "./ParchPanel";
 import { FIELD_SX } from "./tokens";
 
@@ -170,6 +171,10 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
 
         <ParchPanel>
           <PointBuyPanel level={1} record={record} derived={derived} onHm={setHmChannel} onResource={setResourceAllocation} onStat={setStatBuy} />
+        </ParchPanel>
+
+        <ParchPanel>
+          <LedgerPanel record={record} derived={derived} />
         </ParchPanel>
 
         <ParchPanel>

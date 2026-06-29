@@ -150,6 +150,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const kapIncomeByLevel: number[] = [];
   const kapBalanceByLevel: number[] = [];
   const hmGrantedByLevel: number[] = []; // free HM (from skills) per level — assignable at no cost
+  const ledgerCosts: Record<string, number> = {}; // KAP charged per ledger op, keyed `L:kind:id` (for the ledger view)
+  const ledgerDelta: Record<string, { before: number; after: number }> = {}; // running value before→after per op
   let cumulativeBgCost = 0;
 
   // A granted subtype may be renamed by the player (placeholders like "anyanyelv"/"szülőföld").
@@ -273,10 +275,27 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         if (a.target === "HM") continue; // HM cost is derived from assignments minus granted HM (below)
         const spend = a.points * KAP_RATE[a.target];
         kapBalance -= spend;
+        ledgerCosts[`${L}:alloc:${a.target}`] = spend;
+        const allocBefore = a.target === "Fp" ? fpGains : poolMax[a.target];
+        ledgerDelta[`${L}:alloc:${a.target}`] = { before: allocBefore, after: allocBefore + a.points };
         if (a.target === "Fp") fpGains += a.points;
         else {
           if (!poolExists[a.target]) diag("warn", `${a.target} vásárlása megfelelő háttér nélkül (${L}. szint).`, L);
           poolMax[a.target] += a.points;
+        }
+      }
+
+      // Attribute buys (and other stat increases) apply BEFORE skill purchases, so the boosted stats lower
+      // the unmet-attribute penalty on skills bought this level. (fok-4 bonuses are applied after, below.)
+      for (const si of lvlRec.statIncreases) {
+        const statBefore = effective[si.stat];
+        effective[si.stat] += si.amount;
+        ledgerDelta[`${L}:stat:${si.stat}:${si.source}`] = { before: statBefore, after: statBefore + si.amount };
+        addProv(si.stat as string, `${si.source} L${L}`, si.amount);
+        if (si.source === "kap") {
+          const c = si.amount * ATTR_KAP_COST;
+          kapBalance -= c;
+          ledgerCosts[`${L}:stat:${si.stat}:${si.source}`] = c;
         }
       }
 
@@ -304,6 +323,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(discounts, def);
         const cost = skillKpCost(def, from, sp.to, tUpto, effective);
         kapBalance -= cost.kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
+        ledgerCosts[`${L}:skill:${key}`] = cost.kp;
+        ledgerDelta[`${L}:skill:${key}`] = { before: from, after: sp.to };
         if (cost.note) diag("info", cost.note, L);
         // Carry forward the granted subtype's stable key: raising a granted-subtyped skill must keep its
         // origSubtype, else it looks self-specialised (a spurious "unspecialise" ✕ that corrupts on click).
@@ -314,28 +335,20 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         }
       }
 
-      for (const si of lvlRec.statIncreases) {
-        if (si.source === "skillFok4") continue; // applied (and validity-checked) by the fok-4 pass below
-        effective[si.stat] += si.amount;
-        addProv(si.stat as string, `${si.source}${si.refSkill ? ` (${si.refSkill})` : ""} L${L}`, si.amount);
-        if (si.source === "kap") kapBalance -= si.amount * ATTR_KAP_COST;
-      }
-
       // Fok-4 bonus: a fok-based skill with attribute requirements grants +1 to one of its attributes the
-      // first level it reaches fok 4. Single-attr skills auto-target it; multi-attr use the player's stored
-      // choice (a skillFok4 statIncrease, looked up across levels). Applied here — after the level's
-      // purchases — so it lowers the cost of skills priced at later levels. Once per skill via `fok4Bonused`;
-      // a skill dropped back below fok 4 simply isn't seen here, so its bonus disappears (no phantom +1).
+      // first level it reaches fok 4 (by purchase OR grant — e.g. a wizard's granted Pszi 4). Single-attr
+      // skills auto-target it; multi-attr use the player's stored choice (rec.fok4Bonuses, matched per
+      // INSTANCE). Applied after this level's purchases so it lowers the cost of skills priced at later
+      // levels. Once per instance via `fok4Bonused`; an instance dropped below fok 4 isn't seen here, so its
+      // bonus disappears (no phantom +1).
       for (const k of Object.keys(owned)) {
         const o = owned[k];
         const def = db.skills[o.skill];
-        // Per INSTANCE (keyed by the owned key `k`): the trunk and each branch each earn their own bonus
-        // the level they reach fok 4. Multi-attr uses the choice stored against this same instance key.
         if (!def || def.cost === "percentage" || def.attrs.length === 0 || o.fok < 4 || fok4Bonused.has(k)) continue;
         fok4Bonused.add(k);
         const choice = def.attrs.length === 1
           ? def.attrs[0]
-          : rec.levels.flatMap((l) => l.statIncreases).find((si) => si.source === "skillFok4" && si.refSkill === k)?.stat;
+          : rec.fok4Bonuses?.find((b) => (o.variantId != null ? b.variantId === o.variantId : b.variantId == null && b.skill === o.skill && (b.subtype ?? "") === (o.subtype ?? "")))?.stat;
         if (choice) {
           effective[choice] += 1;
           addProv(choice as string, `skillFok4 (${o.skill}) L${L}`, 1);
@@ -375,13 +388,20 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       }
     }
 
-    // HM: skill-granted HM is free; everything assigned beyond it is bought at KAP_RATE.HM each.
+    // HM: skill-granted HM is free; everything assigned beyond it is bought at KAP_RATE.HM each. The free
+    // pool is consumed by the assignments in order, so each line's recorded cost is what it actually paid.
     let assigned = 0;
+    let freeHm = hmFromSkills;
     if (lvlRec) {
       lvlRec.hmAssignments.forEach((h) => {
+        const hmBefore = combatAcc[h.channel];
         combatAcc[h.channel] += h.amount;
+        ledgerDelta[`${L}:hm:${h.channel}`] = { before: hmBefore, after: hmBefore + h.amount };
         addProv(h.channel, `HM L${L}`, h.amount);
         assigned += h.amount;
+        const freeUsed = Math.min(freeHm, h.amount);
+        freeHm -= freeUsed;
+        ledgerCosts[`${L}:hm:${h.channel}`] = (h.amount - freeUsed) * KAP_RATE.HM;
       });
     }
     hmGrantedByLevel.push(hmFromSkills);
@@ -409,6 +429,19 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
 
   const epMax = effective.Egészség + derivedBonus.Ép;
   const fpMax = effective.Állóképesség + effective.Egészség + fpGains + derivedBonus.Fp;
+
+  // Re-base alloc/HM deltas onto the actual affected number (base + buys), not the bought-only running
+  // total — so the ledger shows e.g. Fp 26 → 29 and KÉ 64 → 68, not 0 → N. (Exact for the single-level
+  // creator; for multi-level it pins to the final total.)
+  for (const k of Object.keys(ledgerDelta)) {
+    const [, kind, ...rest] = k.split(":");
+    if (kind !== "alloc" && kind !== "hm") continue;
+    const id = rest.join(":");
+    const finalVal = kind === "hm" ? combat[id as CombatChannel] : id === "Fp" ? fpMax : poolMax[id as Pool];
+    if (finalVal == null) continue;
+    const d = ledgerDelta[k];
+    ledgerDelta[k] = { before: finalVal - (d.after - d.before), after: finalVal };
+  }
   const derived = {
     Ép: epMax,
     Fp: fpMax,
@@ -501,5 +534,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     inventory,
     provenance,
     diagnostics,
+    ledgerCosts,
+    ledgerDelta,
   };
 }

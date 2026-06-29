@@ -25,7 +25,7 @@ interface Props {
   onRemoveVariant: (level: number, id: string) => void;
   onOverride: (originalKey: string, value: string) => void;
   onSetSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
-  onSetFok4Stat: (level: number, skill: string, stat: Stat | null) => void;
+  onSetFok4Stat: (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => void;
 }
 
 const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
@@ -287,14 +287,16 @@ export const SkillLevelPanel: React.FC<Props> = ({
     );
   };
 
-  // The player's stored fok-4 +1 choice for a specific INSTANCE (keyed by refKey) at this level.
-  const fok4Stat = (refKey: string): Stat | undefined =>
-    getLevelRecord(record, level)?.statIncreases.find((si) => si.source === "skillFok4" && si.refSkill === refKey)?.stat as Stat | undefined;
+  // The player's stored fok-4 +1 choice for a specific INSTANCE (a branch by variantId, else skill+subtype).
+  const fok4Stat = (skill: string, subtype?: string, variantId?: string): Stat | undefined =>
+    record.fok4Bonuses?.find((b) =>
+      variantId != null ? b.variantId === variantId : b.variantId == null && b.skill === skill && (b.subtype ?? "") === (subtype ?? "")
+    )?.stat as Stat | undefined;
 
-  // The "4. fok: +1 tulajdonság" badge for one fok-4 instance (`refKey` is its identity — trunk vs each
-  // branch). Single-attr → a quiet info chip (auto-applied by the engine); multi-attr → a popover picker,
+  // The "4. fok: +1 tulajdonság" badge for one fok-4 instance (identified by skill+subtype, or variantId for
+  // a branch). Single-attr → a quiet info chip (auto-applied by the engine); multi-attr → a popover picker,
   // loud (red) until a choice is made. Every fok-4 instance carries its own.
-  const fok4Badge = (skill: string, refKey: string) => {
+  const fok4Badge = (skill: string, subtype?: string, variantId?: string) => {
     const attrs = SKILL_BY_NAME[skill]?.attrs ?? [];
     if (attrs.length === 0) return null;
     if (attrs.length === 1) {
@@ -304,11 +306,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
         </Box>
       );
     }
-    const chosen = fok4Stat(refKey);
-    const open = fok4Open === refKey;
+    const openKey = variantId ? `v:${variantId}` : `s:${keyOf(skill, subtype)}`;
+    const chosen = fok4Stat(skill, subtype, variantId);
+    const open = fok4Open === openKey;
     return (
       <Box position="relative" flexShrink={0}>
-        <Box as="button" type="button" title="4. fok: válassz +1 tulajdonságot" onClick={() => setFok4Open(open ? null : refKey)}
+        <Box as="button" type="button" title="4. fok: válassz +1 tulajdonságot" onClick={() => setFok4Open(open ? null : openKey)}
           display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
           fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
           bg={chosen ? "accentSoft" : "badSoft"} color={chosen ? "accentTx" : "bad"} borderColor={chosen ? "accentBd" : "bad"}>
@@ -322,7 +325,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
               <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">+1 tulajdonság (4. fok)</Text>
               <HStack gap="7px">
                 {attrs.map((a) => (
-                  <Box as="button" key={a} type="button" onClick={() => { onSetFok4Stat(level, refKey, a); setFok4Open(null); }}
+                  <Box as="button" key={a} type="button" onClick={() => { onSetFok4Stat(skill, subtype, variantId, a); setFok4Open(null); }}
                     px="12px" h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
                     borderColor={a === chosen ? "accent" : "fieldBd"} bg={a === chosen ? "accentSoft" : "fieldBg"} color={a === chosen ? "accentTx" : "fg"}
                     fontWeight={700} fontSize="14px" display="flex" alignItems="center" justifyContent="center" whiteSpace="nowrap" _hover={{ borderColor: "accent" }}>
@@ -403,7 +406,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
               ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
               : onSetSubtype(level, inst.skill, inst.subtype, v))
         : null,
-      <>{floor > 0 && <KapottBadge />}{showFok4 && fok4Badge(inst.skill, keyOf(inst.skill, inst.subtype))}</>,
+      <>{floor > 0 && <KapottBadge />}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined)}</>,
       <Stepper
         value={isPct ? `${cur}%` : `${cur}.`}
         incLabel={atMax ? undefined : String(cost)}
@@ -452,7 +455,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       isPrimary,
       left,
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v })),
-      showFok4 ? fok4Badge(p.skill, `var:${p.id}`) : null,
+      showFok4 ? fok4Badge(p.skill, p.subtype, p.id) : null,
       <Stepper
         value={isPct ? `${p.to}%` : `${p.to}.`}
         incLabel={atMax ? undefined : String(cost)}

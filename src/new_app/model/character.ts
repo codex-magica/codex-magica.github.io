@@ -57,13 +57,23 @@ export interface HmAssignment {
   amount: number;
 }
 
-export type StatIncreaseSource = "kap" | "skillFok4" | "km" | "age" | "race";
+export type StatIncreaseSource = "kap" | "km" | "age" | "race";
 
 export interface StatIncrease {
   stat: keyof Stats;
   amount: number;
   source: StatIncreaseSource;
-  refSkill?: string; // for skillFok4: which skill triggered it
+}
+
+// The +1 attribute a fok-4 skill INSTANCE grants (multi-attribute skills only; single-attribute ones
+// auto-apply in the engine). Identified structurally by the instance: a user branch by its `variantId`,
+// otherwise the skill + subtype (covers grants at fok 4 too, e.g. the wizard's Pszi, which have no
+// purchase). Lives on the record (not a per-level ledger) — it's a per-instance choice, not a KAP spend.
+export interface Fok4Bonus {
+  skill: string;
+  subtype?: string;
+  variantId?: string;
+  stat: keyof Stats;
 }
 
 export interface LevelRecord {
@@ -109,6 +119,7 @@ export interface CharacterRecord {
   pointBuy: Stats; // the 135 base allocation, each ≤ racial cap
   adottsag?: Partial<Record<keyof Stats, number>>; // points above the racial cap (1 KAP each)
   subtypeOverrides?: Record<string, string>; // rename a granted subtype, keyed by `skill|originalSubtype`
+  fok4Bonuses?: Fok4Bonus[]; // the +1 attribute chosen for each fok-4 skill instance
 
   levels: LevelRecord[]; // the build ledger (ordered per-level decisions)
   kmAdjustments: Adjustment[];

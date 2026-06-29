@@ -62,4 +62,8 @@ export interface DerivedCharacter {
   inventory: InventoryItem[];
   provenance: Record<string, Contribution[]>;
   diagnostics: Diagnostic[];
+  // KAP charged per ledger operation, keyed `L{lvl}:{kind}:{id}` (skill/alloc/hm/stat) — for the ledger view.
+  ledgerCosts: Record<string, number>;
+  // The running value an operation changed, before → after (same keys as ledgerCosts).
+  ledgerDelta: Record<string, { before: number; after: number }>;
 }
