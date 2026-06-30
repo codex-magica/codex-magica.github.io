@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Box, Heading, HStack, Input, Select, Text, VStack } from "@chakra-ui/react";
+import { Box, Heading, HStack, Input, Text, VStack } from "@chakra-ui/react";
 import { ModalShell } from "./Modal";
 import { CharacterBuilderApi } from "../state/useCharacterBuilder";
 import { derive } from "../engine/derive";
 import { RULES } from "../model/rulesDb";
-import { RACES, RACE_NAMES } from "../model/races";
-import { CLASSES, CLASS_NAMES } from "../model/classes";
-import { activeChoices, defaultSelections } from "../model/choices";
+import { RACES } from "../model/races";
+import { CLASSES } from "../model/classes";
+import { activeChoices, defaultSelections, ChoiceDef } from "../model/choices";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { AttributeEditor } from "./AttributeEditor";
 import { BackgroundSelector } from "./BackgroundSelector";
@@ -15,6 +15,7 @@ import { PointBuyPanel } from "./PointBuyPanel";
 import { LevelGainsPanel } from "./LevelGainsPanel";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import { LedgerPanel } from "./LedgerPanel";
+import { RaceClassPicker, SpecPicker } from "./RaceClassPicker";
 import { ParchPanel } from "./ParchPanel";
 import { FIELD_SX } from "./tokens";
 
@@ -61,6 +62,8 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
 
   const [selectedLevel, setSelectedLevel] = useState(1); // which level the editor targets (edit mode)
   const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
+  const [picker, setPicker] = useState<"race" | "class" | null>(null); // open race/class browser modal
+  const [specChoice, setSpecChoice] = useState<ChoiceDef | null>(null); // open specialization browser modal
 
   const onRaceChange = (race: string) => {
     const caps = RACES[race].statLimits;
@@ -111,6 +114,14 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   );
   const selectProps = { ...FIELD_SX, size: "sm" as const };
 
+  // A select-styled button that opens the race/class browser modal.
+  const pickerButton = (value: string, onClick: () => void) => (
+    <Box as="button" type="button" onClick={onClick} flex="1" h="32px" px="10px" bg="fieldBg" border="1px solid" borderColor="fieldBd" borderRadius="9px" color="fg" display="flex" alignItems="center" justifyContent="space-between" _hover={{ borderColor: "accent" }}>
+      <Text fontSize="14px" noOfLines={1}>{value}</Text>
+      <Text fontSize="10px" color="muted" ml="6px">▾</Text>
+    </Box>
+  );
+
   return (
     <Box p={{ base: "16px", md: "14px" }} bg="page" color="fg">
       <VStack align="stretch" spacing="14px">
@@ -153,32 +164,12 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} mb={2} color="fg">Alapadatok</Heading>
           <Box>
             {fieldRow("Név", <Input {...selectProps} value={record.name} onChange={(e) => update({ name: e.target.value })} />)}
-            {fieldRow(
-              "Faj",
-              <Select {...selectProps} value={record.race} onChange={(e) => onRaceChange(e.target.value)}>
-                {RACE_NAMES.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </Select>
-            )}
-            {fieldRow(
-              "Kaszt",
-              <Select {...selectProps} value={record.class} onChange={(e) => onClassChange(e.target.value)}>
-                {CLASS_NAMES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </Select>,
-              choiceList.length === 0
-            )}
+            {fieldRow("Faj", pickerButton(record.race, () => setPicker("race")))}
+            {fieldRow("Kaszt", pickerButton(record.class, () => setPicker("class")), choiceList.length === 0)}
             {choiceList.map((ch, i) =>
               fieldRow(
                 ch.label,
-                <Select {...selectProps} value={record.selections[ch.id] || ""} onChange={(e) => setSelection(ch.id, e.target.value)}>
-                  <option value="">— válassz —</option>
-                  {ch.options.map((o) => (
-                    <option key={o.name} value={o.name}>{o.name}</option>
-                  ))}
-                </Select>,
+                pickerButton(record.selections[ch.id] || "— válassz —", () => setSpecChoice(ch)),
                 i === choiceList.length - 1
               )
             )}
@@ -238,6 +229,25 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           <DiagnosticsPanel diagnostics={derived.diagnostics} />
         </ParchPanel>
       </VStack>
+
+      {picker && (
+        <RaceClassPicker
+          kind={picker}
+          selected={picker === "race" ? record.race : record.class}
+          onPick={picker === "race" ? onRaceChange : onClassChange}
+          onClose={() => setPicker(null)}
+        />
+      )}
+
+      {specChoice && (
+        <SpecPicker
+          choice={specChoice}
+          className={record.class}
+          selected={record.selections[specChoice.id] || ""}
+          onPick={(name) => setSelection(specChoice.id, name)}
+          onClose={() => setSpecChoice(null)}
+        />
+      )}
 
       {pendingClass && (
         <ModalShell onClose={() => setPendingClass(null)} width="min(440px, 100%)">

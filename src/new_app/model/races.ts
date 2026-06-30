@@ -3,6 +3,7 @@
 
 import { Stats } from "./attributes";
 import { GrantEntry, grant } from "./effects";
+import { SkillFok } from "./common";
 
 export interface AgeCategory {
   name: string;
@@ -21,6 +22,11 @@ export interface RaceDef {
 // the full age table (with stat penalties for old age etc.) later.
 const adult: AgeCategory[] = [{ name: "Ifjúkor", statMods: {} }];
 
+// Innate racial teaching talent: the listed skills are learned as if from an `uptoLevel`-fok teacher
+// (a (fok − 2) Kp/fok discount up to that fok — e.g. fok 3 → 1 Kp up to 3, fok 4 → 2 Kp up to 4).
+const teach = (uptoLevel: SkillFok, ...skills: string[]): GrantEntry[] =>
+  skills.map((skill) => grant({ kind: "teachingDiscount", skill, uptoLevel }));
+
 export const RACES: Record<string, RaceDef> = {
   Ember: {
     name: "Ember",
@@ -38,6 +44,7 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Elf hallás" }),
       grant({ kind: "tag", tag: "Erős nekromancia érzékenység" }),
       grant({ kind: "combatBonus", channel: "CÉ", amount: 10 }),
+      ...teach(4, "Állatismeret", "Idomítás", "Vadonjárás", "Lovaglás"),
     ],
     ageCategories: adult,
   },
@@ -49,6 +56,7 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Félelf látás" }),
       grant({ kind: "tag", tag: "Félelf hallás" }),
       grant({ kind: "tag", tag: "Gyenge nekromancia érzékenység" }),
+      ...teach(3, "Állatismeret", "Idomítás", "Vadonjárás", "Lovaglás"),
     ],
     ageCategories: adult,
   },
@@ -63,14 +71,19 @@ export const RACES: Record<string, RaceDef> = {
     name: "Törpe",
     cost: 1,
     statLimits: { Erő: 19, Gyorsaság: 18, Ügyesség: 18, Állóképesség: 19, Egészség: 19, Karizma: 17, Intelligencia: 17, Akaraterő: 18, Asztrál: 17, Érzékelés: 18 },
-    grants: [grant({ kind: "tag", tag: "Infralátás" }), grant({ kind: "tag", tag: "Idő és irányérzék" }), grant({ kind: "tag", tag: "Archeológiai érzék" })],
+    grants: [
+      grant({ kind: "tag", tag: "Infralátás" }),
+      grant({ kind: "tag", tag: "Idő és irányérzék" }),
+      grant({ kind: "tag", tag: "Archeológiai érzék" }),
+      ...teach(4, "Építészet", "Térképészet", "Mechanika", "Művészetek", "Szakma"),
+    ],
     ageCategories: adult,
   },
   "Kyr Származék": {
     name: "Kyr Származék",
     cost: 1,
     statLimits: { Erő: 17, Gyorsaság: 18, Ügyesség: 18, Állóképesség: 17, Egészség: 17, Karizma: 19, Intelligencia: 19, Akaraterő: 18, Asztrál: 19, Érzékelés: 18 },
-    grants: [],
+    grants: [grant({ kind: "teachingDiscount", category: "Szociális", uptoLevel: 4 })],
     ageCategories: adult,
   },
 };

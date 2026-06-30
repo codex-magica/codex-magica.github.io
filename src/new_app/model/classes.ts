@@ -35,6 +35,9 @@ const bg = (background: string, atLevel?: number): GrantEntry =>
   grant({ kind: "grantBackground", background }, atLevel);
 const teach = (...skills: string[]): GrantEntry[] =>
   skills.map((skill) => grant({ kind: "teachingDiscount", skill, uptoLevel: 4 }));
+// For a subclass option that teaches its OWN list instead of the class's: discards the inherited teach
+// list, then teaches only `skills`. (Plain `teach(...)` in an option EXTENDS what the class teaches.)
+const teachOnly = (...skills: string[]): GrantEntry[] => [grant({ kind: "resetTeaching" }), ...teach(...skills)];
 const equip = (item: string): GrantEntry => grant({ kind: "grantEquipment", item });
 const restrict = (text: string): GrantEntry => grant({ kind: "restriction", text });
 

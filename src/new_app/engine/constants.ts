@@ -28,9 +28,6 @@ export const FOK_CHECK_MOD: Record<number, number> = {
   5: 3,
 };
 
-// Per-increment Kp discount from a qualifying teacher/oktatás (min cost stays 1).
-export const TEACHING_DISCOUNT_PER_FOK = 2;
-
 // MME/AME offset over the governing attribute. The existing app uses +0; the book may use +10.
 // Kept as a constant so it is trivial to change once confirmed.
 export const MAGIC_DEFENSE_OFFSET = 0;

@@ -24,6 +24,7 @@ export type Effect =
   | { kind: "grantSkill"; skill: string; subtype?: string; level: SkillFok }
   | { kind: "grantSkillPercent"; skill: string; subtype?: string; percent: number }
   | { kind: "teachingDiscount"; skill?: string; category?: SkillCategory; uptoLevel: SkillFok }
+  | { kind: "resetTeaching" } // in a subclass option: discard the inherited (class) teach list before adding its own — the subclass OVERRIDES rather than extends what it teaches
   | { kind: "grantBackground"; background: string }
   | { kind: "resourcePerLevel"; resource: Resource; amount: number }
   | { kind: "derivedPerLevel"; target: DerivedKey; amount: number } // e.g. +N MME/AME each level (faith, Mágiatagadás)

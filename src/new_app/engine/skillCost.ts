@@ -2,7 +2,6 @@
 
 import { Stats } from "../model/attributes";
 import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT, SkillDef } from "../model/skills";
-import { TEACHING_DISCOUNT_PER_FOK } from "./constants";
 
 export type Discount = { skill?: string; category?: string; uptoLevel: number };
 
@@ -18,8 +17,8 @@ export function teachingUptoFor(discounts: Discount[], def: SkillDef): number {
 }
 
 // Kp cost to raise a skill from→to, with a resolved teacher level and the character's stats.
-// Tiered: cumulative-difference minus a −2/fok teaching discount (min 1), up to fok 4, plus an
-// unmet-attribute penalty. Percentage: ceil(Δ% / rate), rate 3 (or 5 with a teacher).
+// Tiered: cumulative-difference minus a (teacher fok − 2)/fok teaching discount (min 1 each), up to the
+// teacher's fok, plus an unmet-attribute penalty. Percentage: ceil(Δ% / rate), rate 3 (or 5 with a teacher).
 export function skillKpCost(
   def: SkillDef,
   from: number,
@@ -33,10 +32,13 @@ export function skillKpCost(
     return { kp: Math.ceil((to - from) / rate) };
   }
   const cum = def.cost;
+  // A teacher of fok T discounts each levelup by (T − 2) Kp — fok 3 → 1, 4 → 2, 5 → 3; below fok 3 nothing —
+  // and can teach up to fok T. Every levelup still costs at least 1 Kp.
+  const perFok = Math.max(0, teachingUpto - 2);
   let kp = 0;
   for (let f = from + 1; f <= to; f++) {
     const inc = cum[f - 1] - (f > 1 ? cum[f - 2] : 0);
-    const disc = f <= 4 && f <= teachingUpto ? TEACHING_DISCOUNT_PER_FOK : 0;
+    const disc = f <= teachingUpto ? perFok : 0;
     kp += Math.max(1, inc - disc);
   }
   let penalty = 0;

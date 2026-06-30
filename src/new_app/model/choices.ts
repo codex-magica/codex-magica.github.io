@@ -6,7 +6,9 @@
 //   • "override" — the selected option's SKILL grants REPLACE the accumulated skill package
 //                  (used where picking a school gives a whole new package, e.g. Harcos, Lovag).
 //   • "additive" — the option's skill grants ADD to the package (shared base + deltas, e.g. Pap).
-// Non-skill grants (backgrounds, teaching, equipment, restrictions…) ALWAYS add, never override.
+// Taught skills (teachingDiscount) default to ADDING (subclass extends what the class teaches), but a
+// subclass option can carry a `resetTeaching` marker to discard the inherited list first (override).
+// Other non-skill grants (backgrounds, equipment, restrictions…) always add.
 
 import { GrantEntry } from "./effects";
 
@@ -29,6 +31,8 @@ export type Selections = Record<string, string>; // choiceId → option name
 
 const isSkillGrant = (g: GrantEntry): boolean =>
   g.effect.kind === "grantSkill" || g.effect.kind === "grantSkillPercent";
+const isTeach = (g: GrantEntry): boolean => g.effect.kind === "teachingDiscount";
+const isResetTeach = (g: GrantEntry): boolean => g.effect.kind === "resetTeaching";
 
 // Resolve a class's choice tree against the character's selections into a flat grant list.
 // `base` is the class's shared base skill package (used by additive choices; empty for pure override).
@@ -38,8 +42,9 @@ export function resolveChoiceGrants(
   choices: ChoiceDef[],
   selections: Selections
 ): GrantEntry[] {
-  const other: GrantEntry[] = classGrants.slice();
+  const other: GrantEntry[] = classGrants.filter((g) => !isTeach(g));
   let skills: GrantEntry[] = baseSkills ? baseSkills.slice() : [];
+  let teaches: GrantEntry[] = classGrants.filter(isTeach); // class default; a subclass may reset/extend it
 
   const walk = (nodes: ChoiceDef[]) => {
     for (const choice of nodes) {
@@ -49,16 +54,17 @@ export function resolveChoiceGrants(
       if (!opt) continue;
       const og = opt.grants || [];
       const skillGrants = og.filter(isSkillGrant);
-      const otherGrants = og.filter((g) => !isSkillGrant(g));
       if (choice.mode === "override") skills = skillGrants.slice();
       else for (const g of skillGrants) skills.push(g);
-      for (const g of otherGrants) other.push(g);
+      if (og.some(isResetTeach)) teaches = []; // this subclass OVERRIDES what the class teaches
+      for (const g of og.filter(isTeach)) teaches.push(g);
+      for (const g of og.filter((g) => !isSkillGrant(g) && !isTeach(g) && !isResetTeach(g))) other.push(g);
       if (opt.choices) walk(opt.choices);
     }
   };
   walk(choices);
 
-  return other.concat(skills);
+  return other.concat(skills).concat(teaches);
 }
 
 // The ordered list of choices that should currently be shown/selected, given the selections
