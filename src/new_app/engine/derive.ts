@@ -152,7 +152,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const hmGrantedByLevel: number[] = []; // free HM (from skills) per level — assignable at no cost
   const ledgerCosts: Record<string, number> = {}; // KAP charged per ledger op, keyed `L:kind:id` (for the ledger view)
   const ledgerDelta: Record<string, { before: number; after: number }> = {}; // running value before→after per op
-  let resourceGrants: { source: string; resource: Resource; amount: number }[] = []; // skill-fok grants, last level
+  const resourceGrantsByLevel: { source: string; resource: Resource; amount: number }[][] = []; // skill-fok grants per level
   let cumulativeBgCost = 0;
 
   // A granted subtype may be renamed by the player (placeholders like "anyanyelv"/"szülőföld").
@@ -255,12 +255,19 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
 
   // Snapshot of skills owned purely from grants at level 1 (the floor the level-up UI can't go below).
   let grantedSkillsSnapshot: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent: number }[] = [];
+  // Owned skills at the START of EACH level (grants + every PRIOR level's purchases). Editing level L can't
+  // reduce a skill below floorSnapshots[L-1] — you can't un-learn what earlier levels already locked in.
+  const floorSnapshots: (typeof grantedSkillsSnapshot)[] = [];
+  // Non-variant skill purchases that raise nothing (to ≤ inherited fok) — phantom no-ops to be auto-pruned.
+  const redundantPurchases: { level: number; skill: string; subtype?: string }[] = [];
   // Skills that already received their one-time fok-4 attribute bonus (so it applies exactly once).
   const fok4Bonused = new Set<string>();
 
   for (let L = 1; L <= N; L++) {
     perLevelEffects.filter((p) => p.level === L).forEach((p) => applyEffect(p.effect, p.source, L));
-    if (L === 1) grantedSkillsSnapshot = Object.keys(owned).map((k) => ({ ...owned[k] }));
+    const floorSnap = Object.keys(owned).map((k) => ({ ...owned[k] }));
+    floorSnapshots[L - 1] = floorSnap;
+    if (L === 1) grantedSkillsSnapshot = floorSnap;
     cumulativeBgCost += bgCostAtLevel[L] || 0;
     // Level 1 only folds the starting Kp (= Intelligencia) into the shared KAP pool; later level-ups
     // get the flat 50 − backgrounds. The Int pool funds skills or HM/Mana/Pszi/Kegy/Tulajdonság.
@@ -321,6 +328,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const isPct = def.cost === "percentage";
         // `from` is whatever is already owned (grants + earlier purchases) unless explicitly given.
         const from = sp.from != null ? sp.from : cur ? (isPct ? cur.percent : cur.fok) : 0;
+        // A non-variant purchase that doesn't raise the fok is a phantom (e.g. an earlier level now reaches
+        // it) — flag it for pruning. Branches (sp.id) are distinct instances, never phantom.
+        if (sp.id == null && sp.to <= from) redundantPurchases.push({ level: L, skill: sp.skill, subtype: sp.subtype });
         const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(discounts, def);
         const cost = skillKpCost(def, from, sp.to, tUpto, effective);
         kapBalance -= cost.kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
@@ -363,7 +373,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     // Collected into a flat delta list, then applied with plain for-loops (no functions-in-loop).
     let hmFromSkills = 0;
     const resourceDeltas: { resource: string; amount: number }[] = [];
-    resourceGrants = []; // rebuilt each level; after the loop it holds the last (current) level's grants
+    // This level's skill-fok resource grants — the amount scales with the skill's CURRENT fok, so it differs
+    // per level as the skill is raised. Indexed by level below (resourceGrantsByLevel).
+    const levelGrants: { source: string; resource: Resource; amount: number }[] = [];
     for (const k of Object.keys(owned)) {
       const o = owned[k];
       const def = db.skills[o.skill];
@@ -373,10 +385,11 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       for (const e of effs) {
         if (e.kind === "resourcePerLevel") {
           resourceDeltas.push({ resource: e.resource, amount: e.amount });
-          resourceGrants.push({ source: `${o.skill}${o.subtype ? ` (${o.subtype})` : ""} ${o.fok}. fok`, resource: e.resource, amount: e.amount });
+          levelGrants.push({ source: `${o.skill}${o.subtype ? ` (${o.subtype})` : ""} ${o.fok}. fok`, resource: e.resource, amount: e.amount });
         } else if (e.kind === "derivedPerLevel") derivedBonus[e.target] += e.amount;
       }
     }
+    resourceGrantsByLevel[L - 1] = levelGrants;
     for (const s of staticPerLevel) {
       if (s.fromLevel <= L) resourceDeltas.push({ resource: s.resource, amount: s.amount });
     }
@@ -515,13 +528,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   });
 
   // Skills owned purely from grants (the level-up floor) + the teacher level available per skill.
-  const grantedSkills = grantedSkillsSnapshot.map((o) => ({
-    skill: o.skill,
-    subtype: o.subtype,
-    origSubtype: o.origSubtype,
-    fok: o.fok,
-    percent: o.percent || undefined,
-  }));
+  const snapToFloor = (snap: typeof grantedSkillsSnapshot) =>
+    snap.map((o) => ({ skill: o.skill, subtype: o.subtype, origSubtype: o.origSubtype, fok: o.fok, percent: o.percent || undefined }));
+  const grantedSkills = snapToFloor(grantedSkillsSnapshot);
+  const floorByLevel = floorSnapshots.map(snapToFloor);
   const teaching: Record<string, number> = {};
   Object.keys(db.skills).forEach((name) => {
     const u = teachingUptoFor(discounts, db.skills[name]);
@@ -538,6 +548,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     pools: { kapIncomeByLevel, kapBalanceByLevel, hmGrantedByLevel, magic },
     skills,
     grantedSkills,
+    floorByLevel,
+    redundantPurchases,
     teaching,
     spells,
     tags: Object.keys(tags),
@@ -548,6 +560,6 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     diagnostics,
     ledgerCosts,
     ledgerDelta,
-    resourceGrants,
+    resourceGrantsByLevel,
   };
 }

@@ -104,6 +104,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
   derived.grantedSkills.forEach((g) => {
     grantedFloor[keyOf(g.skill, g.subtype)] = g.percent != null ? g.percent : g.fok;
   });
+  // The dec floor on THIS level: grants + everything bought in PRIOR levels (can't un-learn past progress).
+  // floorByLevel[level-1] is the snapshot at the start of this level — equals grants at level 1.
+  const inheritedFloor: Record<string, number> = {};
+  (derived.floorByLevel[level - 1] ?? derived.grantedSkills).forEach((g) => {
+    inheritedFloor[keyOf(g.skill, g.subtype)] = g.percent != null ? g.percent : g.fok;
+  });
 
   // User-added branches carry a variantId in the derived list; everything else is a "real" owned instance
   // (trunk / grant). This is collision-proof — an unnamed branch no longer masquerades as the trunk.
@@ -377,7 +383,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }, isPrimary: boolean, showBranch: boolean, mainFok: number, topCount: number, branchFloor: number | null) => {
     const isPct = inst.percent != null;
     const cur = isPct ? inst.percent! : inst.fok;
-    const floor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0;
+    const grantFloor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0; // grant-only → the "KAPOTT" badge
+    const floor = inheritedFloor[keyOf(inst.skill, inst.subtype)] || 0; // grants + prior levels → dec limit
     const teacher = teacherOf(inst.skill);
     const step = isPct ? (teacher > 0 ? 5 : 3) : 1;
     const atMax = isPct ? cur >= 100 : cur >= 5;
@@ -406,7 +413,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
               ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
               : onSetSubtype(level, inst.skill, inst.subtype, v))
         : null,
-      <>{floor > 0 && <KapottBadge />}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined)}</>,
+      <>{grantFloor > 0 && <KapottBadge />}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined)}</>,
       <Stepper
         value={isPct ? `${cur}%` : `${cur}.`}
         incLabel={atMax ? undefined : String(cost)}

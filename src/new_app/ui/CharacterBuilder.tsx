@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Heading, HStack, Input, Select, Text, VStack } from "@chakra-ui/react";
+import { ModalShell } from "./Modal";
 import { CharacterBuilderApi } from "../state/useCharacterBuilder";
+import { derive } from "../engine/derive";
+import { RULES } from "../model/rulesDb";
 import { RACES, RACE_NAMES } from "../model/races";
 import { CLASSES, CLASS_NAMES } from "../model/classes";
 import { activeChoices, defaultSelections } from "../model/choices";
@@ -31,7 +34,7 @@ const BalanceChip: React.FC<{ caption: string; value: number; numColor: string; 
 
 // The character creator — the left editor column. Rendered inside the full-screen creator (which
 // provides the scroll container, the header and the confirm button). Controlled by `api`.
-export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }) => {
+export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "create" | "edit" | "levelup" }> = ({ api, mode }) => {
   const {
     record,
     derived,
@@ -56,6 +59,9 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
     setGrantedHmChannel,
   } = api;
 
+  const [selectedLevel, setSelectedLevel] = useState(1); // which level the editor targets (edit mode)
+  const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
+
   const onRaceChange = (race: string) => {
     const caps = RACES[race].statLimits;
     const clamped = { ...record.pointBuy };
@@ -65,17 +71,37 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
     update({ race, pointBuy: clamped });
   };
 
-  const onClassChange = (cls: string) => {
+  const applyClassChange = (cls: string) =>
     update({ class: cls, selections: defaultSelections(CLASSES[cls].choices) });
-  };
+  // Class drives grants/backgrounds/choices, so changing it on a character with progress can invalidate
+  // later levels — gate it behind a hard confirm. A fresh level-1 character has nothing to lose, so skip it.
+  const hasProgress =
+    record.levels.length > 1 ||
+    record.levels.some((l) => l.skillPurchases.length || l.allocations.length || l.hmAssignments.length || l.statIncreases.length || (l.grantedHmAssignments?.length ?? 0));
+  const onClassChange = (cls: string) => (hasProgress ? setPendingClass(cls) : applyClassChange(cls));
 
   const klass = CLASSES[record.class];
   const choiceList = klass ? activeChoices(klass.choices, record.selections) : [];
   const raceAllowed = klass ? klass.allowedRaces.indexOf(record.race) >= 0 : true;
 
   // Header balance anchor. (The base point-buy budget lives on the Tulajdonságok panel itself.)
-  const kap = derived.pools.kapBalanceByLevel[0] ?? 0;
+  // Level-up edits the freshly-added last level and hides the level-1-only panels (race/class, attribute
+  // point-buy, backgrounds). Create/edit work level 1 with everything shown.
+  const isLevelup = mode === "levelup";
+  const activeLevel = isLevelup ? record.levels.length : Math.min(selectedLevel, record.levels.length);
+  const showBase = activeLevel === 1; // creation panels (race/class/attrs/backgrounds) live on level 1 only
+  const showSwitcher = !isLevelup && record.levels.length > 1; // pick which level to edit
+  const levelHasConflict = (L: number) =>
+    (derived.pools.kapBalanceByLevel[L - 1] ?? 0) < 0 || derived.diagnostics.some((d) => d.atLevel === L && d.severity !== "info");
+  const kap = derived.pools.kapBalanceByLevel[activeLevel - 1] ?? 0;
   const subLine = `${record.race} ${record.class} · ${record.levels.length}. szint`;
+
+  // The per-level panels must show skills/pools AS OF the level being edited (not the final state) — else
+  // raising a skill at an earlier level would start from its level-N value. Re-derive the record truncated
+  // to the active level; for the last level (and level-up) that's the full derived already.
+  const editDerived = activeLevel >= record.levels.length
+    ? derived
+    : derive(RULES, { ...record, levels: record.levels.slice(0, activeLevel) });
 
   const fieldRow = (label: string, control: React.ReactNode, last?: boolean) => (
     <HStack align="center" py="9px" borderBottom={last ? undefined : "1px solid"} borderColor="hair" spacing={3}>
@@ -101,8 +127,28 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
               <BalanceChip caption="KAP maradék" value={kap} numColor={kap < 0 ? "bad" : "accentTx"} bg="chipBg" borderColor="chipBd" />
             </HStack>
           </HStack>
+          {showSwitcher && (
+            <HStack gap="6px" mt="11px" flexWrap="wrap">
+              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="fgFaint" mr="2px">Szint</Text>
+              {record.levels.map((l) => {
+                const active = l.level === activeLevel;
+                const conflict = levelHasConflict(l.level);
+                return (
+                  <Box as="button" key={l.level} type="button" onClick={() => setSelectedLevel(l.level)}
+                    position="relative" minW="32px" h="29px" px="9px" borderRadius="8px" border="1px solid"
+                    borderColor={active ? "accent" : "fieldBd"} bg={active ? "accentSoft" : "fieldBg"}
+                    color={active ? "accentTx" : "muted"} fontWeight={700} fontSize="13px" fontFamily="system-ui"
+                    display="inline-flex" alignItems="center" justifyContent="center" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                    {l.level}
+                    {conflict && <Box position="absolute" top="-3px" right="-3px" w="9px" h="9px" borderRadius="full" bg="bad" border="1.5px solid" borderColor="page" />}
+                  </Box>
+                );
+              })}
+            </HStack>
+          )}
         </ParchPanel>
 
+        {showBase && (
         <ParchPanel>
           <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} mb={2} color="fg">Alapadatok</Heading>
           <Box>
@@ -146,20 +192,25 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
             </Text>
           </Box>
         </ParchPanel>
+        )}
 
+        {showBase && (
         <ParchPanel>
           <BackgroundSelector record={record} granted={derived.grantedBackgrounds} onToggle={toggleBackground} onLevel={setBackgroundLevel} onOption={setBackgroundOption} />
         </ParchPanel>
+        )}
 
+        {showBase && (
         <ParchPanel>
           <AttributeEditor record={record} derived={derived} onChange={(s: Stat, v: number) => patchPointBuy(s, v)} onAdottsag={setAdottsag} />
         </ParchPanel>
+        )}
 
         <ParchPanel>
           <SkillLevelPanel
-            level={1}
+            level={activeLevel}
             record={record}
-            derived={derived}
+            derived={editDerived}
             onUpsert={upsertSkillPurchase}
             onRemove={removeSkillPurchase}
             onAddVariant={addSkillVariant}
@@ -172,11 +223,11 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
         </ParchPanel>
 
         <ParchPanel>
-          <LevelGainsPanel level={1} record={record} derived={derived} onGrantedHm={setGrantedHmChannel} />
+          <LevelGainsPanel level={activeLevel} record={record} derived={editDerived} onGrantedHm={setGrantedHmChannel} />
         </ParchPanel>
 
         <ParchPanel>
-          <PointBuyPanel level={1} record={record} derived={derived} onHm={setHmChannel} onResource={setResourceAllocation} onStat={setStatBuy} />
+          <PointBuyPanel level={activeLevel} record={record} derived={editDerived} onHm={setHmChannel} onResource={setResourceAllocation} onStat={setStatBuy} />
         </ParchPanel>
 
         <ParchPanel>
@@ -187,6 +238,28 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi }> = ({ api }
           <DiagnosticsPanel diagnostics={derived.diagnostics} />
         </ParchPanel>
       </VStack>
+
+      {pendingClass && (
+        <ModalShell onClose={() => setPendingClass(null)} width="min(440px, 100%)">
+          <Box p="22px">
+            <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>Kaszt módosítása</Heading>
+            <Text fontSize="14px" color="muted" lineHeight="1.55" mb={4}>
+              A kaszt <b>{record.class}</b> → <b>{pendingClass}</b> módosítása megváltoztatja a kapott
+              képzettségeket, hátteret és a kaszthoz kötött választásokat. A magasabb szinteken elköltött
+              pontok érvénytelenné válhatnak: a fölöslegessé vált képzettségvásárlások automatikusan
+              törlődnek, a túlköltött szinteket pedig jelöljük. Folytatod?
+            </Text>
+            <HStack justify="flex-end" gap="9px">
+              <Box as="button" type="button" onClick={() => setPendingClass(null)} px="15px" py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="15px" _hover={{ borderColor: "accent" }}>
+                Mégse
+              </Box>
+              <Box as="button" type="button" onClick={() => { applyClassChange(pendingClass); setPendingClass(null); }} px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="bad" bg="bad" color="white" fontWeight={700} fontSize="15px">
+                Kaszt módosítása
+              </Box>
+            </HStack>
+          </Box>
+        </ModalShell>
+      )}
     </Box>
   );
 };

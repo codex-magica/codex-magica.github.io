@@ -28,7 +28,7 @@ const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNod
 // FREE and distributed to KÉ/TÉ/VÉ/CÉ right here.
 export const LevelGainsPanel: React.FC<Props> = ({ level, record, derived, onGrantedHm }) => {
   const lvl = getLevelRecord(record, level);
-  const grants = derived.resourceGrants;
+  const grants = derived.resourceGrantsByLevel[level - 1] ?? [];
   const hmGranted = derived.pools.hmGrantedByLevel[level - 1] ?? 0;
   const grantedHmOf = (c: CombatChannel) => lvl?.grantedHmAssignments?.find((h) => h.channel === c)?.amount ?? 0;
   const grantedAssigned = lvl?.grantedHmAssignments?.reduce((s, h) => s + h.amount, 0) ?? 0;

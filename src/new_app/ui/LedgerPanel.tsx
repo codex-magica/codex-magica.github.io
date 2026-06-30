@@ -63,7 +63,7 @@ const bonusFor = (bonuses: Fok4Bonus[], skill: string, subtype?: string, variant
 // Every item of a level as ONE flat, ordered list (no type grouping). The fok-4 +1 attribute is shown
 // inline on the very skill purchase that reached fok 4. (Bonuses on GRANTED fok-4 instances — which have
 // no purchase to inline onto, e.g. the wizard's Pszi — are listed in their own top-level section instead.)
-const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; deltas: Record<string, { before: number; after: number }>; fok4: Fok4Bonus[] }> = ({ lvl, costs, deltas, fok4 }) => {
+const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; deltas: Record<string, { before: number; after: number }>; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[] }> = ({ lvl, costs, deltas, fok4, grants }) => {
   const L = lvl.level;
   const fmtDelta = (key: string, pct = false): string | undefined => {
     const d = deltas[key];
@@ -96,8 +96,13 @@ const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; de
       <Text fontFamily="system-ui" fontSize="12px" fontWeight={700} letterSpacing=".06em" textTransform="uppercase" color="muted" pb="3px" borderBottom="1px solid" borderColor="hair">
         {L}. szint
       </Text>
-      {items.length === 0 && <Empty>Nincs döntés ezen a szinten.</Empty>}
+      {items.length === 0 && grants.length === 0 && <Empty>Nincs döntés ezen a szinten.</Empty>}
       {items.map((it, i) => <Line key={i} n={i + 1} tag={it.tag} delta={it.delta} cost={it.cost}>{it.text}</Line>)}
+      {/* Passive per-level resource gains from skill foks (no KAP, no sequence number). */}
+      {grants.map((g, i) => {
+        const rl = g.resource === "Psi" ? "Pszi" : g.resource;
+        return <Line key={`g${i}`} tag={rl}>{g.source}  ·  +{g.amount} {rl}/szint</Line>;
+      })}
     </Box>
   );
 };
@@ -162,19 +167,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
             </>
           )}
 
-          {/* Per-level resource grants from skill levels (read-only; folded into the pool/Fp totals and,
-              for HM, distributed in the Szintlépési nyereségek panel). Shown only when the character has any. */}
-          {derived.resourceGrants.length > 0 && (
-            <>
-              <Cat>Szintlépési nyereségek (/ szint)</Cat>
-              {derived.resourceGrants.map((g, i) => {
-                const rl = g.resource === "Psi" ? "Pszi" : g.resource;
-                return <Line key={i} n={i + 1} tag={rl}>{g.source}  ·  +{g.amount} {rl}</Line>;
-              })}
-            </>
-          )}
-
-          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} costs={costs} deltas={derived.ledgerDelta} fok4={fok4} />)}
+          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} costs={costs} deltas={derived.ledgerDelta} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} />)}
 
           {record.kmAdjustments.length > 0 && (
             <Box mt="14px">

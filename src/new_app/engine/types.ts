@@ -53,7 +53,12 @@ export interface DerivedCharacter {
     magic: Partial<Record<Pool, { max: number }>>;
   };
   skills: OwnedSkill[];
-  grantedSkills: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }[]; // grant-only floor
+  grantedSkills: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }[]; // grant-only floor (level 1)
+  // Skill floor at the START of each level (grants + all PRIOR levels), indexed by level−1. Editing level L
+  // can't reduce a skill below floorByLevel[L-1].
+  floorByLevel: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }[][];
+  // Non-variant purchases that raise nothing (to ≤ inherited) — auto-pruned so no phantom purchases linger.
+  redundantPurchases: { level: number; skill: string; subtype?: string }[];
   teaching: Record<string, number>; // skill name → teacher (oktatás) level available
   spells: SpellView[];
   tags: string[];
@@ -66,8 +71,8 @@ export interface DerivedCharacter {
   ledgerCosts: Record<string, number>;
   // The running value an operation changed, before → after (same keys as ledgerCosts).
   ledgerDelta: Record<string, { before: number; after: number }>;
-  // Per-level resources granted by skills at their current fok (fok 3→+1, 4→+2, 5→+3), for the last level —
-  // e.g. Harctéri gyakorlat (4. fok) → +2 HM/szint. Drives the Szintlépési nyereségek panel. HM grants are
-  // distributed via the per-level grantedHmAssignments; the rest already fold into the pools/Fp totals.
-  resourceGrants: { source: string; resource: Resource; amount: number }[];
+  // Resources granted by skills at their current fok (fok 3→+1, 4→+2, 5→+3), PER LEVEL (indexed by level−1) —
+  // the amount scales with the skill's fok, so it grows as the skill is raised across levels. Drives the
+  // Szintlépési nyereségek panel; HM grants are distributed via grantedHmAssignments, the rest fold into pools/Fp.
+  resourceGrantsByLevel: { source: string; resource: Resource; amount: number }[][];
 }

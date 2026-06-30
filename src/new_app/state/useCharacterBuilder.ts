@@ -27,6 +27,24 @@ const pruneStaleFok4 = (rec: CharacterRecord): CharacterRecord => {
   return filtered.length === rec.fok4Bonuses.length ? rec : { ...rec, fok4Bonuses: filtered };
 };
 
+// A skill purchase that no longer raises the fok (e.g. an earlier level now reaches it) is a phantom. Drop
+// it so the record only ever holds purchases that do something. (Branches are never phantom — engine skips
+// them.) Removing a no-op doesn't change any fok, so a single pass converges.
+const pruneRedundantPurchases = (rec: CharacterRecord): CharacterRecord => {
+  if (!rec.levels.some((l) => l.skillPurchases.length)) return rec;
+  const { redundantPurchases } = derive(RULES, rec);
+  if (!redundantPurchases.length) return rec;
+  const dead = new Set(redundantPurchases.map((r) => `${r.level}:${r.skill}:${r.subtype ?? ""}`));
+  let changed = false;
+  const levels = rec.levels.map((l) => {
+    const kept = l.skillPurchases.filter((p) => p.id != null || !dead.has(`${l.level}:${p.skill}:${p.subtype ?? ""}`));
+    if (kept.length === l.skillPurchases.length) return l;
+    changed = true;
+    return { ...l, skillPurchases: kept };
+  });
+  return changed ? { ...rec, levels } : rec;
+};
+
 export interface CharacterBuilderApi {
   record: CharacterRecord;
   derived: DerivedCharacter;
@@ -55,8 +73,9 @@ export interface CharacterBuilderApi {
 // Controlled: the caller owns the record (so each character edits its own, persisted via the roster).
 // Re-derives the sheet on every change.
 export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: CharacterRecord) => void): CharacterBuilderApi {
-  // Every write goes through pruning so stale fok-4 choices can't linger after a skill is lowered.
-  const setRecord = (r: CharacterRecord) => rawSetRecord(pruneStaleFok4(r));
+  // Every write is cleaned: phantom (no-op) skill purchases are dropped, then stale fok-4 choices. Keeps the
+  // record canonical so editing an earlier level can't leave orphaned/redundant entries on later ones.
+  const setRecord = (r: CharacterRecord) => rawSetRecord(pruneStaleFok4(pruneRedundantPurchases(r)));
   const derived = useMemo(() => derive(RULES, record), [record]);
 
   const update = (patch: Partial<CharacterRecord>) => setRecord({ ...record, ...patch });

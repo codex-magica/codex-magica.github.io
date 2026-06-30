@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, Flex, Heading, HStack, Text } from "@chakra-ui/react";
 import { CharacterBuilder } from "./CharacterBuilder";
 import { useCharacterBuilder } from "../state/useCharacterBuilder";
-import { CharacterRecord } from "../model/character";
+import { CharacterRecord, emptyLevel } from "../model/character";
 
 export type CreatorMode = "create" | "edit" | "levelup";
 
@@ -15,7 +15,7 @@ const BackArrow = (
 const headerFor = (mode: CreatorMode, r: CharacterRecord) => {
   const lvl = r.levels.length;
   if (mode === "create") return { title: "Új karakter", sub: "Karakteralkotó · 1. szint", primary: "Karakter létrehozása" };
-  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl}. szint → ${lvl + 1}. szint`, primary: "Szint megerősítése" };
+  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szint megerősítése" };
   return { title: "Karakter szerkesztése", sub: `${r.name} · ${r.race} ${r.class} · ${lvl}. szint`, primary: "Mentés" };
 };
 
@@ -27,7 +27,12 @@ export const CreatorScreen: React.FC<{
   onClose: () => void;
   onCommit: (record: CharacterRecord) => void;
 }> = ({ mode, initialRecord, onClose, onCommit }) => {
-  const [record, setRecord] = useState<CharacterRecord>(initialRecord);
+  // Level-up adds a fresh empty level to spend this level's KAP into; create/edit work the record as-is.
+  const [record, setRecord] = useState<CharacterRecord>(() =>
+    mode === "levelup"
+      ? { ...initialRecord, levels: [...initialRecord.levels, emptyLevel(initialRecord.levels.length + 1)] }
+      : initialRecord
+  );
   const api = useCharacterBuilder(record, setRecord);
   const m = headerFor(mode, record);
 
@@ -56,7 +61,7 @@ export const CreatorScreen: React.FC<{
       </Box>
       <Box flex="1 1 auto" minH={0} overflowY="auto">
         <Box maxW="760px" mx="auto">
-          <CharacterBuilder api={api} />
+          <CharacterBuilder api={api} mode={mode} />
         </Box>
       </Box>
     </Flex>
