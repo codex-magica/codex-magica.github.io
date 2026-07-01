@@ -711,7 +711,7 @@ export const CLASSES: Record<string, ClassDef> = {
     baseSkills: [
       gs("Vallásismeret", 3),
       weaponChoice("fő fegyver", 3),
-      gs("Pajzshasználat", 2),
+      weaponChoice("másodfegyver", 2), // book: "Fegyverhasználat vagy Pajzshasználat" — set to Fegyverhasználat (TODO)
       gs("Fájdalomtűrés", 2),
       gs("Hadvezetés", 2),
       gs("Harctéri gyakorlat", 2),
