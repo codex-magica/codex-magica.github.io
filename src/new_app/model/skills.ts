@@ -7,19 +7,44 @@
 import { Stat, STAT_BY_SHORT } from "./attributes";
 import { Effect, GrantEntry, grant } from "./effects";
 import { SkillCategory, SkillDifficulty, SkillFok, SkillRef } from "./common";
+import { WeaponValues } from "../data/weapons";
 
 export type SkillCost = number[] | "percentage"; // cumulative Kp per fok (length 5), or %-based
+
+// How a skill specializes (branches). A skill instance is identified by a path of subtype segments; each
+// BranchLevel describes one depth of that path. No `branch` at all ⇒ the skill can't specialize
+// (Futás, Úszás, every percentage skill).
+export interface BranchOption {
+  name: string;
+  attrs?: Stat[]; // this branch's own attribute requirements (e.g. a Fegyverhasználat weapon category)
+  children?: string[]; // suggested next-level specifics under this option (e.g. the weapons in a category)
+}
+export interface BranchLevel {
+  label: string; // "tradíció" | "kategória" | "fegyver" | "ág" — shown in the branch UI
+  source: "fixed" | "open"; // enumerated dropdown vs free-form (player-typed)
+  options?: BranchOption[]; // for "fixed"
+  chooseAttrs?: boolean; // "open": the player sets this branch's attribute requirements (Művészetek)
+  capFok?: SkillFok; // a node at this depth can't exceed this fok directly (Fegyverhasználat kategória = 2)
+  branchAbove?: SkillFok; // to exceed `branchAbove`, you MUST branch to the next depth (forced branching)
+}
+// A choice forced when an instance reaches a fok. attrBonus = the existing fok-4 +1 attribute pick;
+// path = a committing choice that gates later progress (Pszi tudat/test at fok 3).
+export type FokTrigger =
+  | { kind: "attrBonus"; atFok: SkillFok }
+  | { kind: "path"; atFok: SkillFok; label: string; options: string[] };
 
 export interface SkillDef {
   name: string;
   category: SkillCategory;
   difficulty: SkillDifficulty;
   cost: SkillCost;
-  attrs: Stat[]; // required/governing attributes (checks, fok-4 bonus, unmet-req penalty)
+  attrs: Stat[]; // default required/governing attributes (a branch may override via BranchOption/chooseAttrs)
   hardReq: SkillRef[]; // strong prereq — must be owned at >= target fok
   softReq: SkillRef[]; // weak prereq   — must be owned at >= target fok − 1
   perFokEffects?: Partial<Record<SkillFok, Effect[]>>;
-  subtypes?: string[]; // closed set of allowed subtypes (a dropdown in the editor); else free text
+  branch?: BranchLevel[]; // branching structure; absent ⇒ non-branchable
+  fokTriggers?: FokTrigger[]; // choices forced at a fok
+  subtypes?: string[]; // DEPRECATED (kept for the not-yet-migrated UI/engine); derived from branch[0]
 }
 
 // Default cumulative cost curves by difficulty (book ch.16). Used unless a skill overrides.
@@ -43,7 +68,9 @@ type Raw = {
   hard?: string[];
   soft?: string[];
   perFok?: Partial<Record<SkillFok, Effect[]>>;
-  subtypes?: string[];
+  subtypes?: string[]; // shorthand: a single fixed branch level with these options
+  branch?: BranchLevel[]; // explicit branching (categories, open, multi-level)
+  fokTriggers?: FokTrigger[];
 };
 
 const ref = (s: string): SkillRef => ({ skill: s });
@@ -57,8 +84,41 @@ const build = (r: Raw): SkillDef => ({
   hardReq: (r.hard ?? []).map(ref),
   softReq: (r.soft ?? []).map(ref),
   perFokEffects: r.perFok,
-  subtypes: r.subtypes,
+  // Explicit branch wins; else a fixed level from `subtypes`; else non-branchable.
+  branch: r.branch ?? (r.subtypes ? [{ label: "altípus", source: "fixed", options: r.subtypes.map((name) => ({ name })) }] : undefined),
+  fokTriggers: r.fokTriggers,
+  subtypes: r.subtypes ?? (r.branch?.[0]?.source === "fixed" ? r.branch[0].options?.map((o) => o.name) : undefined),
 });
+
+// Weapon-group categories for Fegyverhasználat: fok 1–2 at the group, then branch to a specific weapon
+// (fok 3+). The group defines the attribute requirements (ranged needs only Ügy+Érz).
+// Specific weapons per category, pulled from the weapon table (data/weapons.ts) by its subType groups.
+// A trailing "(...)" variant (e.g. "elf íj (lélektelen)") collapses to the base weapon and is de-duped —
+// for training purposes it's the same weapon.
+const wpn = (...subTypes: string[]): string[] => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const w of WeaponValues) {
+    if (!subTypes.includes(w.subType)) continue;
+    const name = w.name.replace(/\s*\([^)]*\)\s*$/, "").trim();
+    if (!seen.has(name)) { seen.add(name); out.push(name); }
+  }
+  return out;
+};
+const WEAPON_CATEGORIES: BranchOption[] = [
+  { name: "egykezes kardok", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: wpn("Egykezes kardok") },
+  { name: "kétkezes kardok", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: wpn("Nehézkardok") },
+  { name: "csatabárdok", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: wpn("Csatabárdok", "Nehéz csatabárdok") },
+  { name: "buzogányok", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: wpn("Buzogányok") },
+  { name: "botok", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: wpn("Botok") },
+  { name: "nyeles fegyverek", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: wpn("Nyeles fegyverek") },
+  { name: "tőr jellegű fegyverek", attrs: ["Gyorsaság", "Ügyesség"], children: wpn("Tőr jellegű fegyverek") },
+  { name: "íjak", attrs: ["Ügyesség", "Érzékelés"], children: wpn("Íjak") },
+  { name: "számszeríjak", attrs: ["Ügyesség", "Érzékelés"], children: wpn("Nyílpuskák") },
+  { name: "hajítófegyverek", attrs: ["Erő", "Ügyesség", "Érzékelés"], children: wpn("Hajítófegyverek") },
+  { name: "dobófegyverek", attrs: ["Erő", "Ügyesség", "Érzékelés"], children: wpn("Egyéb célzófegyverek") },
+  { name: "pajzsok", attrs: ["Erő", "Gyorsaság", "Ügyesség"], children: [] },
+];
 
 const RAW: Raw[] = [
   // ── Harci ──────────────────────────────────────────────────────────────────
@@ -70,7 +130,7 @@ const RAW: Raw[] = [
       5: [{ kind: "resourcePerLevel", resource: "Fp", amount: 3 }],
     },
   },
-  { name: "Fegyverhasználat", cat: "Harci", diff: "III", attrs: ["Erő", "Gy", "Ügy", "Érz"] },
+  { name: "Fegyverhasználat", cat: "Harci", diff: "III", attrs: ["Erő", "Gy", "Ügy", "Érz"], branch: [{ label: "kategória", source: "fixed", options: WEAPON_CATEGORIES, capFok: 2, branchAbove: 2 }, { label: "fegyver", source: "open" }] },
   { name: "Fegyverismeret", cat: "Harci", diff: "II", attrs: ["Int", "Érz"] },
   { name: "Hadvezetés", cat: "Harci", diff: "III", attrs: ["Int", "Krz"], soft: ["Lélektan", "Térképészet"] },
   { name: "Harci láz", cat: "Harci", diff: "II", attrs: ["Áks", "Egs"] },
@@ -124,9 +184,9 @@ const RAW: Raw[] = [
   { name: "Kocsihajtás", cat: "Világi", diff: "I", attrs: ["Ügy"], soft: ["Állatismeret"] },
   { name: "Lovaglás", cat: "Világi", diff: "I", attrs: ["Ügy"], soft: ["Állatismeret"] },
   { name: "Nyomolvasás", cat: "Világi", diff: "II", attrs: ["Érz"] },
-  { name: "Szakma", cat: "Világi", diff: "II" },
+  { name: "Szakma", cat: "Világi", diff: "II", branch: [{ label: "szakma", source: "open" }] },
   { name: "Úszás", cat: "Világi", diff: "I", attrs: ["Erő", "Áks", "Egs"] },
-  { name: "Vadonjárás", cat: "Világi", diff: "II", attrs: ["Érz"], soft: ["Állatismeret", "Herbalizmus"] },
+  { name: "Vadonjárás", cat: "Világi", diff: "II", attrs: ["Érz"], soft: ["Állatismeret", "Herbalizmus"], branch: [{ label: "terep", source: "open" }] },
   { name: "Akrobatika", cat: "Világi", diff: "I", attrs: ["Ügy"], pct: true },
   { name: "Esés", cat: "Világi", diff: "I", attrs: ["Ügy"], pct: true },
   { name: "Mászás", cat: "Világi", diff: "I", attrs: ["Erő", "Ügy"], pct: true },
@@ -142,7 +202,7 @@ const RAW: Raw[] = [
   { name: "Mechanika", cat: "Tudományos", diff: "III", attrs: ["Ügy", "Int"], cost: [2, 8, 15, 25, 40], hard: ["Számtan/Mértan"] },
   { name: "Oktatás", cat: "Tudományos", diff: "III", attrs: ["Int", "Aszt"], soft: ["Lélektan"] },
   { name: "Orvoslás", cat: "Tudományos", diff: "III", attrs: ["Int"], hard: ["Élettan", "Herbalizmus"] },
-  { name: "Ősi nyelv", cat: "Tudományos", diff: "IV", attrs: ["Int"], soft: ["Írás/olvasás"] },
+  { name: "Ősi nyelv", cat: "Tudományos", diff: "IV", attrs: ["Int"], soft: ["Írás/olvasás"], branch: [{ label: "nyelv", source: "fixed", options: [{ name: "aquir" }, { name: "kyr" }, { name: "godoni" }, { name: "crantai" }, { name: "óelf" }, { name: "lingua domini" }, { name: "toroni" }] }] },
   { name: "Számtan/Mértan", cat: "Tudományos", diff: "III", attrs: ["Int"], soft: ["Írás/olvasás"] },
   { name: "Térképészet", cat: "Tudományos", diff: "III", attrs: ["Int"], hard: ["Számtan/Mértan"], soft: ["Művészetek"] },
   { name: "Történelem", cat: "Tudományos", diff: "II", attrs: ["Int"], soft: ["Írás/olvasás"] },
@@ -175,8 +235,8 @@ const RAW: Raw[] = [
   { name: "Heraldika", cat: "Szociális", diff: "II", attrs: ["Int"], hard: ["Kultúra"] },
   { name: "Kultúra", cat: "Szociális", diff: "I", cost: [3, 8, 15, 25, 40], hard: ["Nyelvtudás"] },
   { name: "Lélektan", cat: "Szociális", diff: "III", attrs: ["Int", "Aszt", "Érz"] },
-  { name: "Művészetek", cat: "Szociális", diff: "II" },
-  { name: "Nyelvtudás", cat: "Szociális", diff: "I", cost: [2, 8, 15, 25, 40] },
+  { name: "Művészetek", cat: "Szociális", diff: "II", branch: [{ label: "ág", source: "open", chooseAttrs: true }] },
+  { name: "Nyelvtudás", cat: "Szociális", diff: "I", cost: [2, 8, 15, 25, 40], branch: [{ label: "nyelv", source: "open" }] },
   { name: "Párbaj", cat: "Szociális", diff: "II", attrs: ["Int", "Aszt", "Krz"], hard: ["Udvari etikett/intrika"] },
   { name: "Politika/diplomácia", cat: "Szociális", diff: "III", attrs: ["Int", "Aszt", "Krz"], hard: ["Udvari etikett/intrika"], soft: ["Történelem"] },
   { name: "Szexuális kultúra", cat: "Szociális", diff: "I", attrs: ["Aszt", "Krz"] },
@@ -196,7 +256,7 @@ const RAW: Raw[] = [
   },
   { name: "Nekromancia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Élettan"] },
   { name: "Őselemi mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
-  { name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], subtypes: ["pyarroni", "kyr", "godoni", "slan"] },
+  { name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], subtypes: ["pyarroni", "kyr", "godoni", "slan"], fokTriggers: [{ kind: "path", atFok: 3, label: "Pszi út", options: ["tudat", "test"] }] },
   { name: "Rúnamágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
   {
     name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"],

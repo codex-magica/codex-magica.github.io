@@ -58,8 +58,8 @@ export interface CharacterBuilderApi {
   setBackgroundOption: (name: string, option: string) => void;
   upsertSkillPurchase: (level: number, skill: string, subtype: string | undefined, to: number) => void;
   removeSkillPurchase: (level: number, skill: string, subtype: string | undefined) => void;
-  addSkillVariant: (level: number, skill: string) => void;
-  patchPurchaseById: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => void;
+  addSkillVariant: (level: number, skill: string, parent?: string) => void;
+  patchPurchaseById: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) => void;
   removePurchaseById: (level: number, id: string) => void;
   setSubtypeOverride: (originalKey: string, value: string) => void;
   setLearnedSubtype: (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => void;
@@ -68,6 +68,8 @@ export interface CharacterBuilderApi {
   setGrantedHmChannel: (level: number, channel: CombatChannel, amount: number) => void;
   setStatBuy: (level: number, stat: Stat, amount: number) => void;
   setSkillFok4Stat: (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => void;
+  setSkillPathChoice: (skill: string, subtype: string | undefined, variantId: string | undefined, trigger: string, value: string | null) => void;
+  setSkillChosenAttrs: (level: number, skill: string, subtype: string | undefined, variantId: string | undefined, attrs: Stat[]) => void;
 }
 
 // Controlled: the caller owns the record (so each character edits its own, persisted via the roster).
@@ -148,12 +150,15 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
 
   // A user-added variant (its own subtype + a branch fok). Stored with a stable id so the subtype
   // can be edited freely without losing identity.
-  const addSkillVariant = (level: number, skill: string) => {
+  const addSkillVariant = (level: number, skill: string, parent?: string) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
-    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([{ id: genId("v"), skill, subtype: "", from: 1, to: 1 }]) });
+    // Relearning a skill adds an INDEPENDENT new instance (its own subtype + fok, starting fresh) — no
+    // branch-fok inheritance. (The `parent` param is retained for the two-tier engine but unused by the UI.)
+    const seed = parent ? { id: genId("v"), skill, subtype: "", parent, from: 2, to: 3 } : { id: genId("v"), skill, subtype: "", to: 1 };
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([seed]) });
   };
-  const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number }>) => {
+  const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
     patchLevel(level, { skillPurchases: lvl.skillPurchases.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
@@ -225,6 +230,24 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     setRecord({ ...record, fok4Bonuses: list });
   };
 
+  // A committing path choice (Pszi tudat/test at fok 3), stored per instance + trigger; null clears it.
+  const setSkillPathChoice = (skill: string, subtype: string | undefined, variantId: string | undefined, trigger: string, value: string | null) => {
+    const key = instanceKey(variantId, skill, subtype) + "|" + trigger;
+    const list = (record.pathChoices ?? []).filter((c) => instanceKey(c.variantId, c.skill, c.subtype) + "|" + c.trigger !== key);
+    if (value) list.push({ skill, subtype, variantId, trigger, value });
+    setRecord({ ...record, pathChoices: list });
+  };
+
+  // Player-set attribute requirements for an open chooseAttrs branch (Művészetek). Stored per INSTANCE in
+  // record.skillAttrChoices (like fok4Bonuses) — not on a purchase — so it saves for granted or
+  // earlier-level instances too. `level` is unused (kept for call-site symmetry).
+  const setSkillChosenAttrs = (_level: number, skill: string, subtype: string | undefined, variantId: string | undefined, attrs: Stat[]) => {
+    const key = instanceKey(variantId, skill, subtype);
+    const list = (record.skillAttrChoices ?? []).filter((c) => instanceKey(c.variantId, c.skill, c.subtype) !== key);
+    if (attrs.length) list.push({ skill, subtype, variantId, attrs });
+    setRecord({ ...record, skillAttrChoices: list });
+  };
+
   return {
     record,
     derived,
@@ -248,5 +271,7 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     setGrantedHmChannel,
     setStatBuy,
     setSkillFok4Stat,
+    setSkillPathChoice,
+    setSkillChosenAttrs,
   };
 }

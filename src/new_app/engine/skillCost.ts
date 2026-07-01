@@ -1,15 +1,18 @@
 // Pure skill Kp-cost helpers, shared by the derivation engine and the level-up UI.
 
-import { Stats } from "../model/attributes";
+import { Stat, Stats } from "../model/attributes";
 import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT, SkillDef } from "../model/skills";
 
-export type Discount = { skill?: string; category?: string; allSkills?: boolean; uptoLevel: number };
+export type Discount = { skill?: string; subtype?: string; category?: string; allSkills?: boolean; uptoLevel: number };
 
-// Highest teacher (oktatás) level available for a skill, given the active discounts. 0 = no teacher.
-export function teachingUptoFor(discounts: Discount[], def: SkillDef): number {
+// Highest teacher (oktatás) level available for a skill instance, given the active discounts. 0 = none.
+// A subtype-scoped discount (Szakma(vadászat)) only matches that branch.
+export function teachingUptoFor(discounts: Discount[], def: SkillDef, subtype?: string): number {
   let max = 0;
   for (const d of discounts) {
-    const matches = d.allSkills || (d.skill ? d.skill === def.name : d.category === def.category);
+    const matches = d.subtype != null
+      ? d.skill === def.name && d.subtype === subtype
+      : d.allSkills || (d.skill ? d.skill === def.name : d.category === def.category);
     if (matches && d.uptoLevel > max) max = d.uptoLevel;
   }
   return max;
@@ -23,7 +26,8 @@ export function skillKpCost(
   from: number,
   to: number,
   teachingUpto: number,
-  stats: Stats
+  stats: Stats,
+  attrs?: Stat[] // the instance's resolved attributes (branch/category/chosen); defaults to def.attrs
 ): { kp: number; note?: string } {
   if (to <= from) return { kp: 0 };
   if (def.cost === "percentage") {
@@ -41,7 +45,7 @@ export function skillKpCost(
     kp += Math.max(1, inc - disc);
   }
   let penalty = 0;
-  def.attrs.forEach((a) => {
+  (attrs ?? def.attrs).forEach((a) => {
     const need = 10 + to;
     if (stats[a] < need) penalty += need - stats[a];
   });

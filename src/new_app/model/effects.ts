@@ -23,7 +23,9 @@ export type DerivedKey =
 export type Effect =
   | { kind: "grantSkill"; skill: string; subtype?: string; level: SkillFok }
   | { kind: "grantSkillPercent"; skill: string; subtype?: string; percent: number }
-  | { kind: "teachingDiscount"; skill?: string; category?: SkillCategory; allSkills?: boolean; uptoLevel: SkillFok } // allSkills = teaches everything (e.g. Talavra: any skill @ fok 2). Level-gated grants carry an atLevel on the GrantEntry.
+  | { kind: "teachingDiscount"; skill?: string; subtype?: string; category?: SkillCategory; allSkills?: boolean; uptoLevel: SkillFok } // subtype = teacher scoped to one branch (Szakma(vadászat)). allSkills = teaches everything. Level-gated grants carry an atLevel.
+  | { kind: "grantSkillChoice"; skill: string; label: string; level: SkillFok } // a placeholder branch the player must resolve to a concrete subtype (fegyverhasználat első/második fegyver)
+  | { kind: "allowSkill"; skill: string; subtype?: string } // "may learn if the DM allows" (Bárd Pszi) — informational permission, not auto-granted
   | { kind: "resetTeaching" } // in a subclass option: discard the inherited (class) teach list before adding its own — the subclass OVERRIDES rather than extends what it teaches
   | { kind: "skillCostMultiplier"; skill?: string; category?: SkillCategory; allSkills?: boolean; factor: number } // e.g. Barbár: Szociális/Alvilági/Tudományos Kp cost ×1.5
   | { kind: "forbidSkill"; skill?: string; category?: SkillCategory; text?: string } // school cannot learn this skill/category — surfaced as a builder warning, not hard-blocked

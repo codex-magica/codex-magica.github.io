@@ -47,6 +47,7 @@ export interface SkillPurchase {
   id?: string;
   skill: string;
   subtype?: string;
+  parent?: string; // two-tier branch (Fegyverhasználat): the category a specific weapon belongs to
   from?: number;
   to: number;
   teachingUpto?: SkillFok; // explicit oktatás override (otherwise resolved from class teaching)
@@ -74,6 +75,25 @@ export interface Fok4Bonus {
   subtype?: string;
   variantId?: string;
   stat: keyof Stats;
+}
+
+// A committing "path" choice forced when a skill INSTANCE reaches a trigger fok (Pszi tudat/test at fok 3).
+// Identified like Fok4Bonus (a branch by variantId, else skill+subtype).
+export interface SkillPathChoice {
+  skill: string;
+  subtype?: string;
+  variantId?: string;
+  trigger: string; // the FokTrigger label (e.g. "Pszi út")
+  value: string; // the chosen option (e.g. "tudat")
+}
+
+// Player-set attribute requirements for an open chooseAttrs branch (Művészetek). Per instance (a branch by
+// variantId, else skill+subtype) — NOT on the purchase, so it survives for granted/cross-level instances.
+export interface SkillAttrChoice {
+  skill: string;
+  subtype?: string;
+  variantId?: string;
+  attrs: (keyof Stats)[];
 }
 
 export interface LevelRecord {
@@ -121,6 +141,8 @@ export interface CharacterRecord {
   adottsag?: Partial<Record<keyof Stats, number>>; // points above the racial cap (1 KAP each)
   subtypeOverrides?: Record<string, string>; // rename a granted subtype, keyed by `skill|originalSubtype`
   fok4Bonuses?: Fok4Bonus[]; // the +1 attribute chosen for each fok-4 skill instance
+  pathChoices?: SkillPathChoice[]; // committing path choices (Pszi tudat/test), per instance
+  skillAttrChoices?: SkillAttrChoice[]; // chosen attribute requirements for open branches, per instance
 
   levels: LevelRecord[]; // the build ledger (ordered per-level decisions)
   kmAdjustments: Adjustment[];

@@ -1,4 +1,4 @@
-import { Stats } from "../model/attributes";
+import { Stat, Stats } from "../model/attributes";
 import { CombatChannel, Pool, Resource } from "../model/effects";
 import { InventoryItem, VitalKey } from "../model/character";
 
@@ -20,6 +20,9 @@ export interface OwnedSkill {
   subtype?: string;
   origSubtype?: string; // original granted subtype (the stable key for renaming)
   variantId?: string; // set on user-added branch instances (so they never collide with the trunk)
+  parent?: string; // two-tier branch (Fegyverhasználat): the category a specific weapon belongs to
+  attrs?: Stat[]; // resolved attribute requirements (branch/category/chosen), overriding the skill default
+  placeholder?: boolean; // an unresolved grantSkillChoice (e.g. "első fegyver" awaiting a concrete weapon)
   fok: number; // 0 for percentage skills
   percent?: number; // for percentage skills
   checkMod: number; // attribute-test modifier (or current percent for %-skills)
@@ -53,6 +56,7 @@ export interface DerivedCharacter {
     magic: Partial<Record<Pool, { max: number }>>;
   };
   skills: OwnedSkill[];
+  allowedSkills: { skill: string; subtype?: string }[]; // "may learn if the DM allows" (allowSkill grants)
   grantedSkills: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }[]; // grant-only floor (level 1)
   // Skill floor at the START of each level (grants + all PRIOR levels), indexed by level−1. Editing level L
   // can't reduce a skill below floorByLevel[L-1].

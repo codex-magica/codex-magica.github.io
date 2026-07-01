@@ -57,6 +57,8 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
     setHmChannel,
     setStatBuy,
     setSkillFok4Stat,
+    setSkillPathChoice,
+    setSkillChosenAttrs,
     setGrantedHmChannel,
   } = api;
 
@@ -210,6 +212,8 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
             onOverride={setSubtypeOverride}
             onSetSubtype={setLearnedSubtype}
             onSetFok4Stat={setSkillFok4Stat}
+            onSetPathChoice={setSkillPathChoice}
+            onSetChosenAttrs={setSkillChosenAttrs}
           />
         </ParchPanel>
 
