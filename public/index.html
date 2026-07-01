@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <!-- Icon filenames carry %REACT_APP_ICON_SUFFIX%: empty in production, "-dev" in local
+         development (see .env / .env.development) so the dev PWA/home-screen icon shows a DEV badge. -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon%REACT_APP_ICON_SUFFIX%.ico" />
     <meta name="description" content="M.A.G.U.S. compendium and character creator"/>
 
     <!-- PWA Meta Tags -->
@@ -12,11 +14,11 @@
 
     <!-- Android Specific Tags -->
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" sizes="192x192" href="%PUBLIC_URL%/logo192.png">
-    <link rel="icon" sizes="512x512" href="%PUBLIC_URL%/logo512.png">
+    <link rel="icon" sizes="192x192" href="%PUBLIC_URL%/logo192%REACT_APP_ICON_SUFFIX%.png">
+    <link rel="icon" sizes="512x512" href="%PUBLIC_URL%/logo512%REACT_APP_ICON_SUFFIX%.png">
 
     <!-- Apple Specific Tags -->
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png">
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192%REACT_APP_ICON_SUFFIX%.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Codex Magica">
