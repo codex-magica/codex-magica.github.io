@@ -150,10 +150,6 @@ resource "aws_lambda_permission" "allow_cognito_invoke" {
   source_arn    = aws_cognito_user_pool.main.arn
 }
 
-resource "aws_cognito_user_pool_ui_customization" "ui" {
-  user_pool_id = aws_cognito_user_pool.main.id
-  client_id    = aws_cognito_user_pool_client.web.id
-
-  css = file("${path.module}/cognito.css")
-  # image_file = filebase64("${path.module}/assets/login-bg.png")
-}
+# Hosted-UI customization removed: the app now uses a custom branded login page
+# (public/login.html) served through CloudFront, so the Cognito Hosted UI is no
+# longer shown to users.

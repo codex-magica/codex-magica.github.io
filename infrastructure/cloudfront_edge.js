@@ -12,12 +12,19 @@ function isPublicPath(uri, patterns) {
 }
 
 const publicPaths = [
+  "/login.html",
   "/callback.html",
   "/favicon*",
   "/logo*",
   "/manifest*",
   "/robots.txt"
 ];
+
+// Single source of truth for the Cognito hosted-UI domain + app client id.
+// Passed to the custom login page (/login.html), which builds the Google
+// authorize URL from them.
+const COGNITO_DOMAIN = "your-domain.auth.eu-central-1.amazoncognito.com";
+const CLIENT_ID = "YOUR_COGNITO_CLIENT_ID";
 
 export const handler = async (event) => {
   const request = event.Records[0].cf.request;
@@ -31,16 +38,16 @@ export const handler = async (event) => {
   const isPublic = isPublicPath(uri, publicPaths)
 
   if (!token && !isPublic) {
-    // Redirect to Cognito login
-    // const redirect = encodeURIComponent(`https://${headers.host[0].value}${request.uri}`);
-    const redirect = encodeURIComponent(`https://${headers.host[0].value}/callback.html`);
+    // Redirect to our custom branded login page, passing the Cognito domain +
+    // client id so it can build the Google sign-in URL. The login page redirects
+    // back to /callback.html, which sets the id_token cookie.
     return {
       status: "302",
       headers: {
         location: [
           {
             key: "Location",
-            value: `https://your-domain.auth.eu-central-1.amazoncognito.com/login?client_id=YOUR_COGNITO_CLIENT_ID&response_type=token&scope=email+openid&redirect_uri=${redirect}`
+            value: `https://${headers.host[0].value}/login.html?cd=${COGNITO_DOMAIN}&ci=${CLIENT_ID}`
           }
         ]
       }

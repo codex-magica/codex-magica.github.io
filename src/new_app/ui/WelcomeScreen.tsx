@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Box, Flex, Heading, HStack, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, HStack, IconButton, Text } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
 import { ZoneBar } from "./ZoneBar";
 import { CharacterRecord, VitalKey } from "../model/character";
@@ -31,6 +31,14 @@ const RenameIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 const CopyIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>;
 const TrashIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>;
 const ImportIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>;
+const LogoutIcon = <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
+
+// Sign out: clear the id_token cookie (same attributes callback.html sets it with) and return to
+// the root. With no cookie, the CloudFront edge gate redirects to the branded login page.
+const logout = () => {
+  document.cookie = "id_token=; Path=/; Secure; SameSite=Lax; Max-Age=0";
+  window.location.replace(window.location.origin + "/");
+};
 
 const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: boolean; children: React.ReactNode }> = ({ icon, onClick, danger, children }) => (
   <Box as="button" type="button" onClick={onClick} display="flex" alignItems="center" gap="11px" w="100%" textAlign="left" px="13px" py="11px" borderRadius="9px" border="none" bg="transparent" color={danger ? "bad" : "fg"} fontWeight={600} fontSize="15px" _hover={{ bg: danger ? "badSoft" : "accentSoft" }}>
@@ -40,6 +48,7 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
 
 export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onOpenCompendium }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const hoverShadow = useParchmentHoverShadow();
 
   const views: CardView[] = useMemo(
@@ -58,7 +67,22 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
 
   return (
     <Flex direction="column" h="100vh" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
-      <ZoneBar active="karakter" onKarakter={() => {}} onKompendium={onOpenCompendium} />
+      <ZoneBar
+        active="karakter"
+        onKarakter={() => {}}
+        onKompendium={onOpenCompendium}
+        right={
+          <IconButton
+            aria-label="Kijelentkezés"
+            title="Kijelentkezés"
+            size="sm"
+            variant="ghost"
+            color="muted"
+            icon={LogoutIcon}
+            onClick={() => setConfirmLogout(true)}
+          />
+        }
+      />
       <Box flex="1 1 auto" overflowY="auto" position="relative">
       <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "32px", md: "30px" }} pb="90px">
         <Box textAlign="center" mb={{ base: "44px", md: "36px" }}>
@@ -146,6 +170,23 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
               <Box h="1px" bg="rule" mx="10px" my="6px" />
               <MenuItem icon={TrashIcon} onClick={() => { const i = menuView.id; setMenuId(null); onDelete(i); }} danger>Törlés</MenuItem>
             </Box>
+          </ParchPanel>
+        </Flex>
+      )}
+
+      {confirmLogout && (
+        <Flex position="fixed" inset={0} zIndex={50} bg="rgba(16,14,24,.5)" align="center" justify="center" p="28px" onClick={() => setConfirmLogout(false)}>
+          <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p="24px" w="min(360px, 100%)" style={{ boxShadow: "0 22px 60px rgba(0,0,0,.4)" }}>
+            <Text fontSize="20px" fontWeight={700} color="fg" textAlign="center">Kijelentkezés</Text>
+            <Text fontFamily="system-ui" fontSize="14px" color="muted" mt="8px" mb="22px" textAlign="center">Biztosan ki szeretnél jelentkezni?</Text>
+            <HStack gap="10px">
+              <Box as="button" type="button" onClick={() => setConfirmLogout(false)} flex="1 1 0" px="16px" py="10px" borderRadius="9px" border="1px solid" borderColor="rule" bg="transparent" color="fg" fontWeight={600} fontSize="14px" _hover={{ bg: "accentSoft" }}>
+                Mégse
+              </Box>
+              <Box as="button" type="button" onClick={logout} flex="1 1 0" px="16px" py="10px" borderRadius="9px" border="1px solid" borderColor="bad" bg="badSoft" color="bad" fontWeight={700} fontSize="14px" _hover={{ bg: "bad", color: "accentFg" }}>
+                Kijelentkezés
+              </Box>
+            </HStack>
           </ParchPanel>
         </Flex>
       )}
