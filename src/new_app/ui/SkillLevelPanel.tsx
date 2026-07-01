@@ -435,6 +435,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
         : null,
       <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{attrsBadge(inst.skill, inst.subtype, undefined, inst.attrs ?? [])}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined, inst.attrs)}{pathBadge(inst.skill, inst.subtype, undefined, cur)}</>,
       <Stepper
+        fixed
         value={isPct ? `${cur}%` : `${cur}.`}
         incLabel={atMax ? undefined : String(cost)}
         decDisabled={cur <= floor}
@@ -459,6 +460,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v }), p.to),
       <>{attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [])}{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
       <Stepper
+        fixed
         value={`${p.to}.`}
         incLabel={atMax ? undefined : String(cost)}
         decDisabled={p.to <= 1}

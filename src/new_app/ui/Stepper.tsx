@@ -9,6 +9,7 @@ interface StepperProps {
   incDisabled?: boolean;
   incLabel?: string; // cost shown after the "+", e.g. "8" → "+ 8"
   fullWidth?: boolean; // fill the parent box (attribute columns) for column alignment
+  fixed?: boolean; // constant total width regardless of value / +cost label (skill rows align)
   valueMuted?: boolean; // Adottság column — secondary value color
   // "Locked by a dependency" — the − is NOT lowerable, but unlike `decDisabled` (greyed / at its floor)
   // it's accent-styled and tappable so the reason is reachable on touch (iPad) via `onDecBlocked`.
@@ -20,6 +21,11 @@ interface StepperProps {
 const H = { base: "44px", md: "34px" };
 const W = { base: "46px", md: "34px" };
 const FS = { base: "19px", md: "16px" };
+const FS_PCT = { base: "15px", md: "13px" }; // percentages ("100%") — smaller so they fit the cell
+// Fixed mode: all three cells are the same width as the − button (W). Value grows only for a rare
+// percentage ("100%"); the + cell keeps tight padding so "+ 15" still fits.
+const VAL_W = W;
+const INC_W = W;
 
 // The connected inline stepper [ − | value | + ] used across every section.
 export const Stepper: React.FC<StepperProps> = ({
@@ -30,6 +36,7 @@ export const Stepper: React.FC<StepperProps> = ({
   incDisabled,
   incLabel,
   fullWidth,
+  fixed,
   valueMuted,
   decBlocked,
   onDecBlocked,
@@ -52,6 +59,7 @@ export const Stepper: React.FC<StepperProps> = ({
       onClick={decBlocked ? onDecBlocked : decDisabled ? undefined : onDec}
       disabled={decDisabled && !decBlocked}
       title={decBlocked ? "Egy ág innen ágazik" : undefined}
+      w={fixed ? W : undefined}
       minW={W}
       borderRight="1px solid"
       borderColor="fieldBd"
@@ -69,12 +77,13 @@ export const Stepper: React.FC<StepperProps> = ({
     </Box>
     <Box
       flex={fullWidth ? "1 1 auto" : "0 0 auto"}
-      minW={fullWidth ? undefined : "38px"}
-      px="4px"
+      w={!fullWidth && fixed ? VAL_W : undefined}
+      minW={fullWidth ? undefined : fixed ? undefined : "38px"}
+      px={fixed ? "2px" : "4px"}
       display="flex"
       alignItems="center"
       justifyContent="center"
-      fontSize={FS}
+      fontSize={typeof value === "string" && value.includes("%") ? FS_PCT : FS}
       fontWeight={600}
       color={valueMuted ? "muted" : "fg"}
       sx={{ fontVariantNumeric: "tabular-nums" }}
@@ -86,8 +95,9 @@ export const Stepper: React.FC<StepperProps> = ({
       type="button"
       onClick={incDisabled ? undefined : onInc}
       disabled={incDisabled}
-      minW={W}
-      px={incLabel ? "8px" : undefined}
+      w={fixed ? INC_W : undefined}
+      minW={fixed ? undefined : W}
+      px={fixed ? "2px" : incLabel ? "8px" : undefined}
       borderLeft="1px solid"
       borderColor="fieldBd"
       bg={incDisabled ? "transparent" : "accentSoft"}
@@ -96,6 +106,7 @@ export const Stepper: React.FC<StepperProps> = ({
       cursor={incDisabled ? "default" : "pointer"}
       fontWeight={700}
       fontSize="14px"
+      letterSpacing="-0.03em"
       whiteSpace="nowrap"
       display="flex"
       alignItems="center"
