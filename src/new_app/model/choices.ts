@@ -30,9 +30,10 @@ export interface ChoiceDef {
 export type Selections = Record<string, string>; // choiceId → option name
 
 const isSkillGrant = (g: GrantEntry): boolean =>
-  g.effect.kind === "grantSkill" || g.effect.kind === "grantSkillPercent";
+  g.effect.kind === "grantSkill" || g.effect.kind === "grantSkillPercent" || g.effect.kind === "grantSkillChoice";
 const isTeach = (g: GrantEntry): boolean => g.effect.kind === "teachingDiscount";
 const isResetTeach = (g: GrantEntry): boolean => g.effect.kind === "resetTeaching";
+const isRemove = (g: GrantEntry): boolean => g.effect.kind === "removeSkill";
 
 // Resolve a class's choice tree against the character's selections into a flat grant list.
 // `base` is the class's shared base skill package (used by additive choices; empty for pure override).
@@ -64,7 +65,10 @@ export function resolveChoiceGrants(
   };
   walk(choices);
 
-  return other.concat(skills).concat(teaches);
+  // `removeSkill` must run AFTER the base/skill grants it drops — split it out and append after `skills`.
+  const removes = other.filter(isRemove);
+  const otherRest = other.filter((g) => !isRemove(g));
+  return otherRest.concat(skills).concat(removes).concat(teaches);
 }
 
 // The ordered list of choices that should currently be shown/selected, given the selections

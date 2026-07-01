@@ -9,13 +9,17 @@ import { ModalShell } from "./Modal";
 
 // Bucket grant effects into readable groups for the detail pane.
 const summarize = (entries: GrantEntry[]) => {
-  const b = { backgrounds: [] as string[], skills: [] as string[], teaches: [] as { skill: string; level: number }[], tags: [] as string[], combat: [] as string[], other: [] as string[], specials: [] as string[] };
-  const catName = (e: { skill?: string; category?: string; allSkills?: boolean }) => (e.allSkills ? "minden képzettség" : e.category ? `${e.category} (kat.)` : e.skill ?? "");
+  const b = { backgrounds: [] as string[], skills: [] as string[], teaches: [] as { skill: string; level: number }[], allows: [] as string[], tags: [] as string[], combat: [] as string[], other: [] as string[], specials: [] as string[] };
+  // A skill/branch label: "minden képzettség" | "<Kategória> (kat.)" | "<Skill>" | "<Skill> (<altípus>)".
+  const catName = (e: { skill?: string; subtype?: string; category?: string; allSkills?: boolean }) =>
+    e.allSkills ? "minden képzettség" : e.category ? `${e.category} (kat.)` : `${e.skill ?? ""}${e.subtype ? ` (${e.subtype})` : ""}`;
   for (const { effect: e, atLevel } of entries) {
     switch (e.kind) {
       case "grantBackground": b.backgrounds.push(e.background); break;
       case "grantSkill": b.skills.push(`${e.skill}${e.subtype ? ` (${e.subtype})` : ""} ${e.level}. fok`); break;
       case "grantSkillPercent": b.skills.push(`${e.skill} ${e.percent}%`); break;
+      case "grantSkillChoice": b.skills.push(`${e.skill} (${e.label}) ${e.level}. fok`); break; // választható fegyver stb.
+      case "allowSkill": b.allows.push(`${e.skill}${e.subtype ? ` (${e.subtype})` : ""}`); break;
       case "teachingDiscount": {
         const nm = catName(e);
         if (!nm) break;
@@ -89,6 +93,7 @@ const RaceDetail: React.FC<{ name: string }> = ({ name }) => {
       </Section>
       {g.skills.length > 0 && <Section label="Tanult képzettségek"><Chips items={g.skills} /></Section>}
       {g.teaches.length > 0 && <Section label="Kedvezményes oktatás"><Chips items={g.teaches.map((t) => `${t.skill} (${t.level}. fokig)`)} /></Section>}
+      {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {innate.length > 0 && <Section label="Faji kedvezmények"><Chips items={innate} /></Section>}
       <Section label={`Választható kasztok · ${allowedClasses.length}`}>
         {allowedClasses.length > 0
@@ -109,7 +114,8 @@ const ClassDetail: React.FC<{ name: string }> = ({ name }) => {
       <Text fontSize="11.5px" color="fgFaint" mb="11px">Engedett fajok: {c.allowedRaces.join(", ")}</Text>
       {g.backgrounds.length > 0 && <Section label="Kapott hátterek"><Chips items={g.backgrounds} /></Section>}
       {g.skills.length > 0 && <Section label="Kapott képzettségek"><Chips items={g.skills} /></Section>}
-      {g.teaches.length > 0 && <Section label={`Tanított képzettségek · ${g.teaches.length}`}><Text fontSize="12.5px" color="muted" lineHeight="1.6">{g.teaches.map((t) => t.skill).join(", ")}</Text></Section>}
+      {g.teaches.length > 0 && <Section label={`Tanított képzettségek · ${g.teaches.length}`}><Text fontSize="12.5px" color="muted" lineHeight="1.6">{g.teaches.map((t) => `${t.skill} (${t.level}. fokig)`).join(", ")}</Text></Section>}
+      {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {c.choices.length > 0 && <Section label="Specializációk"><ChoiceTree choices={c.choices} /></Section>}
       {g.other.length > 0 && <Section label="Megkötések / egyéb"><Text fontSize="12px" color="muted" lineHeight="1.55">{g.other.join("  ·  ")}</Text></Section>}
     </Box>
@@ -125,7 +131,7 @@ const OptionDetail: React.FC<{ option: OptionDef; classTeaches?: { skill: string
   const overrides = (option.grants ?? []).some((gr) => gr.effect.kind === "resetTeaching");
   const seen = new Set<string>();
   const teaches = [...g.teaches, ...(overrides ? [] : classTeaches ?? [])].filter((t) => (seen.has(t.skill) ? false : (seen.add(t.skill), true)));
-  const empty = !g.skills.length && !g.backgrounds.length && !teaches.length && !innate.length && !g.other.length && !g.specials.length && !option.choices?.length;
+  const empty = !g.skills.length && !g.backgrounds.length && !teaches.length && !g.allows.length && !innate.length && !g.other.length && !g.specials.length && !option.choices?.length;
   return (
     <Box>
       <Heading fontSize="17px" fontWeight={700} color="fg" mb="7px">{option.name}</Heading>
@@ -134,7 +140,8 @@ const OptionDetail: React.FC<{ option: OptionDef; classTeaches?: { skill: string
       {innate.length > 0 && <Section label="Egyéb bónuszok"><Chips items={innate} /></Section>}
       {g.specials.length > 0 && <Section label="Speciális oktatási szabályok"><Chips items={g.specials} /></Section>}
       {g.other.length > 0 && <Section label="Megkötések / felszerelés"><Text fontSize="12px" color="muted" lineHeight="1.55">{g.other.join("  ·  ")}</Text></Section>}
-      {teaches.length > 0 && <Section label={`Tanított képzettségek${overrides ? " · saját lista" : ""} · ${teaches.length}`}><Text fontSize="12.5px" color="muted" lineHeight="1.6">{teaches.map((t) => t.skill).join(", ")}</Text></Section>}
+      {teaches.length > 0 && <Section label={`Tanított képzettségek${overrides ? " · saját lista" : ""} · ${teaches.length}`}><Text fontSize="12.5px" color="muted" lineHeight="1.6">{teaches.map((t) => `${t.skill} (${t.level}. fokig)`).join(", ")}</Text></Section>}
+      {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {option.choices && option.choices.length > 0 && <Section label="További választások"><ChoiceTree choices={option.choices} /></Section>}
       {empty && <Text fontSize="13px" color="fgFaint">Nincs külön nyereség ehhez a választáshoz.</Text>}
     </Box>

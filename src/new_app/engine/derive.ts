@@ -252,6 +252,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       case "allowSkill":
         allowedSkills.push({ skill: e.skill, subtype: e.subtype });
         break;
+      case "removeSkill":
+        // Drop a base-granted instance (a subclass that doesn't get it). Applied after the base grants.
+        delete owned[skillKey(e.skill, e.subtype)];
+        break;
       case "note":
         break;
     }

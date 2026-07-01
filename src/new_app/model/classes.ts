@@ -38,6 +38,12 @@ const weaponChoice = (label: string, level: number): GrantEntry =>
 // "May learn if the DM allows" — informational, not auto-granted (Bárd Pszi).
 const allow = (skill: string, subtype?: string): GrantEntry =>
   grant({ kind: "allowSkill", skill, subtype });
+// Teacher scoped to ONE branch of a skill, e.g. Művészetek(Rajz), Ősi nyelv(kyr). Default uptoLevel 4.
+const teachSub = (skill: string, subtype: string, uptoLevel: SkillFok = 4): GrantEntry =>
+  grant({ kind: "teachingDiscount", skill, subtype, uptoLevel });
+// A subclass DROPS a base-granted skill it doesn't receive (Arel: Írás/olvasás; Lar-Dor: Pszi kyr).
+const remove = (skill: string, subtype?: string): GrantEntry =>
+  grant({ kind: "removeSkill", skill, subtype });
 const bg = (background: string, atLevel?: number): GrantEntry =>
   grant({ kind: "grantBackground", background }, atLevel);
 const teach = (...skills: string[]): GrantEntry[] =>
@@ -72,12 +78,14 @@ export const CLASSES: Record<string, ClassDef> = {
     name: "Harcos",
     cost: 5,
     allowedRaces: ALL,
-    grants: teach("Fegyverhasználat", "Fegyverismeret", "Fájdalomtűrés", "Harctéri gyakorlat", "Hadvezetés", "Harci láz", "Pajzshasználat", "Pusztakezes harc", "Taktika", "Vértviselet", "Lélektan", "Lovaglás", "Állatismeret", "Futás", "Úszás", "Számtan/Mértan", "Térképészet", "Mászás", "Esés", "Akrobatika"),
+    grants: [...teach("Fegyverhasználat", "Fegyverismeret", "Fájdalomtűrés", "Harctéri gyakorlat", "Hadvezetés", "Harci láz", "Pajzshasználat", "Pusztakezes harc", "Taktika", "Vértviselet", "Lélektan", "Lovaglás", "Állatismeret", "Futás", "Úszás", "Számtan/Mértan", "Térképészet", "Mászás", "Esés", "Akrobatika"), teachSub("Művészetek", "Rajz")],
     choices: [
       choice("iskola", "Iskola", "override", [
         opt("Általános (iskolázatlan)", [
           weaponChoice("fő fegyver", 3),
           weaponChoice("másodfegyver", 2),
+          weaponChoice("harmadik fegyver", 2),
+          weaponChoice("negyedik fegyver", 2),
           gs("Fegyverismeret", 2),
           gs("Fájdalomtűrés", 2),
           gs("Harctéri gyakorlat", 2),
@@ -119,6 +127,7 @@ export const CLASSES: Record<string, ClassDef> = {
           ...forbidCat("Misztikus"),
           weaponChoice("fő fegyver", 3),
           weaponChoice("másodfegyver", 2),
+          weaponChoice("harmadik fegyver", 2),
           gs("Fájdalomtűrés", 3),
           gs("Harctéri gyakorlat", 3),
           gs("Harci láz", 2),
@@ -134,7 +143,8 @@ export const CLASSES: Record<string, ClassDef> = {
           restrict("Szociális/Alvilági/Tudományos 1,5× Kp; Misztikus tilos; nem civilizált."),
         ]),
         opt("Erigowi számszeríjász", [
-          ...teachOnly("Akrobatika", "Csapdaállítás", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Futás", "Hadvezetés", "Harctéri gyakorlat", "Jelbeszéd", "Lélektan", "Mászás", "Mechanika", "Művészetek", "Nyomolvasás", "Számtan/Mértan", "Taktika", "Térképészet", "Úszás", "Vadonjárás"),
+          ...teachOnly("Akrobatika", "Csapdaállítás", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Futás", "Hadvezetés", "Harctéri gyakorlat", "Jelbeszéd", "Lélektan", "Mászás", "Mechanika", "Nyomolvasás", "Számtan/Mértan", "Taktika", "Térképészet", "Úszás", "Vadonjárás"),
+          teachSub("Művészetek", "Rajz"),
           gs("Fegyverhasználat", 3, "vadász számszeríj"),
           gs("Fegyverhasználat", 2, "egykezes kardok"),
           gs("Fegyverismeret", 2),
@@ -168,7 +178,9 @@ export const CLASSES: Record<string, ClassDef> = {
           equip("Ramiera (ura ajándéka)"),
         ]),
         opt("Predoci vértes", [
-          ...teachOnly("Állatismeret", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Idomítás", "Írás/olvasás", "Kultúra", "Lélektan", "Lovaglás", "Mászás", "Művészetek", "Párbaj", "Számtan/Mértan", "Taktika", "Térképészet", "Udvari etikett/intrika", "Úszás", "Vértviselet"),
+          ...teachOnly("Állatismeret", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Idomítás", "Írás/olvasás", "Kultúra", "Lélektan", "Lovaglás", "Mászás", "Párbaj", "Számtan/Mértan", "Taktika", "Térképészet", "Udvari etikett/intrika", "Úszás", "Vértviselet"),
+          teachSub("Művészetek", "Rajz"),
+          teachSub("Művészetek", "Irodalom"),
           gs("Fegyverhasználat", 3, "nehézlovas kopja"),
           gs("Fegyverhasználat", 2, "egykezes kardok"),
           gs("Fegyverhasználat", 2, "tőr jellegű fegyverek"),
@@ -197,15 +209,18 @@ export const CLASSES: Record<string, ClassDef> = {
     allowedRaces: ["Ember", "Félelf", "Kyr Származék"],
     grants: [
       bg("Nemesi vér"),
-      ...teach("Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Lovaglás", "Párbaj", "Pajzshasználat", "Taktika", "Vértviselet", "Udvari etikett/intrika", "Történelem", "Lélektan", "Állatismeret", "Írás/olvasás", "Kultúra", "Nyelvtudás", "Számtan/Mértan", "Térképészet", "Élettan"),
+      ...teach("Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Lovaglás", "Párbaj", "Pajzshasználat", "Taktika", "Vértviselet", "Udvari etikett/intrika", "Történelem", "Lélektan", "Állatismeret", "Írás/olvasás", "Kultúra", "Nyelvtudás", "Számtan/Mértan", "Térképészet", "Élettan", "Esés", "Fájdalomtűrés"),
+      teachSub("Művészetek", "Rajz"),
       restrict("Célzófegyvert és nemtelen hajítófegyvert elutasít."),
     ],
     choices: [
       choice("rend", "Lovagrend", "override", [
-        opt("Általános lovag", lovagBase()),
+        opt("Általános lovag", [...lovagBase(), gs("Vértviselet", 3), gs("Párbaj", 2), gs("Állatismeret", 2, "hátas állatok"), weaponChoice("harmadik fegyver", 2)]),
         opt("Feketerendek", [
           ...teachOnly("Állatismeret", "Élettan", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Írás/olvasás", "Kultúra", "Lélektan", "Lovaglás", "Művészetek", "Nyelvtudás", "Ősi nyelv", "Pajzshasználat", "Párbaj", "Pszi", "Pusztítás", "Számtan/Mértan", "Taktika", "Térképészet", "Történelem", "Udvari etikett/intrika", "Vértviselet"),
           ...lovagBase(),
+          gs("Vértviselet", 3),
+          gs("Párbaj", 1),
           gs("Pajzshasználat", 2),
           gs("Fájdalomtűrés", 2),
           gs("Vallásismeret", 3, "Ranagol"),
@@ -216,6 +231,8 @@ export const CLASSES: Record<string, ClassDef> = {
           ...teachOnly("Állatismeret", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Írás/olvasás", "Kultúra", "Legendaismeret", "Lélektan", "Lovaglás", "Művészetek", "Nyelvtudás", "Pajzshasználat", "Párbaj", "Pszi", "Számtan/Mértan", "Taktika", "Térképészet", "Történelem", "Udvari etikett/intrika", "Vallásismeret", "Vértviselet"),
           ...teachCat(3, "Tudományos", "Alvilági"),
           ...lovagBase(),
+          gs("Vértviselet", 2),
+          gs("Párbaj", 1),
           gs("Pajzshasználat", 3),
           gs("Vallásismeret", 3, "Ranagol"),
           restrict("Pikkelyvértnél nehezebb páncél tilos; Tudományos/Alvilági 3. fokú kedvezmény."),
@@ -225,6 +242,8 @@ export const CLASSES: Record<string, ClassDef> = {
           [
             ...teachOnly("Állatismeret", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Írás/olvasás", "Kultúra", "Legendaismeret", "Lélektan", "Lovaglás", "Művészetek", "Nyelvtudás", "Ősi nyelv", "Pajzshasználat", "Párbaj", "Pszi", "Számtan/Mértan", "Taktika", "Térképészet", "Történelem", "Udvari etikett/intrika", "Vallásismeret", "Vértviselet"),
             ...lovagBase(),
+            gs("Vértviselet", 3),
+            gs("Párbaj", 1),
             gs("Pajzshasználat", 2),
             gs("Vallásismeret", 3, "Domvik"),
             gs("Ősi nyelv", 2, "lingua domini"),
@@ -244,6 +263,8 @@ export const CLASSES: Record<string, ClassDef> = {
           ...teachOnly("Állatismeret", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Írás/olvasás", "Kultúra", "Legendaismeret", "Lélektan", "Lovaglás", "Művészetek", "Pajzshasználat", "Párbaj", "Pszi", "Számtan/Mértan", "Taktika", "Térképészet", "Történelem", "Udvari etikett/intrika", "Vallásismeret", "Vértviselet"),
           ...teachCat(3, "Tudományos", "Misztikus"),
           ...lovagBase(),
+          gs("Vértviselet", 3),
+          gs("Párbaj", 1),
           gs("Hadvezetés", 3),
           gs("Lélektan", 2),
           gs("Történelem", 3),
@@ -317,7 +338,8 @@ export const CLASSES: Record<string, ClassDef> = {
         opt("Felderítő", [
           ...teachOnly("Akrobatika", "Álcázás/álruha", "Csapdaállítás", "Csapdakeresés", "Csomózás", "Élettan", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Harcművészet", "Harctéri gyakorlat", "Írás/olvasás", "Jelbeszéd", "Kétkezesharc", "Kínzás", "Kultúra", "Lélektan", "Lopódzás", "Mászás", "Mechanika", "Művészetek", "Nyomolvasás", "Orvtámadás", "Pszi", "Rejtekhely kutatás", "Rejtőzködés", "Szabadulóművészet", "Szakma", "Számtan/Mértan", "Színészet", "Taktika", "Vakharc", "Zárnyitás"),
           weaponChoice("fegyvercsoport", 2),
-          weaponChoice("fegyvercsoport", 1),
+          weaponChoice("második fegyvercsoport", 2),
+          weaponChoice("harmadik fegyvercsoport", 1),
           gs("Fájdalomtűrés", 1),
           gs("Fegyverismeret", 2),
           gs("Álcázás/álruha", 3),
@@ -351,7 +373,7 @@ export const CLASSES: Record<string, ClassDef> = {
           gs("Fegyverismeret", 2),
           gs("Harctéri gyakorlat", 2),
           gs("Hadvezetés", 2),
-          gs("Taktika", 1),
+          gs("Taktika", 1, "kisebb egységes formációk"),
           gs("Lélektan", 2),
           gs("Térképészet", 1),
           gs("Orvtámadás", 1),
@@ -382,7 +404,7 @@ export const CLASSES: Record<string, ClassDef> = {
     name: "Tolvaj",
     cost: 6,
     allowedRaces: ["Ember", "Félelf", "Udvari Ork", "Törpe", "Kyr Származék"],
-    grants: teach("Fegyverhasználat", "Álcázás/álruha", "Hamisítás", "Jelbeszéd", "Orvtámadás", "Szabadulóművészet", "Szerencsejáték", "Csomózás", "Értékbecslés", "Mechanika", "Lélektan", "Ékesszólás", "Heraldika", "Helyismeret", "Kultúra", "Legendaismeret", "Számtan/Mértan", "Színészet", "Nyomolvasás", "Udvari etikett/intrika", "Lopódzás", "Rejtőzködés", "Rejtekhely kutatás", "Zárnyitás", "Zsebmetszés", "Csapdakeresés", "Mászás", "Esés", "Akrobatika", "Élettan", "Építészet", "Művészetek", "Írás/olvasás", "Kocsmai verekedés"),
+    grants: teach("Fegyverhasználat", "Álcázás/álruha", "Hamisítás", "Jelbeszéd", "Kétkezesharc", "Orvtámadás", "Szabadulóművészet", "Szerencsejáték", "Csomózás", "Értékbecslés", "Mechanika", "Lélektan", "Ékesszólás", "Heraldika", "Helyismeret", "Kultúra", "Legendaismeret", "Számtan/Mértan", "Színészet", "Nyomolvasás", "Udvari etikett/intrika", "Lopódzás", "Rejtőzködés", "Rejtekhely kutatás", "Zárnyitás", "Zsebmetszés", "Csapdakeresés", "Mászás", "Esés", "Akrobatika", "Élettan", "Építészet", "Művészetek", "Írás/olvasás", "Kocsmai verekedés"),
     choices: [
       choice("tipus", "Típus", "override", [
         opt("Általános", [
@@ -438,7 +460,7 @@ export const CLASSES: Record<string, ClassDef> = {
           gs("Csomózás", 1),
           gs("Lélektan", 1),
           gs("Heraldika", 2),
-          gs("Művészetek", 2, "festészet"),
+          gs("Művészetek", 2),
           gs("Írás/olvasás", 3),
           gp("Rejtekhely kutatás", 10),
           gp("Zárnyitás", 10),
@@ -542,7 +564,9 @@ export const CLASSES: Record<string, ClassDef> = {
           restrict("Sosem tanulhat: Kocsmai verekedés, Orvtámadás, Méregkeverés, Zsebmetszés, Szakma."),
         ]),
         opt("Vándorló dalnok", [
-          ...teachOnly("Akrobatika", "Állatismeret", "Csomózás", "Értékbecslés", "Esés", "Fegyverhasználat", "Hangutánzás", "Harctéri gyakorlat", "Herbalizmus", "Idomítás", "Kocsmai verekedés", "Kultúra", "Legendaismeret", "Lélektan", "Lopódzás", "Lovaglás", "Mászás", "Művészetek", "Párbaj", "Rejtőzködés", "Szexuális kultúra", "Tapasztalati mágia", "Vadonjárás"),
+          ...teachOnly("Akrobatika", "Állatismeret", "Csomózás", "Értékbecslés", "Esés", "Fegyverhasználat", "Hangutánzás", "Harctéri gyakorlat", "Herbalizmus", "Idomítás", "Kocsmai verekedés", "Kultúra", "Legendaismeret", "Lélektan", "Lopódzás", "Lovaglás", "Mászás", "Párbaj", "Rejtőzködés", "Szexuális kultúra", "Tapasztalati mágia", "Vadonjárás"),
+          teachSub("Művészetek", "éneklés"),
+          teachSub("Művészetek", "zenélés"),
           ...forbidSkills("Kínzás", "Pusztítás", "Orvtámadás", "Méregkeverés/semlegesítés", "Zsebmetszés"),
           gs("Fegyverhasználat", 2, "egykezes kardok"),
           gs("Fegyverhasználat", 2, "íjak"),
@@ -574,6 +598,8 @@ export const CLASSES: Record<string, ClassDef> = {
           gs("Álcázás/álruha", 2),
           gs("Művészetek", 2, "éneklés"),
           gs("Művészetek", 2, "zenélés"),
+          gs("Művészetek", 1, "szobrászat"),
+          gs("Művészetek", 1, "irodalom"),
           gp("Lopódzás", 10),
           gp("Rejtőzködés", 10),
         ]),
@@ -604,10 +630,10 @@ export const CLASSES: Record<string, ClassDef> = {
     ],
     choices: [
       choice("stilus", "Stílus / Irányzat", "additive", [
-        opt("Shien-ka-to (Tűz)", [...teachCat(2, "Harci", "Alvilági", "Világi", "Tudományos", "Szociális"), gs("Harcművészet", 3, "Shien-ka-to"), gs("Harcművészet", 3, "drakkfa husáng"), restrict("Listán kívüli, nem-misztikus képzettségek 2. fokú oktatói kedvezménnyel.")]),
-        opt("Dart-nid-kinito (Víz)", [...teachAt(3, "Nekromancia", "Démonológia", "Ősi nyelv"), gs("Harcművészet", 3, "Dart-nid-kinito"), restrict("Fegyvertelen.")]),
-        opt("Avad-ka-kinito (Föld)", [...teach("Hadvezetés", "Térképészet", "Számtan/Mértan", "Lélektan", "Művészetek"), gs("Harcművészet", 3, "Avad-ka-kinito"), gs("Harctéri gyakorlat", 2), gs("Vértviselet", 2), gs("Hadvezetés", 2), equip("Papír-szövet könnyű páncél (SFÉ 2)")]),
-        opt("Nisen-nid-to (Levegő)", [...teach("Veszélyérzék", "Hadvezetés", "Lélektan", "Térképészet", "Számtan/Mértan", "Művészetek", "Taktika"), gs("Harcművészet", 3, "Nisen-nid-to"), gs("Harcművészet", 3, "Nisen-kard"), equip("Fegyverkabát (SFÉ 1)"), restrict("Csak Par-Elyában vagy DiMaremben tanulható.")]),
+        opt("Shien-ka-to (Tűz)", [...teachCat(2, "Harci", "Alvilági", "Világi", "Tudományos", "Szociális"), gs("Harcművészet", 3, "Shien-ka-to"), gs("Harcművészet", 3, "hosszú bot"), restrict("Listán kívüli, nem-misztikus képzettségek 2. fokú oktatói kedvezménnyel.")]),
+        opt("Dart-nid-kinito (Víz)", [...teachAt(3, "Nekromancia", "Démonológia"), teachSub("Ősi nyelv", "kyr", 3), gs("Harcművészet", 3, "Dart-nid-kinito"), restrict("Fegyvertelen.")]),
+        opt("Avad-ka-kinito (Föld)", [...teach("Hadvezetés", "Térképészet", "Számtan/Mértan", "Lélektan"), teachSub("Művészetek", "Rajz"), gs("Harcművészet", 3, "Avad-ka-kinito"), gs("Harcművészet", 3, "választott alapfegyver"), gs("Harctéri gyakorlat", 2), gs("Vértviselet", 2), gs("Hadvezetés", 2), equip("Papír-szövet könnyű páncél (SFÉ 2)")]),
+        opt("Nisen-nid-to (Levegő)", [...teach("Veszélyérzék", "Hadvezetés", "Lélektan", "Térképészet", "Számtan/Mértan", "Taktika"), teachSub("Művészetek", "Rajz"), gs("Harcművészet", 3, "Nisen-nid-to"), gs("Harcművészet", 3, "Nisen-kard"), equip("Fegyverkabát (SFÉ 1)"), restrict("Csak Par-Elyában vagy DiMaremben tanulható.")]),
         opt("Udvari kardművész", [...teachCat(3, "Szociális", "Tudományos"), ...teachAt(3, "Hadvezetés"), gs("Harcművészet", 3, "Slan kard"), gs("Harcművészet", 3, "Slan tőr"), bg("Nemesi vér"), bg("Vagyon"), equip("Kardművész vért (SFÉ 4)"), restrict("Dhala-saan technika.")]),
         opt("A harc útja", [...teachCat(3, "Harci"), ...teachAt(3, "Lélektan", "Számtan/Mértan", "Térképészet", "Jog/Törvénykezés", "Történelem", "Vallásismeret", "Állatismeret", "Lovaglás"), gs("Harcművészet", 3, "Slan kard"), gs("Harcművészet", 3, "Slan tőr"), equip("Kardművész vért (SFÉ 4)"), restrict("Shien-su technika.")]),
       ]),
@@ -637,8 +663,8 @@ export const CLASSES: Record<string, ClassDef> = {
     ],
     choices: [
       choice("rend", "Istenség / Rend", "additive", [
-        opt("Domvik-pap", [...teach("Hadvezetés", "Oktatás", "Ősi nyelv"), gs("Jog/Törvénykezés", 2), gs("Ősi nyelv", 3, "lingua domini"), gs("Herbalizmus", 2), gs("Orvoslás", 2), gs("Élettan", 2), restrict("Szférák: Élet, Lélek, Természet + Domvik.")]),
-        opt("Ranagol-pap", [...teach("Alkímia", "Kínzás", "Művészetek", "Ősi nyelv"), gs("Ősi nyelv", 2, "aquir"), gs("Pszi", 3, "pyarroni"), gs("Kínzás", 2), gs("Élettan", 2), gs("Méregkeverés/semlegesítés", 2), restrict("Szférák: Halál, Lélek, Természet + Ranagol.")]),
+        opt("Domvik-pap", [...teach("Hadvezetés", "Oktatás"), teachSub("Ősi nyelv", "lingua domini"), teachSub("Ősi nyelv", "godoni"), gs("Jog/Törvénykezés", 2), gs("Ősi nyelv", 3, "lingua domini"), gs("Herbalizmus", 2), gs("Orvoslás", 2), gs("Élettan", 2), restrict("Szférák: Élet, Lélek, Természet + Domvik.")]),
+        opt("Ranagol-pap", [...teach("Alkímia", "Kínzás", "Művészetek"), teachSub("Ősi nyelv", "aquir"), gs("Ősi nyelv", 2, "aquir"), gs("Pszi", 3, "pyarroni"), gs("Kínzás", 2), gs("Élettan", 2), gs("Méregkeverés/semlegesítés", 2), gs("Alkímia", 1), gs("Herbalizmus", 1), restrict("Szférák: Halál, Lélek, Természet + Ranagol.")]),
         opt(
           "Arel-pap",
           [
@@ -651,6 +677,7 @@ export const CLASSES: Record<string, ClassDef> = {
             gs("Állatismeret", 2),
             gs("Idomítás", 2),
             gs("Szakma", 3, "vadászat"),
+            remove("Írás/olvasás"),
             restrict("Nincs Írás/olvasás 3 és nincs kezdő Pszi."),
           ],
           [
@@ -661,9 +688,9 @@ export const CLASSES: Record<string, ClassDef> = {
             ]),
           ]
         ),
-        opt("Kyel-pap", [...teach("Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Pajzshasználat", "Pusztítás", "Vértviselet"), bg("Pszi érzékenység"), gs("Vértviselet", 2), gs("Pajzshasználat", 2), gs("Pusztítás", 2), gs("Jog/Törvénykezés", 3), gs("Pszi", 2, "pyarroni"), restrict("Csak férfi; fegyver csak buzogány; szférák: Élet, Halál, Lélek + Kyel.")]),
-        opt("Sogron-pap", [...teach("Hadvezetés", "Tapasztalati mágia", "Vértviselet"), gs("Hadvezetés", 2), gs("Vértviselet", 1), gs("Őselemi mágia", 2, "tűz"), gs("Ősi nyelv", 2, "kyr"), restrict("Fegyver: lángkard/lángtőr; szférák: Élet, Természet, Lélek + Sogron.")]),
-        opt("Tharr-pap", [...teach("Alkímia", "Kínzás", "Méregkeverés/semlegesítés", "Orvtámadás"), gs("Élettan", 2), gs("Kínzás", 2), gs("Politika/diplomácia", 2), gs("Orvtámadás", 2), gs("Méregkeverés/semlegesítés", 2), gs("Udvari etikett/intrika", 2), restrict("Szférák: Lélek, Halál + Tharr.")]),
+        opt("Kyel-pap", [...teach("Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Pajzshasználat", "Pusztítás", "Vértviselet"), bg("Pszi érzékenység"), gs("Vértviselet", 2), gs("Pajzshasználat", 2), gs("Pusztítás", 2), gs("Jog/Törvénykezés", 3), gs("Pszi", 2, "pyarroni"), gs("Hadvezetés", 1), gs("Harctéri gyakorlat", 1), gs("Élettan", 1), restrict("Csak férfi; fegyver csak buzogány; szférák: Élet, Halál, Lélek + Kyel.")]),
+        opt("Sogron-pap", [...teach("Hadvezetés", "Vértviselet"), teachSub("Tapasztalati mágia", "tűzvarázsló"), gs("Hadvezetés", 2), gs("Vértviselet", 1), gs("Őselemi mágia", 2, "tűz"), gs("Ősi nyelv", 2, "kyr"), restrict("Fegyver: lángkard/lángtőr; szférák: Élet, Természet, Lélek + Sogron.")]),
+        opt("Tharr-pap", [...teach("Alkímia", "Kínzás", "Méregkeverés/semlegesítés", "Orvtámadás"), gs("Élettan", 2), gs("Kínzás", 2), gs("Politika/diplomácia", 2), gs("Orvtámadás", 2), gs("Méregkeverés/semlegesítés", 2), gs("Udvari etikett/intrika", 2), gs("Herbalizmus", 1), gs("Alkímia", 1), restrict("Szférák: Lélek, Halál + Tharr.")]),
       ]),
     ],
     suggestedAllocation: { HM: 6, Fp: 3, Kp: 10, Kegy: 8 },
@@ -699,12 +726,12 @@ export const CLASSES: Record<string, ClassDef> = {
     ],
     choices: [
       choice("rend", "Paplovagrend", "additive", [
-        opt("Darton-paplovag (Maremita)", [...teach("Kocsmai verekedés", "Élettan", "Pusztakezes harc", "Pusztítás", "Szerencsejáték"), gs("Harctéri gyakorlat", 3), gs("Pusztítás", 2), gs("Pusztakezes harc", 2), gs("Kocsmai verekedés", 2), equip("Acél teljesvértezet + nyílt sisak"), restrict("Nincs Pajzshasználat; mágikus gyógyítás tilos.")]),
-        opt("Domvik-paplovag (Isten Kardja)", [...teach("Élettan", "Jog/Törvénykezés", "Politika/diplomácia", "Ősi nyelv"), gs("Ékesszólás", 2), gs("Politika/diplomácia", 2), gs("Herbalizmus", 2), gs("Orvoslás", 2), gs("Ősi nyelv", 2, "lingua domini"), equip("Acél teljesvértezet, nagy sisak, acélpajzs, lovagkard")]),
-        opt("Dreina-paplovag (Oroszlánszív)", [...teach("Értékbecslés", "Jog/Törvénykezés", "Politika/diplomácia", "Szakma"), gs("Számtan/Mértan", 2), gs("Szakma", 2, "birtokigazgatás"), gs("Jog/Törvénykezés", 2), gs("Politika/diplomácia", 2), equip("Acél teljesvértezet, sisak, acélpajzs, lovagkard")]),
-        opt("Krad-paplovag (Aranykör lovag)", [...teach("Jog/Törvénykezés", "Térképészet"), gs("Írás/olvasás", 3), gs("Történelem", 3), gs("Térképészet", 2), gs("Legendaismeret", 2), gs("Számtan/Mértan", 2), equip("Acél félvértezet, sisak, acélpajzs, hosszúkard")]),
-        opt("Ranagol-paplovag", [...teach("Méregkeverés/semlegesítés", "Alkímia", "Orvtámadás", "Kínzás"), gs("Fegyverhasználat", 2, "nyeles fegyverek"), gs("Élettan", 2), gs("Kínzás", 2), gs("Orvtámadás", 2), gs("Méregkeverés/semlegesítés", 2), equip("Acél félvértezet, acélpajzs, lovagkard, nehézlovas kopja")]),
-        opt("Sogron-paplovag", [...teach("Hajózás", "Térképészet", "Tapasztalati mágia", "Csomózás", "Ősi nyelv", "Taktika"), gs("Tapasztalati mágia", 2, "tűzmágia"), gs("Taktika", 2), gs("Hadvezetés", 2), equip("Lángkard + acél pikkelyvértezet + kobra sisak"), restrict("Tűzmágia Kegy pontból; 3. fok fegyver: lángkard.")]),
+        opt("Darton-paplovag (Maremita)", [...teach("Kocsmai verekedés", "Élettan", "Pusztakezes harc", "Pusztítás", "Szerencsejáték"), gs("Harctéri gyakorlat", 3), gs("Pusztítás", 2), gs("Pusztakezes harc", 2), gs("Kocsmai verekedés", 2), gs("Élettan", 2), gs("Szerencsejáték", 2), remove("Pajzshasználat"), equip("Acél teljesvértezet + nyílt sisak"), restrict("Nincs Pajzshasználat; mágikus gyógyítás tilos.")]),
+        opt("Domvik-paplovag (Isten Kardja)", [...teach("Élettan", "Jog/Törvénykezés", "Politika/diplomácia", "Ősi nyelv"), gs("Ékesszólás", 2), gs("Politika/diplomácia", 2), gs("Herbalizmus", 2), gs("Orvoslás", 2), gs("Ősi nyelv", 2, "lingua domini"), gs("Élettan", 2), equip("Acél teljesvértezet, nagy sisak, acélpajzs, lovagkard")]),
+        opt("Dreina-paplovag (Oroszlánszív)", [...teach("Értékbecslés", "Jog/Törvénykezés", "Politika/diplomácia"), teachSub("Szakma", "birtokigazgatás"), teachSub("Szakma", "pénzügyek"), gs("Számtan/Mértan", 2), gs("Szakma", 2, "birtokigazgatás vagy pénzügyek"), gs("Jog/Törvénykezés", 2), gs("Politika/diplomácia", 2), gs("Kultúra", 2), gs("Nyelvtudás", 2), equip("Acél teljesvértezet, sisak, acélpajzs, lovagkard")]),
+        opt("Krad-paplovag (Aranykör lovag)", [...teach("Jog/Törvénykezés", "Térképészet"), gs("Írás/olvasás", 3), gs("Történelem", 3), gs("Térképészet", 2), gs("Legendaismeret", 2), gs("Számtan/Mértan", 2), gs("Kultúra", 2), gs("Nyelvtudás", 2, "második nyelv"), equip("Acél félvértezet, sisak, acélpajzs, hosszúkard")]),
+        opt("Ranagol-paplovag", [...teach("Méregkeverés/semlegesítés", "Alkímia", "Orvtámadás", "Kínzás"), gs("Fegyverhasználat", 2, "nyeles fegyverek"), gs("Élettan", 2), gs("Kínzás", 2), gs("Orvtámadás", 2), gs("Méregkeverés/semlegesítés", 2), gs("Herbalizmus", 1), gs("Alkímia", 1), equip("Acél félvértezet, acélpajzs, lovagkard, nehézlovas kopja")]),
+        opt("Sogron-paplovag", [...teach("Hajózás", "Térképészet", "Tapasztalati mágia", "Csomózás", "Ősi nyelv", "Taktika"), gs("Tapasztalati mágia", 2, "tűzvarázsló"), gs("Taktika", 2), gs("Hadvezetés", 2), equip("Lángkard + acél pikkelyvértezet + kobra sisak"), restrict("Tűzmágia Kegy pontból; 3. fok fegyver: lángkard.")]),
         opt("Uwel-paplovag", [...teach("Pusztítás", "Jog/Törvénykezés"), gs("Térképészet", 2), gs("Jog/Törvénykezés", 2), gs("Pusztítás", 2), gs("Számtan/Mértan", 2), gs("Élettan", 2), equip("Acél félvértezet + sisak")]),
       ]),
     ],
@@ -737,11 +764,11 @@ export const CLASSES: Record<string, ClassDef> = {
     ],
     choices: [
       choice("rend", "Szekta", "additive", [
-        opt("Liviniai Gyülekezet", [...teachAt(2, "Politika/diplomácia", "Jog/Törvénykezés", "Színészet", "Szakma", "Ősi nyelv", "Rúnamágia", "Drágakőmágia"), restrict("10. Tsz+: Morgena → Kegyelt; egyedi 'Mágia elleplezése'.")]),
-        opt("Maida Saluquas", [...teachAt(2, "Politika/diplomácia", "Jog/Törvénykezés", "Színészet", "Ősi nyelv", "Rúnamágia"), tag("Bármely Alvilági képzettség oktató nélkül tanulható"), restrict("Kráni kötődés.")]),
+        opt("Liviniai Gyülekezet", [...teachAt(2, "Politika/diplomácia", "Jog/Törvénykezés", "Színészet", "Szakma", "Rúnamágia", "Drágakőmágia"), teachSub("Ősi nyelv", "kyr", 2), restrict("10. Tsz+: Morgena → Kegyelt; egyedi 'Mágia elleplezése'.")]),
+        opt("Maida Saluguas", [...teachAt(2, "Politika/diplomácia", "Jog/Törvénykezés", "Színészet", "Rúnamágia"), teachSub("Ősi nyelv", "aquir", 2), teachSub("Ősi nyelv", "godoni", 2), tag("Bármely Alvilági képzettség oktató nélkül tanulható"), restrict("Kráni kötődés.")]),
         opt("Stella Prosylens", [bg("Sugallat"), restrict("5. Tsz+: Noir → Kegyelt.")]),
-        opt("Alidaxi Boszorkányrend", [...teachFrom(4, 3, "Ősi nyelv", "Rúnamágia", "Drágakőmágia"), restrict("3. Tsz+ a fenti kedvezmény; mágikus tárgy ajándék.")]),
-        opt("Ezer Fátyol Nővérei", [restrict("Nincs kezdő Szexuális kultúra; Táncmágia, fátyol-tárolás.")]),
+        opt("Alidaxi Boszorkányrend", [...teachFrom(4, 3, "Rúnamágia", "Drágakőmágia"), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "kyr", uptoLevel: 3 }, 4), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "crantai", uptoLevel: 3 }, 4), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "óelf", uptoLevel: 3 }, 4), restrict("3. Tsz+ a fenti kedvezmény; mágikus tárgy ajándék.")]),
+        opt("Ezer Fátyol Nővérei", [remove("Szexuális kultúra"), restrict("Nincs kezdő Szexuális kultúra; Táncmágia, fátyol-tárolás.")]),
       ]),
     ],
     suggestedAllocation: { HM: 3, Fp: 3, Kp: 15, Mana: 8 },
@@ -806,6 +833,7 @@ export const CLASSES: Record<string, ClassDef> = {
           gs("Orvtámadás", 2),
           gs("Politika/diplomácia", 1),
           gs("Udvari etikett/intrika", 2),
+          gs("Történelem", 2),
         ]),
         opt("Hergoli Villámmesterek", [
           ...forbidSkills("Nekromancia", "Démonológia"),
@@ -856,14 +884,14 @@ export const CLASSES: Record<string, ClassDef> = {
         opt("Tűz Hordozói", [restrict("Alapértelmezett ág 5. Tsz alatt; Tűzmágia tudósai.")]),
         opt("Tűz Táplálói", [restrict("Vallási/oktató ág; Sogron Útja (5+ Tsz).")]),
         opt("Tűz Harcosai", [restrict("Harci/védelmi ág; Lángőrök — belépéskor Tapasztalati mágia / Ősi nyelv / Pszi kiképzés.")]),
-        opt("Aschaon Tűzmesterei", [...teach("Tapasztalati mágia"), restrict("Nincs Magasiskola; Mana csak Hatalom Italából; Tapasztalati mágia (Boszorkánymesteri) 3. fokú oktatóval; nőket is felvesz.")]),
+        opt("Aschaon Tűzmesterei", [teachSub("Tapasztalati mágia", "Boszorkánymesteri", 3), restrict("Nincs Magasiskola; Mana csak Hatalom Italából; Tapasztalati mágia (Boszorkánymesteri) 3. fokú oktatóval; nőket is felvesz.")]),
       ]),
       choice("iranyzat", "Sogron misztériumának irányzata", "additive", [
         opt("Nincs külön irányzat", [restrict("Az irányzatok jellemzően 5. Tapasztalati szinttől választhatók.")]),
         opt("A Pusztító Tűz Útja", [...teachCatFrom(5, 4, "Harci", "Tudományos", "Világi"), restrict("5. Tsz+: bármely Harci/Tudományos/Világi képzettség 4. fokú oktatói kedvezménnyel — a pusztító erő növelésére.")]),
         opt("Sogron Útja", [restrict("5. Tsz+: Sogron-pappá válhat (Kegyelt háttér, Vallásismeret 3. fok); nem-isteni mana-módszereit elveszti.")]),
-        opt("A Fény Ösvénye", [restrict("5. Tsz+: Pszi (Godoni Ösvény) 3. fokú oktatói kedvezménnyel.")]),
-        opt("Sogronita szerafisták", [...teachFrom(6, 4, "Démonológia"), ...capSkill(3, "Démonológia"), restrict("6.–10. Tsz közti képzés alatt Démonológia (legfeljebb 3. fok) sajátítható el.")]),
+        opt("A Fény Ösvénye", [grant({ kind: "teachingDiscount", skill: "Pszi", subtype: "Godoni Ösvény", uptoLevel: 3 }, 5), restrict("5. Tsz+: Pszi (Godoni Ösvény) 3. fokú oktatói kedvezménnyel.")]),
+        opt("Sogronita szerafisták", [...teachFrom(6, 4, "Démonológia"), restrict("6.–10. Tsz közti képzés alatt Démonológia sajátítható el; 10. Tsz-re legalább 3. fok kell.")]),
         opt("Renegátok", [restrict("−1 KAP iskolaköltség; nincs fegyver-/vértkorlát; nem tanulhat Godoni Örökséget vagy Tűzmágia magasiskolát; nem lehet szerafista.")]),
       ]),
     ],
@@ -894,9 +922,9 @@ export const CLASSES: Record<string, ClassDef> = {
     ],
     choices: [
       choice("iskola", "Iskola", "additive", [
-        opt("Lar-Dor", [...capSkill(2, "Nekromancia", "Démonológia"), gs("Pszi", 3, "godoni"), restrict("Belsőszigeti/Északi: Pszi (kyr) helyett Pszi (Godoni Örökség) 3; Nekromancia/Démonológia max 2. fok.")]),
-        opt("Pyarroni Varázslórend", [bg("Manalátó", 3), restrict("3. Tsz+ rend; varázslóbot (E = Tsz/3); tiszta asztráltest.")]),
-        opt("Doran", [gs("Magasmágia", 3, "Tér-/Idő-/Idézőmágia"), equip("Élő varázslóbot (1. Tsz)"), restrict("Nekromancia/Démonidézés engedett; bot saját Pszi/Mp-vel.")]),
+        opt("Lar-Dor", [...capSkill(2, "Nekromancia", "Démonológia"), gs("Pszi", 3, "Godoni Örökség"), remove("Pszi", "kyr"), restrict("Belsőszigeti/Északi: Pszi (kyr) helyett Pszi (Godoni Örökség) 3; Nekromancia/Démonológia max 2. fok.")]),
+        opt("Pyarroni Varázslórend", [restrict("3. Tsz+ rend; varázslóbot (E = Tsz/3); tiszta asztráltest.")]),
+        opt("Doran", [equip("Élő varázslóbot (1. Tsz)"), restrict("Nekromancia/Démonidézés engedett; bot saját Pszi/Mp-vel.")]),
       ]),
     ],
     suggestedAllocation: { HM: 0, Fp: 0, Kp: 15, Mana: 10 },
@@ -910,16 +938,14 @@ function lovagBase(): GrantEntry[] {
     weaponChoice("másodfegyver", 2),
     gs("Harctéri gyakorlat", 2),
     gs("Fegyverismeret", 2),
-    gs("Vértviselet", 3),
     gs("Hadvezetés", 1),
     gs("Lovaglás", 3),
     gs("Udvari etikett/intrika", 2),
     gs("Heraldika", 2),
-    gs("Párbaj", 2),
-    gs("Állatismeret", 2, "hátas állatok"),
     gs("Történelem", 2),
     gs("Írás/olvasás", 2),
   ];
+  // Vértviselet, Párbaj and Állatismeret vary by order → granted per-option, not here.
 }
 
 export const CLASS_NAMES = Object.keys(CLASSES);
