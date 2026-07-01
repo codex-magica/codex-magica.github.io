@@ -53,6 +53,22 @@ const Chips: React.FC<{ items: string[] }> = ({ items }) => (
   <Text fontSize="13px" color="fg" lineHeight="1.55">{items.join("  ·  ")}</Text>
 );
 
+// Taught skills grouped by teacher level ("N. fokig: a, b, c"), instead of repeating the level per skill.
+const TeachGroups: React.FC<{ teaches: { skill: string; level: number }[] }> = ({ teaches }) => {
+  const byLevel = new Map<number, string[]>();
+  for (const t of teaches) (byLevel.get(t.level) ?? byLevel.set(t.level, []).get(t.level)!).push(t.skill);
+  const levels = Array.from(byLevel.keys()).sort((a, b) => b - a);
+  return (
+    <VStack align="stretch" spacing="4px">
+      {levels.map((lvl) => (
+        <Text key={lvl} fontSize="12.5px" color="muted" lineHeight="1.55">
+          <Text as="span" fontWeight={700} color="accentTx">{lvl}. fokig</Text> — {byLevel.get(lvl)!.join(", ")}
+        </Text>
+      ))}
+    </VStack>
+  );
+};
+
 // The specialization tree: each choice lists its options; an option with its own sub-choices nests below it
 // (e.g. Pap → Istenség/Rend → Arel-pap → Arel irányzat).
 const ChoiceTree: React.FC<{ choices: ChoiceDef[] }> = ({ choices }) => (
@@ -92,7 +108,7 @@ const RaceDetail: React.FC<{ name: string }> = ({ name }) => {
         </HStack>
       </Section>
       {g.skills.length > 0 && <Section label="Tanult képzettségek"><Chips items={g.skills} /></Section>}
-      {g.teaches.length > 0 && <Section label="Kedvezményes oktatás"><Chips items={g.teaches.map((t) => `${t.skill} (${t.level}. fokig)`)} /></Section>}
+      {g.teaches.length > 0 && <Section label="Kedvezményes oktatás"><TeachGroups teaches={g.teaches} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {innate.length > 0 && <Section label="Faji kedvezmények"><Chips items={innate} /></Section>}
       <Section label={`Választható kasztok · ${allowedClasses.length}`}>
@@ -114,7 +130,7 @@ const ClassDetail: React.FC<{ name: string }> = ({ name }) => {
       <Text fontSize="11.5px" color="fgFaint" mb="11px">Engedett fajok: {c.allowedRaces.join(", ")}</Text>
       {g.backgrounds.length > 0 && <Section label="Kapott hátterek"><Chips items={g.backgrounds} /></Section>}
       {g.skills.length > 0 && <Section label="Kapott képzettségek"><Chips items={g.skills} /></Section>}
-      {g.teaches.length > 0 && <Section label={`Tanított képzettségek · ${g.teaches.length}`}><Text fontSize="12.5px" color="muted" lineHeight="1.6">{g.teaches.map((t) => `${t.skill} (${t.level}. fokig)`).join(", ")}</Text></Section>}
+      {g.teaches.length > 0 && <Section label={`Tanított képzettségek · ${g.teaches.length}`}><TeachGroups teaches={g.teaches} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {c.choices.length > 0 && <Section label="Specializációk"><ChoiceTree choices={c.choices} /></Section>}
       {g.other.length > 0 && <Section label="Megkötések / egyéb"><Text fontSize="12px" color="muted" lineHeight="1.55">{g.other.join("  ·  ")}</Text></Section>}
@@ -140,7 +156,7 @@ const OptionDetail: React.FC<{ option: OptionDef; classTeaches?: { skill: string
       {innate.length > 0 && <Section label="Egyéb bónuszok"><Chips items={innate} /></Section>}
       {g.specials.length > 0 && <Section label="Speciális oktatási szabályok"><Chips items={g.specials} /></Section>}
       {g.other.length > 0 && <Section label="Megkötések / felszerelés"><Text fontSize="12px" color="muted" lineHeight="1.55">{g.other.join("  ·  ")}</Text></Section>}
-      {teaches.length > 0 && <Section label={`Tanított képzettségek${overrides ? " · saját lista" : ""} · ${teaches.length}`}><Text fontSize="12.5px" color="muted" lineHeight="1.6">{teaches.map((t) => `${t.skill} (${t.level}. fokig)`).join(", ")}</Text></Section>}
+      {teaches.length > 0 && <Section label={`Tanított képzettségek${overrides ? " · saját lista" : ""} · ${teaches.length}`}><TeachGroups teaches={teaches} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {option.choices && option.choices.length > 0 && <Section label="További választások"><ChoiceTree choices={option.choices} /></Section>}
       {empty && <Text fontSize="13px" color="fgFaint">Nincs külön nyereség ehhez a választáshoz.</Text>}
