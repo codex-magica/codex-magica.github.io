@@ -245,21 +245,21 @@ const RAW: Raw[] = [
 
   // ── Misztikus (magic-system skills — spells point back to these) ────────────
   { name: "Démonológia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"] },
-  { name: "Drágakőmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Szakma"] },
+  { name: "Drágakőmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Szakma"] },
   {
-    name: "Magasmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"],
+    name: "Magasmágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"],
     perFok: {
       3: [{ kind: "resourcePerLevel", resource: "Mana", amount: 1 }],
       4: [{ kind: "resourcePerLevel", resource: "Mana", amount: 2 }],
       5: [{ kind: "resourcePerLevel", resource: "Mana", amount: 3 }],
     },
   },
-  { name: "Nekromancia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Élettan"] },
-  { name: "Őselemi mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
+  { name: "Nekromancia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Élettan"] },
+  { name: "Őselemi mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"] },
   { name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], subtypes: ["pyarroni", "kyr", "godoni", "slan"], fokTriggers: [{ kind: "path", atFok: 3, label: "Pszi út", options: ["tudat", "test"] }] },
-  { name: "Rúnamágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], hard: ["Ősi nyelv"] },
+  { name: "Rúnamágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"] },
   {
-    name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"],
+    name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"],
     // Empirical magic — one skill, one tradition per subtype. Each (at fok 3) unlocks its whole list.
     subtypes: ["bárd", "tűzmágia", "boszorkány", "boszorkánymester"],
     // The empirical-magic skill grants Mana per level from fok 3 (the casting threshold).
