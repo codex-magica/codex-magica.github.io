@@ -3,15 +3,14 @@
 import { Stats } from "../model/attributes";
 import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT, SkillDef } from "../model/skills";
 
-export type Discount = { skill?: string; category?: string; uptoLevel: number };
+export type Discount = { skill?: string; category?: string; allSkills?: boolean; uptoLevel: number };
 
 // Highest teacher (oktatás) level available for a skill, given the active discounts. 0 = no teacher.
 export function teachingUptoFor(discounts: Discount[], def: SkillDef): number {
   let max = 0;
   for (const d of discounts) {
-    if (d.skill ? d.skill === def.name : d.category === def.category) {
-      if (d.uptoLevel > max) max = d.uptoLevel;
-    }
+    const matches = d.allSkills || (d.skill ? d.skill === def.name : d.category === def.category);
+    if (matches && d.uptoLevel > max) max = d.uptoLevel;
   }
   return max;
 }

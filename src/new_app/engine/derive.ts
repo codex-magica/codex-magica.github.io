@@ -146,6 +146,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   let money = 0;
   const inventory = rec.inventory.slice();
   const discounts: Discount[] = [];
+  const costMultipliers: { skill?: string; category?: string; allSkills?: boolean; factor: number }[] = []; // e.g. ×1.5 Kp
+  const skillBans: { skill?: string; category?: string; source: string }[] = []; // schools that can't learn X → warning
+  const fokCaps: { skill?: string; category?: string; fok: number }[] = []; // schools that cap X at a fok → warning
   let kapBalance = 0; // skills (1 Kp = 1 KAP), HM/Fp/Mana/Psi/Kegy and attribute buys all draw from this
   const kapIncomeByLevel: number[] = [];
   const kapBalanceByLevel: number[] = [];
@@ -178,7 +181,16 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         break;
       }
       case "teachingDiscount":
-        discounts.push({ skill: e.skill, category: e.category, uptoLevel: e.uptoLevel });
+        discounts.push({ skill: e.skill, category: e.category, allSkills: e.allSkills, uptoLevel: e.uptoLevel });
+        break;
+      case "skillCostMultiplier":
+        costMultipliers.push({ skill: e.skill, category: e.category, allSkills: e.allSkills, factor: e.factor });
+        break;
+      case "forbidSkill":
+        skillBans.push({ skill: e.skill, category: e.category, source });
+        break;
+      case "maxSkillFok":
+        fokCaps.push({ skill: e.skill, category: e.category, fok: e.fok });
         break;
       case "poolAccess":
         poolExists[e.pool] = true;
@@ -333,8 +345,12 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         if (sp.id == null && sp.to <= from) redundantPurchases.push({ level: L, skill: sp.skill, subtype: sp.subtype });
         const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(discounts, def);
         const cost = skillKpCost(def, from, sp.to, tUpto, effective);
-        kapBalance -= cost.kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
-        ledgerCosts[`${L}:skill:${key}`] = cost.kp;
+        // School cost penalty (e.g. Barbár: Szociális/Alvilági/Tudományos ×1.5 Kp).
+        let mult = 1;
+        for (const m of costMultipliers) if (m.allSkills || m.skill === sp.skill || (m.category != null && m.category === def.category)) mult = Math.max(mult, m.factor);
+        const kp = mult === 1 ? cost.kp : Math.ceil(cost.kp * mult);
+        kapBalance -= kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
+        ledgerCosts[`${L}:skill:${key}`] = kp;
         ledgerDelta[`${L}:skill:${key}`] = { before: from, after: sp.to };
         if (cost.note) diag("info", cost.note, L);
         // Carry forward the granted subtype's stable key: raising a granted-subtyped skill must keep its
@@ -437,6 +453,18 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     if (kapBalance < 0) diag("warn", `${L}. szint: a KAP egyenleg negatív (${kapBalance}).`, L);
 
     kapBalanceByLevel.push(kapBalance);
+  }
+
+  // Ban / fok-cap warnings: the chosen school forbids or caps certain skills (e.g. Bárd subclasses banning
+  // skills, Lar-Dor capping Nekromancia/Démonológia at fok 2). Not hard-blocked — surfaced so the player notices.
+  for (const k of Object.keys(owned)) {
+    const o = owned[k];
+    const def = db.skills[o.skill];
+    if (!def) continue;
+    if (skillBans.some((b) => b.skill === o.skill || (b.category != null && b.category === def.category)))
+      diag("warn", `${o.skill}${o.subtype ? ` (${o.subtype})` : ""}: a választott iskola/rend nem engedi ezt a képzettséget.`);
+    const cap = fokCaps.find((c) => (c.skill === o.skill || (c.category != null && c.category === def.category)) && o.fok > c.fok);
+    if (cap) diag("warn", `${o.skill}${o.subtype ? ` (${o.subtype})` : ""}: a választott iskola szerint legfeljebb ${cap.fok}. fok (jelenleg ${o.fok}).`);
   }
 
   // ── 5. KM adjustments ──────────────────────────────────────────────────────

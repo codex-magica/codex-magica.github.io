@@ -23,8 +23,11 @@ export type DerivedKey =
 export type Effect =
   | { kind: "grantSkill"; skill: string; subtype?: string; level: SkillFok }
   | { kind: "grantSkillPercent"; skill: string; subtype?: string; percent: number }
-  | { kind: "teachingDiscount"; skill?: string; category?: SkillCategory; uptoLevel: SkillFok }
+  | { kind: "teachingDiscount"; skill?: string; category?: SkillCategory; allSkills?: boolean; uptoLevel: SkillFok } // allSkills = teaches everything (e.g. Talavra: any skill @ fok 2). Level-gated grants carry an atLevel on the GrantEntry.
   | { kind: "resetTeaching" } // in a subclass option: discard the inherited (class) teach list before adding its own — the subclass OVERRIDES rather than extends what it teaches
+  | { kind: "skillCostMultiplier"; skill?: string; category?: SkillCategory; allSkills?: boolean; factor: number } // e.g. Barbár: Szociális/Alvilági/Tudományos Kp cost ×1.5
+  | { kind: "forbidSkill"; skill?: string; category?: SkillCategory; text?: string } // school cannot learn this skill/category — surfaced as a builder warning, not hard-blocked
+  | { kind: "maxSkillFok"; skill?: string; category?: SkillCategory; fok: SkillFok } // school caps a skill/category at this fok — surfaced as a builder warning
   | { kind: "grantBackground"; background: string }
   | { kind: "resourcePerLevel"; resource: Resource; amount: number }
   | { kind: "derivedPerLevel"; target: DerivedKey; amount: number } // e.g. +N MME/AME each level (faith, Mágiatagadás)
