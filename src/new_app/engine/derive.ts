@@ -582,13 +582,19 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     const o = owned[k];
     const def = db.skills[o.skill];
     const isPct = def && def.cost === "percentage";
+    const rAttrs = o.attrs ?? instAttrs(o.skill, o.subtype, o.parent, attrChoiceFor(o.skill, o.subtype, o.variantId));
+    // Unmet governing attributes for the NEXT fok: a governing attr below 10 + (fok+1) means raising the
+    // skill one more level is penalised. (No next level at fok 5.) Surfaced yellow in the UI.
+    const need = 11 + o.fok;
+    const unmetAttrs = !def || isPct || o.fok >= 5 ? [] : rAttrs.filter((a) => effective[a] < need);
     return {
       skill: o.skill,
       subtype: o.subtype,
       origSubtype: o.origSubtype,
       variantId: o.variantId,
       parent: o.parent ?? branchChildCat(o.skill, o.subtype),
-      attrs: o.attrs ?? instAttrs(o.skill, o.subtype, o.parent, attrChoiceFor(o.skill, o.subtype, o.variantId)),
+      attrs: rAttrs,
+      unmetAttrs,
       placeholder: o.placeholder,
       fok: o.fok,
       percent: isPct ? o.percent : undefined,

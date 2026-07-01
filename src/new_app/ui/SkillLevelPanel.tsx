@@ -348,19 +348,39 @@ export const SkillLevelPanel: React.FC<Props> = ({
     );
   };
 
-  // Choose-attributes badge for an open branch (Művészetek): the player toggles which attributes govern it.
-  const attrsBadge = (skill: string, subtype: string | undefined, variantId: string | undefined, current: Stat[]) => {
-    if (!SKILL_BY_NAME[skill]?.branch?.some((b) => b.chooseAttrs)) return null;
+  // Attribute-requirement badge, shown on EVERY skill instance that has governing attributes. Lists the
+  // attrs as short names; any UNMET one (effective stat < 10 + fok) is yellow. For an open chooseAttrs skill
+  // (Művészetek) it's an editable picker (red until chosen); otherwise it's a read-only info pill.
+  const attrsBadge = (skill: string, subtype: string | undefined, variantId: string | undefined, current: Stat[], unmetAttrs: Stat[]) => {
+    const chooseAttrs = SKILL_BY_NAME[skill]?.branch?.some((b) => b.chooseAttrs) ?? false;
+    if (!chooseAttrs && current.length === 0) return null; // fixed skill with no attribute requirements
+    const unmet = (a: Stat) => unmetAttrs.includes(a); // computed by the engine (matches the KAP penalty)
+    const empty = chooseAttrs && current.length === 0;
+    const bg = empty ? "badSoft" : chooseAttrs ? "accentSoft" : "fieldBg";
+    const tx = empty ? "bad" : chooseAttrs ? "accentTx" : "muted";
+    const bd = empty ? "bad" : chooseAttrs ? "accentBd" : "fieldBd";
+    const chipSx = { display: "inline-flex", alignItems: "center", gap: "4px", px: "7px", py: "3px", borderRadius: "6px", border: "1px solid", fontFamily: "system-ui", fontSize: "9.5px", fontWeight: 700, letterSpacing: ".04em", whiteSpace: "nowrap", bg, color: tx, borderColor: bd } as const;
+    const inner = current.length ? (
+      <Box as="span" display="inline-flex" alignItems="center">
+        {current.map((a, i) => (
+          <React.Fragment key={a}>
+            {i > 0 && <Box as="span" opacity={0.5} mx="1px">·</Box>}
+            <Box as="span" color={unmet(a) ? "warn" : undefined} title={unmet(a) ? `${a}: nem elég magas (a képzés drágább)` : a}>{STAT_SHORT[a]}</Box>
+          </React.Fragment>
+        ))}
+      </Box>
+    ) : "tul.?";
+
+    if (!chooseAttrs)
+      return <Box {...chipSx} flexShrink={0} title="Tulajdonság-igény">{inner}</Box>;
+
     const openKey = (variantId ? `v:${variantId}` : `s:${keyOf(skill, subtype)}`) + "|attrs";
     const open = attrsOpen === openKey;
     const toggle = (a: Stat) => onSetChosenAttrs(level, skill, subtype, variantId, current.includes(a) ? current.filter((x) => x !== a) : current.concat([a]));
     return (
       <Box position="relative" flexShrink={0}>
-        <Box as="button" type="button" title="Válaszd meg a tulajdonság-igényt" onClick={() => setAttrsOpen(open ? null : openKey)}
-          display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
-          fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
-          bg={current.length ? "accentSoft" : "fieldBg"} color={current.length ? "accentTx" : "muted"} borderColor={current.length ? "accentBd" : "fieldBd"}>
-          {current.length ? current.map((a) => STAT_SHORT[a]).join("·") : "tul.?"}
+        <Box as="button" type="button" title="Válaszd meg a tulajdonság-igényt" onClick={() => setAttrsOpen(open ? null : openKey)} {...chipSx}>
+          {inner}
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
         </Box>
         {open && (
@@ -413,7 +433,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // A granted or first-learned instance (no variant id) — an independent row. A branchable skill always
   // shows its subtype control (fixed dropdown / free text / fok-aware weapon); its subtype edits go through
   // the origSubtype-keyed override (grants) or the combined learned setter.
-  const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number; attrs?: Stat[]; placeholder?: boolean }) => {
+  const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number; attrs?: Stat[]; unmetAttrs?: Stat[]; placeholder?: boolean }) => {
     const isPct = inst.percent != null;
     const cur = isPct ? inst.percent! : inst.fok;
     const grantFloor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0;
@@ -433,16 +453,20 @@ export const SkillLevelPanel: React.FC<Props> = ({
               ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
               : onSetSubtype(level, inst.skill, inst.subtype, v), cur)
         : null,
-      <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{attrsBadge(inst.skill, inst.subtype, undefined, inst.attrs ?? [])}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined, inst.attrs)}{pathBadge(inst.skill, inst.subtype, undefined, cur)}</>,
-      <Stepper
-        fixed
-        value={isPct ? `${cur}%` : `${cur}.`}
-        incLabel={atMax ? undefined : String(cost)}
-        decDisabled={cur <= floor}
-        incDisabled={atMax || cost > kap}
-        onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, inst.subtype) : onUpsert(level, inst.skill, inst.subtype, cur - step))}
-        onInc={() => onUpsert(level, inst.skill, inst.subtype, cur + step)}
-      />,
+      <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined, inst.attrs)}{pathBadge(inst.skill, inst.subtype, undefined, cur)}</>,
+      <HStack spacing="7px" flexShrink={0}>
+        {attrsBadge(inst.skill, inst.subtype, undefined, inst.attrs ?? [], inst.unmetAttrs ?? [])}
+        <Stepper
+          fixed
+          value={isPct ? `${cur}%` : `${cur}.`}
+          incLabel={atMax ? undefined : String(cost)}
+          incWarn={(inst.unmetAttrs?.length ?? 0) > 0}
+          decDisabled={cur <= floor}
+          incDisabled={atMax || cost > kap}
+          onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, inst.subtype) : onUpsert(level, inst.skill, inst.subtype, cur - step))}
+          onInc={() => onUpsert(level, inst.skill, inst.subtype, cur + step)}
+        />
+      </HStack>,
       null
     );
   };
@@ -451,23 +475,29 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // ever branchable skills (the relearn picker offers only those), so never a percentage skill.
   const varRow = (p: { id?: string; skill: string; subtype?: string; to: number }) => {
     const atMax = p.to >= 5;
-    const vAttrs = derived.skills.find((s) => s.variantId === p.id)?.attrs;
+    const dv = derived.skills.find((s) => s.variantId === p.id);
+    const vAttrs = dv?.attrs;
+    const vUnmet = dv?.unmetAttrs ?? [];
     const cost = atMax ? 0 : stepCost(p.skill, p.to, p.to + 1, p.subtype, vAttrs);
     const showFok4 = p.to >= 4;
     return rowShell(
       p.id!,
       nameGroup(p.skill, teacherOf(p.skill, p.subtype)),
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v }), p.to),
-      <>{attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [])}{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
-      <Stepper
-        fixed
-        value={`${p.to}.`}
-        incLabel={atMax ? undefined : String(cost)}
-        decDisabled={p.to <= 1}
-        incDisabled={atMax || cost > kap}
-        onDec={() => onPatchVariant(level, p.id!, { to: p.to - 1 })}
-        onInc={() => onPatchVariant(level, p.id!, { to: p.to + 1 })}
-      />,
+      <>{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
+      <HStack spacing="7px" flexShrink={0}>
+        {attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [], vUnmet)}
+        <Stepper
+          fixed
+          value={`${p.to}.`}
+          incLabel={atMax ? undefined : String(cost)}
+          incWarn={vUnmet.length > 0}
+          decDisabled={p.to <= 1}
+          incDisabled={atMax || cost > kap}
+          onDec={() => onPatchVariant(level, p.id!, { to: p.to - 1 })}
+          onInc={() => onPatchVariant(level, p.id!, { to: p.to + 1 })}
+        />
+      </HStack>,
       <DeleteButton onClick={() => onRemoveVariant(level, p.id!)} />
     );
   };

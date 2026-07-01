@@ -24,6 +24,8 @@ const theme = extendTheme({
       good: { default: 'oklch(0.5 0.11 152)', _dark: 'oklch(0.76 0.12 155)' },
       bad: { default: 'oklch(0.52 0.19 27)', _dark: 'oklch(0.7 0.16 25)' },
       badSoft: { default: 'oklch(0.95 0.04 27)', _dark: 'oklch(0.32 0.06 25)' },
+      warn: { default: 'oklch(0.62 0.14 75)', _dark: 'oklch(0.82 0.14 85)' }, // unmet attribute requirement (yellow/amber)
+      warnSoft: { default: 'oklch(0.94 0.05 80)', _dark: 'oklch(0.34 0.06 80)' }, // soft amber fill (penalised + button)
       // Warm-neutral chrome (borders, fields, steppers, tracks) — sits on the parchment.
       hair: { default: 'oklch(0.89 0.009 84)', _dark: 'oklch(0.34 0.011 95)' },
       hairSoft: { default: 'oklch(0.93 0.006 252)', _dark: 'oklch(0.29 0.013 257)' },

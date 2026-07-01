@@ -23,6 +23,7 @@ export interface OwnedSkill {
   variantId?: string; // set on user-added branch instances (so they never collide with the trunk)
   parent?: string; // two-tier branch (Fegyverhasználat): the category a specific weapon belongs to
   attrs?: Stat[]; // resolved attribute requirements (branch/category/chosen), overriding the skill default
+  unmetAttrs?: Stat[]; // governing attrs below the requirement (10 + fok), ignoring this skill's own fok-4 +1
   placeholder?: boolean; // an unresolved grantSkillChoice (e.g. "első fegyver" awaiting a concrete weapon)
   fok: number; // 0 for percentage skills
   percent?: number; // for percentage skills

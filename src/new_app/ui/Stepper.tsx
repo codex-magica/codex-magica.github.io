@@ -8,6 +8,7 @@ interface StepperProps {
   decDisabled?: boolean;
   incDisabled?: boolean;
   incLabel?: string; // cost shown after the "+", e.g. "8" → "+ 8"
+  incWarn?: boolean; // amber "+" — raising one more level is penalised (unmet attribute requirement)
   fullWidth?: boolean; // fill the parent box (attribute columns) for column alignment
   fixed?: boolean; // constant total width regardless of value / +cost label (skill rows align)
   valueMuted?: boolean; // Adottság column — secondary value color
@@ -35,6 +36,7 @@ export const Stepper: React.FC<StepperProps> = ({
   decDisabled,
   incDisabled,
   incLabel,
+  incWarn,
   fullWidth,
   fixed,
   valueMuted,
@@ -100,8 +102,8 @@ export const Stepper: React.FC<StepperProps> = ({
       px={fixed ? "2px" : incLabel ? "8px" : undefined}
       borderLeft="1px solid"
       borderColor="fieldBd"
-      bg={incDisabled ? "transparent" : "accentSoft"}
-      color={incDisabled ? "fgFaint" : "accentTx"}
+      bg={incDisabled ? "transparent" : incWarn ? "warnSoft" : "accentSoft"}
+      color={incDisabled ? "fgFaint" : incWarn ? "warn" : "accentTx"}
       opacity={incDisabled ? 0.45 : 1}
       cursor={incDisabled ? "default" : "pointer"}
       fontWeight={700}
