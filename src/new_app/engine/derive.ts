@@ -186,7 +186,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         break;
       }
       case "teachingDiscount":
-        discounts.push({ skill: e.skill, category: e.category, allSkills: e.allSkills, uptoLevel: e.uptoLevel });
+        discounts.push({ skill: e.skill, subtype: e.subtype, category: e.category, allSkills: e.allSkills, uptoLevel: e.uptoLevel });
         break;
       case "skillCostMultiplier":
         costMultipliers.push({ skill: e.skill, category: e.category, allSkills: e.allSkills, factor: e.factor });
@@ -633,6 +633,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     floorByLevel,
     redundantPurchases,
     teaching,
+    teachingDiscounts: discounts,
     spells,
     tags: Object.keys(tags),
     grantedBackgrounds: Object.keys(grantedBg),

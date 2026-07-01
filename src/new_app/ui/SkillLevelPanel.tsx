@@ -5,7 +5,7 @@ import { DerivedCharacter } from "../engine/types";
 import { SKILLS, SKILL_BY_NAME } from "../model/skills";
 import { Stat, STAT_SHORT, STAT_KEYS } from "../model/attributes";
 import { SkillCategory, SKILL_CATEGORIES } from "../model/common";
-import { skillKpCost } from "../engine/skillCost";
+import { skillKpCost, teachingUptoFor } from "../engine/skillCost";
 import { Stepper } from "./Stepper";
 import { DeleteButton } from "./controls";
 import { DetailModal, ModalState } from "./DetailModal";
@@ -104,9 +104,28 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // User-added branches carry a variantId in the derived list; everything else is a "real" owned instance
   // (trunk / grant). This is collision-proof — an unnamed branch no longer masquerades as the trunk.
   const ownedInstances = derived.skills.filter((s) => s.variantId == null);
-  const teacherOf = (skill: string) => derived.teaching[skill] || 0;
-  const stepCost = (skill: string, from: number, to: number) =>
-    skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill), derived.effectiveStats).kp;
+  // Teacher (oktatás) level for a specific INSTANCE — subtype-aware, so a branch-scoped teacher (e.g. Elf's
+  // Vadonjárás(erdő)) only counts for that branch.
+  const teacherOf = (skill: string, subtype?: string) => teachingUptoFor(derived.teachingDiscounts, SKILL_BY_NAME[skill], subtype);
+  // Is the WHOLE skill taught (a general / category / all-skills teacher, not a branch-scoped one)?
+  const generallyTaught = (skill: string) => {
+    const def = SKILL_BY_NAME[skill];
+    return derived.teachingDiscounts.some((d) => !d.subtype && (d.allSkills || (d.skill ? d.skill === skill : d.category === def.category)));
+  };
+  // Distinct subtypes of a skill that have a dedicated (branch-scoped) teacher, e.g. Vadonjárás → ["erdő"].
+  const taughtBranchesOf = (skill: string) =>
+    Array.from(new Set(derived.teachingDiscounts.filter((d) => d.subtype && d.skill === skill).map((d) => d.subtype!)));
+  const stepCost = (skill: string, from: number, to: number, subtype?: string, attrs?: Stat[]) =>
+    skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill, subtype), derived.effectiveStats, attrs).kp;
+  // Datalist suggestions for an open free-text branch: the subtypes already learned for this skill, plus any
+  // branch the character has an oktató for (e.g. Vadonjárás erdő). Free text still allowed.
+  const subtypeSuggestions = (skill: string): string[] =>
+    Array.from(
+      new Set([
+        ...derived.skills.filter((s) => s.skill === skill && s.subtype).map((s) => s.subtype!),
+        ...derived.teachingDiscounts.filter((d) => d.subtype && d.skill === skill).map((d) => d.subtype!),
+      ])
+    );
 
   // Skills that can be RE-learned (added as another independent row): branchable AND already learned/owned.
   const relearnable = SKILLS.filter(
@@ -115,12 +134,23 @@ export const SkillLevelPanel: React.FC<Props> = ({
 
   const skillHasContent = (name: string) =>
     ownedInstances.some((s) => s.skill === name) || variants.some((p) => p.skill === name);
-  const visibleInCat = (cat: SkillCategory) =>
-    SKILLS.filter((d) => d.category === cat).filter((d) => {
-      if (view === "meglevo") return skillHasContent(d.name); // minden megszerzett (kapott + tanult)
-      if (view === "tanult") return teacherOf(d.name) > 0; // van rá oktató
-      return !skillHasContent(d.name) && teacherOf(d.name) === 0; // egyéb: se nem megvan, se nem oktatott
-    });
+  // A list row: a skill, optionally pinned to a taught BRANCH (subtype) — so "Vadonjárás (erdő)" can sit in
+  // Tanult while the general "Vadonjárás" sits in Egyéb.
+  type Entry = { skill: string; subtype?: string };
+  const entriesInCat = (cat: SkillCategory): Entry[] => {
+    const defs = SKILLS.filter((d) => d.category === cat);
+    if (view === "meglevo") return defs.filter((d) => skillHasContent(d.name)).map((d) => ({ skill: d.name }));
+    if (view === "egyeb")
+      // Not owned AND the whole skill isn't taught. A branch-scoped teacher does NOT pull the general skill out.
+      return defs.filter((d) => !skillHasContent(d.name) && !generallyTaught(d.name)).map((d) => ({ skill: d.name }));
+    // tanult: generally-taught skills as-is, plus a pinned entry per branch-scoped taught branch.
+    const entries: Entry[] = [];
+    for (const d of defs) {
+      if (generallyTaught(d.name)) entries.push({ skill: d.name });
+      else for (const sub of taughtBranchesOf(d.name)) entries.push({ skill: d.name, subtype: sub });
+    }
+    return entries;
+  };
 
   // ── reusable controls ──
   const subtypeInput = (value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, list?: string) => (
@@ -183,11 +213,19 @@ export const SkillLevelPanel: React.FC<Props> = ({
         </Select>
       );
     }
-    return subtypeInput(value, (e) => setValue(e.target.value), "altípus");
+    const sugg = subtypeSuggestions(skill);
+    const listId = `sub-${skill}`.replace(/[^a-zA-Z0-9]+/g, "-");
+    return (
+      <Box flexShrink={0} w={SUBW}>
+        {subtypeInput(value, (e) => setValue(e.target.value), "altípus", sugg.length ? listId : undefined)}
+        {sugg.length > 0 && <datalist id={listId}>{sugg.map((c) => <option key={c} value={c} />)}</datalist>}
+      </Box>
+    );
   };
 
-  // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected").
-  const tanulBtn = (name: string) => (
+  // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected"). A
+  // `subtype` pre-specialises the learn (e.g. a taught branch: Vadonjárás(erdő)).
+  const tanulBtn = (name: string, subtype?: string) => (
     <Box
       as="button"
       type="button"
@@ -207,7 +245,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       alignItems="center"
       gap="7px"
       _hover={{ borderColor: "accent", bg: "accentSoft" }}
-      onClick={() => onUpsert(level, name, undefined, 1)}
+      onClick={() => onUpsert(level, name, subtype, 1)}
     >
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H2z" />
@@ -347,15 +385,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
     );
   };
 
-  const nameGroup = (name: string) => {
-    const teacher = teacherOf(name);
-    return (
-      <HStack spacing="7px" flex="0 1 auto" minW={0}>
-        <Box as="button" type="button" onClick={() => openSkillModal(name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{name}</Box>
-        {teacher > 0 && <TeacherBadge n={teacher} />}
-      </HStack>
-    );
-  };
+  const nameGroup = (name: string, teacher: number) => (
+    <HStack spacing="7px" flex="0 1 auto" minW={0}>
+      <Box as="button" type="button" onClick={() => openSkillModal(name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{name}</Box>
+      {teacher > 0 && <TeacherBadge n={teacher} />}
+    </HStack>
+  );
 
   const rowShell = (
     key: string,
@@ -383,15 +418,15 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const cur = isPct ? inst.percent! : inst.fok;
     const grantFloor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0;
     const floor = inheritedFloor[keyOf(inst.skill, inst.subtype)] || 0;
-    const teacher = teacherOf(inst.skill);
+    const teacher = teacherOf(inst.skill, inst.subtype);
     const step = isPct ? (teacher > 0 ? 5 : 3) : 1;
     const atMax = isPct ? cur >= 100 : cur >= 5;
-    const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step);
+    const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step, inst.subtype, inst.attrs);
     const showFok4 = !isPct && cur >= 4;
     const branchable = SKILL_BY_NAME[inst.skill]?.branch != null;
     return rowShell(
       keyOf(inst.skill, inst.origSubtype) + ":g",
-      nameGroup(inst.skill),
+      nameGroup(inst.skill, teacher),
       branchable
         ? subtypeControl(inst.skill, inst.subtype || "", (v) =>
             inst.origSubtype != null
@@ -415,12 +450,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // ever branchable skills (the relearn picker offers only those), so never a percentage skill.
   const varRow = (p: { id?: string; skill: string; subtype?: string; to: number }) => {
     const atMax = p.to >= 5;
-    const cost = atMax ? 0 : stepCost(p.skill, p.to, p.to + 1);
-    const showFok4 = p.to >= 4;
     const vAttrs = derived.skills.find((s) => s.variantId === p.id)?.attrs;
+    const cost = atMax ? 0 : stepCost(p.skill, p.to, p.to + 1, p.subtype, vAttrs);
+    const showFok4 = p.to >= 4;
     return rowShell(
       p.id!,
-      nameGroup(p.skill),
+      nameGroup(p.skill, teacherOf(p.skill, p.subtype)),
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v }), p.to),
       <>{attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [])}{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
       <Stepper
@@ -511,28 +546,33 @@ export const SkillLevelPanel: React.FC<Props> = ({
         "& > div:last-child > :last-child > :last-child": { borderBottom: "none" },
       }}>
         {SKILL_CATEGORIES.map((cat) => {
-          const skills = visibleInCat(cat);
-          if (skills.length === 0) return null;
+          const entries = entriesInCat(cat);
+          if (entries.length === 0) return null;
           return (
             <Box key={cat}>
               <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx" mt="13px" mb="1px">
                 {cat}
               </Text>
-              {skills.map((def) => {
-                const insts = ownedInstances.filter((s) => s.skill === def.name);
-                const vars = variants.filter((p) => p.skill === def.name);
+              {entries.map((e) => {
+                // A branch-pinned entry (e.subtype) matches only that subtype's instances; a plain entry matches all.
+                const match = <T extends { subtype?: string }>(x: T) => e.subtype == null || (x.subtype ?? "") === e.subtype;
+                const insts = ownedInstances.filter((s) => s.skill === e.skill && match(s));
+                const vars = variants.filter((p) => p.skill === e.skill && match(p));
+                const key = `${e.skill}|${e.subtype ?? ""}`;
                 if (insts.length === 0 && vars.length === 0) {
+                  const label = e.subtype ? `${e.skill} (${e.subtype})` : e.skill;
                   return (
-                    <HStack key={def.name} spacing="9px" py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center">
-                      <Box as="button" type="button" onClick={() => openSkillModal(def.name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{def.name}</Box>
+                    <HStack key={key} spacing="9px" py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center">
+                      <Box as="button" type="button" onClick={() => openSkillModal(e.skill)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{label}</Box>
+                      {teacherOf(e.skill, e.subtype) > 0 && <TeacherBadge n={teacherOf(e.skill, e.subtype)} />}
                       <Box flex="1 1 auto" minW="8px" />
-                      {tanulBtn(def.name)}
+                      {tanulBtn(e.skill, e.subtype)}
                     </HStack>
                   );
                 }
                 // Each learning is an independent row (grants + first-learn, then any re-learned instances).
                 return (
-                  <Box key={def.name}>
+                  <Box key={key}>
                     {insts.map((inst) => instRow(inst))}
                     {vars.map((p) => varRow(p))}
                   </Box>

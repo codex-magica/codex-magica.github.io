@@ -26,6 +26,9 @@ const adult: AgeCategory[] = [{ name: "Ifjúkor", statMods: {} }];
 // (a (fok − 2) Kp/fok discount up to that fok — e.g. fok 3 → 1 Kp up to 3, fok 4 → 2 Kp up to 4).
 const teach = (uptoLevel: SkillFok, ...skills: string[]): GrantEntry[] =>
   skills.map((skill) => grant({ kind: "teachingDiscount", skill, uptoLevel }));
+// Teacher scoped to ONE branch of a skill (e.g. Vadonjárás(erdő) only, not Vadonjárás in general).
+const teachSub = (uptoLevel: SkillFok, skill: string, subtype: string): GrantEntry =>
+  grant({ kind: "teachingDiscount", skill, subtype, uptoLevel });
 
 export const RACES: Record<string, RaceDef> = {
   Ember: {
@@ -44,7 +47,8 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Elf hallás" }),
       grant({ kind: "tag", tag: "Erős nekromancia érzékenység" }),
       grant({ kind: "combatBonus", channel: "CÉ", amount: 10 }),
-      ...teach(4, "Állatismeret", "Idomítás", "Vadonjárás", "Lovaglás"),
+      ...teach(4, "Állatismeret", "Idomítás", "Lovaglás"),
+      teachSub(4, "Vadonjárás", "erdő"),
     ],
     ageCategories: adult,
   },
@@ -56,7 +60,8 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Félelf látás" }),
       grant({ kind: "tag", tag: "Félelf hallás" }),
       grant({ kind: "tag", tag: "Gyenge nekromancia érzékenység" }),
-      ...teach(3, "Állatismeret", "Idomítás", "Vadonjárás", "Lovaglás"),
+      ...teach(3, "Állatismeret", "Idomítás", "Lovaglás"),
+      teachSub(3, "Vadonjárás", "erdő"),
     ],
     ageCategories: adult,
   },

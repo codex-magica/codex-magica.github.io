@@ -134,7 +134,7 @@ const RAW: Raw[] = [
   { name: "Fegyverismeret", cat: "Harci", diff: "II", attrs: ["Int", "Érz"] },
   { name: "Hadvezetés", cat: "Harci", diff: "III", attrs: ["Int", "Krz"], soft: ["Lélektan", "Térképészet"] },
   { name: "Harci láz", cat: "Harci", diff: "II", attrs: ["Áks", "Egs"] },
-  { name: "Harcművészet", cat: "Harci", diff: "IV", attrs: ["Erő", "Gy", "Ügy", "Akr"] },
+  { name: "Harcművészet", cat: "Harci", diff: "IV", attrs: ["Erő", "Gy", "Ügy", "Akr"], branch: [{ label: "stílus", source: "open" }] },
   {
     name: "Harctéri gyakorlat", cat: "Harci", diff: "II", attrs: ["Gy", "Ügy", "Érz"],
     // Fok 3+ grants HM per level (book ch.16, line 470/474/480).
@@ -171,14 +171,14 @@ const RAW: Raw[] = [
   { name: "Veszélyérzék", cat: "Alvilági", diff: "I", attrs: ["Érz"], pct: true },
 
   // ── Világi ─────────────────────────────────────────────────────────────────
-  { name: "Állatismeret", cat: "Világi", diff: "I" },
+  { name: "Állatismeret", cat: "Világi", diff: "I", branch: [{ label: "fajta", source: "open" }] },
   { name: "Csapdaállítás", cat: "Világi", diff: "II", attrs: ["Ügy"], soft: ["Mechanika", "Csomózás"] },
   { name: "Csomózás", cat: "Világi", diff: "II", attrs: ["Ügy"] },
   { name: "Értékbecslés", cat: "Világi", diff: "I", attrs: ["Int", "Érz"] },
   { name: "Futás", cat: "Világi", diff: "I", attrs: ["Áks", "Egs"] },
   { name: "Hajózás", cat: "Világi", diff: "II", attrs: ["Érz"] },
   { name: "Hangutánzás", cat: "Világi", diff: "II", attrs: ["Érz"], cost: [2, 5, 10, 20, 30], soft: ["Állatismeret"] },
-  { name: "Helyismeret", cat: "Világi", diff: "I" },
+  { name: "Helyismeret", cat: "Világi", diff: "I", branch: [{ label: "hely", source: "open" }] },
   { name: "Idomítás", cat: "Világi", diff: "II", attrs: ["Aszt"], hard: ["Állatismeret"] },
   { name: "Időjóslás", cat: "Világi", diff: "II", attrs: ["Érz", "Int"] },
   { name: "Kocsihajtás", cat: "Világi", diff: "I", attrs: ["Ügy"], soft: ["Állatismeret"] },
