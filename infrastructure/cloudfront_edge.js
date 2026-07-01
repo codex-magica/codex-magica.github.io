@@ -33,7 +33,7 @@ export const handler = async (event) => {
   if (!token && !isPublic) {
     // Redirect to Cognito login
     // const redirect = encodeURIComponent(`https://${headers.host[0].value}${request.uri}`);
-    const redirect = encodeURIComponent('https://dexample000001.cloudfront.net/callback.html');
+    const redirect = encodeURIComponent(`https://${headers.host[0].value}/callback.html`);
     return {
       status: "302",
       headers: {

@@ -26,7 +26,7 @@ resource "aws_cognito_user_pool_client" "web" {
   allowed_oauth_flows = ["code", "implicit"]
   allowed_oauth_scopes = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
-  callback_urls = var.cognito_callback_urls
+  callback_urls = ["https://${aws_cloudfront_distribution.cdn.domain_name}/callback.html"]
   logout_urls = var.cognito_logout_urls
   supported_identity_providers = compact([var.google_client_id != null ? "Google" : null, var.apple_services_id != null ? "SignInWithApple" : null])
   prevent_user_existence_errors = "ENABLED"

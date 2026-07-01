@@ -70,7 +70,7 @@ variable "allowed_emails" {
 # Callback / logout URLs for Cognito Hosted UI
 variable "cognito_callback_urls" {
   type = list(string)
-  default = ["https://dexample000001.cloudfront.net/callback.html"]
+  default = ["https://dexample000002.cloudfront.net/callback.html"]
 }
 variable "cognito_logout_urls" {
   type = list(string)
