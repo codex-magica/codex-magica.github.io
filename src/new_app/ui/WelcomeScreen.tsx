@@ -35,9 +35,12 @@ const LogoutIcon = <svg width="17" height="17" viewBox="0 0 24 24" fill="none" s
 
 // Sign out: clear the id_token cookie (same attributes callback.html sets it with) and return to
 // the root. With no cookie, the CloudFront edge gate redirects to the branded login page.
+// The unique query string is a cache-buster: without it the browser can serve "/" from its cache
+// without a network request, so the edge auth check is skipped and the redirect to login only
+// happens on a later manual reload.
 const logout = () => {
   document.cookie = "id_token=; Path=/; Secure; SameSite=Lax; Max-Age=0";
-  window.location.replace(window.location.origin + "/");
+  window.location.replace(window.location.origin + "/?loggedout=" + Date.now());
 };
 
 const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: boolean; children: React.ReactNode }> = ({ icon, onClick, danger, children }) => (
