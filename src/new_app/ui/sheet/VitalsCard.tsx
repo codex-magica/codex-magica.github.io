@@ -29,9 +29,10 @@ const VitalModal: React.FC<{ v: VitalRow; onSetCur: (n: number) => void; onClose
       <Box flex="1 1 auto" overflowY="auto" px="20px" pt={{ base: "10px", md: "14px" }} pb={{ base: "14px", md: "20px" }}>
         <Box h={{ base: "8px", md: "9px" }} borderRadius="3px" bg="vitTrack" overflow="hidden" mb={{ base: "10px", md: "14px" }}><Box h="100%" w={`${pct(v.cur, v.max)}%`} bg={VIT_TOKEN[v.kind]} borderRadius="3px" transition="width .3s" /></Box>
         <NumPad value={amount} onChange={setAmount} />
+        {/* decrease (damage/use) is the more common action → it sits on the right, under the thumb */}
         <HStack gap="9px" mt={{ base: "9px", md: "12px" }}>
-          <Box as="button" type="button" onClick={() => apply("damage")} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="bad" bg="transparent" color="bad" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45} _hover={amt > 0 ? { bg: "accentSoft" } : undefined}>{downLabel}</Box>
           <Box as="button" type="button" onClick={() => apply("heal")} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="good" bg="transparent" color="good" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45} _hover={amt > 0 ? { bg: "accentSoft" } : undefined}>{upLabel}</Box>
+          <Box as="button" type="button" onClick={() => apply("damage")} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="bad" bg="transparent" color="bad" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45} _hover={amt > 0 ? { bg: "accentSoft" } : undefined}>{downLabel}</Box>
         </HStack>
         <Box as="button" type="button" onClick={() => set(v.max)} w="100%" mt={{ base: "8px", md: "10px" }} py={{ base: "8px", md: "9px" }} borderRadius="9px" border="1px solid" borderColor="fieldBd" bg="fieldBg" color="accentTx" fontWeight={600} fontSize="14px" _hover={{ borderColor: "accent" }}>Teljes feltöltés</Box>
       </Box>
