@@ -29,6 +29,10 @@ interface Props {
   compTab: number;
   onSelectTab: (tab: number) => void;
   onOpenModal: (m: ModalState) => void;
+  // parent-provided content for the merged mobile top bar (zone switch / back / dark toggle) —
+  // on phones the parent hides its own bar and the compendium hosts everything in one row
+  mobileLeading?: React.ReactNode;
+  mobileTrailing?: React.ReactNode;
 }
 
 // sidebar nav groups (indices into compNames): Képzettségek stands alone, then Harc, Mágia, Felszerelés
@@ -62,10 +66,11 @@ const NavItem: React.FC<{ active: boolean; prominent?: boolean; onClick: () => v
 const drawerIn = keyframes`from { transform: translateX(-100%); } to { transform: translateX(0); }`;
 const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
 
-// square icon button for the mobile header (menu / search)
+// square icon button for the mobile header (menu / search) — quiet ghost style, matching the
+// roster bar's right-side icon buttons (logout / dark mode)
 const HeaderIconBtn: React.FC<{ label: string; onClick: () => void; children: React.ReactNode }> = ({ label, onClick, children }) => (
   <Box as="button" type="button" aria-label={label} onClick={onClick} w="40px" h="40px" flexShrink={0} borderRadius="10px"
-    border="1px solid" borderColor="hair" bg="fieldBg" color="muted" display="inline-flex" alignItems="center" justifyContent="center">
+    bg="transparent" color="muted" display="inline-flex" alignItems="center" justifyContent="center" _active={{ bg: "accentSoft" }}>
     {children}
   </Box>
 );
@@ -99,7 +104,7 @@ const skillGroups = SKILL_CATEGORIES.map((cat) => ({
     .map((s) => ({ name: s.name, diff: s.cost === "percentage" ? "%" : s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(", ") || "–" })),
 })).filter((g) => g.rows.length > 0);
 
-export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal }) => {
+export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal, mobileLeading, mobileTrailing }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   // mobile (< md): the sidebar becomes a slide-in drawer behind a header menu button
   const [navOpen, setNavOpen] = useState(false);
@@ -266,19 +271,22 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
 
   return (
     <Flex direction={{ base: "column", md: "row" }} flex="1 1 auto" minH={0} bg="page" overflow="hidden">
-      {/* Mobile header — menu · current page · search */}
-      <Flex display={{ base: "flex", md: "none" }} align="center" gap="10px" px="12px" h="54px" flexShrink={0} borderBottom="1px solid" borderColor="hair" bg="page">
+      {/* Merged mobile top bar — parent slots (back / zone switch … dark toggle) + menu + search.
+          No title: the page heading sits right below in the content. */}
+      {/* 55px = 54px content + the 1px bottom border (border-box) — the other bars put the border on a
+          wrapper, so this keeps the pill at the exact same y across zone switches */}
+      <Flex display={{ base: "flex", md: "none" }} align="center" gap="9px" px="12px" h="55px" flexShrink={0} borderBottom="1px solid" borderColor="hair" bg="page">
+        {mobileLeading}
+        <Box flex="1 1 auto" />
         <HeaderIconBtn label="Tartalomjegyzék" onClick={() => setNavOpen(true)}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <line x1="4" y1="6.5" x2="20" y2="6.5" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17.5" x2="20" y2="17.5" />
           </svg>
         </HeaderIconBtn>
-        <Heading as="p" flex="1 1 auto" minW={0} fontSize="18px" fontWeight={700} color="fg" noOfLines={1}>
-          {chapter ? chapter.name : title}
-        </Heading>
         <HeaderIconBtn label="Keresés" onClick={() => setSearchOpen(true)}>
           <SearchIcon boxSize="15px" />
         </HeaderIconBtn>
+        {mobileTrailing}
       </Flex>
 
       {/* Left sidebar navigation (md+) — grouped (Képzettségek · Harc · Mágia · Felszerelés) */}
@@ -306,11 +314,11 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
         <Box maxW="780px" mx="auto"><Markdown source={chapter.md} /></Box>
         ) : (
         <>
-        <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb="4px">
+        <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb={{ base: "18px", md: "4px" }}>
           <Heading as="h2" fontSize="19px" fontWeight={700} color="fg" textAlign="center">{title}</Heading>
           {headingRules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", headingRules)} />}
         </Box>
-        <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
+        <Text display={{ base: "none", md: "block" }} fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
         </Text>
         {TAB_INTROS[compTab] && (

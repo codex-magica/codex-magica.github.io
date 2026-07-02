@@ -1,5 +1,6 @@
 import React from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, HStack, IconButton, useColorMode } from "@chakra-ui/react";
+import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { BTN_H } from "./tokens";
 
 // Small shared controls reused across screens. Previously each was redefined per file.
@@ -35,6 +36,23 @@ export const ZoneBtn: React.FC<{ active: boolean; onClick: () => void; kind?: "k
     )}
   </Box>
 );
+
+// The complete Karakter/Kompendium switch pill — shared by ZoneBar, AppShell and the compendium's
+// merged mobile bar so the markup can't drift apart.
+export const ZoneSwitch: React.FC<{ active: "karakter" | "kompendium"; onKarakter: () => void; onKompendium: () => void }> = ({ active, onKarakter, onKompendium }) => (
+  <HStack gap="3px" bg="fieldBg" border="1px solid" borderColor="hair" borderRadius="10px" p="3px" flexShrink={0}>
+    <ZoneBtn kind="karakter" active={active === "karakter"} onClick={onKarakter}>Karakter</ZoneBtn>
+    <ZoneBtn kind="kompendium" active={active === "kompendium"} onClick={onKompendium}>Kompendium</ZoneBtn>
+  </HStack>
+);
+
+// The dark-mode toggle icon button shared by every top bar.
+export const DarkToggle: React.FC = () => {
+  const { colorMode, toggleColorMode } = useColorMode();
+  return (
+    <IconButton aria-label="Sötét mód váltása" size="sm" variant="ghost" color="muted" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
+  );
+};
 
 // The small outlined "✕" remove button used by the creator panels (skills, point-buy).
 export const DeleteButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
