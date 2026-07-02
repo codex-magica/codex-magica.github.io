@@ -64,7 +64,8 @@ export interface DerivedCharacter {
   // can't reduce a skill below floorByLevel[L-1].
   floorByLevel: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number }[][];
   // Non-variant purchases that raise nothing (to ≤ inherited) — auto-pruned so no phantom purchases linger.
-  redundantPurchases: { level: number; skill: string; subtype?: string }[];
+  // `idx` pins the exact entry in that level's skillPurchases (same-key twins must not be co-deleted).
+  redundantPurchases: { level: number; idx: number; skill: string; subtype?: string }[];
   teaching: Record<string, number>; // skill name → best teacher (oktatás) level, ignoring subtype scoping
   teachingDiscounts: Discount[]; // raw active teacher discounts (subtype-aware) — for per-branch teacher/cost
   costMultipliers: { skill?: string; category?: string; allSkills?: boolean; factor: number }[]; // school Kp-cost penalties (Barbár ×1.5) — the UI must show the multiplied cost

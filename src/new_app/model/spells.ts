@@ -20,7 +20,9 @@ import { magasFok4 } from "../data/magasFok4";
 import { magasFok5 } from "../data/magasFok5";
 import { magasFok6 } from "../data/magasFok6";
 
-export type SpellReq = { skill: string; subtype?: string; fok: SkillFok };
+// `path`: the owning skill instance must have COMMITTED to this fokTrigger path (Pszi tudat/test at fok 3)
+// — fok 1–2 disciplines are common, fok 3+ only come from the chosen ág (book ch.16).
+export type SpellReq = { skill: string; subtype?: string; fok: SkillFok; path?: string };
 
 export interface SpellDef {
   name: string;
@@ -60,7 +62,20 @@ const PSI_TRAD: Record<string, string> = {
   "Godoni örökség": "godoni",
   "Slan útja": "slan",
 };
-const psi = build(PsiValues, "Pszi", "Psi", (s) => [{ skill: "Pszi", subtype: PSI_TRAD[s.type ?? ""], fok: clampFok(s.level ?? 1) }]);
+// Every tradition builds on the Pyarroni base: a kyr/godoni/slan practitioner also masters the Pyarroni
+// disciplines up to their fok (book ch.22) — so Pyarroni spells carry NO tradition requirement.
+// Fok 1–2 disciplines are common; fok 3+ additionally require the instance's committed tudat/test ág
+// to match the discipline's domain (book ch.16: the fok-3 path choice).
+const psi = build(PsiValues, "Pszi", "Psi", (s) => {
+  const fok = clampFok(s.level ?? 1);
+  const trad = PSI_TRAD[s.type ?? ""];
+  return [{
+    skill: "Pszi",
+    subtype: trad === "pyarroni" ? undefined : trad,
+    fok,
+    path: fok >= 3 && s.domain ? s.domain.toLowerCase() : undefined,
+  }];
+});
 
 // ── C. Magasmágia — the book gates each category on Magasmágia 3 AND its governing skill 3. The AND
 //        condition is what keeps a non-mage (e.g. someone with Alkímia 3 + a Mana pool) out of high magic. ──

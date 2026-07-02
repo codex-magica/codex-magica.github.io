@@ -11,6 +11,7 @@ export interface SpellLike {
   range?: string;
   duration?: string;
   level?: number;
+  domain?: string; // Pszi: Tudat/Test discipline tree (ág)
   domains?: string[];
   save?: string | string[];
   erosseg?: string | number;

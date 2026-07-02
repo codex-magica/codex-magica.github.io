@@ -54,10 +54,10 @@ const pruneRedundantPurchases = (rec: CharacterRecord): CharacterRecord => {
   if (!rec.levels.some((l) => l.skillPurchases.length)) return rec;
   const { redundantPurchases } = derive(RULES, rec);
   if (!redundantPurchases.length) return rec;
-  const dead = new Set(redundantPurchases.map((r) => `${r.level}:${r.skill}:${r.subtype ?? ""}`));
+  const dead = new Set(redundantPurchases.map((r) => `${r.level}:${r.idx}`));
   let changed = false;
   const levels = rec.levels.map((l) => {
-    const kept = l.skillPurchases.filter((p) => p.id != null || !dead.has(`${l.level}:${p.skill}:${p.subtype ?? ""}`));
+    const kept = l.skillPurchases.filter((p, i) => p.id != null || !dead.has(`${l.level}:${i}`));
     if (kept.length === l.skillPurchases.length) return l;
     changed = true;
     return { ...l, skillPurchases: kept };
@@ -161,13 +161,17 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
   };
   const sameSkill = (a: { skill: string; subtype?: string }, skill: string, subtype?: string) =>
     a.skill === skill && (a.subtype || "") === (subtype || "");
+  // Trunk (non-variant) matcher: a re-learned variant may carry the SAME subtype text as the trunk —
+  // it must never be caught by the trunk's upsert/remove (variants are addressed by id only).
+  const sameTrunk = (p: { id?: string; skill: string; subtype?: string }, skill: string, subtype?: string) =>
+    p.id == null && sameSkill(p, skill, subtype);
 
   const upsertSkillPurchase = (level: number, skill: string, subtype: string | undefined, to: number) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
-    const exists = lvl.skillPurchases.some((p) => sameSkill(p, skill, subtype));
+    const exists = lvl.skillPurchases.some((p) => sameTrunk(p, skill, subtype));
     const skillPurchases = exists
-      ? lvl.skillPurchases.map((p) => (sameSkill(p, skill, subtype) ? { ...p, to } : p))
+      ? lvl.skillPurchases.map((p) => (sameTrunk(p, skill, subtype) ? { ...p, to } : p))
       : lvl.skillPurchases.concat([{ skill, subtype, to }]);
     patchLevel(level, { skillPurchases });
   };
@@ -175,7 +179,7 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
   const removeSkillPurchase = (level: number, skill: string, subtype: string | undefined) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
-    patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => !sameSkill(p, skill, subtype)) });
+    patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => !sameTrunk(p, skill, subtype)) });
   };
 
   // A user-added variant (its own subtype + a branch fok). Stored with a stable id so the subtype

@@ -75,7 +75,8 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
     name: cat,
     items: derived.skills
       .filter((s) => SKILL_BY_NAME[s.skill]?.category === cat)
-      .map((s) => ({ key: s.skill + (s.subtype || ""), name: s.subtype ? `${s.skill} (${s.subtype})` : s.skill, val: s.percent != null ? `${s.percent}%` : `${s.fok}`, open: () => onOpenSkill(s.skill, s.fok, s.percent) })),
+      // key by the STABLE identity (variant id / original subtype) — two instances may share the display text
+      .map((s) => ({ key: s.skill + "|" + (s.variantId ?? s.origSubtype ?? s.subtype ?? ""), name: s.subtype ? `${s.skill} (${s.subtype})` : s.skill, val: s.percent != null ? `${s.percent}%` : `${s.fok}`, open: () => onOpenSkill(s.skill, s.fok, s.percent) })),
   })).filter((g) => g.items.length > 0);
 
   // Free-text equipment: the user's text once set, otherwise seeded from the derived inventory
