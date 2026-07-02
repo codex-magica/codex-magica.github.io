@@ -1,6 +1,5 @@
-import React from "react";
-import { Box, Flex, Heading, Input, Text } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { ParchPanel } from "./ParchPanel";
 import { ModalState } from "./DetailModal";
 import { Markdown } from "./Markdown";
@@ -10,6 +9,7 @@ import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
 import { combatSituationsIntro } from "../data/combatSituations";
 import { mundaneItemsIntro } from "../data/mundaneItems";
 import { poisonsIntro, poisonRules } from "../data/poisons";
+import { SearchPalette, SearchButton, SearchEntry } from "./CompendiumSearch";
 import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
@@ -85,6 +85,60 @@ const skillGroups = SKILL_CATEGORIES.map((cat) => ({
 })).filter((g) => g.rows.length > 0);
 
 export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal }) => {
+  const [searchOpen, setSearchOpen] = useState(false);
+  // the query outlives a pick (reopening resumes the search) but a dismissal clears it
+  const [searchQuery, setSearchQuery] = useState("");
+  // navigation target picked in the search palette; consumed once the target tab has rendered
+  const pendingRef = useRef<{ tab: number; block: string; name: string } | null>(null);
+  const [pendingTick, setPendingTick] = useState(0);
+
+  const dismissSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  // ⌘K / Ctrl+K toggles the search palette (closing this way counts as a dismissal)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((o) => {
+          if (o) setSearchQuery("");
+          return !o;
+        });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const pickResult = (entry: SearchEntry) => {
+    setSearchOpen(false); // keep the query — the user may want to resume the search
+    if (entry.modal) onOpenModal(entry.modal);
+    pendingRef.current = { tab: entry.tab, block: entry.block, name: entry.name };
+    onSelectTab(entry.tab);
+    setPendingTick((t) => t + 1);
+  };
+
+  // once the picked entry's tab is on screen, scroll its row into view and flash it
+  useEffect(() => {
+    const p = pendingRef.current;
+    if (!p || compTab !== p.tab) return;
+    pendingRef.current = null;
+    requestAnimationFrame(() => {
+      const blockEl = document.querySelector(`[data-block="${CSS.escape(p.block)}"]`);
+      const rowEl = (blockEl?.querySelector(`[data-row="${CSS.escape(p.name)}"]`) ?? blockEl) as HTMLElement | null;
+      if (!rowEl) return;
+      rowEl.scrollIntoView({ block: "center", behavior: "smooth" });
+      rowEl.style.backgroundColor = "var(--chakra-colors-accentSoft)";
+      setTimeout(() => {
+        rowEl.style.transition = "background-color 1.2s ease";
+        rowEl.style.backgroundColor = "";
+        setTimeout(() => { rowEl.style.transition = ""; }, 1300);
+      }, 900);
+    });
+  }, [compTab, pendingTick]);
+
   const chapter = compTab >= CHAPTER_BASE ? CHAPTERS[compTab - CHAPTER_BASE] : null;
   const title = compNames[compTab];
   const isSkills = compTab === 0;
@@ -124,7 +178,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
           // rows without a description (pure price lists) render as plain rows, not buttons
           const clickable = !!r.body?.length;
           return (
-          <Box key={r.name + i} {...(clickable ? { as: "button" as const, type: "button", onClick: () => openRow(r) } : {})} display="grid" gridTemplateColumns={grid} gap={gap} w="100%" textAlign="left" px={px} py={dense ? "7px" : "8px"} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" alignItems="baseline" _hover={clickable ? { bg: "accentSoft" } : undefined}>
+          <Box key={r.name + i} data-row={r.name} {...(clickable ? { as: "button" as const, type: "button", onClick: () => openRow(r) } : {})} display="grid" gridTemplateColumns={grid} gap={gap} w="100%" textAlign="left" px={px} py={dense ? "7px" : "8px"} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" alignItems="baseline" _hover={clickable ? { bg: "accentSoft" } : undefined}>
             <Text fontSize={nameFs} fontWeight={600} color="fg" lineHeight="1.2">{r.name}</Text>
             {r.note ? (
               <Text gridColumn="2 / -1" textAlign="center" fontSize={cellFs} fontStyle="italic" color="fgFaint" lineHeight="1.25">{r.note}</Text>
@@ -139,7 +193,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
 
     const subRules = schoolRules?.sub?.[block.title];
     return (
-      <Box key={block.title}>
+      <Box key={block.title} data-block={block.title}>
         {showTitle && (
         <Box display="flex" alignItems="center" justifyContent="center" gap="10px" mb="9px">
           <Heading as="h3" textAlign="center" fontSize={{ base: "19px", md: "17px" }} fontWeight={700} color="fg">{block.title}</Heading>
@@ -160,10 +214,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
     <Flex flex="1 1 auto" minH={0} bg="page" overflow="hidden">
       {/* Left sidebar navigation — grouped (Képzettségek · Mágia · Felszerelés) */}
       <Box as="nav" w={{ base: "180px", md: "248px" }} flexShrink={0} h="100%" overflowY="auto" borderRight="1px solid" borderColor="hair" px="14px" py={{ base: "16px", md: "20px" }}>
-        <Box position="relative">
-          <SearchIcon position="absolute" left="11px" top="50%" transform="translateY(-50%)" boxSize="13px" color="fgFaint" pointerEvents="none" />
-          <Input placeholder="Keresés…" size="sm" pl="32px" bg="fieldBg" borderColor="fieldBd" borderRadius="9px" color="fg" fontSize="13.5px" _placeholder={{ color: "fgFaint" }} focusBorderColor="accent" />
-        </Box>
+        <SearchButton onClick={() => setSearchOpen(true)} />
         <Box mt="18px" mb="12px">
           <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".16em" textTransform="uppercase" color="fgFaint">Kompendium</Text>
           <Heading as="p" fontSize="21px" fontStyle="italic" fontWeight={600} color="fg" lineHeight="1.1">Tartalom</Heading>
@@ -203,7 +254,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
         {isSkills ? (
           <Box display="flex" flexDirection="column" gap="22px" maxW="760px" mx="auto">
             {skillGroups.map((g) => (
-              <Box key={g.group}>
+              <Box key={g.group} data-block={g.group}>
                 <GroupHead>{g.group}</GroupHead>
                 <ParchPanel p={0} overflow="hidden">
                   <Box overflowX="auto"><Box minW="560px">
@@ -211,7 +262,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
                       <Th>Képzettség</Th><Th align="center">Nehéz.</Th><Th>Erős</Th><Th>Gyenge</Th><Th align="right">Tulajdonság</Th>
                     </Box>
                     {g.rows.map((r, i) => (
-                      <Box as="button" type="button" key={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py="8px" borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
+                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py="8px" borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
                         <Text fontSize={{ base: "16px", md: "15px" }} fontWeight={600} color="fg">{r.name}</Text>
                         <Text textAlign="center" color="muted" fontSize="14.5px" sx={{ fontVariantNumeric: "tabular-nums" }}>{r.diff}</Text>
                         <Text color="muted" fontSize="13.5px">{r.strong}</Text>
@@ -240,6 +291,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
         )}
       </Box>
       </Box>
+      {searchOpen && <SearchPalette query={searchQuery} onQueryChange={setSearchQuery} onClose={dismissSearch} onPick={pickResult} />}
     </Flex>
   );
 };
