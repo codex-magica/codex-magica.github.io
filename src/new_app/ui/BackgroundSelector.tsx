@@ -49,7 +49,8 @@ export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle,
           const entry = chosenEntry(name);
           const isChosen = !!entry;
           const checked = isGranted || isChosen;
-          const showLevel = isChosen && !isGranted && bg.costRange;
+          const showLevel = (isChosen || isGranted) && bg.costRange; // granted backgrounds can also be levelled (free, e.g. Barbár Mágiatagadás)
+          const levelValue = isGranted ? record.grantedBgLevels?.[name] ?? bg.costRange?.[0] : entry?.level ?? bg.costRange?.[0];
           const showOption = isChosen && !isGranted && bg.optionKind === "stat";
           return (
             <HStack key={name} align="start" spacing="11px" py={ROW_PY} borderBottom="1px solid" borderColor="hair">
@@ -94,9 +95,9 @@ export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle,
                     </Select>
                   )}
                   {showLevel && bg.costRange && (
-                    <Select {...pillStyle} width="78px" value={entry!.level ?? bg.costRange[0]} onChange={(e) => onLevel(name, Number(e.target.value))}>
+                    <Select {...pillStyle} width="78px" value={levelValue} onChange={(e) => onLevel(name, Number(e.target.value))}>
                       {rangeValues(bg.costRange).map((v) => (
-                        <option key={v} value={v}>{v} KAP</option>
+                        <option key={v} value={v}>{v}{isGranted ? ". szint" : " KAP"}</option>
                       ))}
                     </Select>
                   )}

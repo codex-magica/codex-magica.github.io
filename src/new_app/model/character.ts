@@ -136,6 +136,7 @@ export interface CharacterRecord {
   class: string;
   selections: Record<string, string>; // choiceId → option name (class specialization tree)
   backgrounds: ChosenBackground[];
+  grantedBgLevels?: Record<string, number>; // player-chosen level for a class/race-GRANTED background (free, e.g. Barbár Mágiatagadás "tetszőleges mértékű")
 
   pointBuy: Stats; // the 135 base allocation, each ≤ racial cap
   adottsag?: Partial<Record<keyof Stats, number>>; // points above the racial cap (1 KAP each)

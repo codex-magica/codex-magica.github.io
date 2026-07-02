@@ -96,9 +96,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           return;
         }
         grantedBg[bgName] = true;
-        const grants = def.grantsFor
-          ? def.grantsFor({ level: def.costRange ? def.costRange[0] : def.cost })
-          : def.grants;
+        // A granted background with a level range uses the player's chosen level (free); else its min/cost.
+        const bgLevel = rec.grantedBgLevels?.[bgName] ?? (def.costRange ? def.costRange[0] : def.cost);
+        const grants = def.grantsFor ? def.grantsFor({ level: bgLevel }) : def.grants;
         pushActivation(bgName, lvl, 0, grants, `${bgName} (kapott)`);
       } else {
         perLevelEffects.push({ effect: g.effect, source, level: lvl });
@@ -298,10 +298,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     return m;
   };
 
-  // ── 4. Per-level fold ──────────────────────────────────────────────────────
-  let maxGrantLevel = 1;
-  perLevelEffects.forEach((p) => (maxGrantLevel = Math.max(maxGrantLevel, p.level)));
-  const N = Math.max(rec.levels.length, maxGrantLevel, 1);
+  // ── 4. Per-level fold ── only the character's ACTUAL levels: a grant gated to a later level (atLevel >
+  // current level) must NOT apply yet — it activates when the character reaches that level.
+  const N = Math.max(rec.levels.length, 1);
 
   // Snapshot of skills owned purely from grants at level 1 (the floor the level-up UI can't go below).
   let grantedSkillsSnapshot: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent: number }[] = [];

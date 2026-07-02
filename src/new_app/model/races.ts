@@ -45,6 +45,7 @@ export const RACES: Record<string, RaceDef> = {
     grants: [
       grant({ kind: "tag", tag: "Elf látás" }),
       grant({ kind: "tag", tag: "Elf hallás" }),
+      grant({ kind: "tag", tag: "Infralátás" }),
       grant({ kind: "tag", tag: "Erős nekromancia érzékenység" }),
       grant({ kind: "combatBonus", channel: "CÉ", amount: 10 }),
       ...teach(4, "Állatismeret", "Idomítás", "Lovaglás"),
@@ -59,7 +60,9 @@ export const RACES: Record<string, RaceDef> = {
     grants: [
       grant({ kind: "tag", tag: "Félelf látás" }),
       grant({ kind: "tag", tag: "Félelf hallás" }),
+      grant({ kind: "tag", tag: "Infralátás" }),
       grant({ kind: "tag", tag: "Gyenge nekromancia érzékenység" }),
+      grant({ kind: "combatBonus", channel: "CÉ", amount: 5 }),
       ...teach(3, "Állatismeret", "Idomítás", "Lovaglás"),
       teachSub(3, "Vadonjárás", "erdő"),
     ],

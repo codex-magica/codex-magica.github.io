@@ -109,13 +109,14 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     });
   };
 
-  const setBackgroundLevel = (name: string, level: number) =>
-    setRecord({
-      ...record,
-      backgrounds: record.backgrounds.map((b) =>
-        b.background === name && b.source === "chosen" ? { ...b, level } : b
-      ),
-    });
+  const setBackgroundLevel = (name: string, level: number) => {
+    // A chosen background stores its level on the record entry; a GRANTED one (no chosen entry) stores it
+    // in grantedBgLevels (free, player-chosen level — e.g. Barbár's Mágiatagadás).
+    const isChosen = record.backgrounds.some((b) => b.background === name && b.source === "chosen");
+    if (isChosen)
+      setRecord({ ...record, backgrounds: record.backgrounds.map((b) => (b.background === name && b.source === "chosen" ? { ...b, level } : b)) });
+    else setRecord({ ...record, grantedBgLevels: { ...record.grantedBgLevels, [name]: level } });
+  };
 
   const setBackgroundOption = (name: string, option: string) =>
     setRecord({

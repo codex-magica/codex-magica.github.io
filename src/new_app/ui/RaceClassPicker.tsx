@@ -6,10 +6,11 @@ import { ChoiceDef, OptionDef } from "../model/choices";
 import { GrantEntry } from "../model/effects";
 import { STAT_KEYS, STAT_SHORT } from "../model/attributes";
 import { ModalShell } from "./Modal";
+import { AbilityChips } from "./AbilityChips";
 
 // Bucket grant effects into readable groups for the detail pane.
 const summarize = (entries: GrantEntry[]) => {
-  const b = { backgrounds: [] as string[], skills: [] as string[], teaches: [] as { skill: string; level: number }[], allows: [] as string[], tags: [] as string[], combat: [] as string[], other: [] as string[], specials: [] as string[] };
+  const b = { backgrounds: [] as string[], skills: [] as string[], teaches: [] as { skill: string; level: number }[], allows: [] as string[], tags: [] as { name: string; atLevel?: number }[], combat: [] as string[], other: [] as string[], specials: [] as string[], forbidden: [] as string[] };
   // A skill/branch label: "minden képzettség" | "<Kategória> (kat.)" | "<Skill>" | "<Skill> (<altípus>)".
   const catName = (e: { skill?: string; subtype?: string; category?: string; allSkills?: boolean }) =>
     e.allSkills ? "minden képzettség" : e.category ? `${e.category} (kat.)` : `${e.skill ?? ""}${e.subtype ? ` (${e.subtype})` : ""}`;
@@ -28,9 +29,9 @@ const summarize = (entries: GrantEntry[]) => {
         break;
       }
       case "skillCostMultiplier": b.specials.push(`${catName(e)} ×${e.factor} Kp`); break;
-      case "forbidSkill": b.specials.push(`Tiltott: ${catName(e)}`); break;
+      case "forbidSkill": b.forbidden.push(catName(e)); break;
       case "maxSkillFok": b.specials.push(`${catName(e)} max ${e.fok}. fok`); break;
-      case "tag": b.tags.push(e.tag); break;
+      case "tag": b.tags.push({ name: e.tag, atLevel: atLevel != null && atLevel > 1 ? atLevel : undefined }); break;
       case "combatBonus": b.combat.push(`${e.channel} +${e.amount}`); break;
       case "statBonus": b.other.push(`${e.stat} +${e.amount}`); break;
       case "poolAccess": b.other.push(`${e.pool} elérés`); break;
@@ -93,7 +94,7 @@ const RaceDetail: React.FC<{ name: string }> = ({ name }) => {
   const r = RACES[name];
   if (!r) return null;
   const g = summarize(r.grants);
-  const innate = [...g.combat, ...g.tags, ...g.other];
+  const innate = [...g.combat, ...g.other];
   const allowedClasses = CLASS_NAMES.filter((cn) => CLASSES[cn].allowedRaces.includes(name));
   return (
     <Box>
@@ -110,6 +111,7 @@ const RaceDetail: React.FC<{ name: string }> = ({ name }) => {
       {g.skills.length > 0 && <Section label="Tanult képzettségek"><Chips items={g.skills} /></Section>}
       {g.teaches.length > 0 && <Section label="Kedvezményes oktatás"><TeachGroups teaches={g.teaches} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
+      {g.tags.length > 0 && <Section label="Faji képességek"><AbilityChips tags={g.tags} /></Section>}
       {innate.length > 0 && <Section label="Faji kedvezmények"><Chips items={innate} /></Section>}
       <Section label={`Választható kasztok · ${allowedClasses.length}`}>
         {allowedClasses.length > 0
@@ -128,9 +130,11 @@ const ClassDetail: React.FC<{ name: string }> = ({ name }) => {
     <Box>
       <Heading fontSize="17px" fontWeight={700} color="fg" mb="1px">{c.name} <Text as="span" fontSize="13px" fontWeight={500} color="fgFaint">· {c.cost} KAP</Text></Heading>
       <Text fontSize="11.5px" color="fgFaint" mb="11px">Engedett fajok: {c.allowedRaces.join(", ")}</Text>
+      {g.tags.length > 0 && <Section label="Különleges képességek"><AbilityChips tags={g.tags} /></Section>}
       {g.backgrounds.length > 0 && <Section label="Kapott hátterek"><Chips items={g.backgrounds} /></Section>}
       {g.skills.length > 0 && <Section label="Kapott képzettségek"><Chips items={g.skills} /></Section>}
       {g.teaches.length > 0 && <Section label={`Tanított képzettségek · ${g.teaches.length}`}><TeachGroups teaches={g.teaches} /></Section>}
+      {g.forbidden.length > 0 && <Section label="Tiltott képzettségek"><Chips items={g.forbidden} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {c.choices.length > 0 && <Section label="Specializációk"><ChoiceTree choices={c.choices} /></Section>}
       {g.other.length > 0 && <Section label="Megkötések / egyéb"><Text fontSize="12px" color="muted" lineHeight="1.55">{g.other.join("  ·  ")}</Text></Section>}
@@ -142,19 +146,21 @@ const ClassDetail: React.FC<{ name: string }> = ({ name }) => {
 // in, since teaching is class-wide), and any nested sub-choices.
 const OptionDetail: React.FC<{ option: OptionDef; classTeaches?: { skill: string; level: number }[] }> = ({ option, classTeaches }) => {
   const g = summarize(option.grants ?? []);
-  const innate = [...g.combat, ...g.tags];
+  const innate = [...g.combat];
   // Subclass with a resetTeaching marker OVERRIDES the class's taught skills; otherwise it extends them.
   const overrides = (option.grants ?? []).some((gr) => gr.effect.kind === "resetTeaching");
   const seen = new Set<string>();
   const teaches = [...g.teaches, ...(overrides ? [] : classTeaches ?? [])].filter((t) => (seen.has(t.skill) ? false : (seen.add(t.skill), true)));
-  const empty = !g.skills.length && !g.backgrounds.length && !teaches.length && !g.allows.length && !innate.length && !g.other.length && !g.specials.length && !option.choices?.length;
+  const empty = !g.skills.length && !g.backgrounds.length && !teaches.length && !g.allows.length && !innate.length && !g.tags.length && !g.other.length && !g.specials.length && !g.forbidden.length && !option.choices?.length;
   return (
     <Box>
       <Heading fontSize="17px" fontWeight={700} color="fg" mb="7px">{option.name}</Heading>
       {g.skills.length > 0 && <Section label="Kapott képzettségek"><Chips items={g.skills} /></Section>}
       {g.backgrounds.length > 0 && <Section label="Kapott hátterek"><Chips items={g.backgrounds} /></Section>}
+      {g.tags.length > 0 && <Section label="Különleges képességek"><AbilityChips tags={g.tags} /></Section>}
       {innate.length > 0 && <Section label="Egyéb bónuszok"><Chips items={innate} /></Section>}
       {g.specials.length > 0 && <Section label="Speciális oktatási szabályok"><Chips items={g.specials} /></Section>}
+      {g.forbidden.length > 0 && <Section label="Tiltott képzettségek"><Chips items={g.forbidden} /></Section>}
       {g.other.length > 0 && <Section label="Megkötések / felszerelés"><Text fontSize="12px" color="muted" lineHeight="1.55">{g.other.join("  ·  ")}</Text></Section>}
       {teaches.length > 0 && <Section label={`Tanított képzettségek${overrides ? " · saját lista" : ""} · ${teaches.length}`}><TeachGroups teaches={teaches} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
