@@ -67,6 +67,7 @@ export interface DerivedCharacter {
   redundantPurchases: { level: number; skill: string; subtype?: string }[];
   teaching: Record<string, number>; // skill name → best teacher (oktatás) level, ignoring subtype scoping
   teachingDiscounts: Discount[]; // raw active teacher discounts (subtype-aware) — for per-branch teacher/cost
+  costMultipliers: { skill?: string; category?: string; allSkills?: boolean; factor: number }[]; // school Kp-cost penalties (Barbár ×1.5) — the UI must show the multiplied cost
   spells: SpellView[];
   tags: string[];
   grantedBackgrounds: string[]; // backgrounds conferred free by race/class (locked in the UI)

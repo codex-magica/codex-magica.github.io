@@ -50,7 +50,9 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
   // Clicked harcérték label → formula-with-values + definition modal.
   const [combatInfo, setCombatInfo] = useState<string | null>(null);
   const boughtStats = STAT_KEYS.filter((s) => statBuyOf(s) > 0);
-  const availableForDraft = STAT_KEYS.filter((s) => statBuyOf(s) === 0 && !(caps && derived.effectiveStats[s] >= caps[s]));
+  // Effective ceiling: racial cap RAISED by Adottság points (absolute 20) — matches the engine's cap check.
+  const maxOf = (s: Stat) => (caps ? Math.min(20, caps[s] + (record.adottsag?.[s] ?? 0)) : 20);
+  const availableForDraft = STAT_KEYS.filter((s) => statBuyOf(s) === 0 && derived.effectiveStats[s] < maxOf(s));
 
   const buyRow = (
     key: string,
@@ -164,7 +166,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
       </SubHeader>
       {boughtStats.map((s) => {
         const amount = statBuyOf(s);
-        const atCap = caps ? derived.effectiveStats[s] >= caps[s] : false;
+        const atCap = derived.effectiveStats[s] >= maxOf(s);
         return buyRow(
           s,
           <>{s} <Text as="span" color="fgFaint">(= {derived.effectiveStats[s]})</Text></>,

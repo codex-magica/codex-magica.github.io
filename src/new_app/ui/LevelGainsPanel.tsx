@@ -65,7 +65,7 @@ export const LevelGainsPanel: React.FC<Props> = ({ level, record, derived, onGra
       {hmGranted > 0 && (
         <>
           <SubHeader trailing={
-            <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} color={hmLeft === 0 ? "fgFaint" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
+            <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} color={hmLeft < 0 ? "bad" : hmLeft === 0 ? "fgFaint" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
               {hmLeft} / {hmGranted} szabad
             </Text>
           }>

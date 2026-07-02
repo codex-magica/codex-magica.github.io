@@ -94,17 +94,22 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
   const lvl = getLevelRecord(record, level);
   const purchases = lvl?.skillPurchases ?? [];
-  const variants = purchases.filter((p) => p.id);
+  // Variant (relearned) instances are independent extra rows. A variant added at an earlier level is still
+  // owned here, so gather variant purchases from EVERY level up to the active one — else the row would
+  // vanish (and the skill could look unowned in all filters) when switching levels. Edits route by id.
+  const variants = record.levels.filter((l) => l.level <= level).flatMap((l) => l.skillPurchases.filter((p) => p.id));
 
+  // Floor maps are keyed by the instance's STABLE identity (origSubtype ?? subtype) — two granted instances
+  // whose overrides were both cleared to "" stay distinct (the engine keeps them apart by origSubtype).
   const grantedFloor: Record<string, number> = {};
   derived.grantedSkills.forEach((g) => {
-    grantedFloor[keyOf(g.skill, g.subtype)] = g.percent != null ? g.percent : g.fok;
+    grantedFloor[keyOf(g.skill, g.origSubtype ?? g.subtype)] = g.percent != null ? g.percent : g.fok;
   });
   // The dec floor on THIS level: grants + everything bought in PRIOR levels (can't un-learn past progress).
   // floorByLevel[level-1] is the snapshot at the start of this level — equals grants at level 1.
   const inheritedFloor: Record<string, number> = {};
   (derived.floorByLevel[level - 1] ?? derived.grantedSkills).forEach((g) => {
-    inheritedFloor[keyOf(g.skill, g.subtype)] = g.percent != null ? g.percent : g.fok;
+    inheritedFloor[keyOf(g.skill, g.origSubtype ?? g.subtype)] = g.percent != null ? g.percent : g.fok;
   });
 
   // User-added branches carry a variantId in the derived list; everything else is a "real" owned instance
@@ -121,8 +126,19 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // Distinct subtypes of a skill that have a dedicated (branch-scoped) teacher, e.g. Vadonjárás → ["erdő"].
   const taughtBranchesOf = (skill: string) =>
     Array.from(new Set(derived.teachingDiscounts.filter((d) => d.subtype && d.skill === skill).map((d) => d.subtype!)));
-  const stepCost = (skill: string, from: number, to: number, subtype?: string, attrs?: Stat[]) =>
-    skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill, subtype), derived.effectiveStats, attrs).kp;
+  // A step's Kp cost, INCLUDING any school cost multiplier (Barbár ×1.5) — must match what the engine
+  // charges (derive.ts), else the shown +N and the affordability gate would both understate the price.
+  const costMultOf = (skill: string): number => {
+    const def = SKILL_BY_NAME[skill];
+    let m = 1;
+    for (const cm of derived.costMultipliers) if (cm.allSkills || cm.skill === skill || (cm.category != null && cm.category === def.category)) m = Math.max(m, cm.factor);
+    return m;
+  };
+  const stepCost = (skill: string, from: number, to: number, subtype?: string, attrs?: Stat[]) => {
+    const base = skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill, subtype), derived.effectiveStats, attrs).kp;
+    const m = costMultOf(skill);
+    return m === 1 ? base : Math.ceil(base * m);
+  };
   // Datalist suggestions for an open free-text branch: the subtypes already learned for this skill, plus any
   // branch the character has an oktató for (e.g. Vadonjárás erdő). Free text still allowed.
   const subtypeSuggestions = (skill: string): string[] =>
@@ -483,8 +499,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
     // Stable instance identity: purchases and per-instance choices (fok-4, path, attrs) address a granted
     // instance by its ORIGINAL subtype, so renaming/clearing the display name never orphans them.
     const idSub = inst.origSubtype ?? inst.subtype;
-    const grantFloor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0;
-    const floor = inheritedFloor[keyOf(inst.skill, inst.subtype)] || 0;
+    const grantFloor = grantedFloor[keyOf(inst.skill, idSub)] || 0;
+    const floor = inheritedFloor[keyOf(inst.skill, idSub)] || 0;
     const teacher = teacherOf(inst.skill, inst.subtype);
     const step = isPct ? (teacher > 0 ? 5 : 3) : 1;
     const atMax = isPct ? cur >= 100 : cur >= 5;

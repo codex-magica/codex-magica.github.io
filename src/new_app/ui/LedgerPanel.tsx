@@ -63,7 +63,7 @@ const bonusFor = (bonuses: Fok4Bonus[], skill: string, subtype?: string, variant
 // Every item of a level as ONE flat, ordered list (no type grouping). The fok-4 +1 attribute is shown
 // inline on the very skill purchase that reached fok 4. (Bonuses on GRANTED fok-4 instances — which have
 // no purchase to inline onto, e.g. the wizard's Pszi — are listed in their own top-level section instead.)
-const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; deltas: Record<string, { before: number; after: number }>; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[] }> = ({ lvl, costs, deltas, fok4, grants }) => {
+const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; deltas: Record<string, { before: number; after: number }>; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[]; subtypeOverrides?: Record<string, string> }> = ({ lvl, costs, deltas, fok4, grants, subtypeOverrides }) => {
   const L = lvl.level;
   const fmtDelta = (key: string, pct = false): string | undefined => {
     const d = deltas[key];
@@ -71,8 +71,11 @@ const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; de
     const u = pct ? "%" : "";
     return `${d.before}${u} → ${d.after}${u}`;
   };
+  // Match the engine's ledger keys: a non-variant purchase is keyed by its OVERRIDE-resolved subtype
+  // (a renamed granted subtype), not the raw stored one — else the cost/delta lookup misses (shows 0 KAP).
+  const keySub = (skill: string, subtype?: string) => subtypeOverrides?.[skillKey(skill, subtype)] || subtype;
   const skillItems = lvl.skillPurchases.map((p) => {
-    const refKey = p.id ? `var:${p.id}` : skillKey(p.skill, p.subtype);
+    const refKey = p.id ? `var:${p.id}` : skillKey(p.skill, keySub(p.skill, p.subtype));
     const bonus = p.to >= 4 ? bonusFor(fok4, p.skill, p.subtype, p.id) : undefined;
     const pct = SKILL_BY_NAME[p.skill]?.cost === "percentage";
     return { tag: "képz", text: fmtPurchase(p) + (bonus ? `  ·  +1 ${STAT_SHORT[bonus]} (4. fok)` : ""), cost: costs[`${L}:skill:${refKey}`] ?? 0, delta: fmtDelta(`${L}:skill:${refKey}`, pct) };
@@ -167,7 +170,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
             </>
           )}
 
-          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} costs={costs} deltas={derived.ledgerDelta} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} />)}
+          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} costs={costs} deltas={derived.ledgerDelta} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} subtypeOverrides={record.subtypeOverrides} />)}
 
           {record.kmAdjustments.length > 0 && (
             <Box mt="14px">

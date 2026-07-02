@@ -14,17 +14,37 @@ import { DerivedCharacter } from "../engine/types";
 const instanceKey = (variantId: string | undefined, skill: string, subtype: string | undefined): string =>
   variantId ? `v:${variantId}` : `s:${skillKey(skill, subtype)}`;
 
-// A fok-4 choice is tied to a skill INSTANCE being at fok ≥ 4. If that instance drops below 4 (or is
-// removed), the stored choice is stale — drop it so it stops counting and leaves the ledger.
-const pruneStaleFok4 = (rec: CharacterRecord): CharacterRecord => {
-  if (!rec.fok4Bonuses?.length) return rec;
+// Per-instance choice stores are tied to a skill INSTANCE existing (at the required fok). If the instance
+// drops below the threshold or is removed, the stored choice is stale — drop it so it can't silently
+// resurrect when the skill is learned again later (fok-4 +1, Pszi path, chosen attrs).
+const pruneStaleInstanceChoices = (rec: CharacterRecord): CharacterRecord => {
+  if (!rec.fok4Bonuses?.length && !rec.pathChoices?.length && !rec.skillAttrChoices?.length) return rec;
   const derived = derive(RULES, rec);
-  const valid = new Set<string>();
+  const fok4Valid = new Set<string>();
+  const pathValid = new Set<string>();
+  const existValid = new Set<string>();
   for (const s of derived.skills) {
-    if (s.percent == null && s.fok >= 4) valid.add(instanceKey(s.variantId, s.skill, s.origSubtype ?? s.subtype));
+    const key = instanceKey(s.variantId, s.skill, s.origSubtype ?? s.subtype);
+    existValid.add(key);
+    if (s.percent == null && s.fok >= 4) fok4Valid.add(key);
+    const trig = RULES.skills[s.skill]?.fokTriggers?.find((t) => t.kind === "path");
+    if (trig && trig.kind === "path" && s.fok >= trig.atFok) pathValid.add(key);
   }
-  const filtered = rec.fok4Bonuses.filter((b) => valid.has(instanceKey(b.variantId, b.skill, b.subtype)));
-  return filtered.length === rec.fok4Bonuses.length ? rec : { ...rec, fok4Bonuses: filtered };
+  const out = { ...rec };
+  let changed = false;
+  if (rec.fok4Bonuses?.length) {
+    const kept = rec.fok4Bonuses.filter((b) => fok4Valid.has(instanceKey(b.variantId, b.skill, b.subtype)));
+    if (kept.length !== rec.fok4Bonuses.length) { out.fok4Bonuses = kept; changed = true; }
+  }
+  if (rec.pathChoices?.length) {
+    const kept = rec.pathChoices.filter((c) => pathValid.has(instanceKey(c.variantId, c.skill, c.subtype)));
+    if (kept.length !== rec.pathChoices.length) { out.pathChoices = kept; changed = true; }
+  }
+  if (rec.skillAttrChoices?.length) {
+    const kept = rec.skillAttrChoices.filter((c) => existValid.has(instanceKey(c.variantId, c.skill, c.subtype)));
+    if (kept.length !== rec.skillAttrChoices.length) { out.skillAttrChoices = kept; changed = true; }
+  }
+  return changed ? out : rec;
 };
 
 // A skill purchase that no longer raises the fok (e.g. an earlier level now reaches it) is a phantom. Drop
@@ -43,6 +63,15 @@ const pruneRedundantPurchases = (rec: CharacterRecord): CharacterRecord => {
     return { ...l, skillPurchases: kept };
   });
   return changed ? { ...rec, levels } : rec;
+};
+
+// A background that becomes GRANTED (via a class/spec change) while the player had also CHOSEN it would be
+// double-charged and its checkbox locked — drop the redundant chosen entry so only the free grant remains.
+const pruneGrantedChosenBg = (rec: CharacterRecord): CharacterRecord => {
+  if (!rec.backgrounds.some((b) => b.source === "chosen")) return rec;
+  const granted = new Set(derive(RULES, rec).grantedBackgrounds);
+  const kept = rec.backgrounds.filter((b) => !(b.source === "chosen" && granted.has(b.background)));
+  return kept.length === rec.backgrounds.length ? rec : { ...rec, backgrounds: kept };
 };
 
 export interface CharacterBuilderApi {
@@ -77,7 +106,7 @@ export interface CharacterBuilderApi {
 export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: CharacterRecord) => void): CharacterBuilderApi {
   // Every write is cleaned: phantom (no-op) skill purchases are dropped, then stale fok-4 choices. Keeps the
   // record canonical so editing an earlier level can't leave orphaned/redundant entries on later ones.
-  const setRecord = (r: CharacterRecord) => rawSetRecord(pruneStaleFok4(pruneRedundantPurchases(r)));
+  const setRecord = (r: CharacterRecord) => rawSetRecord(pruneGrantedChosenBg(pruneStaleInstanceChoices(pruneRedundantPurchases(r))));
   const derived = useMemo(() => derive(RULES, record), [record]);
 
   const update = (patch: Partial<CharacterRecord>) => setRecord({ ...record, ...patch });
@@ -166,31 +195,39 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
       : { id: genId("v"), skill, subtype: sub, to: 1 };
     patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([seed]) });
   };
-  const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) => {
-    const lvl = getLevelRecord(record, level);
-    if (!lvl) return;
-    patchLevel(level, { skillPurchases: lvl.skillPurchases.map((p) => (p.id === id ? { ...p, ...patch } : p)) });
-  };
-  const removePurchaseById = (level: number, id: string) => {
-    const lvl = getLevelRecord(record, level);
-    if (!lvl) return;
-    patchLevel(level, { skillPurchases: lvl.skillPurchases.filter((p) => p.id !== id) });
-  };
+  // Variant ids are globally unique, so patch/remove find the id on WHATEVER level holds it — a variant can
+  // be viewed and edited from a later level too (the `level` arg is ignored; kept for signature stability).
+  const patchPurchaseById = (_level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) =>
+    setRecord({ ...record, levels: record.levels.map((l) => ({ ...l, skillPurchases: l.skillPurchases.map((p) => (p.id === id ? { ...p, ...patch } : p)) })) });
+  const removePurchaseById = (_level: number, id: string) =>
+    setRecord({ ...record, levels: record.levels.map((l) => ({ ...l, skillPurchases: l.skillPurchases.filter((p) => p.id !== id) })) });
   const setSubtypeOverride = (originalKey: string, value: string) =>
     setRecord({ ...record, subtypeOverrides: { ...record.subtypeOverrides, [originalKey]: value } });
-  // Specialise a GENERAL (origSubtype-undefined) primary in place: set both the grant override (keyed by
-  // the bare skill name, where a general grant looks it up) AND any matching learned primary purchase, in
-  // ONE update — so a granted + leveled-up skill collapses to a single key instead of splitting in two.
-  const setLearnedSubtype = (level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => {
-    const levels = record.levels.map((l) =>
-      l.level !== level
-        ? l
-        : { ...l, skillPurchases: l.skillPurchases.map((p) => (!p.id && sameSkill(p, skill, oldSubtype) ? { ...p, subtype: newSubtype || undefined } : p)) }
-    );
+  // Specialise a GENERAL (origSubtype-undefined) primary in place, in ONE atomic update:
+  //  • rename the instance's purchases on EVERY level (a multi-level instance must not split),
+  //  • set the bare-skill grant override ONLY when a general grant of this skill exists (else a stray
+  //    override would poison a later general instance),
+  //  • migrate the per-instance choice stores (fok-4 +1, path, chosen attrs) to the new identity so the
+  //    player's choices survive the rename instead of being pruned.
+  const setLearnedSubtype = (_level: number, skill: string, oldSubtype: string | undefined, newSubtype: string | undefined) => {
+    const levels = record.levels.map((l) => ({
+      ...l,
+      skillPurchases: l.skillPurchases.map((p) => (!p.id && sameSkill(p, skill, oldSubtype) ? { ...p, subtype: newSubtype || undefined } : p)),
+    }));
     const subtypeOverrides = { ...record.subtypeOverrides };
-    if (newSubtype) subtypeOverrides[skill] = newSubtype;
-    else delete subtypeOverrides[skill]; // unspecialise → drop the override so a general grant reverts cleanly
-    setRecord({ ...record, subtypeOverrides, levels });
+    const hasGeneralGrant = derived.grantedSkills.some((g) => g.skill === skill && !g.origSubtype && !g.subtype);
+    if (hasGeneralGrant && newSubtype) subtypeOverrides[skill] = newSubtype;
+    else delete subtypeOverrides[skill]; // unspecialise / no grant → drop the override so nothing strays
+    const migrate = <T extends { skill: string; subtype?: string; variantId?: string }>(list: T[] | undefined): T[] | undefined =>
+      list?.map((c) => (c.variantId == null && c.skill === skill && (c.subtype ?? "") === (oldSubtype ?? "") ? { ...c, subtype: newSubtype || undefined } : c));
+    setRecord({
+      ...record,
+      subtypeOverrides,
+      levels,
+      fok4Bonuses: migrate(record.fok4Bonuses),
+      pathChoices: migrate(record.pathChoices),
+      skillAttrChoices: migrate(record.skillAttrChoices),
+    });
   };
 
   // Generic KAP allocation (Mana / Psi / Kegy / Fp …). HM and Kp have their own dedicated setters.

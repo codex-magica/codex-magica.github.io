@@ -14,15 +14,18 @@ const KEY = "magus.roster.v1";
 // Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
 export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
+// Deep clone the demo seed — a shallow spread would share `levels`/`pointBuy`/... with the module constant.
+const seedRoster = (): CharacterRecord[] => [JSON.parse(JSON.stringify(defaultRecord)) as CharacterRecord];
+
 export const loadRoster = (): CharacterRecord[] => {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return [{ ...defaultRecord }]; // first run → seed with the demo character
+    if (!raw) return seedRoster(); // first run → seed with the demo character
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length) return parsed as CharacterRecord[];
-    return [];
+    if (Array.isArray(parsed)) return parsed.length ? (parsed as CharacterRecord[]) : []; // [] = user deleted all
+    return seedRoster(); // corrupt (non-array) payload → fall back to the seed, same as the catch branch
   } catch {
-    return [{ ...defaultRecord }];
+    return seedRoster();
   }
 };
 

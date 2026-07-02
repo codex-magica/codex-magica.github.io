@@ -64,10 +64,11 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
 
   const [selectedLevel, setSelectedLevel] = useState(1); // which level the editor targets (edit mode)
   const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
+  const [pendingRace, setPendingRace] = useState<string | null>(null); // race change awaiting hard confirm
   const [picker, setPicker] = useState<"race" | "class" | null>(null); // open race/class browser modal
   const [specChoice, setSpecChoice] = useState<ChoiceDef | null>(null); // open specialization browser modal
 
-  const onRaceChange = (race: string) => {
+  const applyRaceChange = (race: string) => {
     const caps = RACES[race].statLimits;
     const clamped = { ...record.pointBuy };
     STAT_KEYS.forEach((s) => {
@@ -76,14 +77,18 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
     update({ race, pointBuy: clamped });
   };
 
+  // Class drives grants/backgrounds/choices, so changing it resets what hangs off the OLD class: the
+  // specialization selections, the granted-subtype renames (they key off old grant labels) and the granted
+  // background levels. Purchases made redundant by the new class's grants are auto-pruned = DELETED.
   const applyClassChange = (cls: string) =>
-    update({ class: cls, selections: defaultSelections(CLASSES[cls].choices) });
-  // Class drives grants/backgrounds/choices, so changing it on a character with progress can invalidate
-  // later levels — gate it behind a hard confirm. A fresh level-1 character has nothing to lose, so skip it.
+    update({ class: cls, selections: defaultSelections(CLASSES[cls].choices), subtypeOverrides: {}, grantedBgLevels: {} });
+  // Changing race/class on a character with progress can invalidate (and via auto-prune, delete) later
+  // work — gate both behind a hard confirm. A fresh level-1 character has nothing to lose, so skip it.
   const hasProgress =
     record.levels.length > 1 ||
     record.levels.some((l) => l.skillPurchases.length || l.allocations.length || l.hmAssignments.length || l.statIncreases.length || (l.grantedHmAssignments?.length ?? 0));
   const onClassChange = (cls: string) => (hasProgress ? setPendingClass(cls) : applyClassChange(cls));
+  const onRaceChange = (race: string) => (hasProgress ? setPendingRace(race) : applyRaceChange(race));
 
   const klass = CLASSES[record.class];
   const choiceList = klass ? activeChoices(klass.choices, record.selections) : [];
@@ -269,6 +274,28 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
               </Box>
               <Box as="button" type="button" onClick={() => { applyClassChange(pendingClass); setPendingClass(null); }} px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="bad" bg="bad" color="white" fontWeight={700} fontSize="15px">
                 Kaszt módosítása
+              </Box>
+            </HStack>
+          </Box>
+        </ModalShell>
+      )}
+
+      {pendingRace && (
+        <ModalShell onClose={() => setPendingRace(null)} width="min(440px, 100%)">
+          <Box p="22px">
+            <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>Faj módosítása</Heading>
+            <Text fontSize="14px" color="muted" lineHeight="1.55" mb={4}>
+              A faj <b>{record.race}</b> → <b>{pendingRace}</b> módosítása megváltoztatja a faji
+              képességeket, tulajdonság-maximumokat és bónuszokat. A magasabb szinteken elköltött pontok
+              érvénytelenné válhatnak: a fölöslegessé vált vásárlások automatikusan törlődnek, a
+              tulajdonság-pontokat pedig újra az új maximumokhoz kell igazítani. Folytatod?
+            </Text>
+            <HStack justify="flex-end" gap="9px">
+              <Box as="button" type="button" onClick={() => setPendingRace(null)} px="15px" py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="15px" _hover={{ borderColor: "accent" }}>
+                Mégse
+              </Box>
+              <Box as="button" type="button" onClick={() => { applyRaceChange(pendingRace); setPendingRace(null); }} px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="bad" bg="bad" color="white" fontWeight={700} fontSize="15px">
+                Faj módosítása
               </Box>
             </HStack>
           </Box>

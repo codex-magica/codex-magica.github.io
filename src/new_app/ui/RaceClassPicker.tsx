@@ -31,6 +31,7 @@ const summarize = (entries: GrantEntry[]) => {
       case "skillCostMultiplier": b.specials.push(`${catName(e)} ×${e.factor} Kp`); break;
       case "forbidSkill": b.forbidden.push(catName(e)); break;
       case "maxSkillFok": b.specials.push(`${catName(e)} max ${e.fok}. fok`); break;
+      case "classCostDelta": b.specials.push(`Iskolaköltség ${e.amount > 0 ? "+" : ""}${e.amount} KAP`); break;
       case "tag": b.tags.push({ name: e.tag, atLevel: atLevel != null && atLevel > 1 ? atLevel : undefined }); break;
       case "combatBonus": b.combat.push(`${e.channel} +${e.amount}`); break;
       case "statBonus": b.other.push(`${e.stat} +${e.amount}`); break;

@@ -27,6 +27,7 @@ export type Effect =
   | { kind: "grantSkillChoice"; skill: string; label: string; level: SkillFok } // a placeholder branch the player must resolve to a concrete subtype (fegyverhasználat első/második fegyver)
   | { kind: "allowSkill"; skill: string; subtype?: string } // "may learn if the DM allows" (Bárd Pszi) — informational permission, not auto-granted
   | { kind: "removeSkill"; skill: string; subtype?: string } // a subclass DROPS a base-granted skill (Arel: no Írás/olvasás; Lar-Dor: Pszi kyr→godoni)
+  | { kind: "classCostDelta"; amount: number } // a subclass changes the class's KAP cost (Renegát tűzvarázsló −1)
   | { kind: "resetTeaching" } // in a subclass option: discard the inherited (class) teach list before adding its own — the subclass OVERRIDES rather than extends what it teaches
   | { kind: "skillCostMultiplier"; skill?: string; category?: SkillCategory; allSkills?: boolean; factor: number } // e.g. Barbár: Szociális/Alvilági/Tudományos Kp cost ×1.5
   | { kind: "forbidSkill"; skill?: string; category?: SkillCategory; text?: string } // school cannot learn this skill/category — surfaced as a builder warning, not hard-blocked

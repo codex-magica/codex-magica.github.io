@@ -31,13 +31,14 @@ export function skillKpCost(
 ): { kp: number; note?: string } {
   if (to <= from) return { kp: 0 };
   if (def.cost === "percentage") {
-    const rate = teachingUpto > 0 ? PERCENT_KP_RATE_TAUGHT : PERCENT_KP_RATE;
+    // %/Kp scales with the teacher's fok: none/fok 1–2 → 3%, fok 3 → 4%, fok 4 → 5%, fok 5 → 6% (book ch.16).
+    const rate = PERCENT_KP_RATE + Math.max(0, teachingUpto - 2);
     return { kp: Math.ceil((to - from) / rate) };
   }
   const cum = def.cost;
-  // A teacher of fok T discounts each levelup by (T − 2) Kp — fok 3 → 1, 4 → 2, 5 → 3; below fok 3 nothing —
-  // and can teach up to fok T. Every levelup still costs at least 1 Kp.
-  const perFok = Math.max(0, teachingUpto - 2);
+  // A teacher discounts each levelup: fok 1–2 → 1 Kp, fok 3 → 1, fok 4 → 2, fok 5 → 3 (book ch.16) — and
+  // can teach up to fok T. Every levelup still costs at least 1 Kp.
+  const perFok = teachingUpto >= 3 ? teachingUpto - 2 : teachingUpto >= 1 ? 1 : 0;
   let kp = 0;
   for (let f = from + 1; f <= to; f++) {
     const inc = cum[f - 1] - (f > 1 ? cum[f - 2] : 0);

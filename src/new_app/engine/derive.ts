@@ -106,12 +106,22 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     });
   };
 
+  // Universal free skills — every character starts with these at fok 3 (book ch.02); class grants of the
+  // same instance merge by max, so e.g. a Bárd's Kultúra (saját) 4 simply wins.
+  pushActivation(null, 1, 0, [
+    { effect: { kind: "grantSkill", skill: "Nyelvtudás", subtype: "anyanyelv", level: 3 as const } },
+    { effect: { kind: "grantSkill", skill: "Kultúra", subtype: "saját", level: 3 as const } },
+    { effect: { kind: "grantSkill", skill: "Helyismeret", subtype: "szülőföld", level: 3 as const } },
+  ], "Alapképzettségek");
+
   if (race) pushActivation(null, 1, race.cost, race.grants, `Faj: ${rec.race}`);
   const klass = db.classes[rec.class];
   if (klass) {
     // Resolve the class's specialization choice tree (override/additive + nested) into grants.
     const classGrants = resolveChoiceGrants(klass.grants, klass.baseSkills, klass.choices, rec.selections);
-    pushActivation(null, 1, klass.cost, classGrants, `Kaszt: ${rec.class}`);
+    // A subclass may change the class's KAP cost (Renegát tűzvarázsló −1).
+    const costDelta = classGrants.reduce((a, g) => a + (g.effect.kind === "classCostDelta" ? g.effect.amount : 0), 0);
+    pushActivation(null, 1, Math.max(0, klass.cost + costDelta), classGrants, `Kaszt: ${rec.class}`);
   } else {
     diag("error", `Ismeretlen kaszt: ${rec.class}`);
   }
@@ -209,8 +219,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         break;
       case "grantPoolFromStat":
         poolExists[e.pool] = true;
-        poolMax[e.pool] += base[e.stat];
-        addProv(e.pool, `${source} (${e.stat})`, base[e.stat]);
+        poolMax[e.pool] += effective[e.stat]; // effective, so a granted +stat raises the pool too
+        addProv(e.pool, `${source} (${e.stat})`, effective[e.stat]);
         break;
       case "statBonus":
         effective[e.stat] += e.amount;
@@ -257,8 +267,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         break;
       case "removeSkill":
         // Drop a base-granted instance (a subclass that doesn't get it). Applied after the base grants.
-        delete owned[skillKey(e.skill, e.subtype)];
+        // Resolve through the override like the grant itself — a renamed grant must still be removable.
+        delete owned[skillKey(e.skill, keySubtype(e.skill, e.subtype))];
         break;
+      case "classCostDelta": // consumed at class-activation time (adjusts the class KAP cost)
       case "note":
         break;
     }
@@ -314,6 +326,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const redundantPurchases: { level: number; skill: string; subtype?: string }[] = [];
   // Skills that already received their one-time fok-4 attribute bonus (so it applies exactly once).
   const fok4Bonused = new Set<string>();
+  const fok4StatOfSkill: Record<string, Set<string>> = {}; // per skill: stats already +1'd (repeat = warning)
 
   for (let L = 1; L <= N; L++) {
     perLevelEffects.filter((p) => p.level === L).forEach((p) => applyEffect(p.effect, p.source, L));
@@ -323,7 +336,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     cumulativeBgCost += bgCostAtLevel[L] || 0;
     // Level 1 only folds the starting Kp (= Intelligencia) into the shared KAP pool; later level-ups
     // get the flat 50 − backgrounds. The Int pool funds skills or HM/Mana/Pszi/Kegy/Tulajdonság.
-    const income = BASE_KAP_PER_LEVEL + (L === 1 ? base.Intelligencia : 0) - cumulativeBgCost;
+    const income = BASE_KAP_PER_LEVEL + (L === 1 ? effective.Intelligencia : 0) - cumulativeBgCost; // effective Int (grants count)
     kapBalance += income;
     kapIncomeByLevel.push(income);
 
@@ -357,6 +370,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           kapBalance -= c;
           ledgerCosts[`${L}:stat:${si.stat}:${si.source}`] = c;
         }
+        // Book: level-up raises may not exceed the racial maximum (Adottság lifts it, absolute cap 20).
+        const raceCap = race ? Math.min(20, race.statLimits[si.stat] + (rec.adottsag?.[si.stat] ?? 0)) : 20;
+        if (effective[si.stat] > raceCap)
+          diag("warn", `${si.stat}: a faji maximum (${raceCap}) fölé nőtt (${effective[si.stat]}).`, L);
       }
 
       for (const sp of lvlRec.skillPurchases) {
@@ -412,8 +429,11 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         for (const m of costMultipliers) if (m.allSkills || m.skill === sp.skill || (m.category != null && m.category === def.category)) mult = Math.max(mult, m.factor);
         const kp = mult === 1 ? cost.kp : Math.ceil(cost.kp * mult);
         kapBalance -= kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
-        ledgerCosts[`${L}:skill:${key}`] = kp;
-        ledgerDelta[`${L}:skill:${key}`] = { before: from, after: sp.to };
+        // Accumulate — two same-key ops in one level (e.g. raw + renamed purchase resolving to one
+        // instance) must not under-report the spend; the delta keeps the first `before`, last `after`.
+        ledgerCosts[`${L}:skill:${key}`] = (ledgerCosts[`${L}:skill:${key}`] ?? 0) + kp;
+        const prevDelta = ledgerDelta[`${L}:skill:${key}`];
+        ledgerDelta[`${L}:skill:${key}`] = { before: prevDelta?.before ?? from, after: sp.to };
         if (cost.note) diag("info", cost.note, L);
         // Carry forward the granted subtype's stable key: raising a granted-subtyped skill must keep its
         // origSubtype, else it looks self-specialised (a spurious "unspecialise" ✕ that corrupts on click).
@@ -421,7 +441,11 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const common = { skill: sp.skill, subtype: effSub, parent: sp.parent, attrs: rAttrs, origSubtype: cur?.origSubtype ?? (hasOverride ? sp.subtype : undefined), variantId: sp.id };
         owned[key] = isPct ? { ...common, fok: 0, percent: sp.to } : { ...common, fok: sp.to, percent: 0 };
       }
+    }
 
+    // NOTE: the fok-4 and path scans run OUTSIDE the lvlRec guard — they're grant-driven (a level-gated
+    // grant can push an instance to fok 4 on a level with no ledger record).
+    {
       // Fok-4 bonus: a fok-based skill with attribute requirements grants +1 to one of its attributes the
       // first level it reaches fok 4 (by purchase OR grant — e.g. a wizard's granted Pszi 4). Single-attr
       // skills auto-target it; multi-attr use the player's stored choice (rec.fok4Bonuses, matched per
@@ -439,6 +463,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           ? rAttrs[0]
           : rec.fok4Bonuses?.find((b) => (o.variantId != null ? b.variantId === o.variantId : b.variantId == null && b.skill === o.skill && (b.subtype ?? "") === (idSub ?? "")))?.stat;
         if (choice) {
+          // Book: relearning the same skill may not raise the SAME attribute again — warn (not blocked).
+          const used = fok4StatOfSkill[o.skill] ?? (fok4StatOfSkill[o.skill] = new Set());
+          if (used.has(choice)) diag("warn", `${o.skill}: a 4. fok +1 nem növelheti újra ugyanazt a tulajdonságot (${choice}).`, L);
+          used.add(choice);
           effective[choice] += 1;
           addProv(choice as string, `skillFok4 (${o.skill}) L${L}`, 1);
         } else {
@@ -553,7 +581,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   };
 
   const epMax = effective.Egészség + derivedBonus.Ép;
-  const fpMax = effective.Állóképesség + effective.Egészség + fpGains + derivedBonus.Fp;
+  const fpMax = effective.Állóképesség + effective.Akaraterő + fpGains + derivedBonus.Fp; // book: Fp = Áll + Akaraterő
 
   // Re-base alloc/HM deltas onto the actual affected number (base + buys), not the bought-only running
   // total — so the ledger shows e.g. Fp 26 → 29 and KÉ 64 → 68, not 0 → N. (Exact for the single-level
@@ -609,6 +637,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     // skill one more level is penalised. (No next level at fok 5.) Surfaced yellow in the UI.
     const need = 11 + o.fok;
     const unmetAttrs = !def || isPct || o.fok >= 5 ? [] : rAttrs.filter((a) => effective[a] < need);
+    // Percentage skills: untrained base % = the governing attribute; trained % adds on top, total capped
+    // at attribute + 100 (book ch.16). `percent` stays the trained part; `checkMod` is the usable total.
+    const pctBase = isPct && rAttrs.length ? effective[rAttrs[0]] : 0;
     return {
       skill: o.skill,
       subtype: o.subtype,
@@ -620,7 +651,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
       placeholder: o.placeholder,
       fok: o.fok,
       percent: isPct ? o.percent : undefined,
-      checkMod: isPct ? o.percent : FOK_CHECK_MOD[o.fok] || 0,
+      checkMod: isPct ? pctBase + Math.min(o.percent ?? 0, 100) : FOK_CHECK_MOD[o.fok] || 0,
       difficulty: def ? def.difficulty : "?",
     };
   });
@@ -662,6 +693,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     redundantPurchases,
     teaching,
     teachingDiscounts: discounts,
+    costMultipliers,
     spells,
     tags: Object.keys(tags),
     grantedBackgrounds: Object.keys(grantedBg),
