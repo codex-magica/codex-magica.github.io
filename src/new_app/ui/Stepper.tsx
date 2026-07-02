@@ -16,6 +16,8 @@ interface StepperProps {
   // it's accent-styled and tappable so the reason is reachable on touch (iPad) via `onDecBlocked`.
   decBlocked?: boolean;
   onDecBlocked?: () => void;
+  // At its floor the − becomes a ✕ (delete the whole row) instead of a separate delete button.
+  decDelete?: boolean;
 }
 
 // Touch-friendly: 44/46px on iPad (base), 34px on desktop (md).
@@ -42,6 +44,7 @@ export const Stepper: React.FC<StepperProps> = ({
   valueMuted,
   decBlocked,
   onDecBlocked,
+  decDelete,
 }) => (
   <Box
     display={fullWidth ? "flex" : "inline-flex"}
@@ -58,24 +61,24 @@ export const Stepper: React.FC<StepperProps> = ({
     <Box
       as="button"
       type="button"
-      onClick={decBlocked ? onDecBlocked : decDisabled ? undefined : onDec}
-      disabled={decDisabled && !decBlocked}
-      title={decBlocked ? "Egy ág innen ágazik" : undefined}
+      onClick={decBlocked ? onDecBlocked : decDelete ? onDec : decDisabled ? undefined : onDec}
+      disabled={decDisabled && !decBlocked && !decDelete}
+      title={decBlocked ? "Egy ág innen ágazik" : decDelete ? "Törlés" : undefined}
       w={fixed ? W : undefined}
       minW={W}
       borderRight="1px solid"
       borderColor="fieldBd"
       bg={decBlocked ? "accentSoft" : "transparent"}
-      fontSize="18px"
-      color={decBlocked ? "accentTx" : decDisabled ? "fgFaint" : "muted"}
-      opacity={decDisabled && !decBlocked ? 0.5 : 1}
-      cursor={decBlocked || !decDisabled ? "pointer" : "default"}
+      fontSize={decDelete ? "15px" : "18px"}
+      color={decBlocked ? "accentTx" : decDelete ? "bad" : decDisabled ? "fgFaint" : "muted"}
+      opacity={decDisabled && !decBlocked && !decDelete ? 0.5 : 1}
+      cursor={decBlocked || decDelete || !decDisabled ? "pointer" : "default"}
       display="flex"
       alignItems="center"
       justifyContent="center"
       transition="background .12s, color .12s, opacity .12s"
     >
-      −
+      {decDelete ? "✕" : "−"}
     </Box>
     <Box
       flex={fullWidth ? "1 1 auto" : "0 0 auto"}

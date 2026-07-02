@@ -7,7 +7,6 @@ import { Stat, STAT_SHORT, STAT_KEYS } from "../model/attributes";
 import { SkillCategory, SKILL_CATEGORIES } from "../model/common";
 import { skillKpCost, teachingUptoFor } from "../engine/skillCost";
 import { Stepper } from "./Stepper";
-import { DeleteButton } from "./controls";
 import { DetailModal, ModalState } from "./DetailModal";
 import { skillModalSub, skillModalBody } from "./compendiumData";
 import { FS_NAME, ROW_PY } from "./tokens";
@@ -20,7 +19,7 @@ interface Props {
   derived: DerivedCharacter;
   onUpsert: (level: number, skill: string, subtype: string | undefined, to: number) => void;
   onRemove: (level: number, skill: string, subtype: string | undefined) => void;
-  onAddVariant: (level: number, skill: string, parent?: string) => void;
+  onAddVariant: (level: number, skill: string, parent?: string, startFok?: number, subtype?: string) => void;
   onPatchVariant: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) => void;
   onRemoveVariant: (level: number, id: string) => void;
   onOverride: (originalKey: string, value: string) => void;
@@ -33,6 +32,9 @@ interface Props {
 const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
 
 const SUBW = { base: "170px", md: "128px" };
+// The suggested start fok for re-learning (branching): most second branches start at 3 (e.g. a new weapon
+// in a known category).
+const RELEARN_DEFAULT_FOK = 3;
 
 // ── shared inline bits (tokenized to the "Kódex" system) ──
 const TeacherBadge: React.FC<{ n: number }> = ({ n }) => (
@@ -63,6 +65,10 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const [view, setView] = useState<View>("meglevo");
   // Whether the "relearn a skill" picker (add another instance of an already-learned branchable skill) is open.
   const [relearnOpen, setRelearnOpen] = useState(false);
+  // Step 2 of the relearn picker: the chosen skill, awaiting its starting fok.
+  const [relearnSkill, setRelearnSkill] = useState<string | null>(null);
+  // The `skill|subtype` key of the Tanul button whose start-fok popover is open (re-learn only), or null.
+  const [tanulOpen, setTanulOpen] = useState<string | null>(null);
   // The skill name whose fok-4 "+1 attribute" popover is open, or null.
   const [fok4Open, setFok4Open] = useState<string | null>(null);
   // The instance key whose Pszi-path popover is open, or null.
@@ -223,37 +229,75 @@ export const SkillLevelPanel: React.FC<Props> = ({
     );
   };
 
-  // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected"). A
-  // `subtype` pre-specialises the learn (e.g. a taught branch: Vadonjárás(erdő)).
-  const tanulBtn = (name: string, subtype?: string) => (
-    <Box
-      as="button"
-      type="button"
-      title="Képzettség tanulása"
-      border="1px solid"
-      borderColor="fieldBd"
-      bg="transparent"
-      color="accentTx"
-      px="13px"
-      py="7px"
-      borderRadius="9px"
-      fontWeight={600}
-      fontSize={{ base: "16.5px", md: "15px" }}
-      whiteSpace="nowrap"
-      flexShrink={0}
-      display="inline-flex"
-      alignItems="center"
-      gap="7px"
-      _hover={{ borderColor: "accent", bg: "accentSoft" }}
-      onClick={() => onUpsert(level, name, subtype, 1)}
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H2z" />
-        <path d="M22 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H22z" />
-      </svg>
-      Tanul
-    </Box>
+  // The start-fok chooser shared by the relearn flows: fok buttons 1–5, 3 highlighted as the default.
+  const startFokButtons = (pick: (n: number) => void) => (
+    <HStack gap="6px" px="8px" pb="8px">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Box as="button" key={n} type="button"
+          w={{ base: "44px", md: "38px" }} h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
+          borderColor={n === RELEARN_DEFAULT_FOK ? "accent" : "fieldBd"} bg={n === RELEARN_DEFAULT_FOK ? "accentSoft" : "fieldBg"}
+          color={n === RELEARN_DEFAULT_FOK ? "accentTx" : "fg"} fontWeight={700} fontSize="15px"
+          display="flex" alignItems="center" justifyContent="center" sx={{ fontVariantNumeric: "tabular-nums" }}
+          _hover={{ borderColor: "accent", bg: "accentSoft", color: "accentTx" }}
+          onClick={() => pick(n)}>
+          {n}.
+        </Box>
+      ))}
+    </HStack>
   );
+
+  // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected"). A
+  // `subtype` pre-specialises the learn (e.g. a taught branch: Vadonjárás(erdő)). When the skill is ALREADY
+  // owned (this is a RE-learn), a popover asks which fok the new instance starts from (levels below = free).
+  const tanulBtn = (name: string, subtype?: string) => {
+    const relearn = skillHasContent(name);
+    const openKey = `${name}|${subtype ?? ""}`;
+    const open = tanulOpen === openKey;
+    return (
+      <Box position="relative" flexShrink={0}>
+        <Box
+          as="button"
+          type="button"
+          title={relearn ? "Újratanulás — melyik fokról induljon?" : "Képzettség tanulása"}
+          border="1px solid"
+          borderColor="fieldBd"
+          bg="transparent"
+          color="accentTx"
+          px="13px"
+          py="7px"
+          borderRadius="9px"
+          fontWeight={600}
+          fontSize={{ base: "16.5px", md: "15px" }}
+          whiteSpace="nowrap"
+          display="inline-flex"
+          alignItems="center"
+          gap="7px"
+          _hover={{ borderColor: "accent", bg: "accentSoft" }}
+          onClick={() => (relearn ? setTanulOpen(open ? null : openKey) : onUpsert(level, name, subtype, 1))}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H2z" />
+            <path d="M22 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H22z" />
+          </svg>
+          Tanul
+        </Box>
+        {open && (
+          <>
+            <Box position="fixed" inset={0} zIndex={29} onClick={() => setTanulOpen(null)} />
+            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="8px" minW="max-content" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
+              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px" whiteSpace="nowrap">
+                Hányadik fokról indul?
+              </Text>
+              <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" px="8px" pb="7px" maxW="240px">
+                1 fölött a korábbi fokok ingyenesek, de az új ág nem csökkenthető alájuk.
+              </Text>
+              {startFokButtons((n) => { onAddVariant(level, name, undefined, n, subtype); setTanulOpen(null); })}
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  };
 
   // The player's stored fok-4 +1 choice for a specific INSTANCE (a branch by variantId, else skill+subtype).
   const fok4Stat = (skill: string, subtype?: string, variantId?: string): Stat | undefined =>
@@ -476,8 +520,10 @@ export const SkillLevelPanel: React.FC<Props> = ({
 
   // A RE-learned instance (its own variant id): an independent extra row — subtype + fok + delete. Only
   // ever branchable skills (the relearn picker offers only those), so never a percentage skill.
-  const varRow = (p: { id?: string; skill: string; subtype?: string; to: number }) => {
+  // `from` (start fok) marks the skipped-for-free early levels: the floor it can't be lowered below.
+  const varRow = (p: { id?: string; skill: string; subtype?: string; from?: number; to: number }) => {
     const atMax = p.to >= 5;
+    const vFloor = Math.max(1, p.from ?? 1);
     const dv = derived.skills.find((s) => s.variantId === p.id);
     const vAttrs = dv?.attrs;
     const vUnmet = dv?.unmetAttrs ?? [];
@@ -487,7 +533,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       p.id!,
       nameGroup(p.skill, teacherOf(p.skill, p.subtype)),
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v }), p.to),
-      <>{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
+      <>{(p.from ?? 1) > 1 && <KapottBadge text={`${p.from}. foktól`} />}{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
       <HStack spacing="7px" flexShrink={0}>
         {attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [], vUnmet)}
         <Stepper
@@ -495,13 +541,13 @@ export const SkillLevelPanel: React.FC<Props> = ({
           value={`${p.to}.`}
           incLabel={atMax ? undefined : String(cost)}
           incWarn={vUnmet.length > 0}
-          decDisabled={p.to <= 1}
+          decDelete={p.to <= vFloor}
           incDisabled={atMax || cost > kap}
-          onDec={() => onPatchVariant(level, p.id!, { to: p.to - 1 })}
+          onDec={() => (p.to <= vFloor ? onRemoveVariant(level, p.id!) : onPatchVariant(level, p.id!, { to: p.to - 1 }))}
           onInc={() => onPatchVariant(level, p.id!, { to: p.to + 1 })}
         />
       </HStack>,
-      <DeleteButton onClick={() => onRemoveVariant(level, p.id!)} />
+      null
     );
   };
 
@@ -546,7 +592,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
         {relearnable.length > 0 && (
           <Box position="relative" flexShrink={0}>
             <Box as="button" type="button" title="Egy már tanult, ágazható képzettség újratanulása"
-              onClick={() => setRelearnOpen((o) => !o)}
+              onClick={() => { setRelearnOpen((o) => !o); setRelearnSkill(null); }}
               display="inline-flex" alignItems="center" gap="5px" px="11px" py="7px" borderRadius="9px"
               border="1px solid" borderColor="fieldBd" bg="transparent" color="accentTx" fontWeight={600}
               fontFamily="system-ui" fontSize="13px" whiteSpace="nowrap" _hover={{ borderColor: "accent", bg: "accentSoft" }}>
@@ -555,18 +601,32 @@ export const SkillLevelPanel: React.FC<Props> = ({
             </Box>
             {relearnOpen && (
               <>
-                <Box position="fixed" inset={0} zIndex={29} onClick={() => setRelearnOpen(false)} />
+                <Box position="fixed" inset={0} zIndex={29} onClick={() => { setRelearnOpen(false); setRelearnSkill(null); }} />
                 <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="8px" minW="220px" maxH="320px" overflowY="auto" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-                  <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px">
-                    Melyiket tanulod újra?
-                  </Text>
-                  {relearnable.map((d) => (
-                    <Box as="button" key={d.name} type="button" w="100%" textAlign="left" px="8px" py="8px" borderRadius="8px"
-                      fontFamily="system-ui" fontSize="14px" fontWeight={600} color="fg" _hover={{ bg: "accentSoft", color: "accentTx" }}
-                      onClick={() => { onAddVariant(level, d.name); setRelearnOpen(false); }}>
-                      {d.name}
-                    </Box>
-                  ))}
+                  {relearnSkill == null ? (
+                    <>
+                      <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px">
+                        Melyiket tanulod újra?
+                      </Text>
+                      {relearnable.map((d) => (
+                        <Box as="button" key={d.name} type="button" w="100%" textAlign="left" px="8px" py="8px" borderRadius="8px"
+                          fontFamily="system-ui" fontSize="14px" fontWeight={600} color="fg" _hover={{ bg: "accentSoft", color: "accentTx" }}
+                          onClick={() => setRelearnSkill(d.name)}>
+                          {d.name}
+                        </Box>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px" whiteSpace="nowrap">
+                        {relearnSkill} — hányadik fokról indul?
+                      </Text>
+                      <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" px="8px" pb="7px" maxW="240px">
+                        1 fölött a korábbi fokokat máshol már megtanulta — azok ingyenesek, és az új ág nem csökkenthető alájuk.
+                      </Text>
+                      {startFokButtons((n) => { onAddVariant(level, relearnSkill, undefined, n); setRelearnOpen(false); setRelearnSkill(null); })}
+                    </>
+                  )}
                 </Box>
               </>
             )}

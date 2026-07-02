@@ -58,7 +58,7 @@ export interface CharacterBuilderApi {
   setBackgroundOption: (name: string, option: string) => void;
   upsertSkillPurchase: (level: number, skill: string, subtype: string | undefined, to: number) => void;
   removeSkillPurchase: (level: number, skill: string, subtype: string | undefined) => void;
-  addSkillVariant: (level: number, skill: string, parent?: string) => void;
+  addSkillVariant: (level: number, skill: string, parent?: string, startFok?: number, subtype?: string) => void;
   patchPurchaseById: (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) => void;
   removePurchaseById: (level: number, id: string) => void;
   setSubtypeOverride: (originalKey: string, value: string) => void;
@@ -151,12 +151,19 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
 
   // A user-added variant (its own subtype + a branch fok). Stored with a stable id so the subtype
   // can be edited freely without losing identity.
-  const addSkillVariant = (level: number, skill: string, parent?: string) => {
+  const addSkillVariant = (level: number, skill: string, parent?: string, startFok?: number, subtype?: string) => {
     const lvl = getLevelRecord(record, level);
     if (!lvl) return;
-    // Relearning a skill adds an INDEPENDENT new instance (its own subtype + fok, starting fresh) — no
-    // branch-fok inheritance. (The `parent` param is retained for the two-tier engine but unused by the UI.)
-    const seed = parent ? { id: genId("v"), skill, subtype: "", parent, from: 2, to: 3 } : { id: genId("v"), skill, subtype: "", to: 1 };
+    // Relearning a skill adds an INDEPENDENT new instance (its own subtype + fok). `startFok` skips the
+    // early levels for free (learned elsewhere / shared weapon-category basics): the instance starts at
+    // that fok and — like a granted skill — can't be lowered below it (but CAN be deleted whole).
+    // `subtype` pre-fills the branch (e.g. learning a taught branch like Vadonjárás(erdő) as a 2nd instance).
+    const sub = subtype ?? "";
+    const seed = parent
+      ? { id: genId("v"), skill, subtype: sub, parent, from: 2, to: 3 }
+      : startFok != null && startFok > 1
+      ? { id: genId("v"), skill, subtype: sub, from: startFok, to: startFok }
+      : { id: genId("v"), skill, subtype: sub, to: 1 };
     patchLevel(level, { skillPurchases: lvl.skillPurchases.concat([seed]) });
   };
   const patchPurchaseById = (level: number, id: string, patch: Partial<{ subtype: string; from: number; to: number; parent: string }>) => {
