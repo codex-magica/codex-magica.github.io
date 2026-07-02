@@ -9,6 +9,7 @@ import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumDat
 import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
 import { combatSituationsIntro } from "../data/combatSituations";
 import { mundaneItemsIntro } from "../data/mundaneItems";
+import { poisonsIntro, poisonRules } from "../data/poisons";
 import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
@@ -16,7 +17,7 @@ import introMd from "../../book/01-bevezeto.md";
 import charMd from "../../book/02-karakteralkotas.md";
 
 // rulebook chapters shown via the Markdown renderer; tab indices start at CHAPTER_BASE (after the data tabs)
-const CHAPTER_BASE = 12;
+const CHAPTER_BASE = 13;
 const CHAPTERS = [
   { name: "Bevezető", md: introMd },
   { name: "Karakteralkotás", md: charMd },
@@ -30,12 +31,13 @@ interface Props {
 
 // sidebar nav groups (indices into compNames): Képzettségek stands alone, then Harc, Mágia, Felszerelés
 const MAGIC_TABS = [1, 2, 3, 4, 5, 6, 7];
-const GEAR_TABS = [8, 9, 11];
+const GEAR_TABS = [8, 9, 11, 12];
 const COMBAT_TAB = 10;
 const ITEMS_TAB = 11;
+const POISONS_TAB = 12;
 
 // intro paragraph shown under the page heading on tabs that have one
-const TAB_INTROS: Record<number, string> = { [COMBAT_TAB]: combatSituationsIntro, [ITEMS_TAB]: mundaneItemsIntro };
+const TAB_INTROS: Record<number, string> = { [COMBAT_TAB]: combatSituationsIntro, [ITEMS_TAB]: mundaneItemsIntro, [POISONS_TAB]: poisonsIntro };
 
 const NavSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Box display="flex" alignItems="center" gap="10px" mt="20px" mb="6px">
@@ -93,7 +95,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
   // rules prose for the current school (if any), plus a helper to open it in the markdown modal
   const schoolRules = MAGIC_RULES[title];
   // chapter-level rules for the main heading: skills have their own; magic schools use schoolRules
-  const headingRules = isSkills ? skillsRules : schoolRules?.rules;
+  const headingRules = isSkills ? skillsRules : compTab === POISONS_TAB ? poisonRules : schoolRules?.rules;
   const openRules = (name: string, sub: string, md: string) =>
     onOpenModal({ kind: "rules", name, sub, body: [], markdown: stripTitleHeading(md, name) });
 
@@ -230,7 +232,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
             ))}
           </Box>
         ) : (
-          <Box display="flex" flexDirection="column" gap="22px" maxW={compTab === COMBAT_TAB ? "760px" : undefined} mx="auto" w="100%">
+          <Box display="flex" flexDirection="column" gap="22px" maxW={compTab === COMBAT_TAB || compTab === POISONS_TAB ? "760px" : undefined} mx="auto" w="100%">
             {blocks.map((b) => renderBlock(b, compTab === 8))}
           </Box>
         )}

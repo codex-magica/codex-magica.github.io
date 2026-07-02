@@ -14,6 +14,7 @@ import { SkillValues } from "../data/skillsText";
 import { MagasMagiaValues } from "../data/magasMagia";
 import { CombatSituations } from "../data/combatSituations";
 import { MundaneItems } from "../data/mundaneItems";
+import { PoisonValues, PoisonEffects, PoisonCraftCosts, PoisonCraftPrices, ONSET_TIMES, DURATION_TIMES } from "../data/poisons";
 import { SKILLS } from "../model/skills";
 
 export interface TableCol { label: string; align?: "center" | "right" }
@@ -218,6 +219,94 @@ export function tabBlocks(tab: number): TableBlock[] {
         columns: [{ label: "Ár", align: "right" as const }],
         rows: g.items.map((it) => ({ name: it.name, cells: [it.price], open: "modal" as const })),
       }));
+    case 12: // Mérgek és mérgezés (példamérgek + a mérgezés kis szabálytáblázatai)
+      return [
+        {
+          title: "Méregkeverés — egyedi méreg összeállítása",
+          nameLabel: "Ip / képesség",
+          columns: [{ label: "Méregtípus" }, { label: "Hatás" }, { label: "Időtartam" }, { label: "Hatóidő" }],
+          footer:
+            "A 0. szintű méreg Ip költsége a négy képesség Ip értékének összege; minden további szint +3 Ip. A KM engedélyével különleges, ritka alapanyagokkal a szint legfeljebb hárommal növelhető Ip költség nélkül. Sikeres Egészségpróba esetén a méregkeverő által választott, legalább egy kategóriával gyengébb hatás érvényesül, egy kategóriával rövidebb időtartammal.",
+          rows: PoisonCraftCosts.map((c) => ({
+            name: c.ip,
+            cells: [c.type, c.effect, c.duration, c.onset],
+            open: "modal" as const,
+          })),
+        },
+        {
+          title: "A kikevert méreg ára (1 adag)",
+          nameLabel: "Szükséges Ip",
+          columns: [{ label: "Ár" }],
+          footer:
+            "Saját laboratóriumban, a Herbalizmus, illetve az Alkímia képzettség birtokában előállítva az ár a fentiek harmada. A Fájdalom hatású mérgek sebzése a méregkeverő minden képzettségi foka után 1k6 Sp.",
+          rows: PoisonCraftPrices.map((p) => ({ name: p.ip, cells: [p.price], open: "modal" as const })),
+        },
+        {
+          title: "A mérgek hatásai",
+          nameLabel: "Hatás",
+          columns: [{ label: "Erő" }, { label: "Gy" }, { label: "Ügy" }, { label: "Áks" }, { label: "Akr" }, { label: "Érz" }],
+          footer:
+            "A méreg hatásának múlásával az áldozat a méreg típusához tartozó összes enyhébb hatáson keresztülmegy.",
+          rows: PoisonEffects.map((e) => ({
+            name: e.name,
+            cells: e.mods ? [e.mods.ero, e.mods.gy, e.mods.ugy, e.mods.aks, e.mods.akr, e.mods.erz] : ["—", "—", "—", "—", "—", "—"],
+            open: "modal" as const,
+            modalSub: "Méreghatás",
+            body: e.mods
+              ? [`stats:Erő: ${e.mods.ero} · Gyorsaság: ${e.mods.gy} · Ügyesség: ${e.mods.ugy} · Állóképesség: ${e.mods.aks} · Akaraterő: ${e.mods.akr} · Érzékelés: ${e.mods.erz}`, e.meaning]
+              : [e.meaning],
+          })),
+        },
+        {
+          title: "Egészségpróba módosítók",
+          nameLabel: "Feltétel",
+          columns: [{ label: "Módosító" }],
+          footer:
+            "Sikeres Egészségpróba esetén csak a méreg enyhébb hatása érvényesül, sikertelen próbánál a súlyosabb.",
+          rows: [
+            { name: "A méreg szintje (0–5.)", cells: ["-0 … -5"] },
+            { name: "Az áldozat csak a méreg eltávolításával foglalkozik", cells: ["+2"] },
+            { name: "Pszi Képességjavítás diszciplína", cells: ["az Egészségjavítás szerint"] },
+            { name: "A szervezet hozzá volt szoktatva az adott méreghez", cells: ["+1-5"] },
+            { name: "Mérgezéstől óvó varázstárgyak", cells: ["a tárgy E-jétől függően"] },
+            { name: "Ellenméreg", cells: ["+5"] },
+            { name: "Minden további adag méreg", cells: ["-1"] },
+          ].map((r) => ({ ...r, open: "modal" as const })),
+        },
+        {
+          title: "Fegyverméreg — szükséges adag",
+          nameLabel: "Fegyver",
+          columns: [{ label: "Adag" }],
+          footer:
+            "A feltüntetett adagnak legfeljebb a kétszerese kenhető egy fegyverre; ennél kevesebbet használva a méreg hatása egy osztályt esik minden hiányzó adag után.",
+          rows: [
+            { name: "Tű", cells: ["1"] },
+            { name: "Nyílvessző", cells: ["1"] },
+            { name: "Tőr", cells: ["2"] },
+            { name: "Rövidkard", cells: ["4"] },
+            { name: "Hosszúkard", cells: ["6"] },
+            { name: "Lovagkard", cells: ["7"] },
+          ].map((r) => ({ ...r, open: "modal" as const })),
+        },
+        {
+          title: "Példamérgek",
+          nameLabel: "Méreg",
+          columns: [{ label: "Szint" }, { label: "Hatás" }, { label: "Hatóidő" }, { label: "Időtartam" }, { label: "Ár", align: "right" as const }],
+          rows: PoisonValues.map((p) => ({
+            name: p.name,
+            cells: [`${p.level}.`, p.effect, p.onset, p.duration, p.price],
+            open: "modal" as const,
+            modalSub: `${p.level}. szintű ${p.kind}`,
+            body: statsBody(p.description, [
+              ["Hatás (siker / kudarc)", p.effect],
+              ["Támadott rendszer", p.system],
+              ["Hatóidő", `${p.onset} (${ONSET_TIMES[p.onset]})`],
+              ["Időtartam", `${p.duration} (${DURATION_TIMES[p.duration]})`],
+              ["Ár (adagonként)", p.price],
+            ]),
+          })),
+        },
+      ];
     default:
       return [];
   }
