@@ -33,8 +33,9 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
   const kap = derived.pools.kapBalanceByLevel[0] ?? 0;
   const MIN = 1;
 
+  // md+ only — on phones each stepper carries its own caption inside the (wrapped) row instead
   const colHead = (
-    <HStack spacing={3} mb={1} align="flex-end">
+    <HStack display={{ base: "none", md: "flex" }} spacing={3} mb={1} align="flex-end">
       <Box flex="1" />
       <Text w={STEPW} flexShrink={0} textAlign="center" fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="fgFaint">
         Érték
@@ -43,6 +44,13 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
         Max <Text as="span" fontWeight={500} textTransform="none" letterSpacing="0">(Adottság)</Text>
       </Text>
     </HStack>
+  );
+
+  // caption over a stepper, phones only
+  const stepCaption = (label: React.ReactNode) => (
+    <Text display={{ base: "block", md: "none" }} textAlign="center" fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="fgFaint" mb="4px">
+      {label}
+    </Text>
   );
 
   return (
@@ -68,8 +76,9 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
           const max = cap + ad;
           const value = Math.min(ATTR_MAX, b + ad); // effective value includes Adottság
           return (
-            <HStack key={stat} spacing={3} py={{ base: "11px", md: "8px" }}>
-              <Box flex="1" minW={0}>
+            // phones: the name takes the first line, the two captioned steppers share the second
+            <HStack key={stat} spacing={3} py={{ base: "11px", md: "8px" }} flexWrap={{ base: "wrap", md: "nowrap" }} rowGap="7px">
+              <Box flex={{ base: "1 1 100%", md: "1" }} minW={0}>
                 <Box as="button" type="button" onClick={() => setStatInfo(stat)} title="Mit jelent ez a tulajdonság?" textAlign="left" maxW="100%">
                   <Text fontSize={FS_NAME} fontWeight={600} color="fg" noOfLines={1} _hover={{ color: "accentTx", textDecoration: "underline" }}>
                     {stat} <Text as="span" color="fgFaint" fontSize=".82em">({STAT_SHORT[stat]})</Text>
@@ -77,7 +86,8 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
                 </Box>
               </Box>
               {/* ÉRTÉK — effective value; buttons edit the base part, drawn from the 135 budget */}
-              <Box w={STEPW} flexShrink={0}>
+              <Box flex={{ base: "1 1 0", md: "0 0 auto" }} w={{ base: "auto", md: STEPW.md }} minW={0}>
+                {stepCaption("Érték")}
                 <Stepper
                   fullWidth
                   value={value}
@@ -88,7 +98,8 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
                 />
               </Box>
               {/* MAX — racial cap raised by Adottság (1 KAP each, also raises the value) */}
-              <Box w={STEPW} flexShrink={0}>
+              <Box flex={{ base: "1 1 0", md: "0 0 auto" }} w={{ base: "auto", md: STEPW.md }} minW={0}>
+                {stepCaption(<>Max <Text as="span" fontWeight={500} textTransform="none" letterSpacing="0">(Adottság)</Text></>)}
                 <Stepper
                   fullWidth
                   valueMuted

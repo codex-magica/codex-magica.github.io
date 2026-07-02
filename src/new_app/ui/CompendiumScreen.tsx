@@ -10,7 +10,7 @@ export const CompendiumScreen: React.FC<{ onExit: () => void }> = ({ onExit }) =
   const [compTab, setCompTab] = useState(0);
   const [modal, setModal] = useState<ModalState | null>(null);
   return (
-    <Flex direction="column" h="100vh" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100vh" sx={{ "@supports (height: 100dvh)": { height: "100dvh" } }} overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
       <ZoneBar active="kompendium" onKarakter={onExit} onKompendium={() => {}} />
       <Compendium compTab={compTab} onSelectTab={setCompTab} onOpenModal={setModal} />
       <DetailModal modal={modal} onClose={() => setModal(null)} />

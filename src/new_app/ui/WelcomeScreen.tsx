@@ -16,7 +16,7 @@ interface Props {
   onOpenCompendium: () => void;
 }
 
-const SIDE = { base: "32px", md: "32px" };
+const SIDE = { base: "20px", sm: "32px" };
 const VIT: Record<string, string> = { hp: "vitHp", fp: "vitFp", mana: "vitMana", kegy: "vitKegy", pszi: "vitPszi" };
 const PIP_META: [string, VitalKey, string][] = [
   ["ÉP", "Ép", "hp"], ["FP", "Fp", "fp"], ["MANA", "Mana", "mana"], ["KEGY", "Kegy", "kegy"], ["PSZI", "Psi", "pszi"],
@@ -69,7 +69,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const menuView = views.find((v) => v.id === menuId);
 
   return (
-    <Flex direction="column" h="100vh" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100vh" sx={{ "@supports (height: 100dvh)": { height: "100dvh" } }} overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
       <ZoneBar
         active="karakter"
         onKarakter={() => {}}
@@ -90,7 +90,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "32px", md: "30px" }} pb="90px">
         <Box textAlign="center" mb={{ base: "44px", md: "36px" }}>
           <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
-          <Heading as="h1" fontSize={{ base: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
+          <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
           <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
             Válassz egy hőst a folytatáshoz, vagy teremts újat. A karaktereid helyben, ezen az eszközön tárolódnak.
           </Text>
@@ -105,7 +105,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           </Box>
         </HStack>
 
-        <Box display="grid" gridTemplateColumns={{ base: "repeat(2, 1fr)", md: "repeat(auto-fill, minmax(300px, 1fr))" }} gap={{ base: "20px", md: "16px" }}>
+        <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", md: "repeat(auto-fill, minmax(300px, 1fr))" }} gap={{ base: "14px", sm: "20px", md: "16px" }}>
           {views.map((c) => (
             <ParchPanel key={c.id} as="button" onClick={() => onOpenCharacter(c.id)} display="flex" flexDirection="column" textAlign="left" cursor="pointer" w="100%" transition="box-shadow .16s, border-color .16s" _hover={{ borderColor: "accentBd", boxShadow: hoverShadow }}>
               <HStack align="flex-start" justify="space-between" gap="10px">

@@ -21,8 +21,8 @@ export const ZoneBar: React.FC<{
       <HStack px={SIDE} py="9px" gap="14px" flexWrap="wrap" align="center">
         {left}
         <HStack gap="3px" bg="fieldBg" border="1px solid" borderColor="hair" borderRadius="10px" p="3px" flexShrink={0}>
-          <ZoneBtn active={active === "karakter"} onClick={onKarakter}>Karakter</ZoneBtn>
-          <ZoneBtn active={active === "kompendium"} onClick={onKompendium}>Kompendium</ZoneBtn>
+          <ZoneBtn kind="karakter" active={active === "karakter"} onClick={onKarakter}>Karakter</ZoneBtn>
+          <ZoneBtn kind="kompendium" active={active === "kompendium"} onClick={onKompendium}>Kompendium</ZoneBtn>
         </HStack>
         <Spacer />
         {right}

@@ -12,17 +12,17 @@ const InventoryQtyModal: React.FC<{ name: string; qty: number; onApply: (n: numb
   const apply = (n: number) => onApply(Math.max(0, n));
   return (
     <ModalShell onClose={onClose} width="min(340px, 100%)">
-      <ModalHeader onClose={onClose}>
-        <Heading as="h3" fontSize="18px" fontWeight={700} color="fg" noOfLines={1} px="28px">{name || "Mennyiség"}</Heading>
-        <Text mt="2px" fontSize="22px" fontWeight={700} color="accentTx" sx={{ fontVariantNumeric: "tabular-nums" }}>{qty} db</Text>
+      <ModalHeader onClose={onClose} pt={{ base: "14px", md: "18px" }} pb={{ base: "10px", md: "13px" }}>
+        <Heading as="h3" fontSize={{ base: "17px", md: "18px" }} fontWeight={700} color="fg" noOfLines={1} px="28px">{name || "Mennyiség"}</Heading>
+        <Text mt="2px" fontSize={{ base: "19px", md: "22px" }} fontWeight={700} color="accentTx" sx={{ fontVariantNumeric: "tabular-nums" }}>{qty} db</Text>
       </ModalHeader>
-      <Box flex="1 1 auto" overflowY="auto" px="20px" pt="14px" pb="20px">
+      <Box flex="1 1 auto" overflowY="auto" px="20px" pt={{ base: "10px", md: "14px" }} pb={{ base: "14px", md: "20px" }}>
         <NumPad value={amount} onChange={setAmount} />
-        <HStack gap="9px" mt="12px">
-          <Box as="button" type="button" onClick={() => apply(qty + amt)} flex="1" py="11px" borderRadius="9px" border="1px solid" borderColor="good" bg="transparent" color="good" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45}>+ Hozzáad</Box>
-          <Box as="button" type="button" onClick={() => apply(qty - amt)} flex="1" py="11px" borderRadius="9px" border="1px solid" borderColor="bad" bg="transparent" color="bad" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45}>− Elvesz</Box>
+        <HStack gap="9px" mt={{ base: "9px", md: "12px" }}>
+          <Box as="button" type="button" onClick={() => apply(qty + amt)} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="good" bg="transparent" color="good" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45}>+ Hozzáad</Box>
+          <Box as="button" type="button" onClick={() => apply(qty - amt)} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="bad" bg="transparent" color="bad" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45}>− Elvesz</Box>
         </HStack>
-        <Box as="button" type="button" onClick={() => apply(amt)} w="100%" mt="10px" py="9px" borderRadius="9px" border="1px solid" borderColor="fieldBd" bg="fieldBg" color="accentTx" fontWeight={600} fontSize="14px" opacity={amount ? 1 : 0.45}>Beállít: {amount || "0"} db</Box>
+        <Box as="button" type="button" onClick={() => apply(amt)} w="100%" mt={{ base: "8px", md: "10px" }} py={{ base: "8px", md: "9px" }} borderRadius="9px" border="1px solid" borderColor="fieldBd" bg="fieldBg" color="accentTx" fontWeight={600} fontSize="14px" opacity={amount ? 1 : 0.45}>Beállít: {amount || "0"} db</Box>
       </Box>
     </ModalShell>
   );

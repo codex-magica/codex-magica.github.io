@@ -154,7 +154,7 @@ const ResultRow = React.memo<{
   onPickHit: (h: Hit) => void;
 }>(({ hit, idx, selected, qlen, onHover, onPickHit }) => (
   <Flex
-    data-idx={idx} as="button" type="button" w="100%" textAlign="left" align="center" gap="12px" px="13px" py="7px"
+    data-idx={idx} as="button" type="button" w="100%" textAlign="left" align="center" gap="12px" px="13px" py={{ base: "9px", md: "7px" }}
     bg={selected ? "accentSoft" : "transparent"} onMouseMove={() => !selected && onHover(idx)} onClick={() => onPickHit(hit)}
     position="relative"
   >
@@ -217,7 +217,7 @@ export const SearchPalette: React.FC<{
   return (
     <Box position="fixed" inset={0} zIndex={46} bg="rgba(16,14,24,.55)" onClick={onClose}>
       <Box
-        position="absolute" top="14vh" left="50%" transform="translateX(-50%)" w="min(620px, calc(100vw - 28px))"
+        position="absolute" top={{ base: "max(12px, env(safe-area-inset-top))", md: "14vh" }} left="50%" transform="translateX(-50%)" w="min(620px, calc(100vw - 24px))"
         bg="page" border="1px solid" borderColor="hair" borderRadius="14px" overflow="hidden"
         boxShadow="0 24px 64px rgba(0,0,0,.42)" onClick={(e) => e.stopPropagation()} onKeyDown={onKeyDown}
       >
@@ -240,7 +240,7 @@ export const SearchPalette: React.FC<{
             Nincs találat a(z) „{query.trim()}” kifejezésre.
           </Text>
         ) : (
-          <Box ref={listRef} maxH="min(54vh, 480px)" overflowY="auto" py="7px">
+          <Box ref={listRef} maxH={{ base: "42vh", md: "min(54vh, 480px)" }} overflowY="auto" py="7px" sx={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}>
             {hits.map((h, i) => (
               <ResultRow
                 key={`${h.entry.tab}:${h.entry.block}:${h.entry.name}`}
@@ -252,8 +252,9 @@ export const SearchPalette: React.FC<{
         )}
 
         <Flex align="center" gap="14px" px="16px" py="8px" borderTop="1px solid" borderColor="rule" bg="band">
-          <Flex align="center" gap="5px"><Kbd>↑</Kbd><Kbd>↓</Kbd><Text fontFamily="system-ui" fontSize="11px" color="fgFaint">lépkedés</Text></Flex>
-          <Flex align="center" gap="5px"><Kbd>↵</Kbd><Text fontFamily="system-ui" fontSize="11px" color="fgFaint">megnyitás</Text></Flex>
+          <Flex display={{ base: "none", md: "flex" }} align="center" gap="5px"><Kbd>↑</Kbd><Kbd>↓</Kbd><Text fontFamily="system-ui" fontSize="11px" color="fgFaint">lépkedés</Text></Flex>
+          <Flex display={{ base: "none", md: "flex" }} align="center" gap="5px"><Kbd>↵</Kbd><Text fontFamily="system-ui" fontSize="11px" color="fgFaint">megnyitás</Text></Flex>
+          <Text display={{ base: "block", md: "none" }} fontFamily="system-ui" fontSize="11px" color="fgFaint">Kompendium-kereső</Text>
           {!short && hits.length > 0 && (
             <Text ml="auto" fontFamily="system-ui" fontSize="11px" color="fgFaint">{hits.length} találat</Text>
           )}

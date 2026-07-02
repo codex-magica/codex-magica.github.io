@@ -1,5 +1,5 @@
 import React from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, BoxProps } from "@chakra-ui/react";
 import { ParchPanel } from "./ParchPanel";
 
 // Shared modal scaffolding. Every dialog in the app is a fixed dimmed overlay holding a centred
@@ -45,9 +45,9 @@ export const ModalCloseButton: React.FC<{ onClose: () => void; size?: "sm" | "md
 export const ModalHeader: React.FC<{
   onClose: () => void;
   closeSize?: "sm" | "md";
-  px?: string;
-  pt?: string;
-  pb?: string;
+  px?: BoxProps["px"];
+  pt?: BoxProps["pt"];
+  pb?: BoxProps["pb"];
   children: React.ReactNode;
 }> = ({ onClose, closeSize = "sm", px = "24px", pt = "18px", pb = "13px", children }) => (
   <Box position="relative" px={px} pt={pt} pb={pb} borderBottom="1px solid" borderColor="rule" textAlign="center">

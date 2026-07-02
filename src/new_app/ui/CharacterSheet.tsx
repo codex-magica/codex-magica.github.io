@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Box, HStack, Text } from "@chakra-ui/react";
+import React, { useRef, useState } from "react";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import { WeaponModalState } from "./WeaponModal";
 import { CharacterRecord, VitalKey } from "../model/character";
@@ -89,8 +89,56 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
     .map((school) => ({ school, items: known.filter((sp) => sp.school === school) }))
     .filter((g) => g.items.length > 0);
 
+  // phone pager: the columns are full-width snap pages; the dots track/drive the scroll position
+  const pageCount = 4 + spellSchools.length; // 3 fixed cols + spell schools + inventory
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRaf = useRef(0);
+  const [page, setPage] = useState(0);
+  const pageStep = (el: HTMLElement) =>
+    el.children.length > 1 ? (el.children[1] as HTMLElement).offsetLeft - (el.children[0] as HTMLElement).offsetLeft : el.clientWidth;
+  const clampPage = (i: number) => Math.max(0, Math.min(pageCount - 1, i));
+  const onScroll = () => {
+    cancelAnimationFrame(scrollRaf.current);
+    scrollRaf.current = requestAnimationFrame(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const step = pageStep(el);
+      if (step <= 0) return;
+      const idx = el.scrollLeft / step;
+      // hysteresis: flip only once clearly past the midpoint, so momentum/snap settling around the
+      // boundary can't flap the active dot back and forth
+      setPage((p) => (Math.abs(idx - p) > 0.55 ? clampPage(Math.round(idx)) : p));
+    });
+  };
+  // once scrolling fully settles, snap the indicator to the exact page (browsers with scrollend)
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const settle = () => {
+      const step = pageStep(el);
+      if (step > 0) setPage(clampPage(Math.round(el.scrollLeft / step)));
+    };
+    el.addEventListener("scrollend", settle);
+    return () => el.removeEventListener("scrollend", settle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageCount]);
+  const goPage = (i: number) => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ left: i * pageStep(el), behavior: "smooth" });
+  };
+
   return (
-    <Box flex="1 1 auto" minH={0} display="flex" gap={GAP} overflowX="auto" bg="page" px={{ base: "20px", md: "16px" }} py={GAP}>
+    <Box position="relative" flex="1 1 auto" minH={0}>
+    {/* md+: side-by-side columns, each with its own vertical scroll (the container pans freely).
+        base (phones): the same columns as full-width pages with mandatory x-snap. */}
+    <Box ref={scrollRef} onScroll={onScroll} h="100%" display="flex" gap={GAP} overflowX="auto"
+      bg="page" px="16px" py={GAP}
+      sx={{
+        scrollSnapType: { base: "x mandatory", md: "none" },
+        scrollPaddingLeft: "16px",
+        scrollPaddingRight: "16px",
+        WebkitOverflowScrolling: "touch",
+      }}>
       {/* Column 1 */}
       <Col>
         <Card>
@@ -203,6 +251,24 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
       <Col>
         <EquipmentCard text={invText} onSet={onSetInventory} />
       </Col>
+
+    </Box>
+
+      {/* pager dots — phones only, floating bottom-centre over the pages */}
+      <Flex display={{ base: "flex", md: "none" }} position="absolute" bottom="max(10px, env(safe-area-inset-bottom))" left="50%" transform="translateX(-50%)"
+        align="center" px="7px" py="3px" borderRadius="999px" bg="band" border="1px solid" borderColor="hair" boxShadow="0 4px 18px rgba(0,0,0,.18)">
+        {Array.from({ length: pageCount }).map((_, i) => {
+          const active = i === clampPage(page);
+          return (
+            <Box key={i} as="button" type="button" aria-label={`${i + 1}. oldal`} onClick={() => goPage(i)} p="5px" display="flex" alignItems="center" justifyContent="center">
+              {/* transform-only animation — width transitions leave half-painted artifacts on iOS
+                  when interrupted mid-flight by the snap scroll stepping through pages */}
+              <Box w="7px" h="7px" borderRadius="full" bg={active ? "accent" : "fgFaint"} opacity={active ? 1 : 0.55}
+                transform={active ? "scale(1.45)" : "scale(1)"} transition="transform .15s ease, background-color .15s, opacity .15s" />
+            </Box>
+          );
+        })}
+      </Flex>
 
       {combatInfo && <CombatInfoModal statKey={combatInfo} derived={derived} onClose={() => setCombatInfo(null)} />}
       {statInfo && <StatInfoModal stat={statInfo} derived={derived} onClose={() => setStatInfo(null)} />}

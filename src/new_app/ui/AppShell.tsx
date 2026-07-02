@@ -21,10 +21,12 @@ interface AppShellProps {
 
 const SIDE = { base: "20px", md: "16px" };
 
-const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: boolean; children: React.ReactNode }> = ({ onClick, icon, accent, children }) => (
-  <Box as="button" type="button" onClick={onClick} display="inline-flex" alignItems="center" gap="7px" px="13px" py="8px" borderRadius="9px"
+// action button: full label on md+, icon-only on phones (the title carries the label)
+const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: boolean; label: string }> = ({ onClick, icon, accent, label }) => (
+  <Box as="button" type="button" onClick={onClick} title={label} aria-label={label} display="inline-flex" alignItems="center" justifyContent="center" gap="7px"
+    px={{ base: "10px", md: "13px" }} py="8px" minH="36px" borderRadius="9px"
     border="1px solid" borderColor="fieldBd" bg="transparent" color={accent ? "accentTx" : "fg"} fontWeight={600} fontSize="14px" whiteSpace="nowrap">
-    {icon}{children}
+    {icon}<Box as="span" display={{ base: "none", md: "inline" }}>{label}</Box>
   </Box>
 );
 
@@ -62,22 +64,22 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   );
 
   return (
-    <Flex direction="column" h="100vh" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100vh" sx={{ "@supports (height: 100dvh)": { height: "100dvh" } }} overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
       {/* Top app bar */}
       <Box flexShrink={0} bg="page" borderBottom="1px solid" borderColor="hair">
-        <HStack px={SIDE} py="9px" gap="14px" flexWrap="wrap" align="center">
+        <HStack px={SIDE} py="9px" gap={{ base: "10px", md: "14px" }} flexWrap="wrap" align="center">
           <IconButton aria-label="Vissza a karakterekhez" title="Karakterek" size="sm" variant="outline" borderColor="hair" bg="fieldBg" color="muted" icon={<ArrowBackIcon boxSize="16px" />} onClick={onBack} flexShrink={0} _hover={{ borderColor: "accent" }} />
           <HStack gap="3px" bg="fieldBg" border="1px solid" borderColor="hair" borderRadius="10px" p="3px" flexShrink={0}>
-            <ZoneBtn active={isSheet} onClick={() => setView("sheet")}>Karakter</ZoneBtn>
-            <ZoneBtn active={!isSheet} onClick={() => goComp()}>Kompendium</ZoneBtn>
+            <ZoneBtn kind="karakter" active={isSheet} onClick={() => setView("sheet")}>Karakter</ZoneBtn>
+            <ZoneBtn kind="kompendium" active={!isSheet} onClick={() => goComp()}>Kompendium</ZoneBtn>
           </HStack>
           {isSheet ? (
             <>
-              <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" whiteSpace="nowrap">{subLine}</Text>
+              <Text display={{ base: "none", md: "block" }} fontFamily="system-ui" fontSize="12px" color="fgFaint" whiteSpace="nowrap">{subLine}</Text>
               <Spacer />
               <HStack gap="8px">
-                <ActBtn onClick={onEdit} icon={<EditIcon boxSize="14px" />}>Szerkesztés</ActBtn>
-                <ActBtn onClick={onLevelup} icon={<ArrowUpIcon boxSize="16px" />} accent>Szintlépés</ActBtn>
+                <ActBtn onClick={onEdit} icon={<EditIcon boxSize="14px" />} label="Szerkesztés" />
+                <ActBtn onClick={onLevelup} icon={<ArrowUpIcon boxSize="16px" />} accent label="Szintlépés" />
                 {darkToggle}
               </HStack>
             </>

@@ -26,8 +26,13 @@ export const ValNum: React.FC<{ children: React.ReactNode } & Record<string, unk
   <Text fontWeight={600} color="fg" fontSize={FS_NAME} flexShrink={0} sx={{ fontVariantNumeric: "tabular-nums" }} {...rest}>{children}</Text>
 );
 
+// An independently scrolling sheet column. md+: fixed-width, several side by side. base (phones):
+// a full-width snap page — the sheet container snaps horizontally between columns.
 export const Col: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Box flex="1 1 268px" minW="246px" maxW="392px" h="100%" overflowY="auto" display="flex" flexDirection="column" gap={GAP} pb="36px">{children}</Box>
+  <Box flex={{ base: "0 0 100%", md: "1 1 268px" }} minW={{ base: "100%", md: "246px" }} maxW={{ base: "100%", md: "392px" }}
+    h="100%" overflowY="auto" display="flex" flexDirection="column" gap={GAP}
+    pb={{ base: "calc(48px + env(safe-area-inset-bottom))", md: "36px" }}
+    sx={{ scrollSnapAlign: "start", scrollSnapStop: "always" }}>{children}</Box>
 );
 
 export const Empty: React.FC<{ children: React.ReactNode }> = ({ children }) => (

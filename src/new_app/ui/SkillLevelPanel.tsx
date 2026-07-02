@@ -31,7 +31,8 @@ interface Props {
 
 const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
 
-const SUBW = { base: "170px", md: "128px" };
+// phones: the subtype control gets its own full-width line in the row; md+: a compact inline field
+const SUBW = { base: "100%", md: "128px" };
 // The suggested start fok for re-learning (branching): most second branches start at 3 (e.g. a new weapon
 // in a known category).
 const RELEARN_DEFAULT_FOK = 3;
@@ -349,9 +350,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
         {open && (
           <>
             <Box position="fixed" inset={0} zIndex={29} onClick={() => setFok4Open(null)} />
-            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW="max-content" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
+            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW={{ base: 0, md: "max-content" }} maxW={{ base: "min(320px, 86vw)", md: "none" }} sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
               <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">+1 tulajdonság (4. fok)</Text>
-              <HStack gap="7px">
+              <HStack gap="7px" flexWrap={{ base: "wrap", md: "nowrap" }}>
                 {attrs.map((a) => (
                   <Box as="button" key={a} type="button" onClick={() => { onSetFok4Stat(skill, subtype, variantId, a); setFok4Open(null); }}
                     px="12px" h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
@@ -389,9 +390,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
         {open && (
           <>
             <Box position="fixed" inset={0} zIndex={29} onClick={() => setPathOpen(null)} />
-            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW="max-content" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
+            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW={{ base: 0, md: "max-content" }} maxW={{ base: "min(320px, 86vw)", md: "none" }} sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
               <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">{trig.label} ({trig.atFok}. fok)</Text>
-              <HStack gap="7px">
+              <HStack gap="7px" flexWrap={{ base: "wrap", md: "nowrap" }}>
                 {trig.options.map((o) => (
                   <Box as="button" key={o} type="button" onClick={() => { onSetPathChoice(skill, subtype, variantId, trig.label, o === chosen ? null : o); setPathOpen(null); }}
                     px="12px" h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
@@ -467,7 +468,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
 
   const nameGroup = (name: string, teacher: number) => (
     <HStack spacing="7px" flex="0 1 auto" minW={0}>
-      <Box as="button" type="button" onClick={() => openSkillModal(name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{name}</Box>
+      <Box as="button" type="button" onClick={() => openSkillModal(name)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" maxW="100%" overflow="hidden" textOverflow="ellipsis" _hover={{ color: "accentTx", textDecoration: "underline" }}>{name}</Box>
       {teacher > 0 && <TeacherBadge n={teacher} />}
     </HStack>
   );
@@ -480,14 +481,23 @@ export const SkillLevelPanel: React.FC<Props> = ({
     stepper: React.ReactNode,
     trailing: React.ReactNode
   ) => (
-    <HStack key={key} spacing="9px" py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center">
+    // md+: one line (name · subtype · badges · ~ · stepper). base: a fixed three-line rhythm —
+    // name+badges, then the subtype control full-width, then the stepper line (badge left, stepper right).
+    <Box key={key} display="flex" alignItems="center" columnGap="9px" rowGap={{ base: "8px", md: "0px" }}
+      flexWrap={{ base: "wrap", md: "nowrap" }} py={ROW_PY} borderBottom="1px solid" borderColor="hair">
       {left}
-      {subtype}
+      {subtype && (
+        <Box order={{ base: 2, md: 0 }} flexBasis={{ base: "100%", md: "auto" }} flexShrink={0} display="flex">
+          {subtype}
+        </Box>
+      )}
       {trailing}
       {kapott}
-      <Box flex="1 1 auto" minW="8px" />
-      {stepper}
-    </HStack>
+      <Box flex="1 1 auto" minW="8px" display={{ base: "none", md: "block" }} />
+      <Box order={{ base: 3, md: 0 }} flexBasis={{ base: "100%", md: "auto" }} minW={0} display="flex">
+        {stepper}
+      </Box>
+    </Box>
   );
 
   // A granted or first-learned instance (no variant id) — an independent row. A branchable skill always
@@ -517,8 +527,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
               : onSetSubtype(level, inst.skill, inst.subtype, v), cur)
         : null,
       <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{showFok4 && fok4Badge(inst.skill, idSub, undefined, inst.attrs)}{pathBadge(inst.skill, idSub, undefined, cur)}</>,
-      <HStack spacing="7px" flexShrink={0}>
+      <HStack spacing="7px" flexShrink={0} w={{ base: "100%", md: "auto" }}>
         {attrsBadge(inst.skill, idSub, undefined, inst.attrs ?? [], inst.unmetAttrs ?? [])}
+        <Box flex="1 1 auto" display={{ base: "block", md: "none" }} />
         <Stepper
           fixed
           value={isPct ? `${cur}%` : `${cur}.`}
@@ -550,8 +561,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
       nameGroup(p.skill, teacherOf(p.skill, p.subtype)),
       subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v }), p.to),
       <>{(p.from ?? 1) > 1 && <KapottBadge text={`${p.from}. foktól`} />}{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
-      <HStack spacing="7px" flexShrink={0}>
+      <HStack spacing="7px" flexShrink={0} w={{ base: "100%", md: "auto" }}>
         {attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [], vUnmet)}
+        <Box flex="1 1 auto" display={{ base: "block", md: "none" }} />
         <Stepper
           fixed
           value={`${p.to}.`}
@@ -674,7 +686,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
                   const label = e.subtype ? `${e.skill} (${e.subtype})` : e.skill;
                   return (
                     <HStack key={key} spacing="9px" py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center">
-                      <Box as="button" type="button" onClick={() => openSkillModal(e.skill)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" _hover={{ color: "accentTx", textDecoration: "underline" }}>{label}</Box>
+                      <Box as="button" type="button" onClick={() => openSkillModal(e.skill)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" minW={0} overflow="hidden" textOverflow="ellipsis" _hover={{ color: "accentTx", textDecoration: "underline" }}>{label}</Box>
                       {teacherOf(e.skill, e.subtype) > 0 && <TeacherBadge n={teacherOf(e.skill, e.subtype)} />}
                       <Box flex="1 1 auto" minW="8px" />
                       {tanulBtn(e.skill, e.subtype)}

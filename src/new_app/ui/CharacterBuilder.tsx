@@ -27,9 +27,9 @@ const BalanceChip: React.FC<{ caption: string; value: number; numColor: string; 
   bg,
   borderColor,
 }) => (
-  <Box bg={bg} border="1px solid" borderColor={borderColor || bg} borderRadius="9px" px="16px" py="6px" minW="78px" textAlign="center">
-    <Text fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint">{caption}</Text>
-    <Text fontSize="20px" fontWeight={700} lineHeight="1.15" color={numColor} sx={{ fontVariantNumeric: "tabular-nums" }}>{value}</Text>
+  <Box bg={bg} border="1px solid" borderColor={borderColor || bg} borderRadius="9px" px={{ base: "11px", md: "16px" }} py={{ base: "4px", md: "6px" }} minW={{ base: "62px", md: "78px" }} textAlign="center">
+    <Text fontFamily="system-ui" fontSize={{ base: "8.5px", md: "9.5px" }} fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint">{caption}</Text>
+    <Text fontSize={{ base: "17px", md: "20px" }} fontWeight={700} lineHeight="1.15" color={numColor} sx={{ fontVariantNumeric: "tabular-nums" }}>{value}</Text>
   </Box>
 );
 
@@ -114,7 +114,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
     : derive(RULES, { ...record, levels: record.levels.slice(0, activeLevel) });
 
   const fieldRow = (label: string, control: React.ReactNode, last?: boolean) => (
-    <HStack align="center" py="9px" borderBottom={last ? undefined : "1px solid"} borderColor="hair" spacing={3}>
+    <HStack key={label} align="center" py="9px" borderBottom={last ? undefined : "1px solid"} borderColor="hair" spacing={3}>
       <Text w="88px" flexShrink={0} fontSize="sm" color="muted">{label}</Text>
       {control}
     </HStack>
@@ -130,16 +130,16 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   );
 
   return (
-    <Box p={{ base: "16px", md: "14px" }} bg="page" color="fg">
+    <Box py={{ base: "12px", md: "14px" }} px={{ base: "4px", md: "14px" }} pb={{ base: "24px", md: "14px" }} bg="page" color="fg">
       <VStack align="stretch" spacing="14px">
         {/* Sticky balance header — pins to the top of the drawer's scroll area */}
-        <ParchPanel position="sticky" top="0" zIndex={6} py="12px">
-          <HStack justify="space-between" gap="14px" flexWrap="wrap">
+        <ParchPanel position="sticky" top="0" zIndex={6} py={{ base: "9px", md: "12px" }} px={{ base: "14px", md: "16px" }}>
+          <HStack justify="space-between" gap={{ base: "10px", md: "14px" }} flexWrap={{ base: "nowrap", md: "wrap" }}>
             <Box minW={0}>
-              <Heading fontSize={{ base: "27px", md: "24px" }} fontWeight={700} color="fg" noOfLines={1}>
+              <Heading fontSize={{ base: "19px", md: "24px" }} fontWeight={700} color="fg" noOfLines={1}>
                 {record.name || "Névtelen"}
               </Heading>
-              <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" letterSpacing=".04em">{subLine}</Text>
+              <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" letterSpacing=".04em" noOfLines={1}>{subLine}</Text>
             </Box>
             <HStack gap="8px">
               <BalanceChip caption="KAP maradék" value={kap} numColor={kap < 0 ? "bad" : "accentTx"} bg="chipBg" borderColor="chipBd" />
@@ -241,6 +241,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
 
       {picker && (
         <RaceClassPicker
+          key={picker} // remount when switching between the race and class browser — no stale view state
           kind={picker}
           selected={picker === "race" ? record.race : record.class}
           onPick={picker === "race" ? onRaceChange : onClassChange}
@@ -250,6 +251,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
 
       {specChoice && (
         <SpecPicker
+          key={specChoice.id}
           choice={specChoice}
           className={record.class}
           selected={record.selections[specChoice.id] || ""}

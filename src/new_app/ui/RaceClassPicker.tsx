@@ -187,8 +187,23 @@ const BrowserModal: React.FC<{
       <Box px="20px" pt="16px" pb="11px" borderBottom="1px solid" borderColor="rule">
         <Heading fontSize="16px" fontWeight={700} color="fg" textAlign="center">{title}</Heading>
       </Box>
-      <HStack align="stretch" spacing={0} flex="1 1 auto" minH={0}>
-        <VStack align="stretch" spacing={0} w="148px" flexShrink={0} borderRight="1px solid" borderColor="hair" overflowY="auto">
+      <Box display="flex" flexDirection={{ base: "column", md: "row" }} alignItems="stretch" flex="1 1 auto" minH={0}>
+        {/* option list: side column on md+, horizontally scrollable pill strip on phones */}
+        <Box display={{ base: "flex", md: "none" }} gap="7px" overflowX="auto" flexShrink={0} px="12px" py="10px"
+          borderBottom="1px solid" borderColor="hair" sx={{ WebkitOverflowScrolling: "touch" }}>
+          {options.map((n) => (
+            <Box as="button" key={n} type="button"
+              ref={(el: HTMLButtonElement | null) => { if (el && n === view) el.scrollIntoView({ inline: "nearest", block: "nearest" }); }}
+              onClick={(e: React.MouseEvent) => { setView(n); (e.currentTarget as HTMLElement).scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); }}
+              flexShrink={0} px="13px" h="38px" borderRadius="999px" border="1px solid"
+              borderColor={view === n ? "accent" : "fieldBd"} bg={view === n ? "accentSoft" : "fieldBg"}
+              color={view === n ? "accentTx" : "fg"} fontWeight={view === n ? 700 : 500} fontSize="14px"
+              fontFamily="system-ui" whiteSpace="nowrap" display="inline-flex" alignItems="center" gap="5px">
+              {n}{n === selected ? <Text as="span" color="accentTx">●</Text> : null}
+            </Box>
+          ))}
+        </Box>
+        <VStack display={{ base: "none", md: "flex" }} align="stretch" spacing={0} w="148px" flexShrink={0} borderRight="1px solid" borderColor="hair" overflowY="auto">
           {options.map((n) => (
             <Box as="button" key={n} type="button" onClick={() => setView(n)} textAlign="left" px="13px" py="9px"
               borderBottom="1px solid" borderColor="hairSoft" bg={view === n ? "accentSoft" : "transparent"}
@@ -198,12 +213,12 @@ const BrowserModal: React.FC<{
             </Box>
           ))}
         </VStack>
-        <Box flex="1 1 auto" minW={0} overflowY="auto" p="16px">{renderDetail(view)}</Box>
-      </HStack>
-      <HStack justify="space-between" px="18px" py="12px" borderTop="1px solid" borderColor="rule" flexShrink={0}>
-        <Box as="button" type="button" onClick={onClose} px="14px" py="8px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="14px" _hover={{ borderColor: "accent" }}>Mégse</Box>
-        <Box as="button" type="button" onClick={() => { onPick(view); onClose(); }} px="18px" py="8px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accent" color="white" fontWeight={700} fontSize="14px">
-          Kiválasztás{view !== selected ? `: ${view}` : ""}
+        <Box flex="1 1 auto" minW={0} minH={0} overflowY="auto" p="16px">{renderDetail(view)}</Box>
+      </Box>
+      <HStack justify="space-between" gap="10px" px={{ base: "14px", md: "18px" }} py="12px" borderTop="1px solid" borderColor="rule" flexShrink={0}>
+        <Box as="button" type="button" onClick={onClose} px="14px" py="8px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="14px" flexShrink={0} _hover={{ borderColor: "accent" }}>Mégse</Box>
+        <Box as="button" type="button" onClick={() => { onPick(view); onClose(); }} px="18px" py="8px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accent" color="white" fontWeight={700} fontSize="14px" minW={0}>
+          <Text noOfLines={1}>Kiválasztás{view !== selected ? `: ${view}` : ""}</Text>
         </Box>
       </HStack>
     </ModalShell>

@@ -14,9 +14,9 @@ const BackArrow = (
 
 const headerFor = (mode: CreatorMode, r: CharacterRecord) => {
   const lvl = r.levels.length;
-  if (mode === "create") return { title: "Új karakter", sub: "Karakteralkotó · 1. szint", primary: "Karakter létrehozása" };
-  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szint megerősítése" };
-  return { title: "Karakter szerkesztése", sub: `${r.name} · ${r.race} ${r.class} · ${lvl}. szint`, primary: "Mentés" };
+  if (mode === "create") return { title: "Új karakter", sub: "Karakteralkotó · 1. szint", primary: "Karakter létrehozása", primaryShort: "Létrehozás" };
+  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szint megerősítése", primaryShort: "Megerősítés" };
+  return { title: "Karakter szerkesztése", sub: `${r.name} · ${r.race} ${r.class} · ${lvl}. szint`, primary: "Mentés", primaryShort: "Mentés" };
 };
 
 // One full-screen creator used for create / edit / level-up — only the header text and the primary
@@ -39,8 +39,8 @@ export const CreatorScreen: React.FC<{
   return (
     <Flex position="fixed" inset={0} zIndex={50} direction="column" bg="page" color="fg" fontFamily="Warnock, serif">
       <Box flexShrink={0} borderBottom="1px solid" borderColor="hair" bg="page">
-        <HStack maxW="980px" mx="auto" justify="space-between" gap="14px" px={SIDE} py="12px">
-          <HStack gap="12px" minW={0}>
+        <HStack maxW="980px" mx="auto" justify="space-between" gap={{ base: "10px", md: "14px" }} px={SIDE} py="12px">
+          <HStack gap={{ base: "9px", md: "12px" }} minW={0} flex="1 1 auto">
             <Box as="button" type="button" onClick={onClose} title="Vissza" w="38px" h="38px" flexShrink={0} display="inline-flex" alignItems="center" justifyContent="center" borderRadius="10px" border="1px solid" borderColor="hair" bg="fieldBg" color="muted" _hover={{ borderColor: "accent" }}>
               {BackArrow}
             </Box>
@@ -50,16 +50,19 @@ export const CreatorScreen: React.FC<{
             </Box>
           </HStack>
           <HStack gap="9px" flexShrink={0}>
-            <Box as="button" type="button" onClick={onClose} px="15px" py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize={{ base: "16px", md: "15px" }} _hover={{ borderColor: "accent" }}>
+            {/* phones: the back arrow is the cancel — the redundant Mégse only returns at md+ */}
+            <Box as="button" type="button" onClick={onClose} display={{ base: "none", md: "inline-flex" }} px={{ base: "12px", md: "15px" }} py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize={{ base: "15px", md: "15px" }} _hover={{ borderColor: "accent" }}>
               Mégse
             </Box>
-            <Box as="button" type="button" onClick={() => onCommit(record)} px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accent" color="white" fontWeight={700} fontSize={{ base: "16px", md: "15px" }} whiteSpace="nowrap">
-              {m.primary}
+            <Box as="button" type="button" onClick={() => onCommit(record)} px={{ base: "14px", md: "18px" }} py="9px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accent" color="white" fontWeight={700} fontSize={{ base: "15px", md: "15px" }} whiteSpace="nowrap">
+              <Box as="span" display={{ base: "none", md: "inline" }}>{m.primary}</Box>
+              <Box as="span" display={{ base: "inline", md: "none" }}>{m.primaryShort}</Box>
             </Box>
           </HStack>
         </HStack>
       </Box>
-      <Box flex="1 1 auto" minH={0} overflowY="auto">
+      {/* overflowX hidden: any accidentally-wide row clips instead of making the page pan sideways */}
+      <Box flex="1 1 auto" minH={0} overflowY="auto" overflowX="hidden">
         <Box maxW="760px" mx="auto">
           <CharacterBuilder api={api} mode={mode} />
         </Box>

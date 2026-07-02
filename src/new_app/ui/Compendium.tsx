@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Flex, Heading, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text, useBreakpointValue } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
+import { SearchIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "./ParchPanel";
 import { ModalState } from "./DetailModal";
 import { Markdown } from "./Markdown";
@@ -47,10 +49,23 @@ const NavSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 // full-bleed item: bg spans the whole sidebar width, text stays inset to align with the headers
 const NavItem: React.FC<{ active: boolean; prominent?: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, prominent, onClick, children }) => (
-  <Box as="button" type="button" onClick={onClick} position="relative" display="block" w="calc(100% + 28px)" textAlign="left" mx="-14px" px="14px" py={prominent ? "9px" : "7px"}
-    bg={active ? "accentSoft" : "transparent"} color={active ? "fg" : "muted"} fontWeight={active || prominent ? 700 : 500} fontSize={prominent ? "17px" : "15.5px"}
+  <Box as="button" type="button" onClick={onClick} position="relative" display="block" w="calc(100% + 28px)" textAlign="left" mx="-14px" px="14px"
+    py={{ base: prominent ? "12px" : "10px", md: prominent ? "9px" : "7px" }}
+    bg={active ? "accentSoft" : "transparent"} color={active ? "fg" : "muted"} fontWeight={active || prominent ? 700 : 500} fontSize={{ base: prominent ? "18px" : "16.5px", md: prominent ? "17px" : "15.5px" }}
     transition="background .12s, color .12s" _hover={{ bg: active ? "accentSoft" : "band", color: "fg" }}>
     {active && <Box position="absolute" left="0" top="0" bottom="0" w="3px" bg="accent" />}
+    {children}
+  </Box>
+);
+
+// slide-in animation for the mobile nav drawer
+const drawerIn = keyframes`from { transform: translateX(-100%); } to { transform: translateX(0); }`;
+const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
+
+// square icon button for the mobile header (menu / search)
+const HeaderIconBtn: React.FC<{ label: string; onClick: () => void; children: React.ReactNode }> = ({ label, onClick, children }) => (
+  <Box as="button" type="button" aria-label={label} onClick={onClick} w="40px" h="40px" flexShrink={0} borderRadius="10px"
+    border="1px solid" borderColor="hair" bg="fieldBg" color="muted" display="inline-flex" alignItems="center" justifyContent="center">
     {children}
   </Box>
 );
@@ -62,7 +77,7 @@ const Th: React.FC<{ children: React.ReactNode; align?: string }> = ({ children,
   <Box as="span" fontFamily="system-ui" fontSize="10.5px" fontWeight={700} letterSpacing=".06em" textTransform="uppercase" color="fgFaint" textAlign={align as any}>{children}</Box>
 );
 const GroupHead: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Heading as="h3" textAlign="center" fontSize={{ base: "19px", md: "17px" }} fontWeight={700} color="fg" mb="9px">{children}</Heading>
+  <Heading as="h3" textAlign="center" fontSize="16px" fontWeight={700} color="fg" mb="9px">{children}</Heading>
 );
 
 // quiet "Szabályok" chip placed next to a heading that has rules prose; opens the rules modal
@@ -86,6 +101,10 @@ const skillGroups = SKILL_CATEGORIES.map((cat) => ({
 
 export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal }) => {
   const [searchOpen, setSearchOpen] = useState(false);
+  // mobile (< md): the sidebar becomes a slide-in drawer behind a header menu button
+  const [navOpen, setNavOpen] = useState(false);
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
+  const contentRef = useRef<HTMLDivElement>(null);
   // the query outlives a pick (reopening resumes the search) but a dismissal clears it; held in a
   // ref so typing in the palette never re-renders the compendium behind it
   const searchQueryRef = useRef("");
@@ -95,6 +114,12 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
 
   // build the search index while idle so the first palette open is instant
   useEffect(() => prewarmSearchIndex(), []);
+
+  // a fresh page starts at its top (the scroll container survives tab switches); the search-pick
+  // effect below runs after this and wins when there is a row to scroll to
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [compTab]);
 
   const dismissSearch = () => {
     searchQueryRef.current = "";
@@ -167,8 +192,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
     const gap = dense ? "4px" : "8px";
     const px = dense ? { base: "8px", md: "10px" } : PAD;
     const hSize = dense ? "9px" : "10.5px";
-    const cellFs = dense ? "11.5px" : "13px";
-    const nameFs = dense ? { base: "13px", md: "12.5px" } : { base: "16px", md: "15px" };
+    const cellFs = dense ? "11.5px" : "12.5px";
+    const nameFs = dense ? { base: "13px", md: "12.5px" } : "13.5px";
 
     const inner = (
       <Box minW={dense ? undefined : `${170 + block.columns.length * 86}px`}>
@@ -182,7 +207,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
           // rows without a description (pure price lists) render as plain rows, not buttons
           const clickable = !!r.body?.length;
           return (
-          <Box key={r.name + i} data-row={r.name} {...(clickable ? { as: "button" as const, type: "button", onClick: () => openRow(r) } : {})} display="grid" gridTemplateColumns={grid} gap={gap} w="100%" textAlign="left" px={px} py={dense ? "7px" : "8px"} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" alignItems="baseline" _hover={clickable ? { bg: "accentSoft" } : undefined}>
+          <Box key={r.name + i} data-row={r.name} {...(clickable ? { as: "button" as const, type: "button", onClick: () => openRow(r) } : {})} display="grid" gridTemplateColumns={grid} gap={gap} w="100%" textAlign="left" px={px} py={dense ? "7px" : { base: "10px", md: "8px" }} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" alignItems="baseline" _hover={clickable ? { bg: "accentSoft" } : undefined}>
             <Text fontSize={nameFs} fontWeight={600} color="fg" lineHeight="1.2">{r.name}</Text>
             {r.note ? (
               <Text gridColumn="2 / -1" textAlign="center" fontSize={cellFs} fontStyle="italic" color="fgFaint" lineHeight="1.25">{r.note}</Text>
@@ -200,7 +225,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
       <Box key={block.title} data-block={block.title}>
         {showTitle && (
         <Box display="flex" alignItems="center" justifyContent="center" gap="10px" mb="9px">
-          <Heading as="h3" textAlign="center" fontSize={{ base: "19px", md: "17px" }} fontWeight={700} color="fg">{block.title}</Heading>
+          <Heading as="h3" textAlign="center" fontSize="16px" fontWeight={700} color="fg">{block.title}</Heading>
           {subRules && <RulesChip onClick={() => openRules(block.title, "Szabályok", subRules)} />}
         </Box>
         )}
@@ -214,43 +239,82 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
     );
   };
 
+  // shared nav content: the desktop sidebar and the mobile drawer render the same list
+  const go = (tab: number) => {
+    onSelectTab(tab);
+    setNavOpen(false);
+  };
+  const navContent = (
+    <>
+      <SearchButton onClick={() => { setNavOpen(false); setSearchOpen(true); }} />
+      <Box mt="18px" mb="12px">
+        <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".16em" textTransform="uppercase" color="fgFaint">Kompendium</Text>
+        <Heading as="p" fontSize="21px" fontStyle="italic" fontWeight={600} color="fg" lineHeight="1.1">Tartalom</Heading>
+      </Box>
+      {CHAPTERS.map((c, i) => (
+        <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => go(CHAPTER_BASE + i)}>{c.name}</NavItem>
+      ))}
+      <NavItem active={compTab === 0} onClick={() => go(0)}>{compNames[0]}</NavItem>
+      <NavSection>Harc</NavSection>
+      <NavItem active={compTab === COMBAT_TAB} onClick={() => go(COMBAT_TAB)}>{compNames[COMBAT_TAB]}</NavItem>
+      <NavSection>Mágia</NavSection>
+      {MAGIC_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => go(i)}>{compNames[i]}</NavItem>)}
+      <NavSection>Felszerelés</NavSection>
+      {GEAR_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => go(i)}>{compNames[i]}</NavItem>)}
+    </>
+  );
+
   return (
-    <Flex flex="1 1 auto" minH={0} bg="page" overflow="hidden">
-      {/* Left sidebar navigation — grouped (Képzettségek · Mágia · Felszerelés) */}
-      <Box as="nav" w={{ base: "180px", md: "248px" }} flexShrink={0} h="100%" overflowY="auto" borderRight="1px solid" borderColor="hair" px="14px" py={{ base: "16px", md: "20px" }}>
-        <SearchButton onClick={() => setSearchOpen(true)} />
-        <Box mt="18px" mb="12px">
-          <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".16em" textTransform="uppercase" color="fgFaint">Kompendium</Text>
-          <Heading as="p" fontSize="21px" fontStyle="italic" fontWeight={600} color="fg" lineHeight="1.1">Tartalom</Heading>
-        </Box>
-        {CHAPTERS.map((c, i) => (
-          <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => onSelectTab(CHAPTER_BASE + i)}>{c.name}</NavItem>
-        ))}
-        <NavItem active={compTab === 0} onClick={() => onSelectTab(0)}>{compNames[0]}</NavItem>
-        <NavSection>Harc</NavSection>
-        <NavItem active={compTab === COMBAT_TAB} onClick={() => onSelectTab(COMBAT_TAB)}>{compNames[COMBAT_TAB]}</NavItem>
-        <NavSection>Mágia</NavSection>
-        {MAGIC_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => onSelectTab(i)}>{compNames[i]}</NavItem>)}
-        <NavSection>Felszerelés</NavSection>
-        {GEAR_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => onSelectTab(i)}>{compNames[i]}</NavItem>)}
+    <Flex direction={{ base: "column", md: "row" }} flex="1 1 auto" minH={0} bg="page" overflow="hidden">
+      {/* Mobile header — menu · current page · search */}
+      <Flex display={{ base: "flex", md: "none" }} align="center" gap="10px" px="12px" h="54px" flexShrink={0} borderBottom="1px solid" borderColor="hair" bg="page">
+        <HeaderIconBtn label="Tartalomjegyzék" onClick={() => setNavOpen(true)}>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            <line x1="4" y1="6.5" x2="20" y2="6.5" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17.5" x2="20" y2="17.5" />
+          </svg>
+        </HeaderIconBtn>
+        <Heading as="p" flex="1 1 auto" minW={0} fontSize="18px" fontWeight={700} color="fg" noOfLines={1}>
+          {chapter ? chapter.name : title}
+        </Heading>
+        <HeaderIconBtn label="Keresés" onClick={() => setSearchOpen(true)}>
+          <SearchIcon boxSize="15px" />
+        </HeaderIconBtn>
+      </Flex>
+
+      {/* Left sidebar navigation (md+) — grouped (Képzettségek · Harc · Mágia · Felszerelés) */}
+      <Box as="nav" display={{ base: "none", md: "block" }} w="248px" flexShrink={0} h="100%" overflowY="auto" borderRight="1px solid" borderColor="hair" px="14px" py="20px">
+        {navContent}
       </Box>
 
+      {/* Mobile nav drawer */}
+      {navOpen && (
+        <Box display={{ base: "block", md: "none" }} position="fixed" inset={0} zIndex={44} bg="rgba(16,14,24,.55)" animation={`${fadeIn} .18s ease`} onClick={() => setNavOpen(false)}>
+          <Box
+            as="nav" position="absolute" top={0} bottom={0} left={0} w="min(320px, 86vw)" bg="page" borderRight="1px solid" borderColor="hair"
+            px="14px" py="16px" pb="max(16px, env(safe-area-inset-bottom))" overflowY="auto" boxShadow="12px 0 40px rgba(0,0,0,.3)"
+            animation={`${drawerIn} .22s ease`} onClick={(e) => e.stopPropagation()}
+          >
+            {navContent}
+          </Box>
+        </Box>
+      )}
+
       {/* Content */}
-      <Box flex="1 1 auto" minH={0} overflowY="auto">
+      <Box ref={contentRef} flex="1 1 auto" minH={0} overflowY="auto">
       <Box maxW={{ base: "100%", md: "1040px" }} mx="auto" px={{ base: "16px", md: "20px" }} pt={{ base: "26px", md: "24px" }} pb="90px">
         {chapter ? (
         <Box maxW="780px" mx="auto"><Markdown source={chapter.md} /></Box>
         ) : (
         <>
         <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb="4px">
-          <Heading as="h2" fontSize={{ base: "24px", md: "21px" }} fontWeight={700} color="fg" textAlign="center">{title}</Heading>
+          <Heading as="h2" fontSize="19px" fontWeight={700} color="fg" textAlign="center">{title}</Heading>
           {headingRules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", headingRules)} />}
         </Box>
         <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
         </Text>
         {TAB_INTROS[compTab] && (
-          <Text fontSize={{ base: "16px", md: "15px" }} lineHeight="1.6" color="muted" textAlign="center" maxW="680px" mx="auto" mb="24px">
+          <Text fontSize="13.5px" lineHeight="1.65" color="muted" textAlign="center" maxW="680px" mx="auto" mb="24px">
             {TAB_INTROS[compTab]}
           </Text>
         )}
@@ -266,12 +330,12 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
                       <Th>Képzettség</Th><Th align="center">Nehéz.</Th><Th>Erős</Th><Th>Gyenge</Th><Th align="right">Tulajdonság</Th>
                     </Box>
                     {g.rows.map((r, i) => (
-                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py="8px" borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
-                        <Text fontSize={{ base: "16px", md: "15px" }} fontWeight={600} color="fg">{r.name}</Text>
-                        <Text textAlign="center" color="muted" fontSize="14.5px" sx={{ fontVariantNumeric: "tabular-nums" }}>{r.diff}</Text>
-                        <Text color="muted" fontSize="13.5px">{r.strong}</Text>
-                        <Text color="muted" fontSize="13.5px">{r.weak}</Text>
-                        <Text textAlign="right" color="accentTx" fontSize="13.5px">{r.attr}</Text>
+                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py={{ base: "11px", md: "8px" }} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
+                        <Text fontSize="13.5px" fontWeight={600} color="fg">{r.name}</Text>
+                        <Text textAlign="center" color="muted" fontSize="13px" sx={{ fontVariantNumeric: "tabular-nums" }}>{r.diff}</Text>
+                        <Text color="muted" fontSize="12.5px">{r.strong}</Text>
+                        <Text color="muted" fontSize="12.5px">{r.weak}</Text>
+                        <Text textAlign="right" color="accentTx" fontSize="12.5px">{r.attr}</Text>
                       </Box>
                     ))}
                   </Box></Box>
@@ -288,7 +352,9 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
           </Box>
         ) : (
           <Box display="flex" flexDirection="column" gap="22px" maxW={compTab === COMBAT_TAB || compTab === POISONS_TAB ? "760px" : undefined} mx="auto" w="100%">
-            {blocks.map((b) => renderBlock(b, compTab === 8))}
+            {/* the weapons table's crammed no-scroll mode only works with desktop widths — on
+                mobile it falls back to the normal horizontally scrollable layout */}
+            {blocks.map((b) => renderBlock(b, compTab === 8 && !isMobile))}
           </Box>
         )}
         </>

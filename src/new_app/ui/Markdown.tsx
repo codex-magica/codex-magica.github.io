@@ -23,9 +23,9 @@ const inline = (s: string): React.ReactNode[] => {
 };
 
 const H_PROPS: Record<number, Record<string, unknown>> = {
-  1: { fontSize: { base: "27px", md: "29px" }, mt: "4px", mb: "16px", pb: "10px", borderBottom: "1px solid", borderColor: "rule" },
-  2: { fontSize: { base: "21px", md: "22px" }, mt: "30px", mb: "9px" },
-  3: { fontSize: { base: "17.5px", md: "18px" }, mt: "22px", mb: "6px" },
+  1: { fontSize: "23px", mt: "4px", mb: "16px", pb: "10px", borderBottom: "1px solid", borderColor: "rule" },
+  2: { fontSize: "19px", mt: "30px", mb: "9px" },
+  3: { fontSize: "16.5px", mt: "22px", mb: "6px" },
   4: { fontSize: "15.5px", mt: "16px", mb: "4px", color: "accentTx" },
 };
 
@@ -104,7 +104,7 @@ export const Markdown: React.FC<{ source: string }> = ({ source }) => {
       while (i < lines.length && lines[i].trim() && lines[i].trimStart().startsWith(">")) { q.push(lines[i].replace(/^\s*>\s?/, "")); i++; }
       blocks.push(
         <Box key={key++} borderLeft="3px solid" borderColor="accentBd" pl="14px" my="14px" color="muted">
-          <Text fontSize={{ base: "16px", md: "15px" }} lineHeight="1.65" fontStyle="italic">{inline(q.join(" "))}</Text>
+          <Text fontSize="13px" lineHeight="1.65" fontStyle="italic">{inline(q.join(" "))}</Text>
         </Box>
       );
       continue;
@@ -118,7 +118,7 @@ export const Markdown: React.FC<{ source: string }> = ({ source }) => {
       blocks.push(
         <Box as={ordered ? "ol" : "ul"} key={key++} pl="22px" my="12px" sx={{ listStyleType: ordered ? "decimal" : "disc" }}>
           {items.map((it, j) => (
-            <Box as="li" key={j} mb="5px" fontSize={{ base: "17px", md: "16px" }} lineHeight="1.6" color="fg">{inline(it)}</Box>
+            <Box as="li" key={j} mb="5px" fontSize="13.5px" lineHeight="1.6" color="fg">{inline(it)}</Box>
           ))}
         </Box>
       );
@@ -134,7 +134,7 @@ export const Markdown: React.FC<{ source: string }> = ({ source }) => {
       blocks.push(
         <Box key={key++} my="12px">
           {rows.map((r, j) => (
-            <Text key={j} mb="7px" fontSize={{ base: "17px", md: "16px" }} lineHeight="1.6" color="fg" textAlign="justify">{inline(r)}</Text>
+            <Text key={j} mb="7px" fontSize="13.5px" lineHeight="1.6" color="fg" textAlign="justify">{inline(r)}</Text>
           ))}
         </Box>
       );
@@ -148,7 +148,7 @@ export const Markdown: React.FC<{ source: string }> = ({ source }) => {
       !/^#{1,6}\s/.test(lines[i]) && !lines[i].trimStart().startsWith(">") && !isListLine(lines[i]) && !isMarkerLine(lines[i]) && !lines[i].includes("|")
     ) { para.push(lines[i].trim()); i++; }
     if (para.length) {
-      blocks.push(<Text key={key++} mb="13px" fontSize={{ base: "17px", md: "16px" }} lineHeight="1.72" color="fg" textAlign="justify">{inline(para.join(" "))}</Text>);
+      blocks.push(<Text key={key++} mb="13px" fontSize="13.5px" lineHeight="1.72" color="fg" textAlign="justify">{inline(para.join(" "))}</Text>);
     } else { i++; }
   }
   return <Box>{blocks}</Box>;

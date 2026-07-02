@@ -34,7 +34,7 @@ const TableBlock: React.FC<{ raw: string }> = ({ raw }) => {
   const maxCols = Math.max(...rows.map((r) => r.length));
   if (maxCols <= 1) {
     // not really tabular — render as a plain paragraph
-    return <Text mb="13px" fontSize={{ base: "17px", md: "15.5px" }} lineHeight="1.6" color="fg" whiteSpace="pre-line">{rows.map((r) => r.join(" ")).join("\n")}</Text>;
+    return <Text mb="13px" fontSize="13.5px" lineHeight="1.65" color="fg" whiteSpace="pre-line">{rows.map((r) => r.join(" ")).join("\n")}</Text>;
   }
   // a single-cell first row is a caption, not a header
   let caption: string | null = null;
@@ -90,7 +90,7 @@ const StatBlock: React.FC<{ raw: string }> = ({ raw }) => {
           {k && (
             <Text fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".07em" textTransform="uppercase" color="accentTx" lineHeight="1.3">{k}</Text>
           )}
-          <Text fontSize="14.5px" fontWeight={600} color="fg" lineHeight="1.3" sx={{ fontVariantNumeric: "tabular-nums" }}>{v}</Text>
+          <Text fontSize="13.5px" fontWeight={600} color="fg" lineHeight="1.3" sx={{ fontVariantNumeric: "tabular-nums" }}>{v}</Text>
         </Box>
       ))}
     </Box>
@@ -114,14 +114,14 @@ const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text, curre
   if (fok) {
     const reached = currentFok == null || parseInt(fok[1], 10) <= currentFok;
     return (
-      <Text mb="13px" fontSize={{ base: "17px", md: "15.5px" }} lineHeight="1.6" color={reached ? "fg" : "fgFaint"} opacity={reached ? 1 : 0.55} textAlign="justify">
+      <Text mb="13px" fontSize="13.5px" lineHeight="1.65" color={reached ? "fg" : "fgFaint"} opacity={reached ? 1 : 0.55} textAlign="justify">
         <Box as="span" fontWeight={700}>{fok[1]}. fok</Box>
         {fok[2]}
       </Text>
     );
   }
   return (
-    <Text mb="13px" fontSize={{ base: "17px", md: "15.5px" }} lineHeight="1.6" color="fg" textAlign="justify">
+    <Text mb="13px" fontSize="13.5px" lineHeight="1.65" color="fg" textAlign="justify">
       {text}
     </Text>
   );
@@ -133,8 +133,8 @@ export const DetailModal: React.FC<Props> = ({ modal, onClose }) => {
   return (
     <ModalShell onClose={onClose} width="min(660px, 100%)" maxH="86vh" zIndex={40} overlayPad="28px">
       <ModalHeader onClose={onClose} closeSize="md" px="28px" pt="22px" pb="15px">
-        <Heading as="h3" fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">{modal.name}</Heading>
-        {modal.sub && <Text mt="4px" fontSize="14.5px" fontWeight={600} color="muted">{modal.sub}</Text>}
+        <Heading as="h3" fontSize="18px" fontWeight={700} color="fg">{modal.name}</Heading>
+        {modal.sub && <Text mt="4px" fontSize="13px" fontWeight={600} color="muted">{modal.sub}</Text>}
         {modal.levelStrip && (
           <Box mt="9px" display="inline-flex" alignItems="center" gap="7px" px="12px" py="4px" borderRadius="8px" bg="accentSoft" color="accentTx" fontFamily="system-ui" fontSize="12px" fontWeight={700}>
             {modal.levelStrip}
