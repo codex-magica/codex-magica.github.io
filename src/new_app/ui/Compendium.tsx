@@ -7,6 +7,8 @@ import { Markdown } from "./Markdown";
 import { compNames } from "./sampleData";
 import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
 import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
+import { combatSituationsIntro } from "../data/combatSituations";
+import { mundaneItemsIntro } from "../data/mundaneItems";
 import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
@@ -14,7 +16,7 @@ import introMd from "../../book/01-bevezeto.md";
 import charMd from "../../book/02-karakteralkotas.md";
 
 // rulebook chapters shown via the Markdown renderer; tab indices start at CHAPTER_BASE (after the data tabs)
-const CHAPTER_BASE = 10;
+const CHAPTER_BASE = 12;
 const CHAPTERS = [
   { name: "Bevezető", md: introMd },
   { name: "Karakteralkotás", md: charMd },
@@ -26,9 +28,14 @@ interface Props {
   onOpenModal: (m: ModalState) => void;
 }
 
-// sidebar nav groups (indices into compNames): Képzettségek stands alone, then Mágia, then Felszerelés
+// sidebar nav groups (indices into compNames): Képzettségek stands alone, then Harc, Mágia, Felszerelés
 const MAGIC_TABS = [1, 2, 3, 4, 5, 6, 7];
-const GEAR_TABS = [8, 9];
+const GEAR_TABS = [8, 9, 11];
+const COMBAT_TAB = 10;
+const ITEMS_TAB = 11;
+
+// intro paragraph shown under the page heading on tabs that have one
+const TAB_INTROS: Record<number, string> = { [COMBAT_TAB]: combatSituationsIntro, [ITEMS_TAB]: mundaneItemsIntro };
 
 const NavSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Box display="flex" alignItems="center" gap="10px" mt="20px" mb="6px">
@@ -38,7 +45,7 @@ const NavSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 // full-bleed item: bg spans the whole sidebar width, text stays inset to align with the headers
 const NavItem: React.FC<{ active: boolean; prominent?: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, prominent, onClick, children }) => (
-  <Box as="button" type="button" onClick={onClick} position="relative" display="block" textAlign="left" mx="-14px" px="14px" py={prominent ? "9px" : "7px"}
+  <Box as="button" type="button" onClick={onClick} position="relative" display="block" w="calc(100% + 28px)" textAlign="left" mx="-14px" px="14px" py={prominent ? "9px" : "7px"}
     bg={active ? "accentSoft" : "transparent"} color={active ? "fg" : "muted"} fontWeight={active || prominent ? 700 : 500} fontSize={prominent ? "17px" : "15.5px"}
     transition="background .12s, color .12s" _hover={{ bg: active ? "accentSoft" : "band", color: "fg" }}>
     {active && <Box position="absolute" left="0" top="0" bottom="0" w="3px" bg="accent" />}
@@ -93,6 +100,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
   // dense = cram all columns to fit the container (no horizontal scroll) — used for the wide
   // weapons table; value columns shrink to share the width.
   const renderBlock = (block: TableBlock, dense = false) => {
+    const showTitle = block.title !== title; // a lone block titled like the page heading needs no repeat
     const grid = dense
       ? `minmax(82px, 1.3fr) ${block.columns.map(() => "minmax(0, 1fr)").join(" ")}`
       : `minmax(140px, 1.6fr) ${block.columns.map(() => "minmax(58px, 1fr)").join(" ")}`;
@@ -110,27 +118,38 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
             <Box key={i} as="span" fontFamily="system-ui" fontSize={hSize} fontWeight={700} letterSpacing=".02em" textTransform="uppercase" color="fgFaint" textAlign={(c.align as any) || "center"}>{c.label}</Box>
           ))}
         </Box>
-        {block.rows.map((r, i) => (
-          <Box as="button" type="button" key={r.name + i} onClick={() => openRow(r)} display="grid" gridTemplateColumns={grid} gap={gap} w="100%" textAlign="left" px={px} py={dense ? "7px" : "8px"} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" alignItems="baseline" _hover={{ bg: "accentSoft" }}>
+        {block.rows.map((r, i) => {
+          // rows without a description (pure price lists) render as plain rows, not buttons
+          const clickable = !!r.body?.length;
+          return (
+          <Box key={r.name + i} {...(clickable ? { as: "button" as const, type: "button", onClick: () => openRow(r) } : {})} display="grid" gridTemplateColumns={grid} gap={gap} w="100%" textAlign="left" px={px} py={dense ? "7px" : "8px"} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" alignItems="baseline" _hover={clickable ? { bg: "accentSoft" } : undefined}>
             <Text fontSize={nameFs} fontWeight={600} color="fg" lineHeight="1.2">{r.name}</Text>
-            {r.cells.map((cell, j) => (
+            {r.note ? (
+              <Text gridColumn="2 / -1" textAlign="center" fontSize={cellFs} fontStyle="italic" color="fgFaint" lineHeight="1.25">{r.note}</Text>
+            ) : r.cells.map((cell, j) => (
               <Text key={j} textAlign={(block.columns[j].align as any) || "center"} fontSize={cellFs} color="muted" lineHeight="1.25" sx={{ fontVariantNumeric: "tabular-nums" }}>{cell}</Text>
             ))}
           </Box>
-        ))}
+          );
+        })}
       </Box>
     );
 
     const subRules = schoolRules?.sub?.[block.title];
     return (
       <Box key={block.title}>
+        {showTitle && (
         <Box display="flex" alignItems="center" justifyContent="center" gap="10px" mb="9px">
           <Heading as="h3" textAlign="center" fontSize={{ base: "19px", md: "17px" }} fontWeight={700} color="fg">{block.title}</Heading>
           {subRules && <RulesChip onClick={() => openRules(block.title, "Szabályok", subRules)} />}
         </Box>
+        )}
         <ParchPanel p={0} overflow="hidden">
           {dense ? inner : <Box overflowX="auto">{inner}</Box>}
         </ParchPanel>
+        {block.footer && (
+          <Text mt="7px" fontSize="12px" lineHeight="1.5" color="fgFaint">{block.footer}</Text>
+        )}
       </Box>
     );
   };
@@ -151,6 +170,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
           <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => onSelectTab(CHAPTER_BASE + i)}>{c.name}</NavItem>
         ))}
         <NavItem active={compTab === 0} onClick={() => onSelectTab(0)}>{compNames[0]}</NavItem>
+        <NavSection>Harc</NavSection>
+        <NavItem active={compTab === COMBAT_TAB} onClick={() => onSelectTab(COMBAT_TAB)}>{compNames[COMBAT_TAB]}</NavItem>
         <NavSection>Mágia</NavSection>
         {MAGIC_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => onSelectTab(i)}>{compNames[i]}</NavItem>)}
         <NavSection>Felszerelés</NavSection>
@@ -171,6 +192,11 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
         <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
         </Text>
+        {TAB_INTROS[compTab] && (
+          <Text fontSize={{ base: "16px", md: "15px" }} lineHeight="1.6" color="muted" textAlign="center" maxW="680px" mx="auto" mb="24px">
+            {TAB_INTROS[compTab]}
+          </Text>
+        )}
 
         {isSkills ? (
           <Box display="flex" flexDirection="column" gap="22px" maxW="760px" mx="auto">
@@ -196,8 +222,15 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
               </Box>
             ))}
           </Box>
+        ) : compTab === ITEMS_TAB ? (
+          // price lists flow into two masonry columns so the short tables don't stack into one long strip
+          <Box maxW="900px" mx="auto" sx={{ columnCount: { base: 1, md: 2 }, columnGap: "22px" }}>
+            {blocks.map((b) => (
+              <Box key={b.title} mb="22px" sx={{ breakInside: "avoid" }}>{renderBlock(b)}</Box>
+            ))}
+          </Box>
         ) : (
-          <Box display="flex" flexDirection="column" gap="22px">
+          <Box display="flex" flexDirection="column" gap="22px" maxW={compTab === COMBAT_TAB ? "760px" : undefined} mx="auto" w="100%">
             {blocks.map((b) => renderBlock(b, compTab === 8))}
           </Box>
         )}

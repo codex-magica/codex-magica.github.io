@@ -12,6 +12,8 @@ import { WeaponValues } from "../data/weapons";
 import { ArmorValues, ShieldValues } from "../data/armor";
 import { SkillValues } from "../data/skillsText";
 import { MagasMagiaValues } from "../data/magasMagia";
+import { CombatSituations } from "../data/combatSituations";
+import { MundaneItems } from "../data/mundaneItems";
 import { SKILLS } from "../model/skills";
 
 export interface TableCol { label: string; align?: "center" | "right" }
@@ -21,9 +23,10 @@ export interface TableRow {
   open: "modal" | "weapon";
   body?: string[];
   modalSub?: string;
+  note?: string; // no per-column values — this note spans the value columns instead ("Lásd a leírást!")
   weapon?: { kind: "melee" | "ranged"; damage: string; range?: string; ke?: number; te?: number; ve?: number; ce?: number };
 }
-export interface TableBlock { title: string; nameLabel: string; columns: TableCol[]; rows: TableRow[] }
+export interface TableBlock { title: string; nameLabel: string; columns: TableCol[]; rows: TableRow[]; footer?: string }
 
 const arr = (d: string | string[]): string[] => (Array.isArray(d) ? d : [d]);
 const dash = (v: unknown): string => (v === undefined || v === null || v === "" || v === "-" ? "—" : String(v));
@@ -189,6 +192,32 @@ export function tabBlocks(tab: number): TableBlock[] {
           })),
         },
       ];
+    case 10: // Harci helyzetek (Harcrendszer fejezet)
+      return [
+        {
+          title: "Harci helyzetek",
+          nameLabel: "Harci helyzet",
+          columns: [{ label: "KÉ" }, { label: "TÉ" }, { label: "VÉ" }, { label: "CÉ" }],
+          rows: CombatSituations.map((c) => ({
+            name: c.name,
+            cells: [c.ke, c.te, c.ve, c.ce],
+            note: c.note,
+            open: "modal" as const,
+            modalSub: "Harci helyzet",
+            body: c.note
+              ? c.description
+              : [`stats:KÉ: ${c.ke} · TÉ: ${c.te} · VÉ: ${c.ve} · CÉ: ${c.ce}`, ...c.description],
+          })),
+        },
+      ];
+    case 11: // Tárgyak és árak (Pénz, felszerelés fejezet) — price list only, rows are not clickable
+      return MundaneItems.map((g) => ({
+        title: g.group,
+        nameLabel: g.nameLabel,
+        footer: g.footer,
+        columns: [{ label: "Ár", align: "right" as const }],
+        rows: g.items.map((it) => ({ name: it.name, cells: [it.price], open: "modal" as const })),
+      }));
     default:
       return [];
   }

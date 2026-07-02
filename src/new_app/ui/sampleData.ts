@@ -93,6 +93,7 @@ export const equipment = [
 export const compNames = [
   "Képzettségek", "Bárdmágia", "Szakrális Mágia", "Boszorkánymágia",
   "Boszorkánymesteri mágia", "Tűzmágia", "Pszi", "Magasmágia", "Fegyverek", "Páncélok",
+  "Harci helyzetek", "Tárgyak és árak",
 ];
 
 export const refSkillGroups = [
