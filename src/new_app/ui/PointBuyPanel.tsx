@@ -9,6 +9,7 @@ import { ATTR_KAP_COST, KAP_RATE } from "../engine/constants";
 import { Stepper } from "./Stepper";
 import { DeleteButton } from "./controls";
 import { FIELD_SX, FS_NAME, ROW_PY } from "./tokens";
+import { CombatInfoModal } from "./InfoModals";
 
 interface Props {
   level: number;
@@ -46,6 +47,8 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
   const existingPools = PSEUDO.filter(({ pool }) => derived.pools.magic[pool]);
 
   const [adding, setAdding] = useState(false);
+  // Clicked harcérték label → formula-with-values + definition modal.
+  const [combatInfo, setCombatInfo] = useState<string | null>(null);
   const boughtStats = STAT_KEYS.filter((s) => statBuyOf(s) > 0);
   const availableForDraft = STAT_KEYS.filter((s) => statBuyOf(s) === 0 && !(caps && derived.effectiveStats[s] >= caps[s]));
 
@@ -91,7 +94,9 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
         const v = hmOf(c);
         return buyRow(
           c,
-          <>{c} <Text as="span" color="fgFaint">(= {derived.combat[c]})</Text></>,
+          <Box as="button" type="button" onClick={() => setCombatInfo(c)} title="Hogyan számolódik?" textAlign="left" _hover={{ color: "accentTx", textDecoration: "underline" }}>
+            {c} <Text as="span" color="fgFaint">(= {derived.combat[c]})</Text>
+          </Box>,
           v,
           String(KAP_RATE.HM),
           () => onHm(level, c, Math.max(0, v - 1)),
@@ -193,6 +198,8 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
           <DeleteButton onClick={() => setAdding(false)} />
         </HStack>
       )}
+
+      {combatInfo && <CombatInfoModal statKey={combatInfo} derived={derived} onClose={() => setCombatInfo(null)} />}
     </Box>
   );
 };

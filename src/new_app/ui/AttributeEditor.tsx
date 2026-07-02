@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Heading, HStack, Text } from "@chakra-ui/react";
 import { STAT_KEYS, STAT_SHORT, Stat } from "../model/attributes";
 import { RACES } from "../model/races";
@@ -7,6 +7,7 @@ import { CharacterRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { Stepper } from "./Stepper";
 import { FS_NAME } from "./tokens";
+import { StatInfoModal } from "./InfoModals";
 
 interface Props {
   record: CharacterRecord;
@@ -21,6 +22,8 @@ const STEPW = { base: "136px", md: "108px" };
 // Adottság column raises — 1 KAP per point). Effective value = base + Adottság.
 export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, onAdottsag }) => {
   const caps = RACES[record.race]?.statLimits;
+  // Clicked attribute name → book-description modal (text only; no calculation in the creator).
+  const [statInfo, setStatInfo] = useState<Stat | null>(null);
   const capOf = (s: Stat) => (caps ? caps[s] : ATTR_MAX);
   const baseOf = (s: Stat) => Math.min(record.pointBuy[s], capOf(s));
   const adOf = (s: Stat) => record.adottsag?.[s] ?? 0;
@@ -67,9 +70,11 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
           return (
             <HStack key={stat} spacing={3} py={{ base: "11px", md: "8px" }}>
               <Box flex="1" minW={0}>
-                <Text fontSize={FS_NAME} fontWeight={600} color="fg" noOfLines={1}>
-                  {stat} <Text as="span" color="fgFaint" fontSize=".82em">({STAT_SHORT[stat]})</Text>
-                </Text>
+                <Box as="button" type="button" onClick={() => setStatInfo(stat)} title="Mit jelent ez a tulajdonság?" textAlign="left" maxW="100%">
+                  <Text fontSize={FS_NAME} fontWeight={600} color="fg" noOfLines={1} _hover={{ color: "accentTx", textDecoration: "underline" }}>
+                    {stat} <Text as="span" color="fgFaint" fontSize=".82em">({STAT_SHORT[stat]})</Text>
+                  </Text>
+                </Box>
               </Box>
               {/* ÉRTÉK — effective value; buttons edit the base part, drawn from the 135 budget */}
               <Box w={STEPW} flexShrink={0}>
@@ -98,6 +103,8 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
           );
         })}
       </Box>
+
+      {statInfo && <StatInfoModal stat={statInfo} onClose={() => setStatInfo(null)} />}
     </Box>
   );
 };

@@ -4,7 +4,7 @@ import { TimeIcon } from "@chakra-ui/icons";
 import { WeaponModalState } from "./WeaponModal";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
-import { STAT_KEYS } from "../model/attributes";
+import { STAT_KEYS, Stat } from "../model/attributes";
 import { SKILL_BY_NAME } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
 import { VITALS, POOL_UNIT } from "../model/vitals";
@@ -12,8 +12,7 @@ import { FS, FS_NAME, FS_SUB, ROWPY, GAP, Card, SecHead, SubHead, ValNum, Col, E
 import { VitalsCard, VitalRow } from "./sheet/VitalsCard";
 import { EquipmentCard } from "./sheet/EquipmentCard";
 import { AbilityChips } from "./AbilityChips";
-import { ModalShell } from "./Modal";
-import { COMBAT_INFO, combatBreakdown } from "../model/combatInfo";
+import { CombatInfoModal, StatInfoModal } from "./InfoModals";
 
 interface Props {
   record: CharacterRecord;
@@ -68,10 +67,9 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
     { k: "AME", v: derived.derived.AME },
     ...(derived.derived.Sebzésbónusz > 0 ? [{ k: "Sebzésbónusz", v: `+${derived.derived.Sebzésbónusz}` }] : []),
   ];
-  // Clicked harcérték → formula-with-values + book definition modal.
+  // Clicked harcérték / tulajdonság → formula-with-values + book definition modal.
   const [combatInfo, setCombatInfo] = useState<string | null>(null);
-  const combatTotalOf = (k: string): number =>
-    (["KÉ", "TÉ", "VÉ", "CÉ"] as const).includes(k as any) ? derived.combat[k as "KÉ"] : (derived.derived as any)[k] ?? 0;
+  const [statInfo, setStatInfo] = useState<Stat | null>(null);
 
   const skillGroups = SKILL_CATEGORIES.map((cat) => ({
     name: cat,
@@ -123,7 +121,8 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         <Card>
           <SecHead>Tulajdonságok</SecHead>
           {STAT_KEYS.map((s) => (
-            <Box key={s} {...rowProps} justifyContent="space-between" gap="14px">
+            <Box key={s} as="button" type="button" w="100%" textAlign="left" onClick={() => setStatInfo(s)} title="Miből áll össze?"
+              {...rowProps} display="flex" justifyContent="space-between" gap="14px" _hover={{ bg: "accentSoft", borderRadius: "7px" }}>
               <Text color="fg" fontSize={FS}>{s}</Text>
               <ValNum>{derived.effectiveStats[s]}</ValNum>
             </Box>
@@ -205,32 +204,8 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         <EquipmentCard text={invText} onSet={onSetInventory} />
       </Col>
 
-      {combatInfo && COMBAT_INFO[combatInfo] && (() => {
-        const info = COMBAT_INFO[combatInfo];
-        const total = combatTotalOf(combatInfo);
-        const parts = combatBreakdown(info, derived.effectiveStats, total, derived.provenance[combatInfo] ?? []);
-        return (
-          <ModalShell onClose={() => setCombatInfo(null)} width="min(480px, 100%)" maxH="76vh" zIndex={60} overlayPad="28px">
-            <Box p="20px 22px">
-              <Text fontSize="17px" fontWeight={700} color="fg">{info.label} <Text as="span" color="fgFaint" fontWeight={500}>({info.key})</Text></Text>
-              <Box mt="12px" mb="14px" px="14px" py="11px" borderRadius="10px" bg="band" border="1px solid" borderColor="hair">
-                {parts.map((p, i) => (
-                  <HStack key={i} justify="space-between" py="3px">
-                    <Text fontSize="13px" color="muted">{i > 0 ? "+ " : ""}{p.label}</Text>
-                    <Text fontSize="13.5px" fontWeight={600} color="fg" sx={{ fontVariantNumeric: "tabular-nums" }}>{p.value}</Text>
-                  </HStack>
-                ))}
-                <Box h="1px" bg="rule" my="6px" />
-                <HStack justify="space-between" py="3px">
-                  <Text fontSize="13px" fontWeight={700} color="accentTx">{info.key}</Text>
-                  <Text fontSize="15px" fontWeight={700} color="accentTx" sx={{ fontVariantNumeric: "tabular-nums" }}>{total}</Text>
-                </HStack>
-              </Box>
-              <Text fontSize="13.5px" color="fg" lineHeight="1.65">{info.def}</Text>
-            </Box>
-          </ModalShell>
-        );
-      })()}
+      {combatInfo && <CombatInfoModal statKey={combatInfo} derived={derived} onClose={() => setCombatInfo(null)} />}
+      {statInfo && <StatInfoModal stat={statInfo} derived={derived} onClose={() => setStatInfo(null)} />}
     </Box>
   );
 };
