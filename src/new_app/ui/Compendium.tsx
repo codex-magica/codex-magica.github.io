@@ -9,7 +9,7 @@ import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
 import { combatSituationsIntro } from "../data/combatSituations";
 import { mundaneItemsIntro } from "../data/mundaneItems";
 import { poisonsIntro, poisonRules } from "../data/poisons";
-import { SearchPalette, SearchButton, SearchEntry } from "./CompendiumSearch";
+import { SearchPalette, SearchButton, SearchEntry, prewarmSearchIndex } from "./CompendiumSearch";
 import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
@@ -86,15 +86,19 @@ const skillGroups = SKILL_CATEGORIES.map((cat) => ({
 
 export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal }) => {
   const [searchOpen, setSearchOpen] = useState(false);
-  // the query outlives a pick (reopening resumes the search) but a dismissal clears it
-  const [searchQuery, setSearchQuery] = useState("");
+  // the query outlives a pick (reopening resumes the search) but a dismissal clears it; held in a
+  // ref so typing in the palette never re-renders the compendium behind it
+  const searchQueryRef = useRef("");
   // navigation target picked in the search palette; consumed once the target tab has rendered
   const pendingRef = useRef<{ tab: number; block: string; name: string } | null>(null);
   const [pendingTick, setPendingTick] = useState(0);
 
+  // build the search index while idle so the first palette open is instant
+  useEffect(() => prewarmSearchIndex(), []);
+
   const dismissSearch = () => {
+    searchQueryRef.current = "";
     setSearchOpen(false);
-    setSearchQuery("");
   };
 
   // ⌘K / Ctrl+K toggles the search palette (closing this way counts as a dismissal)
@@ -103,7 +107,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setSearchOpen((o) => {
-          if (o) setSearchQuery("");
+          if (o) searchQueryRef.current = "";
           return !o;
         });
       }
@@ -291,7 +295,14 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal 
         )}
       </Box>
       </Box>
-      {searchOpen && <SearchPalette query={searchQuery} onQueryChange={setSearchQuery} onClose={dismissSearch} onPick={pickResult} />}
+      {searchOpen && (
+        <SearchPalette
+          initialQuery={searchQueryRef.current}
+          onQueryChange={(q) => { searchQueryRef.current = q; }}
+          onClose={dismissSearch}
+          onPick={pickResult}
+        />
+      )}
     </Flex>
   );
 };

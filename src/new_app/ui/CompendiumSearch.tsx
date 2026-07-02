@@ -23,6 +23,14 @@ export interface SearchEntry {
 // ── index ──
 // Built lazily on first open, then cached for the session (the data is static).
 let INDEX: SearchEntry[] | null = null;
+
+// build the index while the browser is idle so the first palette open doesn't pay for it
+export function prewarmSearchIndex(): void {
+  const idle = (window as any).requestIdleCallback as undefined | ((cb: () => void) => void);
+  if (idle) idle(() => searchIndex());
+  else setTimeout(() => searchIndex(), 300);
+}
+
 export function searchIndex(): SearchEntry[] {
   if (INDEX) return INDEX;
   const out: SearchEntry[] = [];
@@ -35,9 +43,18 @@ export function searchIndex(): SearchEntry[] {
   for (let tab = 1; tab < compNames.length; tab++) {
     for (const block of tabBlocks(tab)) {
       for (const r of block.rows) {
+        // right-aligned context value: spell cost (Mp/Kegy/Ψp — the part of the modal sub after the
+        // school name), item price, poison price. Long non-values ("Lásd a leírást!") are dropped.
+        const value =
+          tab <= 7 ? r.modalSub?.split("·")[1]?.trim()
+          : tab === 8 ? r.cells[1] // weapon damage
+          : tab === 9 ? r.modalSub?.split("·")[0]?.trim() // "SFÉ n" (armor) / "VÉ n" (shield)
+          : tab === 11 ? r.cells[0]
+          : tab === 12 && block.title === "Példamérgek" ? r.cells[4]
+          : undefined;
         out.push({
           name: r.name, tab, page: compNames[tab], block: block.title,
-          value: tab === 11 ? r.cells[0] : undefined,
+          value: value && value.length <= 16 ? value : undefined,
           modal: r.body?.length ? { kind: "spell", name: r.name, sub: r.modalSub, body: r.body } : undefined,
         });
       }
@@ -127,15 +144,46 @@ const Kbd: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </Box>
 );
 
+// one result row, memoised — typing/hover re-renders only the rows whose props changed
+const ResultRow = React.memo<{
+  hit: Hit;
+  idx: number;
+  selected: boolean;
+  qlen: number;
+  onHover: (i: number) => void;
+  onPickHit: (h: Hit) => void;
+}>(({ hit, idx, selected, qlen, onHover, onPickHit }) => (
+  <Flex
+    data-idx={idx} as="button" type="button" w="100%" textAlign="left" align="center" gap="12px" px="13px" py="7px"
+    bg={selected ? "accentSoft" : "transparent"} onMouseMove={() => !selected && onHover(idx)} onClick={() => onPickHit(hit)}
+    position="relative"
+  >
+    {selected && <Box position="absolute" left="0" top="6px" bottom="6px" w="3px" borderRadius="0 2px 2px 0" bg="accent" />}
+    <Glyph kind={tabGlyph(hit.entry.tab)} />
+    <Box flex="1 1 auto" minW={0}>
+      <MatchedName name={hit.entry.name} pos={hit.pos} len={qlen} />
+      <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" noOfLines={1}>
+        {hit.entry.page}{hit.entry.block !== hit.entry.page ? ` · ${hit.entry.block}` : ""}
+      </Text>
+    </Box>
+    {hit.entry.value && (
+      <Text flexShrink={0} fontSize="13px" color="muted" sx={{ fontVariantNumeric: "tabular-nums" }}>{hit.entry.value}</Text>
+    )}
+  </Flex>
+));
+
 // ── the palette ──
-// The query lives in the parent: it survives picking a result (reopen resumes the search) and the
-// parent clears it when the palette is dismissed (Esc / backdrop / ⌘K).
+// The query is palette-local state (so typing re-renders only the palette, never the compendium
+// behind it) mirrored into the parent through `onQueryChange`, which mutates a ref: it survives
+// picking a result (reopen resumes the search) and the parent clears it on dismissal (Esc /
+// backdrop / ⌘K).
 export const SearchPalette: React.FC<{
-  query: string;
+  initialQuery: string;
   onQueryChange: (q: string) => void;
   onClose: () => void;
   onPick: (e: SearchEntry) => void;
-}> = ({ query, onQueryChange, onClose, onPick }) => {
+}> = ({ initialQuery, onQueryChange, onClose, onPick }) => {
+  const [query, setQuery] = useState(initialQuery);
   const [sel, setSel] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -146,6 +194,13 @@ export const SearchPalette: React.FC<{
 
   // a resumed search opens with the query selected — typing restarts, arrows/Enter continue
   useEffect(() => { inputRef.current?.select(); }, []);
+
+  const setQueryBoth = (q: string) => {
+    setQuery(q);
+    onQueryChange(q);
+  };
+  const onHover = React.useCallback((i: number) => setSel(i), []);
+  const onPickHit = React.useCallback((h: Hit) => onPick(h.entry), [onPick]);
 
   // keep the keyboard-selected row in view
   useEffect(() => {
@@ -160,7 +215,7 @@ export const SearchPalette: React.FC<{
   };
 
   return (
-    <Box position="fixed" inset={0} zIndex={46} bg="rgba(16,14,24,.45)" sx={{ backdropFilter: "blur(2px)" }} onClick={onClose}>
+    <Box position="fixed" inset={0} zIndex={46} bg="rgba(16,14,24,.55)" onClick={onClose}>
       <Box
         position="absolute" top="14vh" left="50%" transform="translateX(-50%)" w="min(620px, calc(100vw - 28px))"
         bg="page" border="1px solid" borderColor="hair" borderRadius="14px" overflow="hidden"
@@ -169,7 +224,7 @@ export const SearchPalette: React.FC<{
         <Flex align="center" gap="11px" px="16px" borderBottom="1px solid" borderColor="rule">
           <SearchIcon boxSize="15px" color="fgFaint" flexShrink={0} />
           <Input
-            ref={inputRef} value={query} onChange={(e) => onQueryChange(e.target.value)} autoFocus variant="unstyled"
+            ref={inputRef} value={query} onChange={(e) => setQueryBoth(e.target.value)} autoFocus variant="unstyled"
             placeholder="Keresés a kompendiumban…" fontSize="17px" color="fg" py="15px"
             _placeholder={{ color: "fgFaint" }}
           />
@@ -187,24 +242,11 @@ export const SearchPalette: React.FC<{
         ) : (
           <Box ref={listRef} maxH="min(54vh, 480px)" overflowY="auto" py="7px">
             {hits.map((h, i) => (
-              <Flex
-                key={`${h.entry.tab}:${h.entry.block}:${h.entry.name}`} data-idx={i}
-                as="button" type="button" w="100%" textAlign="left" align="center" gap="12px" px="13px" py="7px"
-                bg={i === sel ? "accentSoft" : "transparent"} onMouseMove={() => setSel(i)} onClick={() => onPick(h.entry)}
-                position="relative"
-              >
-                {i === sel && <Box position="absolute" left="0" top="6px" bottom="6px" w="3px" borderRadius="0 2px 2px 0" bg="accent" />}
-                <Glyph kind={tabGlyph(h.entry.tab)} />
-                <Box flex="1 1 auto" minW={0}>
-                  <MatchedName name={h.entry.name} pos={h.pos} len={query.trim().length} />
-                  <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" noOfLines={1}>
-                    {h.entry.page}{h.entry.block !== h.entry.page ? ` · ${h.entry.block}` : ""}
-                  </Text>
-                </Box>
-                {h.entry.value && (
-                  <Text flexShrink={0} fontSize="13px" color="muted" sx={{ fontVariantNumeric: "tabular-nums" }}>{h.entry.value}</Text>
-                )}
-              </Flex>
+              <ResultRow
+                key={`${h.entry.tab}:${h.entry.block}:${h.entry.name}`}
+                hit={h} idx={i} selected={i === sel} qlen={query.trim().length}
+                onHover={onHover} onPickHit={onPickHit}
+              />
             ))}
           </Box>
         )}
