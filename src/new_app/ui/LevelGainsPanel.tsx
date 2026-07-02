@@ -41,13 +41,13 @@ export const LevelGainsPanel: React.FC<Props> = ({ level, record, derived, onGra
   return (
     <Box>
       <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} mb={1} color="fg">
-        Szintlépési nyereségek <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
+        Szintlépési bónuszok <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
       </Heading>
       <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={2} maxW="62ch">
-        Képzettségek szintje (3. fok→+1, 4→+2, 5→+3 / szint) és egyéb szintlépési nyereségek adta bónuszok.
+        Speciális képzettségek szintje és egyéb szintlépési bónuszok.
       </Text>
 
-      {nothing && <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" py="6px">Nincsenek szintlépési nyereségek ezen a szinten.</Text>}
+      {nothing && <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" py="6px">Nincsenek szintlépési bónuszok ezen a szinten.</Text>}
 
       {/* Pool/Fp grants — informational; already counted in the pool totals on the Pontvásárlás panel. */}
       {(nonHmGrants.length > 0 || hmGrants.length > 0) && <SubHeader>Képzettségbónuszok (/ szint)</SubHeader>}
