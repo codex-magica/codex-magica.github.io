@@ -258,7 +258,7 @@ const RAW: Raw[] = [
   { name: "Őselemi mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"] },
   {
     name: "Pszi", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"], subtypes: ["pyarroni", "kyr", "godoni", "slan"],
-    fokTriggers: [{ kind: "path", atFok: 3, label: "Pszi út", options: ["tudat", "test"] }],
+    fokTriggers: [{ kind: "path", atFok: 3, label: "Pszi fa", options: ["tudat", "test"] }],
     // Book ch.16: from fok 3 every level-up grants bonus Ψ-points (fok 3 → +1, 4 → +2, 5 → +3).
     perFok: {
       3: [{ kind: "resourcePerLevel", resource: "Psi", amount: 1 }],

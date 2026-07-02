@@ -17,12 +17,19 @@ export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(
 // Deep clone the demo seed — a shallow spread would share `levels`/`pointBuy`/... with the module constant.
 const seedRoster = (): CharacterRecord[] => [JSON.parse(JSON.stringify(defaultRecord)) as CharacterRecord];
 
+// Legacy migrations applied on load. Path choices are matched by the trigger LABEL, so a renamed
+// trigger ("Pszi út" → "Pszi fa") must be remapped or old records lose their committed choice.
+const migrateRecord = (r: CharacterRecord): CharacterRecord =>
+  r.pathChoices?.some((c) => c.trigger === "Pszi út")
+    ? { ...r, pathChoices: r.pathChoices.map((c) => (c.trigger === "Pszi út" ? { ...c, trigger: "Pszi fa" } : c)) }
+    : r;
+
 export const loadRoster = (): CharacterRecord[] => {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return seedRoster(); // first run → seed with the demo character
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.length ? (parsed as CharacterRecord[]) : []; // [] = user deleted all
+    if (Array.isArray(parsed)) return parsed.length ? (parsed as CharacterRecord[]).map(migrateRecord) : []; // [] = user deleted all
     return seedRoster(); // corrupt (non-array) payload → fall back to the seed, same as the catch branch
   } catch {
     return seedRoster();

@@ -504,7 +504,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const trig = db.skills[o.skill]?.fokTriggers?.find((t) => t.kind === "path");
         if (!trig || trig.kind !== "path" || o.fok < trig.atFok) continue;
         const chosen = rec.pathChoices?.find((c) => (o.variantId != null ? c.variantId === o.variantId : c.variantId == null && c.skill === o.skill && (c.subtype ?? "") === ((o.origSubtype ?? o.subtype) ?? "")) && c.trigger === trig.label);
-        if (!chosen) diag("warn", `${o.skill}${o.subtype ? ` (${o.subtype})` : ""}: ${trig.atFok}. fokon válassz ${trig.label.toLowerCase()}at (${trig.options.join(" / ")}).`, L);
+        if (!chosen) diag("warn", `${o.skill}${o.subtype ? ` (${o.subtype})` : ""}: ${trig.atFok}. fokon választani kell (${trig.label}: ${trig.options.join(" / ")}).`, L);
       }
     }
 

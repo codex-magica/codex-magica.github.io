@@ -344,7 +344,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
           display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
           fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
           bg={chosen ? "accentSoft" : "badSoft"} color={chosen ? "accentTx" : "bad"} borderColor={chosen ? "accentBd" : "bad"}>
-          {chosen ? `+1 ${STAT_SHORT[chosen]}` : "+1 tul."}
+          {chosen ? `+1 ${STAT_SHORT[chosen]}` : "+1 tul.?"}
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
         </Box>
         {open && (
@@ -380,7 +380,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const open = pathOpen === openKey;
     return (
       <Box position="relative" flexShrink={0}>
-        <Box as="button" type="button" title={`${trig.atFok}. fok: válassz utat`} onClick={() => setPathOpen(open ? null : openKey)}
+        <Box as="button" type="button" title={`${trig.atFok}. fok: ${trig.label} választása`} onClick={() => setPathOpen(open ? null : openKey)}
           display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
           fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
           bg={chosen ? "accentSoft" : "badSoft"} color={chosen ? "accentTx" : "bad"} borderColor={chosen ? "accentBd" : "bad"}>

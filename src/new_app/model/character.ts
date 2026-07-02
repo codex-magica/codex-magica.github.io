@@ -83,7 +83,7 @@ export interface SkillPathChoice {
   skill: string;
   subtype?: string;
   variantId?: string;
-  trigger: string; // the FokTrigger label (e.g. "Pszi út")
+  trigger: string; // the FokTrigger label (e.g. "Pszi fa")
   value: string; // the chosen option (e.g. "tudat")
 }
 
