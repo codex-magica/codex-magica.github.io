@@ -21,7 +21,7 @@ const pruneStaleFok4 = (rec: CharacterRecord): CharacterRecord => {
   const derived = derive(RULES, rec);
   const valid = new Set<string>();
   for (const s of derived.skills) {
-    if (s.percent == null && s.fok >= 4) valid.add(instanceKey(s.variantId, s.skill, s.subtype));
+    if (s.percent == null && s.fok >= 4) valid.add(instanceKey(s.variantId, s.skill, s.origSubtype ?? s.subtype));
   }
   const filtered = rec.fok4Bonuses.filter((b) => valid.has(instanceKey(b.variantId, b.skill, b.subtype)));
   return filtered.length === rec.fok4Bonuses.length ? rec : { ...rec, fok4Bonuses: filtered };

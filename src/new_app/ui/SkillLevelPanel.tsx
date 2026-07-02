@@ -436,6 +436,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number; attrs?: Stat[]; unmetAttrs?: Stat[]; placeholder?: boolean }) => {
     const isPct = inst.percent != null;
     const cur = isPct ? inst.percent! : inst.fok;
+    // Stable instance identity: purchases and per-instance choices (fok-4, path, attrs) address a granted
+    // instance by its ORIGINAL subtype, so renaming/clearing the display name never orphans them.
+    const idSub = inst.origSubtype ?? inst.subtype;
     const grantFloor = grantedFloor[keyOf(inst.skill, inst.subtype)] || 0;
     const floor = inheritedFloor[keyOf(inst.skill, inst.subtype)] || 0;
     const teacher = teacherOf(inst.skill, inst.subtype);
@@ -453,9 +456,9 @@ export const SkillLevelPanel: React.FC<Props> = ({
               ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
               : onSetSubtype(level, inst.skill, inst.subtype, v), cur)
         : null,
-      <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{showFok4 && fok4Badge(inst.skill, inst.subtype, undefined, inst.attrs)}{pathBadge(inst.skill, inst.subtype, undefined, cur)}</>,
+      <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{showFok4 && fok4Badge(inst.skill, idSub, undefined, inst.attrs)}{pathBadge(inst.skill, idSub, undefined, cur)}</>,
       <HStack spacing="7px" flexShrink={0}>
-        {attrsBadge(inst.skill, inst.subtype, undefined, inst.attrs ?? [], inst.unmetAttrs ?? [])}
+        {attrsBadge(inst.skill, idSub, undefined, inst.attrs ?? [], inst.unmetAttrs ?? [])}
         <Stepper
           fixed
           value={isPct ? `${cur}%` : `${cur}.`}
@@ -463,8 +466,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
           incWarn={(inst.unmetAttrs?.length ?? 0) > 0}
           decDisabled={cur <= floor}
           incDisabled={atMax || cost > kap}
-          onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, inst.subtype) : onUpsert(level, inst.skill, inst.subtype, cur - step))}
-          onInc={() => onUpsert(level, inst.skill, inst.subtype, cur + step)}
+          onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, idSub) : onUpsert(level, inst.skill, idSub, cur - step))}
+          onInc={() => onUpsert(level, inst.skill, idSub, cur + step)}
         />
       </HStack>,
       null

@@ -142,6 +142,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const poolMax: Record<Pool, number> = { Mana: 0, Psi: 0, Kegy: 0 };
   const poolExists: Record<Pool, boolean> = { Mana: false, Psi: false, Kegy: false };
   const owned: OwnedMap = {};
+  const grantedFokOf: Record<string, number> = {}; // key → highest GRANTED fok (grants don't need prereqs)
   const tags: Record<string, boolean> = {};
   let money = 0;
   const inventory = rec.inventory.slice();
@@ -177,6 +178,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const key = skillKey(e.skill, keySubtype(e.skill, e.subtype));
         const cur = owned[key];
         if (!cur || cur.fok < e.level) owned[key] = { skill: e.skill, subtype: effSubtype(e.skill, e.subtype), fok: e.level, percent: 0, origSubtype: e.subtype };
+        grantedFokOf[key] = Math.max(grantedFokOf[key] ?? 0, e.level);
         break;
       }
       case "grantSkillPercent": {
@@ -247,6 +249,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const key = skillKey(e.skill, keySubtype(e.skill, e.label));
         const cur = owned[key];
         if (!cur || cur.fok < e.level) owned[key] = { skill: e.skill, subtype: eff, fok: e.level, percent: 0, origSubtype: e.label, placeholder: !eff || eff === e.label };
+        grantedFokOf[key] = Math.max(grantedFokOf[key] ?? 0, e.level);
         break;
       }
       case "allowSkill":
@@ -362,17 +365,27 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
           diag("warn", `Ismeretlen képzettség: ${sp.skill}`, L);
           continue;
         }
-        for (const r of def.hardReq) {
-          if (maxFok(r.skill) < sp.to)
-            diag("warn", `${sp.skill} ${sp.to}. fok: erős előfeltétel «${r.skill}» legalább ${sp.to}. fok.`, L);
-        }
-        for (const r of def.softReq) {
-          if (maxFok(r.skill) < sp.to - 1)
-            diag("warn", `${sp.skill} ${sp.to}. fok: gyenge előfeltétel «${r.skill}» legalább ${sp.to - 1}. fok.`, L);
+        // Prerequisites only apply to what the player BUYS above the class/race-granted fok — granted skill
+        // levels come without prereqs (book: class packages bypass the requirement lists).
+        const grantedFok = sp.id != null ? 0 : grantedFokOf[skillKey(sp.skill, keySubtype(sp.skill, sp.subtype))] ?? 0;
+        if (sp.to > grantedFok) {
+          for (const r of def.hardReq) {
+            if (maxFok(r.skill) < sp.to)
+              diag("warn", `${sp.skill} ${sp.to}. fok: erős előfeltétel «${r.skill}» legalább ${sp.to}. fok.`, L);
+          }
+          for (const r of def.softReq) {
+            if (maxFok(r.skill) < sp.to - 1)
+              diag("warn", `${sp.skill} ${sp.to}. fok: gyenge előfeltétel «${r.skill}» legalább ${sp.to - 1}. fok.`, L);
+          }
         }
         // A user-added branch (sp.id) is keyed by its id so it forms its own instance and never collides
         // with the general trunk or another branch — even before the player has typed a distinct subtype.
-        const key = sp.id != null ? `var:${sp.id}` : skillKey(sp.skill, sp.subtype);
+        // A purchase whose subtype matches a granted ORIGINAL (e.g. raised while still "fő fegyver")
+        // resolves through the same override mechanism as the grant: stable key by the original, display by
+        // the override — so renaming/clearing after a raise doesn't split the instance or reset the input.
+        const hasOverride = sp.id == null && rec.subtypeOverrides?.[skillKey(sp.skill, sp.subtype)] != null;
+        const effSub = sp.id == null ? effSubtype(sp.skill, sp.subtype) : sp.subtype;
+        const key = sp.id != null ? `var:${sp.id}` : skillKey(sp.skill, keySubtype(sp.skill, sp.subtype));
         const cur = owned[key];
         const isPct = def.cost === "percentage";
         // A two-tier specific (Fegyverhasználat weapon) inherits its parent CATEGORY's fok as its floor;
@@ -382,13 +395,17 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         // Forced branching: a category node (Fegyverhasználat) may not exceed `branchAbove` — you must branch
         // to a concrete weapon for higher foks.
         const lvl0 = def.branch?.[0];
-        if (lvl0?.branchAbove != null && sp.parent == null && lvl0.options?.some((o) => o.name === sp.subtype) && sp.to > lvl0.branchAbove)
-          diag("warn", `${sp.skill} (${sp.subtype}): a kategória legfeljebb ${lvl0.branchAbove}. fok — a magasabb fokhoz konkrét fegyverre kell ágazni.`, L);
+        if (lvl0?.branchAbove != null && sp.parent == null && lvl0.options?.some((o) => o.name === effSub) && sp.to > lvl0.branchAbove)
+          diag("warn", `${sp.skill} (${effSub}): a kategória legfeljebb ${lvl0.branchAbove}. fok — a magasabb fokhoz konkrét fegyverre kell ágazni.`, L);
         // A non-variant purchase that doesn't raise the fok is a phantom (e.g. an earlier level now reaches
-        // it) — flag it for pruning. Branches (sp.id) are distinct instances, never phantom.
-        if (sp.id == null && sp.to <= from) redundantPurchases.push({ level: L, skill: sp.skill, subtype: sp.subtype });
-        const rAttrs = instAttrs(sp.skill, sp.subtype, sp.parent, attrChoiceFor(sp.skill, sp.subtype, sp.id));
-        const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(discounts, def, sp.subtype);
+        // it) — flag it for pruning and SKIP it: applying it would wrongly LOWER the skill to its stale
+        // target (raise L1 to 5 while L2 still says "to 4" → fok must stay 5 until the prune removes it).
+        if (sp.id == null && sp.to <= from) {
+          redundantPurchases.push({ level: L, skill: sp.skill, subtype: sp.subtype });
+          continue;
+        }
+        const rAttrs = instAttrs(sp.skill, effSub, sp.parent, attrChoiceFor(sp.skill, sp.subtype, sp.id));
+        const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(discounts, def, effSub);
         const cost = skillKpCost(def, from, sp.to, tUpto, effective, rAttrs);
         // School cost penalty (e.g. Barbár: Szociális/Alvilági/Tudományos ×1.5 Kp).
         let mult = 1;
@@ -400,7 +417,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         if (cost.note) diag("info", cost.note, L);
         // Carry forward the granted subtype's stable key: raising a granted-subtyped skill must keep its
         // origSubtype, else it looks self-specialised (a spurious "unspecialise" ✕ that corrupts on click).
-        const common = { skill: sp.skill, subtype: sp.subtype, parent: sp.parent, attrs: rAttrs, origSubtype: cur?.origSubtype, variantId: sp.id };
+        // A purchase that itself resolves an override keeps the original as origSubtype for the same reason.
+        const common = { skill: sp.skill, subtype: effSub, parent: sp.parent, attrs: rAttrs, origSubtype: cur?.origSubtype ?? (hasOverride ? sp.subtype : undefined), variantId: sp.id };
         owned[key] = isPct ? { ...common, fok: 0, percent: sp.to } : { ...common, fok: sp.to, percent: 0 };
       }
 
@@ -416,9 +434,10 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const rAttrs = o.attrs ?? instAttrs(o.skill, o.subtype, o.parent);
         if (!def || def.cost === "percentage" || rAttrs.length === 0 || o.fok < 4 || fok4Bonused.has(k)) continue;
         fok4Bonused.add(k);
+        const idSub = o.origSubtype ?? o.subtype; // stable identity — survives renaming a granted subtype
         const choice = rAttrs.length === 1
           ? rAttrs[0]
-          : rec.fok4Bonuses?.find((b) => (o.variantId != null ? b.variantId === o.variantId : b.variantId == null && b.skill === o.skill && (b.subtype ?? "") === (o.subtype ?? "")))?.stat;
+          : rec.fok4Bonuses?.find((b) => (o.variantId != null ? b.variantId === o.variantId : b.variantId == null && b.skill === o.skill && (b.subtype ?? "") === (idSub ?? "")))?.stat;
         if (choice) {
           effective[choice] += 1;
           addProv(choice as string, `skillFok4 (${o.skill}) L${L}`, 1);
@@ -433,7 +452,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         const o = owned[k];
         const trig = db.skills[o.skill]?.fokTriggers?.find((t) => t.kind === "path");
         if (!trig || trig.kind !== "path" || o.fok < trig.atFok) continue;
-        const chosen = rec.pathChoices?.find((c) => (o.variantId != null ? c.variantId === o.variantId : c.variantId == null && c.skill === o.skill && (c.subtype ?? "") === (o.subtype ?? "")) && c.trigger === trig.label);
+        const chosen = rec.pathChoices?.find((c) => (o.variantId != null ? c.variantId === o.variantId : c.variantId == null && c.skill === o.skill && (c.subtype ?? "") === ((o.origSubtype ?? o.subtype) ?? "")) && c.trigger === trig.label);
         if (!chosen) diag("warn", `${o.skill}${o.subtype ? ` (${o.subtype})` : ""}: ${trig.atFok}. fokon válassz ${trig.label.toLowerCase()}at (${trig.options.join(" / ")}).`, L);
       }
     }
@@ -585,7 +604,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     const o = owned[k];
     const def = db.skills[o.skill];
     const isPct = def && def.cost === "percentage";
-    const rAttrs = o.attrs ?? instAttrs(o.skill, o.subtype, o.parent, attrChoiceFor(o.skill, o.subtype, o.variantId));
+    const rAttrs = o.attrs ?? instAttrs(o.skill, o.subtype, o.parent, attrChoiceFor(o.skill, o.origSubtype ?? o.subtype, o.variantId));
     // Unmet governing attributes for the NEXT fok: a governing attr below 10 + (fok+1) means raising the
     // skill one more level is penalised. (No next level at fok 5.) Surfaced yellow in the UI.
     const need = 11 + o.fok;
