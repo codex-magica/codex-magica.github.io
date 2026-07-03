@@ -8,7 +8,7 @@ Mindazonáltal el kell fogadnunk, hogy istenek bizony léteznek, s nem érvénye
 
 A pyarroni és az északi teológiai iskolák megegyeznek abban, hogy a Külső Síkok felette állnak mind az anyagi, mind az Asztrál- és Mentálsíknak. E Külső Síkok végtelen számúak, ebből következően elméletileg végtelen számú isten létezhet. Minden istenség egy adott Külső Síkhoz kötődik — ezt Isteni Síknak nevezzük.
 
-Egyisten születése és hatalmának megerősödése után saját síkot kereshet magának. Ha olyan síkot kíván, melyre még más isten nem terjesztette ki hatalmát, és sikerül az ott élő lényeket uralma alá hajtania, akkor azon sík főistenévé válik. Ha nem vágyik ekkora hatalomra, avagy nem elég erős hozzá, hogy megszerezze, csatlakozhat valamely más istenek által uralt síkhoz, s ha befogadják, annak az istencsaládnak lesz tagja, mely az adott síkot uralja.
+Egy isten születése és hatalmának megerősödése után saját síkot kereshet magának. Ha olyan síkot kíván, melyre még más isten nem terjesztette ki hatalmát, és sikerül az ott élő lényeket uralma alá hajtania, akkor azon sík főistenévé válik. Ha nem vágyik ekkora hatalomra, avagy nem elég erős hozzá, hogy megszerezze, csatlakozhat valamely más istenek által uralt síkhoz, s ha befogadják, annak az istencsaládnak lesz tagja, mely az adott síkot uralja.
 
 Minden vallás valamely istencsaládot tisztel. Emellett természetesen más istenek létezését is elismerheti, ám csak az adott istencsalád hatalmának veti alá magát, s tőlük vár segítséget mind az evilági, mind a túlvilági életben.
 
@@ -28,7 +28,7 @@ Radaconte Argus, a Sigranomoi Egyetem teológiai tanszékének professzora így 
 
 > *"...Mindemellett vallom, hogy minden olyan egyháznak létjogosultsága vagyon, mely nem vét a Pyarroni Paktum szabályai ellen, s híveit mértékletességre, az Élet szent törvényeinek betartására buzdítja..."*
 
-> *"...Ha egy istennek elpusztulnak hívei, kiüresednek templommai és szent helyei, elveszti kapcsolatát az Anyagi Síkkal (megszűnik a csatorna), s többé semmilyen befolyással nem bír e világra..."*
+> *"...Ha egy istennek elpusztulnak hívei, kiüresednek templomai és szent helyei, elveszti kapcsolatát az Anyagi Síkkal (megszűnik a csatorna), s többé semmilyen befolyással nem bír e világra..."*
 
 A Teomica értekezései olykor nem kellően világosak, ám számtalan tekintetben helytállóak, így alapvetően igaznak kell elfogadnunk állításait.
 
@@ -42,13 +42,13 @@ Fohásznak nevezünk minden olyan könyörgést, mellyel a Pap égi pártfogója
 
 ## A szent szimbólum
 
-A szent szimbólum valamely egyház, és az általa tisztelt isten hatalmának szimbóluma, a pap hitének anyagi megtestesülése. A jelkép elkészítése hosszú és fáradtságos feladat. Először magát az alapformát készítik el, általában mesteremberek segítségével.
+A szent szimbólum valamely egyház, és az általa tisztelt isten hatalmának szimbóluma, a pap hitének anyagi megtestesülése. A jelkép elkészítése hosszú és fáradságos feladat. Először magát az alapformát készítik el, általában mesteremberek segítségével.
 
 A szent szimbólumok vallásonként, s nemritkán irányzatonként is eltérőek. Egyes egyházak ékköves-, karika- vagy pecsétgyűrű, mások amulett vagy éppen tetoválás viseletét követelik meg papjaiktól.
 
 Miután a forma elkészült, a szimbólum felszentelése következik, amelyet az adott templom vagy kolostor főpapja végez; majd a gyülekezet közös imádságon is megáldja, eképpen ajánlva istenük figyelmébe a szimbólumot, s annak hordozóját. Ezt általában a pap felesketésével együtt hajtják végre. Ezután a szent szimbólumnak egy évet kell a templom oltárán vagy más, az istennek szentelt helyen töltenie, mialatt egy pap minden nap megáldja (tetoválás esetén elegendő csupán a napi áldás).
 
-Miután elkészült, a pap szimbóluma ereklyének minősül. Gyakorlatilag elpusztíthatatlan, s nincs semmilyen tapasztalati vagy Szak'rális mágia, mely kárt tehetne benne, vagy megfoganna rajta, hacsak a pap ebbe bele nem egyezik.
+Miután elkészült, a pap szimbóluma ereklyének minősül. Gyakorlatilag elpusztíthatatlan, s nincs semmilyen tapasztalati vagy Szakrális mágia, mely kárt tehetne benne, vagy megfoganna rajta, hacsak a pap ebbe bele nem egyezik.
 
 Ebből is látszik, hogy a szent jelkép elkészítése időigényes, s nem egyszerű feladat, ugyanakkor a pap hatalmának legfőbb eszköze, s mint ilyen, majd mindennél fontosabb birtokosa számára. Ezért a papok szimbólumukat az életüknél is jobban őrzik — elvesztése a legnagyobb csapás.
 
@@ -64,7 +64,7 @@ A papok istenüknek, olykor a panteon más istenének is áldozatot mutatnak be.
 
 Az áldozatnak két formája, és nagyon sok — istenenként eltérő — módja van. Közös vonásuk azonban, hogy csak felszentelt vagy az istenségnek különösen kedves helyen hajthatók végre. Ilyen helyek többek között Darton számára a temetők, Antoh-nak a végtelen tenger, Arelnek az emberi kéz által érintetlen ligetek vagy Uwelnek azon helyek, ahol jogos bosszú teljesült be.
 
-Az egyik módja, amikor a pap valamilyen számára kedves és fontos dolgot - lehet tárgy, de akár élőlény is — ajánl fel istenének. Ezzel a lemondással utal arra, hogy az isten jóindulata mennyire fontos számára, vagy ha engesztelő áldozatról van szó, hogy mennyire szeretné elnyerni a megbocsátást.
+Az egyik módja, amikor a pap valamilyen számára kedves és fontos dolgot — lehet tárgy, de akár élőlény is — ajánl fel istenének. Ezzel a lemondással utal arra, hogy az isten jóindulata mennyire fontos számára, vagy ha engesztelő áldozatról van szó, hogy mennyire szeretné elnyerni a megbocsátást.
 
 A második forma egyszerű rituális áldozat, amikor nem saját, hanem istene kedvelt dolgát áldozza fel, juttatja el istenének. Ha a pap elmulaszt áldozatot bemutatni, vagy a kéréshez mérten csekély, netán a bűnhöz mérten nem elég nagy áldozatot mutat be, úgy pártfogója rosszallását fejezi ki, s akár (újabb) Kegy pontok megvonásával is büntetheti.
 
@@ -78,19 +78,19 @@ Minden istennek másképp kell áldozni. Álljon itt néhány módozat, s azokon
 
 **Élőáldozat:** A pap istenének ajánl valamely élőlényt — általában szent állatának kedvelt eledelét. Ezt megteheti úgy is, hogy a templomban vagy szentélyben lakó állat elé veti, de úgy is, hogy előbb az áldozó szertartás során megöli, majd elégeti, tengerbe veti, netán eltemeti. Egyes isteneknél az áldozat véréből inni is kell, míg Ranagol és Tharr hívei között gyakori az emberáldozat, ám ezt a Pyarroni Paktum tiltja, s az emberáldozó papokra az Inkvizítorok Szövetsége is vadászik.
 
-**Egyéb áldozatok:** vannak istenek, akik nem elégszenek meg közönséges áldozatokkal. Adron például hívei érzelmeit, Ranagol mások vagy a pap saját kínját követeli meg. Alborne és Della műalkotások létrehozásában leli örömét, míg Ellának másoknak nyújtott kéjjel áldoznak papnői.
+**Egyéb áldozatok:** vannak istenek, akik nem elégszenek meg közönséges áldozatokkal. Adron például hívei érzelmeit, Ranagol mások vagy a pap saját kínját követeli meg. Alborne és Della műalkotások létrehozásában leli örömét, míg Ellanának másoknak nyújtott kéjjel áldoznak papnői.
 
-Ha az áldozatot elfogadta az istenség, akkor maradványaik nyomuk vész (az oltárról az odahelyezett ajándék, a kupa maradék néhány csepp ital, az áldozati állat teteme semmivé lesz); ez mindenképpen jó ómen, s azt jelenti, hogy az istenség elégedett.
+Ha az áldozatot elfogadta az istenség, akkor maradványaiknak nyoma vész (az oltárról az odahelyezett ajándék, a kupa maradék néhány csepp ital, az áldozati állat teteme semmivé lesz); ez mindenképpen jó ómen, s azt jelenti, hogy az istenség elégedett.
 
 ## A papok varázslása
 
-Ynev istenségeinek papjai nem az évezredes hagyományokra épülő tapasztalati varázslás útját járó, vagy a mágiát tudományként szabályok és törvények után kutató mágiahasználókhoz hasonlóan varázsolnak, hanem a hitük erejéből. Abból a hitből, melyet istenükbe vetnek, hogy ő majd csodát tesz, hogy megvédi őket, vagy ha másért nem, hát azért ad hatalmat, hogy bizonyíthassák kiemelkedettségüket. Tehát a papok szintén a mindenütt jelenlévő manát használják fel, jóllehet közvetett módon, fohászaikban istenük vagy az imádott felsőbbrendű lényt kérve, hogy vigye végbe a csodát. Tehát az istenség hatalmából idéződik meg a hatás, a felkent személy hite által nyitott csatornán keresztül.
+Ynev istenségeinek papjai nem az évezredes hagyományokra épülő tapasztalati varázslás útját járó, vagy a mágiát tudományként szabályok és törvények után kutató mágiahasználókhoz hasonlóan varázsolnak, hanem a hitük erejéből. Abból a hitből, melyet istenükbe vetnek, hogy ő majd csodát tesz, hogy megvédi őket, vagy ha másért nem, hát azért ad hatalmat, hogy bizonyíthassák kiemelkedettségüket. Tehát a papok szintén a mindenütt jelenlévő manát használják fel, jóllehet közvetett módon, fohászaikban istenüket vagy az imádott felsőbbrendű lényt kérve, hogy vigye végbe a csodát. Tehát az istenség hatalmából idéződik meg a hatás, a felkent személy hite által nyitott csatornán keresztül.
 
 Így játsszák ki az istenek és isteni hatalmú lények a Paktumot, mivel ők maguk nem teremthetnek vagy pusztíthatnak az Anyagi Síkon, hanem időlegesen egy szabad akarattal bíró lényre testálják hatalmukat. Azonban ez azt is jelenti, hogy az istenség bármikor megtagadhatja hívétől a csoda teljesítését, ha az nem az ő érdekét szolgálja.
 
 Itt jegyzendő meg: mivel a pap istene hatalmát alkalmazza a fohászok megidézésekor, ezért a szakrális eredetű praktikáival bármiféle varázslat kifürkészhető és szétoszlatható.
 
-Ellenben a Szakrális mágia fohászait csakis másik égi pártfogással bíró személy oszlathatja szét, tapasztalati vagy magasmágiával fürkészni viszont bármely erre képes varázsltudónak lehetősége van.
+Ellenben a Szakrális mágia fohászait csakis másik égi pártfogással bíró személy oszlathatja szét, tapasztalati vagy magasmágiával fürkészni viszont bármely erre képes varázstudónak lehetősége van.
 
 ## Az Isteni Kegy
 
@@ -170,7 +170,7 @@ Az Élet szférájába tartoznak azok a fohászok, melyek az élet megőrzését
 
 ## Halál
 
-E szférába tartoznak mindazok a fohászok, melyek ártó szándékúak, az elmúlást és a pusztulást szolgálják. Végrehajtásukkor a pap szent jelképe vérvörös színben izzik. A Halál szférába tartozó bizonyos fohászok a mágia Nekromancia részébe sorolhatók, így például az elfekre — a Karakteralkotás c. fejezetben a játszható fajoknál leírásánál ismertetett szabályok szerint — különösen veszedelmesek.
+E szférába tartoznak mindazok a fohászok, melyek ártó szándékúak, az elmúlást és a pusztulást szolgálják. Végrehajtásukkor a pap szent jelképe vérvörös színben izzik. A Halál szférába tartozó bizonyos fohászok a mágia Nekromancia részébe sorolhatók, így például az elfekre — a Karakteralkotás c. fejezetben a játszható fajok leírásánál ismertetett szabályok szerint — különösen veszedelmesek.
 
 ## Lélek
 
@@ -212,7 +212,7 @@ Ynev nagyobb vallásainak papjai által birtokolt szférákról az alábbi tábl
 
 | Istenség | Hatalmának területe | Szférái |
 |----------|---------------------|---------|
-| Morgena | Árnyak, álmok, jóslatok, rettőzés, bosszú | Lélek, Halál |
+| Morgena | Árnyak, álmok, jóslatok, rejtőzés, bosszú | Lélek, Halál |
 | Sogron | Lángok, tudás | Élet, Lélek, Természet |
 | Tharr | Káosz, vér, fájdalom, hatalom | Lélek, Halál |
 
@@ -220,7 +220,7 @@ Ynev nagyobb vallásainak papjai által birtokolt szférákról az alábbi tábl
 
 | Istenség | Hatalmának területe | Szférái |
 |----------|---------------------|---------|
-| Domvik | Hét aspektusa a teremtés, egésze felett biztosít számára hatalmat | Élet, Lélek, Természet |
+| Domvik | Hét aspektusa a teremtés egésze felett biztosít számára hatalmat | Élet, Lélek, Természet |
 | Orwella | Betegségek, rontások, átkok | Lélek, Halál |
 | Ranagol | Rend, fájdalom, vér, kiemelkedettség, gondolat | Lélek, Természet, Halál |
 | Ranil | Fény, bátorság, élet | Lélek, Természet |

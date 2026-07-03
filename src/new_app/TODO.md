@@ -86,9 +86,11 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
   egy hét" (ch19 explicitly defers to ch18 yet differs). Fp values match.
 - **ch18**: zuhanás paragraph — vért MGT "Ép veszteségként hozzáadódik" vs same paragraph "kizárólag
   Fp veszteséget okozhat"; 5-max-Ép vs "gyengébb" 8-max-Ép example internally inconsistent.
-- **ch21**: **csatacsillag appears in both the Csatabárdok table (2k6+2, KÉ4 TÉ13 VÉ4) and the
-  Buzogányok table (2k6, KÉ6 TÉ13 VÉ6)** — prose classifies it as buzogány; one row is likely a
-  misplaced duplicate.
+- **ch21**: ~~csatacsillag appears in both the Csatabárdok table and the Buzogányok table~~ —
+  **RESOLVED** (per the description heading "Egykezes (7), kétkezes csatabárd (8), csatacsákány (9)"):
+  the Csatabárdok-table row (2k6+2) was a misnamed **kétkezes csatabárd**; renamed in book + app.
+  Consequently the 4. kategória "Nehéz csatabárd" row (5k6), which also said "kétkezes csatabárd",
+  was renamed to **nehéz csatabárd** (matching its own section heading) — verify against the print.
 - **ch22**: table-vs-body conflicts left unresolved — Fájdalomcsillapítás "1/2 Fp" vs "1 E = 1 Fp";
   Ébredés cost/ME; Felfedés meditáció idő; Levitáció + Tetszhalál listed 4. szint in table but under
   the 5. fokú body section; Kyr Metódus definition includes itself ("a Pyarroni Módszer és a Kyr

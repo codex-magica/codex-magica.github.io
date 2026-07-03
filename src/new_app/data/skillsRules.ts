@@ -23,11 +23,11 @@ Minden képzettségnél öt különböző tudásszintet különböztetünk meg, 
 
 Akadnak azonban olyan képzettségek is, melyek ismeretének meghatározásában jóval finomabb skálát kell alkalmaznunk. Ezek hatékonyságának mértékét százalékban mérjük, s ezért Százalékos képzettségnek nevezzük.
 
-Minden karakter külön időráfordítás és tanulás nélkül is rendelkezik bizonyos eséllyel ezen képzettségek alkalmazásakor, még akkor is, ha soha nem tanulta azt senkitől. Ezt nevezzük százalékos alapértéknek, ami megegyezik a vonatkozó Tulajdonság értékével. (Például egy tolvaj egy két és fél láb magasan nyíló erkélyre akar feljutni, akkor Mászás próbát kell tennie. Tegyük fel, hogy nem fejlesztette ezt a képzettségét, így százalékos alapértéke megegyezik az Ügyességével, ami legyen mondjuk 16. Így tehát 16%-a van rá, hogy képes lesz felmászni. A KM ezt 43%-tel módosítja, mivel a tolvajnál van mászóvas, ráadásul a fal kövei elég sok fogódzkodót kínál. A próbára tehát összesen 51%-a van.)
+Minden karakter külön időráfordítás és tanulás nélkül is rendelkezik bizonyos eséllyel ezen képzettségek alkalmazásakor, még akkor is, ha soha nem tanulta azt senkitől. Ezt nevezzük százalékos alapértéknek, ami megegyezik a vonatkozó Tulajdonság értékével. (Például egy tolvaj egy két és fél láb magasan nyíló erkélyre akar feljutni, akkor Mászás próbát kell tennie. Tegyük fel, hogy nem fejlesztette ezt a képzettségét, így százalékos alapértéke megegyezik az Ügyességével, ami legyen mondjuk 16. Így tehát 16%-a van rá, hogy képes lesz felmászni. A KM ezt +35-tel módosítja, mivel a tolvajnál van mászóvas, ráadásul a fal kövei elég sok fogódzkodót kínálnak. A próbára tehát összesen 51%-a van.)
 
-A Százalékos képzettség használatának sikerét úgy döntjük el, hogy k100-al dobunk, s amennyiben a dobás eredménye kisebb vagy egyenlő mint a képzettség százalékértéke, úgy a próba sikerült. Ha a dobás értéke nagyobb, akkor a feladatot elrontottuk.
+A Százalékos képzettség használatának sikerét úgy döntjük el, hogy k100-zal dobunk, s amennyiben a dobás eredménye kisebb vagy egyenlő mint a képzettség százalékértéke, úgy a próba sikerült. Ha a dobás értéke nagyobb, akkor a feladatot elrontottuk.
 
-A Százalékos képzettség fejlesztésénél alapestben 1 Kp 39-kal fejleszti a képzettség értékét (amit az Oktatás képzettség módosíthat), és hozzávetőleg 20% felel meg egy képzettségfoknak. Minden képzettségre legfeljebb 100% költhető, tehát a Százalékos képzettség maximális értéke 100, plusz a vonatkozó Tulajdonság értéke. E fölé egyetlen képzettség sem fejleszthető.
+A Százalékos képzettség fejlesztésénél alapesetben 1 Kp 3%-kal fejleszti a képzettség értékét (amit az Oktatás képzettség módosíthat), és hozzávetőleg 20% felel meg egy képzettségfoknak. Minden képzettségre legfeljebb 100% költhető, tehát a Százalékos képzettség maximális értéke 100, plusz a vonatkozó Tulajdonság értéke. E fölé egyetlen képzettség sem fejleszthető.
 
 ## A képzettségek elsajátíthatósága
 
@@ -82,7 +82,7 @@ Egy képzettség megfelelő elsajátításához általában napi 2-3 óra gyakor
 
 A klánok, rendek, iskolák oktatói bírnak legtöbbször valamilyen rendszerezett oktatási módozattal, amely megkönnyíti, átláthatóvá és ezáltal könnyebben elsajátíthatóvá teszi az okulni kívánó személy számára a képzettségek megtanulását.
 
-A játék rendszerében ez annyit jelent, hogy a klánok, rendek, iskolák 4. fokú oktatókkal képeztetik növendékeik, azaz az iskolában elsajátított képzettségek fokonkénti emelésének költsége 2 Kp-val csökken egészen a 4. fok eléréséig. (Bővebben lásd az Oktatás képzettséget, illetve a Klánok, rendek, iskolák c. fejezetet)
+A játék rendszerében ez annyit jelent, hogy a klánok, rendek, iskolák 4. fokú oktatókkal képeztetik növendékeiket, azaz az iskolában elsajátított képzettségek fokonkénti emelésének költsége 2 Kp-val csökken egészen a 4. fok eléréséig. (Bővebben lásd az Oktatás képzettséget, illetve a Klánok, rendek, iskolák c. fejezetet)
 
 Igaz ez a Százalékos képzettségekre is, ahol minden Kp-ért nem 3, hanem 5%-ot kap a tanuló.
 
@@ -116,13 +116,13 @@ A képzettségek leírásában szereplő ismereteket, képességeket a karakter 
 
 Százalékos képzettségek esetében a próbáknál a karakter vonatkozó százalékos értékére dobatott próba mindig az átlagos szituációt mutatja. Amennyiben a KM úgy dönt, hogy a helyzet valamiben eltér a megszokottól (a karakternek rengeteg ideje van felkészülni, vagy pont fordítva, sürgeti az idő; alaposan felszerelkezett a szükséges holmikkal, vagy ott helyben kell tolvajkulcsot rögtönöznie), úgy belátása szerint pozitív vagy negatív módon befolyásolhatja a karakter próbáját.
 
-Ha a karakter képzettsége alkalmazása során ellenféllel kerül szembe, és el kell dönteni, hogy melyikük alkalmazza eredményesebben képzettségét, akkor mindkét félnek Tulajdonságpróbát kell tennie a képzettség leírásában szereplő módosítókkal, mely próbához a képzettebb karakter minden általa ismert plusz szint után, mellyel ellenfele nem bír 3 módosítót kap.
+Ha a karakter képzettsége alkalmazása során ellenféllel kerül szembe, és el kell dönteni, hogy melyikük alkalmazza eredményesebben képzettségét, akkor mindkét félnek Tulajdonságpróbát kell tennie a képzettség leírásában szereplő módosítókkal, mely próbához a képzettebb karakter minden általa ismert plusz szint után, mellyel ellenfele nem bír, +3 módosítót kap.
 
 Tehát, ha egy Csomózás képzettség 2. fokával bíró karakter megkötöz egy Szabadulóművészet 1. fokkal rendelkező karaktert, akkor mindketten próbát tesznek, s a képzettebb karakter (a csomózó) +3 pontot ad a Tulajdonságpróbájához. A fogolynak viszonylag kevés esélye van szabadulni, hacsak nem elég tehetséges (elég magas mondjuk az Ügyessége).
 
 Ha a köteléket megkötő karakter még képzettebb, mondjuk 3. fokon képzett, míg ellenfele még mindig csak 1. fokon képzett szabaduló-művész, akkor már nem +3, hanem +6 módosító jár a próbájához, illetve ekkor már a képzettsége is ad még +1 pontot (3. fokú alkalmazó). Természetesen az a karakter nyeri a vetélkedést, aki nagyobb sikert ér el a Tulajdonságpróbán.
 
-Természetesen abban az esetben, ha nem efféle vetélkedés, hanem két alkotó képzettség eredményének összehasonlításáról van szó, a vetélkedést eldöntő próba dobása előtt a KM még dönthet úgy, hogy egy szimpla képzettségpróbával kideríti, hogy egyáltalán a karakterek képesek voltak e végrehajtani a feladatot vagy valamelyikük már alaphelyzetben is felcsúszott.
+Természetesen abban az esetben, ha nem efféle vetélkedés, hanem két alkotó képzettség eredményének összehasonlításáról van szó, a vetélkedést eldöntő próba dobása előtt a KM még dönthet úgy, hogy egy szimpla képzettségpróbával kideríti, hogy egyáltalán a karakterek képesek voltak-e végrehajtani a feladatot vagy valamelyikük már alaphelyzetben is felcsúszott.
 
 A százalékos képzettségeknél hasonlóképpen a százalékdobás alkalmával nagyobb sikert elért karakter a győztes.
 

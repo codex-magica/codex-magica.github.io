@@ -46,7 +46,7 @@ export const PoisonValues: Poison[] = [
     level: 3, kind: "többkomponensű ételméreg", system: "emésztőrendszer",
     effect: "ájulás / halál", onset: "lappangó", duration: "maradandó", price: "~100a",
     description: [
-      "3. szintű, több komponensű méreg. A toroni császári udvar méregkeverői készítik és készítésének titkát féltve őrzik. Csak ételbe keverhető. Kereskedelemben nem beszerezhető, de előállítási költsége is hozzávetőleg 100 arany, mivel különleges összetevők szükségesek hozzá.",
+      "3. szintű, többkomponensű méreg. A toroni császári udvar méregkeverői készítik és készítésének titkát féltve őrzik. Csak ételbe keverhető. Kereskedelemben nem beszerezhető, de előállítási költsége is hozzávetőleg 100 arany, mivel különleges összetevők szükségesek hozzá.",
       "A császár minden kétes hűségű bizalmi emberének ételébe belecsempésztet egy keveset. Hatását tekintve a méreg az emésztőrendszerre hat, lappangó, és ájulást vagy halált okoz, amennyiben nem kap meg egy bizonyos ellenszert az áldozat. Ha az illető áruló lesz, a császár futni hagyja — hiszen az ellenszerhez nem juthat hozzá.",
     ],
   },
@@ -154,7 +154,7 @@ export const poisonRules = `A hozzáértők a mérgeket különböző módokon c
 
 **Fegyvermérgek:** a fegyver éléről vagy hegyéről a véráramba kerülő mérgek. Hatásuk többnyire gyors, hiszen nyílt harcban az ellenféllel minél előbb végezni kell. Legtöbbször állati eredetű mérgek.
 
-**Gáz- vagy légmérgek:** gázok, a végletekig finommá őrölt porok vagy porlasztott folyadékok, amelyek belégzéssel kerülnek az áldozat szervezetébe. Nehezen kezelhetőek és nem irányíthatók. Általában nem gáz halmazállapotban tárolják őket, hanem folyadékként vagy szilárd anyagként, amit elpárologtatva vagy elégetve nyerik a gázt.
+**Gáz- vagy légmérgek:** gázok, a végletekig finommá őrölt porok vagy porlasztott folyadékok, amelyek belégzéssel kerülnek az áldozat szervezetébe. Nehezen kezelhetőek és nem irányíthatók. Általában nem gáz halmazállapotban tárolják őket, hanem folyadékként vagy szilárd anyagként, amiből elpárologtatva vagy elégetve nyerik a gázt.
 
 **Kontaktmérgek:** a csupasz bőrön, de még a vékonyabb ruhán keresztül is felszívódnak és igen gyorsan hatnak. Előállításuk igen bonyolult és költséges, csak igen képzett méregkeverő képes rá, és egy alkimista segítségét is igénybe kell vennie (vagy rendelkeznie kell az Alkímia képzettséggel). Kivételes tulajdonságuk, hogy fegyverre is kenhetők és ételbe, italba is keverhetők.
 

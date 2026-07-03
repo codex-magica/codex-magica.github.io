@@ -218,7 +218,7 @@ export const MundaneItems: PriceGroup[] = [
       { name: "egyszerű szertartás", price: "5r" },
       { name: "lakodalom", price: "2a" },
       { name: "nemesi esküvő", price: "25a" },
-      { name: "főúri mennyegző", price: "350a" },
+      { name: "főúri menyegző", price: "350a" },
       { name: "királyi nász", price: "1000a-tól" },
     ],
   },

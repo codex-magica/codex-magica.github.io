@@ -43,7 +43,7 @@ export const CombatSituations: CombatSituation[] = [
     ke: "nincs", te: "-20", ve: "-10", ce: "nincs",
     description: [
       "Harc közben gyakran előfordul, hogy valaki felbukik, hanyatt zuhan. Az illető ilyenkor súlyos hátránnyal képes csak folytatni a küzdelmet. A kezdeményezést automatikusan elveszíti.",
-      "Az érintett felállni csak akkor képes, ha sikeres mozgás értékű cselekedetet hajt végre anélkül, hogy közben bárki sikeres Támadó dobást hajtana végre ellene. Ha mindezen feltételek teljesülnek, a kör végére újból talpra állhat.",
+      "Az érintett felállni csak akkor képes, ha sikeres mozgásértékű cselekedetet hajt végre anélkül, hogy közben bárki sikeres Támadó dobást hajtana végre ellene. Ha mindezen feltételek teljesülnek, a kör végére újból talpra állhat.",
       "small:Közelharc közben fekve lehetetlen célzófegyvert használni. Egyébként — harcon kívül — kizárólag nyílpuskával és fúvócsővel lehet eredményesen célozni fekve.",
     ],
   },
