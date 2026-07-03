@@ -153,7 +153,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   const poolExists: Record<Pool, boolean> = { Mana: false, Psi: false, Kegy: false };
   const owned: OwnedMap = {};
   const grantedFokOf: Record<string, number> = {}; // key → highest GRANTED fok (grants don't need prereqs)
-  const tags: Record<string, boolean> = {};
+  const tags: { name: string; source: string; atLevel?: number }[] = []; // special abilities, with their origin/level
   let money = 0;
   const inventory = rec.inventory.slice();
   const discounts: Discount[] = [];
@@ -246,7 +246,8 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
         addProv(e.target, source, e.amount);
         break;
       case "tag":
-        tags[e.tag] = true;
+        // First grant wins (levels fold in order 1→N, so the earliest activation is recorded).
+        if (!tags.some((t) => t.name === e.tag)) tags.push({ name: e.tag, source, atLevel: level > 1 ? level : undefined });
         break;
       case "grantEquipment":
         inventory.push({ name: e.item, qty: e.qty });
@@ -738,7 +739,7 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     teachingDiscounts: discounts,
     costMultipliers,
     spells,
-    tags: Object.keys(tags),
+    tags,
     grantedBackgrounds: Object.keys(grantedBg),
     money,
     inventory,

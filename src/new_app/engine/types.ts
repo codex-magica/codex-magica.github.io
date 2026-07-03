@@ -70,7 +70,9 @@ export interface DerivedCharacter {
   teachingDiscounts: Discount[]; // raw active teacher discounts (subtype-aware) — for per-branch teacher/cost
   costMultipliers: { skill?: string; category?: string; allSkills?: boolean; factor: number }[]; // school Kp-cost penalties (Barbár ×1.5) — the UI must show the multiplied cost
   spells: SpellView[];
-  tags: string[];
+  // Special abilities (tag grants). `source` is the human-readable origin ("Faj: Elf", "Kaszt: Harcos",
+  // "Háttér: …") the sheet groups by; `atLevel` (>1) is the level the ability activates at.
+  tags: { name: string; source: string; atLevel?: number }[];
   grantedBackgrounds: string[]; // backgrounds conferred free by race/class (locked in the UI)
   money: number;
   inventory: InventoryItem[];

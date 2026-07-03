@@ -125,7 +125,7 @@ export const SheetPreview: React.FC<{ d: DerivedCharacter }> = ({ d }) => {
             <Heading size="sm" mb={2}>Tulajdonság-jegyek</Heading>
             <Wrap>
               {d.tags.map((t) => (
-                <WrapItem key={t}><Badge>{t}</Badge></WrapItem>
+                <WrapItem key={t.name}><Badge>{t.name}</Badge></WrapItem>
               ))}
             </Wrap>
           </Box>

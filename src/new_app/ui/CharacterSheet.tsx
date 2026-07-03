@@ -14,7 +14,7 @@ import { ModalShell, ModalHeader } from "./Modal";
 import { FS, FS_SUB, ROWPY, GAP, Card, SecHead, SubHead, ValNum, Col, Empty, rowProps } from "./sheet/primitives";
 import { VitalsCard, VitalRow } from "./sheet/VitalsCard";
 import { EquipmentCard } from "./sheet/EquipmentCard";
-import { AbilityChips } from "./AbilityChips";
+import { AbilityRows } from "./AbilityRows";
 import { CombatInfoModal, StatInfoModal } from "./InfoModals";
 
 interface Props {
@@ -250,9 +250,7 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         {derived.tags.length > 0 && (
           <Card>
             <SecHead>Képességek</SecHead>
-            <Box mt="8px">
-              <AbilityChips tags={derived.tags.map((t) => ({ name: t }))} />
-            </Box>
+            <AbilityRows tags={derived.tags} />
           </Card>
         )}
       </Col>
