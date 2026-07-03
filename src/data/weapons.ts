@@ -607,7 +607,7 @@ export const WeaponValues: WeaponInfo[] = [
   // Csatabárdok
   // Név	Időigény	Sebzés	KÉ	TÉ	VÉ	Súly	Ár	Lefegyverzés	Fegyvertörés	Átütés	STP
   // egykezes csatabárd	5	2k6+1	3	10	5	1	6e	igen	igen	igen	25
-  // csatacsillag	5	2k6+2	4	13	4	2.2	2a	igen	nem	igen	20
+  // kétkezes csatabárd	5	2k6+2	4	13	4	2.2	2a	igen	nem	igen	20
   // csatacsákány	5	2k6+3	3	11	5	2	8e	igen	nem	igen	20
 
   {
@@ -630,7 +630,7 @@ export const WeaponValues: WeaponInfo[] = [
     description: "Az egyik legősibb fegyvertípus, az ember és a törpe nép már a kezdetektől fogva ismerte és használta, de az orkok és goblinok is gyorsan elsajátították forgatásának tudományát. A fél ynevi láb hosszúságútól a másfél lábig terjedő nyelekre a legkülönfélébb formájú fejek kerülnek. Ezek változatossága valóban elképesztő; többnyire egyélűek, de ismeretesek ellentétes irányba tekintő dupla fejjel ellátott, kétpengéjű típusaik is. Különleges megjelenésű, amikor a baltaívre egy csőr kerül.",
   },
   {
-    name: "csatacsillag",
+    name: "kétkezes csatabárd",
     type: 3,
     subType: "Csatabárdok",
     damage: "2k6+2",
@@ -646,7 +646,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 20,
     isMagical: false,
-    description: "A közönséges egykezes buzogány továbbfejlesztett változata, válasz az egyre nehezebb és jobban védő páncélokra. Itt a központi gömbre plusz hegyes kitüremkedéseket erősítenek, ami találat esetén tovább fokozza a sebzést, illetve növeli a páncélromboló képességet.",
+    description: "Az egyik legősibb fegyvertípus, az ember és a törpe nép már a kezdetektől fogva ismerte és használta, de az orkok és goblinok is gyorsan elsajátították forgatásának tudományát. A fél ynevi láb hosszúságútól a másfél lábig terjedő nyelekre a legkülönfélébb formájú fejek kerülnek. Ezek változatossága valóban elképesztő; többnyire egyélűek, de ismeretesek ellentétes irányba tekintő dupla fejjel ellátott, kétpengéjű típusaik is. Különleges megjelenésű, amikor a baltaívre egy csőr kerül.",
   },
   {
     name: "csatacsákány",
