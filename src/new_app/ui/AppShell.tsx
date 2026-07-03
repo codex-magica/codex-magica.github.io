@@ -43,6 +43,10 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   const setVital = (key: VitalKey, value: number) =>
     onPatchRecord({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
   const setInventoryText = (text: string) => onPatchRecord({ ...record, inventoryText: text });
+  // Unpinning the in-hand weapon also clears the selection (one atomic patch — two patches would race).
+  const setWeapons = (weapons: string[]) =>
+    onPatchRecord({ ...record, weapons, activeWeapon: record.activeWeapon && weapons.includes(record.activeWeapon) ? record.activeWeapon : undefined });
+  const setActiveWeapon = (name: string | null) => onPatchRecord({ ...record, activeWeapon: name ?? undefined });
 
   const isSheet = view === "sheet";
   const goComp = (tab?: number) => { setView("compendium"); if (tab != null) setCompTab(tab); setModal(null); };
@@ -104,6 +108,8 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           derived={derived}
           onSetVital={setVital}
           onSetInventory={setInventoryText}
+          onSetWeapons={setWeapons}
+          onSetActiveWeapon={setActiveWeapon}
           onOpenSkill={(name, fok, percent) => openSkillModal(name, fok, percent)}
           onOpenSpell={(name) => openSpellModal(name)}
           onOpenWeapon={setWeaponModal}

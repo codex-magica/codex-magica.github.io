@@ -143,6 +143,8 @@ export interface CharacterRecord {
   subtypeOverrides?: Record<string, string>; // rename a granted subtype, keyed by `skill|originalSubtype`
   fok4Bonuses?: Fok4Bonus[]; // the +1 attribute chosen for each fok-4 skill instance
   pathChoices?: SkillPathChoice[]; // committing path choices (Pszi tudat/test), per instance
+  weapons?: string[]; // weapons pinned to the sheet's Harcértékek panel (names from the weapon table)
+  activeWeapon?: string; // the pinned weapon currently "in hand" — the sheet's combat tiles show its adjusted values
   skillAttrChoices?: SkillAttrChoice[]; // chosen attribute requirements for open branches, per instance
 
   levels: LevelRecord[]; // the build ledger (ordered per-level decisions)

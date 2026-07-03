@@ -35,13 +35,18 @@ const CalcCard: React.FC<{ parts: { label: string; value: number }[]; totalLabel
 );
 
 // Harcérték (KÉ/TÉ/VÉ/CÉ/MME/AME/Sebzésbónusz) modal: formula with substituted values + book definition.
-export const CombatInfoModal: React.FC<{ statKey: string; derived: DerivedCharacter; onClose: () => void }> = ({ statKey, derived, onClose }) => {
+// `extra` appends situational lines on top of the character's own value (the in-hand weapon's combat
+// values + Fegyverhasználat bonus) — the total then reflects the weapon-adjusted number.
+export const CombatInfoModal: React.FC<{ statKey: string; derived: DerivedCharacter; extra?: { label: string; amount: number }[]; onClose: () => void }> = ({ statKey, derived, extra, onClose }) => {
   const info = COMBAT_INFO[statKey];
   if (!info) return null;
-  const total = (["KÉ", "TÉ", "VÉ", "CÉ"] as const).includes(statKey as any)
+  const own = (["KÉ", "TÉ", "VÉ", "CÉ"] as const).includes(statKey as any)
     ? derived.combat[statKey as "KÉ"]
     : ((derived.derived as any)[statKey] as number) ?? 0;
-  const parts = combatBreakdown(info, derived.effectiveStats, total, derived.provenance[statKey] ?? []);
+  const extras = (extra ?? []).filter((e) => e.amount !== 0);
+  const total = own + extras.reduce((a, e) => a + e.amount, 0);
+  const parts = combatBreakdown(info, derived.effectiveStats, own, derived.provenance[statKey] ?? [])
+    .concat(extras.map((e) => ({ label: e.label, value: e.amount })));
   return (
     <ModalShell onClose={onClose} width="min(480px, 100%)" maxH="76vh" zIndex={60} overlayPad="28px">
       <Box p="20px 22px">
