@@ -426,7 +426,7 @@ export const SkillValues : SkillInfo[] = [
       lvl_2: "Hivatásos besurranó, aki megélhet tudásából. Egyszerű polgárok házaiba könnyedén bejut, hiszen ott nem találkozik bonyolultabb mechanikus zárakkal.",
       lvl_3: "Szakképzett kasszafúró, akit szívesen visznek magával társai akár még egy bank kifosztásához is.",
       lvl_4: "A zárnyitás mestere, akinek kisujjában vannak még a bonyolultabb mechanikus szerkezetek megnyitásának trükkjei is. Ha az első dobása sikertelen, ám tovább tanulmányozza a zárat, s öt perc elteltével ismét próbálkozhat, de csak egy alkalommal.",
-      lvl_5: "A karakter tudása oly’ hatalma, hogy még talán a dzsad bankházak többszörösen összetett zárrendszerei sem okoznának neki nehézséget. A zárszerkezeteket olyannyira kiismerte, hogy második próbadobását már egy perc elteltével kísérelheti meg."
+      lvl_5: "A karakter tudása oly’ hatalmas, hogy még talán a dzsad bankházak többszörösen összetett zárrendszerei sem okoznának neki nehézséget. A zárszerkezeteket olyannyira kiismerte, hogy második próbadobását már egy perc elteltével kísérelheti meg."
 
     },
     {
@@ -437,7 +437,7 @@ export const SkillValues : SkillInfo[] = [
       hardReq: [],
       stats: ["Ügyesség", "Érzékelés"],
       description: "E Képzettség megmutatja, hogy használója mennyire hatékonyan képes - akár ujjai, vagy éles tárgyak (pengék, kifent pénzdarabok, s egyéb eszközök) segítségével - kisebb, kézben tartható tárgyakat ellenfele ruhájából, zsebeiből elemelni, vagy épp oda csempészni.\n\nA körülmények ez esetben is jelentősen befolyásolhatják a próba sikerét.",
-      lvl_1: "A lelkes kezdő csak azokat a tárgyakat szerezheti meg, melyeket nem fed ruha (erszények, tőrök stb.), vagy könnyen hozzáférhető zsebekben vannak. A furmányosan elrejtett, vagy a ruházaton belül található értéktárgyak ilyen módon akkor sem kaparinthatok meg, ha a próbadobás egyébként sikeres." +
+      lvl_1: "A lelkes kezdő csak azokat a tárgyakat szerezheti meg, melyeket nem fed ruha (erszények, tőrök stb.), vagy könnyen hozzáférhető zsebekben vannak. A furmányosan elrejtett, vagy a ruházaton belül található értéktárgyak ilyen módon akkor sem kaparinthatók meg, ha a próbadobás egyébként sikeres." +
        "\n\nA tolvajszerszámok használatát még egyáltalán nem sajátította el, így azokat nem használhatja sikerrel.",
       lvl_2: "A jobban képzett tolvaj már megismerte a zsebmetszés segédeszközeit, és részesülhet az általuk biztosított előnyökből.",
       lvl_3: "A szakavatott tolvaj a ruhák megmetszésével képessé válik a szövetek mélyébe rejtett, rögzítetlen tárgyakhoz is hozzájutni. Ez mindenképpen gyors, hirtelen tevékenység, segítségével turkálni, keresgélni nemigen lehet.",
@@ -762,7 +762,7 @@ export const SkillValues : SkillInfo[] = [
         "tehet, még akkor is, ha azt a játékos nem jelenti be előre. Az ilyen szintű tudás szinte " +
         "megmagyarázhatatlan, afféle hatodik érzék, a rengeteg tapasztalat eredménye.\n\n" +
         "A rejtekhelyek terén már közvetett következtetéseket tehet az a vizsgált szoba, tárgy kialakítása, " +
-        "elrendezése alapján, és megsejtheti, hogy a mesterek milyen szempontok alapján választják ki a egy " +
+        "elrendezése alapján, és megsejtheti, hogy a mesterek milyen szempontok alapján választják ki egy " +
         "rejtekhely, vagy csapda végleges helyét. Amennyiben az első próbadobása sikertelen volt, ötpercnyi " +
         "újabb tanakodás után ismét dobhat.\n\n" +
         "Az Éberség nem alkalmazható távoli fenyegetéssel kapcsolatban: nem fogja jelezni egy egyén " +

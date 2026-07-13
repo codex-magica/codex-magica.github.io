@@ -74,14 +74,14 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "2",
   castingTime: "5 szegmens",
   duration: "6 kör",
-  description: "Akin a tűzvarázsló e varázslatot végrehajtja, az az időtartam lejártáig képes lesz ellenállni a hőhatásoknak. Ez Erősségenként 100 Celsius-fokos hőséget jelent, valamint minden egyes E 1-es Sebzésfelfogó értéket biztosít tűzhatások sebzésével szemben. Vagyis: 1 E esetén 100 fokos hőségben tartózkodhat büntetlenül, és 1-et vonhat le minden tűzalapú sebzésből. 2 E estén 200 fok, 2 SFÉ; 3 E esetén 300 fok, 3 SFÉ stb.\n\nA tűzvarázsló a varázslatot bárkin végrehajthatja, aki a Zónáján belül tartózkodik, ám egyszerre csak egyetlen személyen. Az illető felszerelése, ruhái és egyéb tárgyai nem élvezik a védelmet. Ha saját magán alkalmazza, különleges képességei (Tűzelnyelés, Tűzelvonás) zavartalanul működnek."
+  description: "Akin a tűzvarázsló e varázslatot végrehajtja, az az időtartam lejártáig képes lesz ellenállni a hőhatásoknak. Ez Erősségenként 100 Celsius-fokos hőséget jelent, valamint minden egyes E 1-es Sebzésfelfogó értéket biztosít tűzhatások sebzésével szemben. Vagyis: 1 E esetén 100 fokos hőségben tartózkodhat büntetlenül, és 1-et vonhat le minden tűzalapú sebzésből. 2 E esetén 200 fok, 2 SFÉ; 3 E esetén 300 fok, 3 SFÉ stb.\n\nA tűzvarázsló a varázslatot bárkin végrehajthatja, aki a Zónáján belül tartózkodik, ám egyszerre csak egyetlen személyen. Az illető felszerelése, ruhái és egyéb tárgyai nem élvezik a védelmet. Ha saját magán alkalmazza, különleges képességei (Tűzelnyelés, Tűzelvonás) zavartalanul működnek."
 }, {
   name: "A Sárkány pikkelye",
   type: "Védőmágiák",
   cost: "4",
   castingTime: "1 kör",
   duration: "6 kör",
-  description: "Akin a tűzvarázsló a varázslatot végrehajtja, az Időtartam lejártáig képes lesz ellenállni az elemi és közönséges tüzeknek, illetve a hőhatásoknak. A varázslat minden E-je egy E-t semlegesít a tűzalapú hatás Erősségéből. A védelemnek feszülő varázslatok és tüzek nem gyengülnek le, csak a varázslat védettjére hatnak gyengében. A védelem mindenre kiterjed, ami a Személyes Aurához tartozik. Ha a tűzvarázsló magára alkalmazza, úgy különleges képességei (Tűzelnyelés, Tűzelvonás) zavartalanul működnek, tehát a tüzek eredeti erősségének megfelelően. A sebzést előbb a varázslat csökkenti, a különleges képességek védelme csak eztán vonandó le - vagyis a védelmek összeadódnak. A varázslat bárkin végrehajtható, aki a Zónán belül tartózkodik, ám egyszerre csak egyetlen személyen."
+  description: "Akin a tűzvarázsló a varázslatot végrehajtja, az Időtartam lejártáig képes lesz ellenállni az elemi és közönséges tüzeknek, illetve a hőhatásoknak. A varázslat minden E-je egy E-t semlegesít a tűzalapú hatás Erősségéből. A védelemnek feszülő varázslatok és tüzek nem gyengülnek le, csak a varázslat védettjére hatnak gyengébben. A védelem mindenre kiterjed, ami a Személyes Aurához tartozik. Ha a tűzvarázsló magára alkalmazza, úgy különleges képességei (Tűzelnyelés, Tűzelvonás) zavartalanul működnek, tehát a tüzek eredeti erősségének megfelelően. A sebzést előbb a varázslat csökkenti, a különleges képességek védelme csak eztán vonandó le - vagyis a védelmek összeadódnak. A varázslat bárkin végrehajtható, aki a Zónán belül tartózkodik, ám egyszerre csak egyetlen személyen."
 }, {
   name: "A Sárkánykirály pikkelye",
   type: "Védőmágiák",
@@ -368,7 +368,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   duration: "6 kör",
   combatModifier: "+20",
   size: "6",
-  description: "A tűzlény kígyó alakot vesz fel, ami leginkább egy nyolc ynevi lábnyi kobrára emlékeztet. A levegőben kígyózva halad, spirálszerűen repülve. Kétszer támad körönként, egyszer fejével csapva le, másszor pedig farkával. Nagy hosszúsága miatt (8 ynevi láb) egymástól igen távoli áldozatokat képes támadni."
+  description: "A tűzlény kígyóalakot vesz fel, ami leginkább egy nyolc ynevi lábnyi kobrára emlékeztet. A levegőben kígyózva halad, spirálszerűen repülve. Kétszer támad körönként, egyszer fejével csapva le, másszor pedig farkával. Nagy hosszúsága miatt (8 ynevi láb) egymástól igen távoli áldozatokat képes támadni."
 }, {
   name: "Tűzmadár",
   type: "Tűzlények idézése",

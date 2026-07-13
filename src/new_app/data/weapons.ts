@@ -730,7 +730,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 20,
     isMagical: false,
-    description: "Ez a fegyver tulajdonképpen valahol a csatabárd és a tollas buzogány között helyezkedik el, egyesítve ezek előnyeit. Két, de ritkábban három acéllapot kovácsolnak ki, és ezeket csúsztatják egymásba, így a fegyvernek összesen négy, vagy hat vágóéle lesz. Mivel a nyél és a penge egy darabból — fémből - van, a súlya is tekintélyes. Különösen jó hasznát lehet venni bármiféle páncélzat ellen.",
+    description: "Ez a fegyver tulajdonképpen valahol a csatabárd és a tollas buzogány között helyezkedik el, egyesítve ezek előnyeit. Két, de ritkábban három acéllapot kovácsolnak ki, és ezeket csúsztatják egymásba, így a fegyvernek összesen négy, vagy hat vágóéle lesz. Mivel a nyél és a penge egy darabból — fémből — van, a súlya is tekintélyes. Különösen jó hasznát lehet venni bármiféle páncélzat ellen.",
   },
   {
     name: "csatacsillag",
@@ -849,7 +849,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 25,
     isMagical: false,
-    description: "Mind hosszát, mind súlyát tekintve a legnagyobb kardnak mondható. Lovagok kedvelt fegyvere, mivel éle és hegye mellett súlya is komoly szerepet játszik sebzésében - így jól használható nehézvértezet ellen. Súlya általában 4 ynevi font, de mivel súlypontja távol esik a markolattól, forgatása nem könnyű feladat. A kardon megfigyelhető a messze kinyúló keresztvas és néha hárítógyűrű is. Igazi mesterei, ha akad elég helyük tudományuk kibontakoztatására, elképesztő dolgokra képesek, akár fél tucat ellenféllel szemben is, hiszen a fegyver puszta méreteivel képesek távol tartani amazokat. Forgatásához két kéz kell, mellette semmiféle pajzs vagy másodlagos fegyver nem használható. Előnye leginkább csatákban mutatkozik meg, sok kalandozó — helyigénye miatt — nem igazán kedveli.",
+    description: "Mind hosszát, mind súlyát tekintve a legnagyobb kardnak mondható. Lovagok kedvelt fegyvere, mivel éle és hegye mellett súlya is komoly szerepet játszik sebzésében — így jól használható nehézvértezet ellen. Súlya általában 4 ynevi font, de mivel súlypontja távol esik a markolattól, forgatása nem könnyű feladat. A kardon megfigyelhető a messze kinyúló keresztvas és néha hárítógyűrű is. Igazi mesterei, ha akad elég helyük tudományuk kibontakoztatására, elképesztő dolgokra képesek, akár fél tucat ellenféllel szemben is, hiszen a fegyver puszta méreteivel képesek távol tartani amazokat. Forgatásához két kéz kell, mellette semmiféle pajzs vagy másodlagos fegyver nem használható. Előnye leginkább csatákban mutatkozik meg, sok kalandozó — helyigénye miatt — nem igazán kedveli.",
   },
   {
     name: "mara-se-quor",
