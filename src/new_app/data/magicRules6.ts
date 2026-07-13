@@ -26,7 +26,9 @@ Az alábbi táblázat arról tájékoztat, hogy mennyi idő alatt regenerálódn
 | Könnyű séta, léptetés lovon | 30 perc |
 | Utazás, ügetés, vagy vágta | 60 perc |
 
-* A meditáció az elme egyfajta aktív pihentetése, a tudat akaratlagos kiemelése a valóságból, elzárkózás minden benyomástól. Az elme teljes tehermentesítése egy érzékelés és gondolatok nélküli, az álomtalan alvásnál is mélyebb tudatállapotban.
+* A meditáció az elme egyfajta aktív pihentetése, a tudat akaratlagos kiemelése a valóságból, elzárkózás minden benyomástól. Az elme teljes tehermentesítése egy érzékelés és gondolatok nélküli, az álomtalan alvásnál is mélyebb tudatállapotban. Ebbe az állapotba való átmenet 30 percnyi zavartalan nyugalmat kíván. Így nehezen elképzelhető egy harctéren, vagy verem fenekén meditáló személy. Ilyen esetekben a KM jogköre eldönteni, lehetséges-e a meditáció, illetve, hogy megkezdéséhez, szükséges-e egy sikeres Akaraterő próba.
+
+\*\* Teljes pihenés után, azaz amikor az alvás természetes ébredéssel ér véget, és az elme saját akarata és tempója szerint merül alá a valóságba, a pszi alkalmazó maximális képességei birtokában, maximális Ψ-ponttal ébred.
 
 ## Mágiaellenállás (ME)
 

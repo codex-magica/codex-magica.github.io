@@ -57,7 +57,7 @@ Természetesen más típusú képzettség, pl. Pusztakezes harc képzettség 4. 
 
 A képzettségnél felsorolt Tulajdonságok (ahol csak egy Tulajdonság van, ott egy) tíz feletti értéke el kell, hogy érje a megtanulni kívánt képzettség szintjét. Tehát egy 3. fokú képzettség tanulásához legalább 13-as vonatkozó Tulajdonságokkal kell bírnia a karakternek.
 
-Ha ezek a jellemzők nincsenek meg, akkor a karakternek még mindig van lehetősége elsajátítani az adott képzettséget, csak több ráfordított idő és vesződség, azaz Kp árán. A karakter ebben az esetben a hiányzó értékeknek megfelelő pontnyi plusz Kp elköltésével szerezheti meg az adott képzettséget. Tehát ha egy 4. fokú képzettséget szeretne tanulni és 12-12-es Tulajdonságokkal bír, akkor 22-4 plusz Kp elköltésével sajátíthatja el az adott képzettséget.
+Ha ezek a jellemzők nincsenek meg, akkor a karakternek még mindig van lehetősége elsajátítani az adott képzettséget, csak több ráfordított idő és vesződség, azaz Kp árán. A karakter ebben az esetben a hiányzó értékeknek megfelelő pontnyi plusz Kp elköltésével szerezheti meg az adott képzettséget. Tehát ha egy 4. fokú képzettséget szeretne tanulni és 12-12-es Tulajdonságokkal bír, akkor 2+2=4 plusz Kp elköltésével sajátíthatja el az adott képzettséget.
 
 ## Képzettség követelmény
 
@@ -96,7 +96,7 @@ A képzettség elsajátításához szükséges ráfordított energiát már jóv
 
 A fent említetteket a M.A.G.U.S. képzettségrendszere a következőképpen kezeli: a karakter Intelligencia Tulajdonságától függően rendelkezik bizonyos mennyiségű Kp-val, (ezek száma minden szinten — már az elsőn is — a Kötött pontelosztás esetén az adott iskola leírásánál szereplő értékkel, a Szabad pontelosztás esetén a Szabadon elosztható pontokból vásárolt Kp-kal növelendő). Minden egyes képzettség megtanulása adott mennyiségű Kp-ba kerül. Mikor a játékos eldönti, hogy karaktere egy képzettség elsajátításába kezd, pontjainak számából levon annyit, amennyi a választott képzettség fokánál fel van tüntetve.
 
-Amikor viszont a karakter fejleszti képzettségeit, csupán a két fok Kp értékének különbségét kell elköltenie. Például ha egy harcos fel akarja venni a Fegyverhasználat (Hosszú kard) 3. fok képzettséget, akkor az 15 Kp-jába és 1 és 4 évébe kerül.
+Amikor viszont a karakter fejleszti képzettségeit, csupán a két fok Kp értékének különbségét kell elköltenie. Például ha egy harcos fel akarja venni a Fegyverhasználat (Hosszú kard) 3. fok képzettséget, akkor az 15 Kp-jába és 1 és ¾ évébe kerül.
 
 ## A képzettségek alkalmazására vonatkozó szabályok
 

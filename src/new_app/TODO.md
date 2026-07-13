@@ -41,18 +41,20 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 
 - ~~**ch16 Harci láz**: fokok 2–5 missing~~ — **RESOLVED**: restored from app data (skillsText.ts
   lvl_2–lvl_5, legacy source had the full text).
-- **ch16 Pajzsfal**: the Sün formation says "Hasonló mint a pajzsfal", but no Pajzsfal entry exists
-  — missing from the app data too, so not reconstructable; needs the scan. (The Falkataktika
-  half is fine: data agrees it's a paragraph under Tiadlani kettős, not its own entry.)
-- ~~**ch16 Lopódzás**: Módosítók list truncated/signs dubious~~ — **RESOLVED**: reconstructed from
-  the app data's coherent modifier table as +10% / +20% / -10% / -20% (Kőpadló / Vastag szőnyeg /
-  Kavicságy / Száraz avar, nyikorgó fapadló) — verify magnitudes against the print.
-- **ch11 Darton-paplovag, advantage I.**: truncated mid-sentence ("…hozzáférhetnek uruk egyedi") —
-  rest lost in OCR.
-- **ch21**: page comments jump `page 207` → `page 210`; pages 208–209 absent (illustrations?).
-- **ch22**: regeneration table row `Alvás**` — the `**` footnote is missing (only `*` exists).
-- **ch19 herb table**: first row lists "Benedekfű" as an *ailment* (it's a remedy) — the real
-  ailment name was lost; the "Sebek" row appears merged with a lost "Kelés" row.
+- ~~**ch16 Pajzsfal**~~ — **settled against the scans (p140–143)**: the print has NO Pajzsfal entry
+  either; Sün's "Hasonló, mint a pajzsfal" reference dangles in the original book. Nothing to restore.
+- ~~**ch16 Lopódzás** Módosítók~~ — **RESOLVED, print-verified (p156)**: 6 rows — Teljes sötétség
+  +20% / Kőpadló +10% / Vastag szőnyeg +20% / Száraz avar -20% / Kavicságy -10% / Nyikorgó fapadló
+  -20%. Book md + skillsText.ts updated to the print values.
+- ~~**ch11 Darton advantage I.**~~ — **RESOLVED from scan (p97)**: "…szférájából választják
+  fohászaikat, valamint hozzáférhetnek uruk egyedi szakrális mágiájához is."
+- ~~**ch21 pages 208–209**~~ — **RESOLVED from scans**: both are full-page illustration plates (the
+  numbered weapon reference drawings 1–58 for FEGYVERLEÍRÁSOK); no body text lost. Comment added to md.
+- ~~**ch22 `Alvás**` footnote~~ — **RESOLVED from scan (p218–219)**: both the missing ** footnote and
+  the *-footnote's dropped continuation restored in md + magicRules6.ts.
+- ~~**ch19 herb table**~~ — **RESOLVED from scan (p185)**: first ailment is **Aranyér**; the Sebek
+  block restored (separate "kelés, gyulladás" and "tályog" rows, corrected "égés" remedies,
+  fekély "bürök"). Note: print itself has the typo "útilapuvél"; md keeps "útilapulevél".
 - ~~**ch03**: "Harcművész iskolák" empty list~~ — **RESOLVED**: confirmed intentionally empty
   in the book; nothing to restore.
 - **ch01**: `## A harc` heading sits over a section about what roleplaying is — heading likely wrong.
@@ -66,46 +68,80 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 
 - ~~**ch02**: udvari ork Asztrál 16 vs 17~~ — **RESOLVED** by rules call: prose (**16**) is
   correct; race-maximum table fixed 17 → 16.
-- **ch04**: sample amazon has Fegyverismeret 3. fok with empty Kp cell (base package grants 2. fok).
-- **ch05**: lovag "Kp: 14 pont" vs itemized Kp column summing to 27; suspicious weapon table
-  (fvn KÉ 31 vs lovagkard KÉ 36; lovagkard Sebzés 3k6+2, possibly 2k6+2).
-- **ch06**: Orgyilkos and Felderítő starting-skill tables each have two consecutive rows with the
-  *identical* weapon list at 2. and 1. fok; Árnyékjáték Hatótáv 10 vs 20 ynevi láb; Lopódzás/Rejtőzés
-  "javítja a sötétség **-30%**-kal" self-contradictory; "Kép-pont: —" unclear label.
-- **ch07**: sample zsebes Csomózás 1. fok vs base thief table 2. fok.
-- **ch08**: bárd table has bare "Művészetek 3. fok" row (lost qualifier); "Nyelvtudás (anyanyelv)"
-  vs sample character "(szülőföld)"; tőr CÉ 32 for a melee dagger.
-- **ch09**: Shien-ka-to fegyver table: stílus KÉ 41 vs components 29+10=39; fvn Sebzés cell and
-  hosszú bot Időigény cell empty; "(ireit)" opaque term.
-- **ch13**: Vándorvillám mozaik "**Mana pont:** -15" — negative cost suspicious.
-- **ch14**: lángtőr column missing Időigény value.
-- **ch15**: varázslóbot rules II vs III contradict (Ψp/Mp "bónuszok nélkül" vs "teljesen a normális
-  módon", near-duplicate sentences); "Pszi (kyr) 4. fok" (starting table) vs "3. fok" (lar-dori text).
-- **ch16**: Kultúra/Nyelvtudás rows show nehézség I with IV-like Kp costs; "22-4 plusz Kp" and
-  "1 és 4 évébe" garbled numbers in worked examples (skillsRules.ts mirrors the same text, so no
-  independent witness). Resolved meanwhile: Vallásismeret entry III→**II** (table + data agree);
-  "Képzetlen fegyverforgatás" ref fixed to **174.** oldal (ch17 heading sits on page 174);
-  Hamisítás "nem" → "**kívánók**" (app data preserved the original word).
-- **ch17**: "a 15-nél hosszabb varázslatokhoz" — unit missing (15 szegmens?); duplicated footnote
-  blockquote after the reload table; 00-ás szabály "+3 Ép" unverified.
-- **ch18 vs ch19**: Ép-regeneration onset — ch18 "1 nap pihenés / egyébként 5 nap" vs ch19 "3 nap /
-  egy hét" (ch19 explicitly defers to ch18 yet differs). Fp values match.
-- **ch18**: zuhanás paragraph — vért MGT "Ép veszteségként hozzáadódik" vs same paragraph "kizárólag
-  Fp veszteséget okozhat"; 5-max-Ép vs "gyengébb" 8-max-Ép example internally inconsistent.
+- ~~**ch04** amazon Fegyverismeret~~ — **RESOLVED from scan (p38)**: print says **2. fok** (empty
+  Kp cell is correct); md fixed.
+- **ch05** — **checked against scan (p47)**: the "Kp: 14 Pont (14 Kp)" line AND the itemized column
+  summing to 27 are both genuinely printed → RULES CALL needed. Weapon table matches print exactly;
+  lovagkard Sebzés **3k6+2 is genuinely printed** (ch21's lovagkard says 2k6+2 → erratum candidate,
+  sample-character sheet only).
+- ~~**ch06** items~~ — **RESOLVED from scans (p54/55/58)**: the 2. fok rows are bare in print
+  ("Fegyverhasználat" / "2 Fegyverhasználat" — the weapon lists were OCR-duplicated; md fixed);
+  Árnyékjáték is fine (10 láb radius, center up to 20 láb — no conflict); darkness bonus is
+  **+30%** (sign fixed); "Kép-pont" is a misread of **"Kegy-pont"** (fixed).
+- ~~**ch07** zsebes Csomózás~~ — **settled from scan (p61–62)**: print really has base tolvaj 2. fok
+  and zsebes package 1. fok — the subclass table simply differs; as printed.
+- **ch08** — **checked from scans (p68/69)**: the bare "Művészetek 3. fok" row is genuine print
+  (a second, free-choice Művészetek — no qualifier lost); the weapon column labelled "tőr" in md is
+  actually **"fvn"** in print (fixed — the CÉ 32 belongs to fegyver nélkül, mystery solved).
+  Still open (not scanned): "Nyelvtudás (anyanyelv)" vs sample "(szülőföld)".
+- ~~**ch09** Shien-ka-to table~~ — **settled from scan (p77)**: table matches print cell-for-cell;
+  the Stílus column is evidently NOT a plain fvn+components sum (TÉ and VÉ don't sum either), so
+  KÉ 41 is not an error; the empty cells are genuinely blank in print. "(ireit)" remains opaque
+  (lore term).
+- ~~**ch13** Vándorvillám~~ — **RESOLVED from scan (p115)**: print says "Mana pont: **+15**"; md fixed.
+- ~~**ch14** lángtőr Időigény~~ — **settled from scan (p118)**: the cell is genuinely blank in the
+  print (printing gap in the book); all other lángtőr values verified correct.
+- **ch15** — **checked from scans (p124–126, 129)**: BOTH conflicts are genuine print → RULES CALL:
+  (a) varázslóbot point II ("bónuszok nélkül") vs point III ("teljesen a normális módon") — the
+  near-duplicate sentence really is printed twice with opposite qualifiers; (b) starting tables
+  (p124 varázsló, p125 lar-dori) say Pszi (kyr) **4. fok** while lar-dori point III prose (p126)
+  says **3. fok** (Belsőszigeti/Északi students swap it for Godoni Örökség 3. fok).
+- ~~**ch16** Kultúra/Nyelvtudás rows + worked examples~~ — **RESOLVED from scans (p132/134)**:
+  both rows are the standard I-progression **1/3/8/15/25** (md fixed); the examples read
+  "**2+2=4** plusz Kp" and "1 és **¾** évébe" (md + skillsRules.ts fixed). Earlier: Vallásismeret
+  entry III→**II**; "Képzetlen fegyverforgatás" ref → 174. oldal; Hamisítás "nem" → "kívánók".
+- ~~**ch17** items~~ — **RESOLVED from scans (p168/174/175)**: it's "az **1s-nél** hosszabb
+  varázslatokhoz" (1 szegmens, not 15 — fixed); the footnote appears once in print (duplicate
+  blockquote removed); 00-ás szabály "+3 Ép" **confirmed** as printed.
+- **ch18 vs ch19** Ép-regen onset — **both pages scanned (p178: 1 nap/5 nap; p184: 3 nap/egy hét)**:
+  genuine cross-chapter contradiction in the print → RULES CALL.
+- ~~**ch18** zuhanás~~ — **RESOLVED from scan (p178)**: print says MGT-je "**Fp** veszteségként
+  hozzáadódik" (md's "Ép" was OCR) — paragraph is internally consistent now. Still open (not
+  scanned): the 5-max-Ép vs "gyengébb" 8-max-Ép example.
 - **ch21**: ~~csatacsillag appears in both the Csatabárdok table and the Buzogányok table~~ —
   **RESOLVED** (per the description heading "Egykezes (7), kétkezes csatabárd (8), csatacsákány (9)"):
   the Csatabárdok-table row (2k6+2) was a misnamed **kétkezes csatabárd**; renamed in book + app.
   Consequently the 4. kategória "Nehéz csatabárd" row (5k6), which also said "kétkezes csatabárd",
-  was renamed to **nehéz csatabárd** (matching its own section heading) — verify against the print.
-- **ch22**: table-vs-body conflicts left unresolved — Fájdalomcsillapítás "1/2 Fp" vs "1 E = 1 Fp";
-  Ébredés cost/ME; Felfedés meditáció idő; Levitáció + Tetszhalál listed 4. szint in table but under
-  the 5. fokú body section; Kyr Metódus definition includes itself ("a Pyarroni Módszer és a Kyr
-  Metódus azon darabjait" — one name likely wrong, Godoni Örökség?).
+  was renamed to **nehéz csatabárd** (matching its own section heading). **Print checked (p198)**:
+  the book genuinely prints "csatacsillag" twice (2k6+2 and 2k6) and "kétkezes csatabárd" under the
+  "Nehéz csatabárd" heading — our renames stand as deliberate errata of a printed typo.
+- **ch22**: table-vs-body conflicts **checked against the scans (2026-07-13, pages 221/222/227/232/234)**
+  — all are genuine in print, not OCR; the md mirrors the book faithfully. Still need a RULES CALL
+  (app data currently sides with the body text in each):
+  - Fájdalomcsillapítás: body Ψp 1, "1 E-je 1 Fp" (p221) vs table "1/2 Fp" (p234); psi.ts cost "1".
+  - Ébredés: body Ψp 1 (p222) vs table "1/E"; psi.ts cost "1". (ME resolved: print table says
+    **Mentális** — md table row fixed, data already had it.)
+  - Felfedés: body Ψp 3 + meditáció "Lásd a leírást!" (p227) vs table "3/E" + "1 szegmens";
+    psi.ts "3" + "Lásd a leírást!".
+  - ~~Levitáció + Tetszhalál 4. vs 5. szint~~ — **settled**: table + psi.ts both say 4. szint;
+    the print (p232) really does place them amid the 5. fokú entries — sloppy print layout, book
+    left as printed. (Their psi.ts durations aligned to the print table: 1 kör / 1 óra; Kitérés
+    "E kör" → "1 kör" likewise.)
+  - ~~Kyr Metódus self-reference~~ — **settled from scan (p217)**: the print really says
+    "a Pyarroni Módszer és a Kyr Metódus azon darabjait" — original wording, left as printed
+    (mirror in magicRules6.ts likewise).
 - **ch24**: ~~Tanulmány "Varázslás ideje: 3 perc" (entry) vs "Min. 3 perc" (table)~~ — **RESOLVED**
-  (entry set to "Min. 3 perc", matching table + app data); "a Mágia dalával együtt alkalmazva"
-  references a spell that doesn't exist in the chapter.
-- **ch25**: Noir szférák cell "Lélek, Lélek vagy Halál" (duplicated?); Kígyótűz "1k6 Ep"
-  (analogous fire prayers use Sp); Rettegés "VÉ: +10" in a penalty list. Resolved meanwhile:
+  (entry set to "Min. 3 perc", matching table + app data). ~~"a Mágia dalával" ghost reference~~ —
+  **settled from scan (p243)**: the phrase is genuinely printed (original book quirk); the same
+  scan showed md's "nem csak zene alapú mágia típusú" should be "nem **Dalmágia** típusú" (fixed;
+  bardMagic.ts already had the correct reading).
+- **ch25**: ~~Noir szférák~~ — **RESOLVED from scan (p259)**: cell reads "**Élet, Lélek vagy
+  Lélek, Halál**" (two alternative szféra-pairs; md + magicRules2.ts fixed). ~~Rettegés "VÉ: +10"~~
+  — **settled from scan (p267)**: the plus sign is unmistakable in print; genuinely printed inside
+  the negative-modifier list, left as printed. ~~Kígyótűz "1k6 Ep"~~ — **RESOLVED against the scan
+  (p280)**: print says "1k6 **Fp**-t sebez"; md fixed, prayers.ts already had Fp. Also print-verified
+  here: Kegy-pont sentence restored ("csakis az istenük vallásában való elmélyedéstől, hitüknek
+  erejétől függ" — md + magicRules2.ts fixed); Patkányidézés "30+5k10" confirmed. Resolved meanwhile:
   Csapás table 3 szegmens/E → **1 szegmens/E** (entry + app data agree); Patkányidézés →
   **30+5k10** (rules call, both sources corrected).
 
@@ -139,6 +175,9 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 
 ## Unreconstructable garbles — need the scan (greppable quotes)
 
+Scan-checked 2026-07-13 (see sections above): the ch16 examples, ch17 "1s-nél", ch19 herb rows,
+ch22 footnotes and ch25 Kegy-pont sentence were all recovered from the page images.
+
 - ch04: "árnyótócsákon átszökkenve", "a később-választottja", "ugyanolyan fekete forgatnak"
   (noun lost after "fekete").
 - ch05: "indítottak a vér jogán" (object missing); the Ranagol-rend broken parentheticals
@@ -157,8 +196,9 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
   both are original phrasing.
 - ch22: Kitérés sentence **settled** (legacy data identical — original phrasing);
   ~~Érzékélesítés~~ — **RESOLVED** from app data ("1 E = 10%, illetve **-1** módosító").
-- ch25: Kegy-pont maximum sentence ("…csak istenük vallásában való elmélyedéstől, hitüknek ereje,
-  amit…"); Szélkeltés "Csak kisebb hajók tartós irányú sebbel alkalmas…".
+- ~~ch25: Kegy-pont maximum sentence~~ — **RESOLVED from scan (p257)** ("csakis az istenük
+  vallásában való elmélyedéstől, hitüknek erejétől függ, amit…"); Szélkeltés was already fixed
+  from app data earlier.
 
 ---
 

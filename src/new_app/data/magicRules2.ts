@@ -98,7 +98,7 @@ Tehát a papok nem az elméjük által összegyűjtött és fókuszált manábó
 
 Egy karakter minél magasabb szintre lép, minél több istenének tetsző tettet hajt végre, annál inkább kiérdemli istene figyelmét. Azt, hogy istene mekkora hatalommal ruházza föl, mennyi fohásza talál meghallgattatásra, a Kegy pontjainak száma hivatott szimbolizálni.
 
-A papok maximális Kegy pontjainak száma csak istenük vallásában való elmélyedéstől, hitüknek ereje, amit a szintenként kapott Karakteralkotó pontjaikból vásárolt, illetve a Vallásismeret képzettség bónuszaként kapott Kegy pontok jelölnek. Megjegyzendő még, hogy bizonyos cselekedetek végrehajtásával, mellyel a pap istene jóindulatát keresi, vagy kitüntetett figyelmet érdemel ki, jutalmul újabb Kegy pontokat kaphat. Ezen extra Kegy pontok összegének száma sohasem haladhatja meg a pap vagy kegyelt tapasztalati szintjét.
+A papok maximális Kegy pontjainak száma csakis az istenük vallásában való elmélyedéstől, hitüknek erejétől függ, amit a szintenként kapott Karakteralkotó pontjaikból vásárolt, illetve a Vallásismeret képzettség bónuszaként kapott Kegy pontok jelölnek. Megjegyzendő még, hogy bizonyos cselekedetek végrehajtásával, mellyel a pap istene jóindulatát keresi, vagy kitüntetett figyelmet érdemel ki, jutalmul újabb Kegy pontokat kaphat. Ezen extra Kegy pontok összegének száma sohasem haladhatja meg a pap vagy kegyelt tapasztalati szintjét.
 
 A Kegy pontok mennyisége mutatja meg, hogy a pap mekkora csodát kérhet urától vagy úrnőjétől, mi az a cselekedet, amit egy isteni lényegű hatalom hajlandó egy halandó kérésére végrehajtani, ugyanakkor azt is meghatározza, hogy hányszor kérheti pártfogója segítségét.
 
@@ -205,7 +205,7 @@ Ynev nagyobb vallásainak papjai által birtokolt szférákról az alábbi tábl
 | Gilron | Kovácsok, mesterségek | Élet, Természet |
 | Krad | Tudomány, felfedezők, utazók | Élet, Lélek |
 | Kyel | Teremtés, pusztítás, sors | Élet, Lélek, Halál |
-| Noir | Álmok, csalás, játékok, fogadások | Lélek, Lélek vagy Halál |
+| Noir | Álmok, csalás, játékok, fogadások | Élet, Lélek vagy Lélek, Halál |
 | Uwel | Bosszú, igazság, fájdalom | Élet, Lélek, Halál |
 
 ### A kyr panteon

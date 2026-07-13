@@ -398,7 +398,7 @@ export const PsiValues: PsiInfo[] = [{
   domain: "Test",
   cost: "3",
   castingTime: "1 szegmens",
-  duration: "E kör",
+  duration: "1 kör",
   description: "A Kitérés időtartama alatt a harcművészen egyfajta révület uralkodik el, melynek hatására a Sárkányharchoz hasonlóan az Istenek idejébe merülve képes megérezni az erők legapróbb rezdülését, az őt fenyegető veszély árnyait. Ez nem jelenti azt, hogy a Hatodik érzékhez hasonló megérzései támadnak az alkalmazónak, inkább arról van szó, hogy a közvetlen életveszéllyel fenyegető események kitérésre késztetik. Valójában egyetlen konkrét felhasználása ismeretes, mikor a diszciplína alkalmazója célzott támadás elől próbál meg kitérni. Ilyenkor a céllövő Célzó dobásával szemben a harcművész Védő értéke érvényesül, nem a távolság, s a kilőtt lövedékek számától függően érvényesül a Túlerő szabály."
 }, {
   name: "Kiáltás",
@@ -416,7 +416,7 @@ export const PsiValues: PsiInfo[] = [{
   domain: "Test",
   cost: "8",
   castingTime: "1 szegmens",
-  duration: "E kör",
+  duration: "1 kör",
   description: "A diszciplína az Auraátalakítás egyik igen komoly szintű alkalmazása. A Slan a rövid pillanatnyi meditáció után Aurájába hihetetlen mennyiségű szellemi energiát zúdít, hogy az éteri létezésből egyfajta anyagi valót kölcsönözzön neki. Ezzel az alkalmazással a Slan képes a szokásos felületek helyett a tárgyak vagy élőlények Auráját alkalmazni kiindulási pontként ugrásaihoz, nekirugaszkodásaihoz, mivel az immáron szilárd Aurája számára ezek a csak a Belső Síkokon létező lenyomatok ha nem is teljesen szilárd, de egyfajta ingoványos támasztékként szolgálnak számára.\n\nígy az alkalmazó képes rövid ideig futni akár a víz felületén, vagy esetleg egy sövénysor tetején. A diszciplína talán leghátborzongatóbb megnyilvánulása, mikor a Slan egy embertömeg felett halad át, szinte alig érintve lábaival a vállalhat, fejeket.\n\nA Slan haladási sebessége teljesen megegyezik a normál képességeivel, illetve a diszciplína hatása alatt ugrásainak magassága és hossza sem változik."
 }, {
   name: "Sárkány dühe",
@@ -456,7 +456,7 @@ export const PsiValues: PsiInfo[] = [{
   domain: "Test",
   cost: "6",
   castingTime: "10 kör",
-  duration: "E óra",
+  duration: "1 óra",
   description: "A testben áramló energiák irányításának tökélyre vitele, az életerő felszítása, lelassítása az alkalmazó saját testében. Az alkalmazás segítségével lehetőség nyílik a test élettani folyamatainak felfüggesztésére.\n\nIlyenkor az alkalmazó semmiféle életjelet nem ad, nincs szüksége táplálékra vagy folyadékra, de még levegőre sem. Mozdulatlanná válik - olyan ez, mint a halál dermedtsége - és kihűl, a tudati folyamatok megszűnnek, az elme is egy visszahúzódott állapotba dermed, csupán a Statikus pajzs alkalmazás marad meg, épp ezért a Tetszhalál felfedezése csak Auraérzékelésével lehetséges, igaz az már 1 E-vel is kimutatja a jelenlévő lelket.\n\nEzzel szemben az Asztrál- és Mentáltest nem alszik, így az alkalmazó továbbra sem lehet alanya a Természeti Anyag Mágiájának. Az alkalmazónak előre el kell döntenie a Tetszhalál időtartamát, mert nincs rá mód, hogy az időtartam lejárta előtt félbeszakítsák a diszciplínát.\n\nTetszhalál állapotában semmiféle fájdalom (Fp) nem okozható, és a testet ért (Ép) sérülések feleződnek. Az egyetlen olyan diszciplína ez, melynek alkalmazása során valóban regenerálódik a test. Minden Tetszhalálban töltött óra alatt 1 Ép regenerálódik - azaz gyógyul magától. Maximuma fölé sem az Ép, sem az Fp nem emelkedhet. A szervezetbe került mérgek hatóideje háromszorosára lassul."
 }, {
   name: "Zavarás",
