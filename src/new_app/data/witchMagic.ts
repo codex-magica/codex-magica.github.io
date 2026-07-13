@@ -176,7 +176,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   castingTime: "1 sz",
   range: "10 m",
   duration: "1 kör/szint",
-  description: "A boszorkány körüli 10 ynevi láb sugarú körön belül embermagasságú lángoszlop csap ki a földből - akárha perzselő gejzír lenne -, majd egy kör múltán lelohad, elenyészik. A boszorkánynak bal keze mutatóujjával arra a pontra kell mutatnia, ahol tüzet kíván fakasztani a földből. A pontnak mindenképpen a talajon, illetve a padlón kell lennie, különben semmi nem történik. A lángnyelv - forrásának megjelölésekor - azonnal felcsap, s akit elér, annak 21k6 Sp égési sebet okoz. A lángoszlop sebzését a páncélok SFÉ-je a fegyvereknél megszokott módon csökkenti.\n\nA boszorkány annyi lángnyelvet képes sorban egymás után fakasztani, amennyi a Tapasztalati szintje. Nem köteles szabályos időközönként a földre mutatni, a varázslat Időtartamán belül tetszés szerinti időpillanatokban idézheti meg a lángoszlopokat. Ha kívánja, gyors egymásutánban, ha kívánja, hosszabb szünetekkel. A lángoszlopok elhasználására annyi kör áll rendelkezésére, ahányadik szintű."
+  description: "A boszorkány körüli 10 ynevi láb sugarú körön belül embermagasságú lángoszlop csap ki a földből - akárha perzselő gejzír lenne -, majd egy kör múltán lelohad, elenyészik. A boszorkánynak bal keze mutatóujjával arra a pontra kell mutatnia, ahol tüzet kíván fakasztani a földből. A pontnak mindenképpen a talajon, illetve a padlón kell lennie, különben semmi nem történik. A lángnyelv - forrásának megjelölésekor - azonnal felcsap, s akit elér, annak 2k6 Sp égési sebet okoz. A lángoszlop sebzését a páncélok SFÉ-je a fegyvereknél megszokott módon csökkenti.\n\nA boszorkány annyi lángnyelvet képes sorban egymás után fakasztani, amennyi a Tapasztalati szintje. Nem köteles szabályos időközönként a földre mutatni, a varázslat Időtartamán belül tetszés szerinti időpillanatokban idézheti meg a lángoszlopokat. Ha kívánja, gyors egymásutánban, ha kívánja, hosszabb szünetekkel. A lángoszlopok elhasználására annyi kör áll rendelkezésére, ahányadik szintű."
 }, {
   name: "Tűzgyújtás",
   type: "Tűzmágia",
@@ -192,7 +192,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   castingTime: "4 sz",
   range: "Lásd a leírást!",
   duration: "4 kör",
-  description: "A Tuzmágia olyan varázslata, mely egyesíti magában a tűzzel való támadást és védekezést. A boszorkány hangos rikoltással tűzgyűrűt idéz maga köré, 1 ynevi láb sugarú körben, melynek sebzése, ha valaki keresztezi, 4k6 Sp. A gyűrű 3 körig marad a boszorkány körül, aztán - vagy, ha a boszorkány úgy kívánja, hamarabb - tágulni kezd, s egy kör alatt eléri a négy ynevi lábnyi sugarat. A gyűrű tágulása folyamatos, akit elér, azt megégeti, a gyúlékony tárgyakat, pedig lángra lobbantja. Sebzése az első lábon 41k6 Sp, a másodikon már csak 3k6 Sp, a harmadikon 2k6, a negyediken 1k6 Sp. Miután a gyűrű elérte a négy ynevi lábnyi sugarat, elenyészik."
+  description: "A Tuzmágia olyan varázslata, mely egyesíti magában a tűzzel való támadást és védekezést. A boszorkány hangos rikoltással tűzgyűrűt idéz maga köré, 1 ynevi láb sugarú körben, melynek sebzése, ha valaki keresztezi, 4k6 Sp. A gyűrű 3 körig marad a boszorkány körül, aztán - vagy, ha a boszorkány úgy kívánja, hamarabb - tágulni kezd, s egy kör alatt eléri a négy ynevi lábnyi sugarat. A gyűrű tágulása folyamatos, akit elér, azt megégeti, a gyúlékony tárgyakat, pedig lángra lobbantja. Sebzése az első lábon 4k6 Sp, a másodikon már csak 3k6 Sp, a harmadikon 2k6, a negyediken 1k6 Sp. Miután a gyűrű elérte a négy ynevi lábnyi sugarat, elenyészik."
 }, {
   name: "Villámszórás",
   type: "Tűzmágia",
@@ -354,8 +354,6 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   save: "Asztrális",
   description: "E varázs áldozatai irtózatot, félelemmel vegyes iszonyatot éreznek egyes - a boszorkány által meghatározott - tárgyak vagy tárgytípusok iránt. Ha az irtózat tárgya az áldozat közelébe kerül, legszívesebben elmenekülne előle (nem félelem, irtózat!), ha nem teheti, megzavarodik, nem képes koncentrálni, s így minden harci dobását -15-ös módosítóval, tulajdonságpróbáit -5 módosítóval teszi."
 }, {
-  // TODO: VÉ modifier set to +5. The original book is self-contradictory here —
-  // the body combat line reads "VÉ: -45" (OCR-garbled / conflicting). Verify against print.
   name: "Rettegés",
   type: "Érzelemkeltő varázslatok",
   cost: "1",
@@ -855,7 +853,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
 }, {
   name: "Sárga gyertya",
   type: "Gyertyamágia",
-  cost: "5",
+  cost: "Lásd a leírást!",
   castingTime: "1 kör",
   duration: "30 p",
   save: "Asztrális",
@@ -863,7 +861,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
 }, {
   name: "Szivárványszín gyertya",
   type: "Gyertyamágia",
-  cost: "1",
+  cost: "Lásd a leírást!",
   castingTime: "1 kör",
   duration: "Lásd a leírást!",
   save: "Lásd a leírást!",

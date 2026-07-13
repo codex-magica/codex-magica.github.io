@@ -106,7 +106,7 @@ export const ArmorValues: ArmorInfo[] = [
     STP: 20,
     MGT: 0,
     SFÉ: 1,
-    description: "A legegyszerűbb páncélfajta a fegyverkabát. Az alapgondolata az, hogy a vastagon hordott ruha valamelyest felfogja, tompítja az ütéseket, vágásokat. A fegyverkabát — bár neve erre engedne következtetni — nem mindig ruhaposztóból készül. Bármilyen vastag anyag megteszi. Sokszor puha bőrből készült zekét, kabátot bélelnek ki úgy, hogy védjen a támadások ellen, illetve a sérülékenyebb helyeken, pl. hónaljban még léncszövet rátéttel is erősíthetik. A fegyverkabát alapvetően 2 felsőtestet védi. Elöl és hátul egyaránt védettséget nyújt. A kezet és a lábat a különböző darabok különbözőképpen védik. Ezen vért általában hosszú ujjú, így a karokat egészen csuklóig beborítja, de a combokra csak kis mértékben lóg rá. A. nehezebb vértezetek alapjául szolgál a legtöbb esetben, így, ha említésre kerül az adott páncél leírásánál, hogy efféle alap szükségeltetik viseléséhez, akkor a vértezet változatlan MGT mellett a táblázatban feltüntetett SFÉ-nél egy ponttal kevesebb védelmet nyújt, ha hiányzik a fegyverkabát."
+    description: "A legegyszerűbb páncélfajta a fegyverkabát. Az alapgondolata az, hogy a vastagon hordott ruha valamelyest felfogja, tompítja az ütéseket, vágásokat. A fegyverkabát — bár neve erre engedne következtetni — nem mindig ruhaposztóból készül. Bármilyen vastag anyag megteszi. Sokszor puha bőrből készült zekét, kabátot bélelnek ki úgy, hogy védjen a támadások ellen, illetve a sérülékenyebb helyeken, pl. hónaljban még láncszövet rátéttel is erősíthetik. A fegyverkabát alapvetően a felsőtestet védi. Elöl és hátul egyaránt védettséget nyújt. A kezet és a lábat a különböző darabok különbözőképpen védik. Ezen vért általában hosszú ujjú, így a karokat egészen csuklóig beborítja, de a combokra csak kis mértékben lóg rá. A nehezebb vértezetek alapjául szolgál a legtöbb esetben, így, ha említésre kerül az adott páncél leírásánál, hogy efféle alap szükségeltetik viseléséhez, akkor a vértezet változatlan MGT mellett a táblázatban feltüntetett SFÉ-nél egy ponttal kevesebb védelmet nyújt, ha hiányzik a fegyverkabát."
   },
   {
     name: "bőrpáncél",
@@ -172,7 +172,7 @@ export const ArmorValues: ArmorInfo[] = [
     STP: 60,
     MGT: -2,
     SFÉ: 3,
-    description: "A pikkelyvért is a brigandin elvén készül, ítt viszont ismét kívülre kerülnek a fémlapocskák. Ezek általában kör-, cserép- vagy téglalap alakúak, és jelentős átfedésekkel borítják a testet. Egyes vidékeken ezt is fegyverkabátra vagy bőrvért alapra varrják fel, de léteznek olyan megoldások is, ahol a lemezeket csak önmagukban fűzik össze. Ilyen esetekben mindig úgy vezetik az összekötő szíjat vagy zsinórt, hogy a pikkelylemezek egyben azt is takarják.\nA posztóalap nélküli pikkelyvért magában is viselhető, a vágásokat így is felfogja, de az ütések erejét alig tompítja, ezért így csak 2 az SFÉ-je — változatlan MGT mellett. Ahhoz, hogy teljes értékű védelmet nyújtson, megfelelő ruházatot kell alávenni, ami általában megfelel a fegyverkabát kategóriájának.\nA pikkelyvért a mellkast és a hasat védi, gyakran kiegészül a hátat borító résszel is. A karokat legfeljebb könyökig fedik, de sokszor leérnek egészen viselőjük térdéig. Ez esetben középen hasítékkal készülnek, a mozgás megkönnyítése érdekében."
+    description: "A pikkelyvért is a brigandin elvén készül, itt viszont ismét kívülre kerülnek a fémlapocskák. Ezek általában kör-, cserép- vagy téglalap alakúak, és jelentős átfedésekkel borítják a testet. Egyes vidékeken ezt is fegyverkabátra vagy bőrvért alapra varrják fel, de léteznek olyan megoldások is, ahol a lemezeket csak önmagukban fűzik össze. Ilyen esetekben mindig úgy vezetik az összekötő szíjat vagy zsinórt, hogy a pikkelylemezek egyben azt is takarják.\nA posztóalap nélküli pikkelyvért magában is viselhető, a vágásokat így is felfogja, de az ütések erejét alig tompítja, ezért így csak 2 az SFÉ-je — változatlan MGT mellett. Ahhoz, hogy teljes értékű védelmet nyújtson, megfelelő ruházatot kell alávenni, ami általában megfelel a fegyverkabát kategóriájának.\nA pikkelyvért a mellkast és a hasat védi, gyakran kiegészül a hátat borító résszel is. A karokat legfeljebb könyökig fedik, de sokszor leérnek egészen viselőjük térdéig. Ez esetben középen hasítékkal készülnek, a mozgás megkönnyítése érdekében."
   },
   {
     name: "lemezvértezet",
@@ -199,7 +199,7 @@ export const ArmorValues: ArmorInfo[] = [
     STP: 80,
     MGT: -3,
     SFÉ: 4,
-    description: "Az igazi nehézvértek a mellyvért, a félvértezet és a teljes vértezet nem sokban különböznek egymástól. Alapvető elemeik ugyanazok, csak az különbözteti meg őket, hogy mely részeket használják fel, illetve hagyják el éppen.  A mellvértet mindig domborúra készítik, általában gömbölyűre vagy gerinccel osztottra. A gyomorszáj tájékán gyakran csúcsba futó lemezzel erősítik meg, ami néha a szegycsontig is felér. Ez a rátét néhány páncél esetében külön mozgatható, így kevésbé akadályozza a páncél viselőjét."
+    description: "Az igazi nehézvértek a mellvért, a félvértezet és a teljes vértezet nem sokban különböznek egymástól. Alapvető elemeik ugyanazok, csak az különbözteti meg őket, hogy mely részeket használják fel, illetve hagyják el éppen.  A mellvértet mindig domborúra készítik, általában gömbölyűre vagy gerinccel osztottra. A gyomorszáj tájékán gyakran csúcsba futó lemezzel erősítik meg, ami néha a szegycsontig is felér. Ez a rátét néhány páncél esetében külön mozgatható, így kevésbé akadályozza a páncél viselőjét."
   },
   {
     name: "félvértezet",
@@ -225,7 +225,7 @@ export const ArmorValues: ArmorInfo[] = [
     STP: 80,
     MGT: -2,
     SFÉ: 4,
-    description: "A szaknyelv gladiátorvértezetnek nevezi a következő öszszeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
+    description: "A szaknyelv gladiátorvértezetnek nevezi a következő összeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
   },
   {
     name: "kráni vért",
@@ -233,7 +233,7 @@ export const ArmorValues: ArmorInfo[] = [
     STP: 80,
     MGT: -2,
     SFÉ: 4,
-    description: "A szaknyelv gladiátorvértezetnek nevezi a következő öszszeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
+    description: "A szaknyelv gladiátorvértezetnek nevezi a következő összeállítást: alkar-, felkar- és lábszárvédők, övszerűen derékra csatolható hasvért, csak gyomorszájig leérő mellpáncél.\nA gladiátorokéhoz hasonló, de erősebb és vállvasakkal is ellátott kráni vértet viselnek Krán fejvadászai."
   },
   {
     name: "kardművész vért",

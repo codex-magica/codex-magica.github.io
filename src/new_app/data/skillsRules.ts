@@ -1,5 +1,5 @@
 // Általános képzettség-szabályok (a 16. fejezet bevezetője), Markdown.
-export const skillsRules = `Képzettségeknek nevezzük azokat az ismereteket, amely nem a karakter veleszületett adottságai, hanem hosszas tanulással elsajátított tudása, képességei.
+export const skillsRules = `Képzettségeknek nevezzük azokat az ismereteket, amelyek nem a karakter veleszületett adottságai, hanem hosszas tanulással elsajátított tudása, képességei.
 
 A karakter jellemén, iskoláján és személyiségén kívül leginkább az eltérő képzettségek azok, amelyek megkülönböztetik egymástól az egyszerű harcost a bajvívótól, fejvadászt a harcművésztől vagy boszorkánymestert a varázslótól.
 
@@ -15,7 +15,7 @@ Minden képzettségnél öt különböző tudásszintet különböztetünk meg, 
 
 **3. fok** — Azt jelenti, hogy a karakter hivatásos szinten ért az adott képzettséghez, szükség esetén meg tudna élni belőle. Tudása biztos és átfogó, a keze alól kikerülő holmik minősége megfelel az elvárásoknak. Bár legtöbb ember rendelkezik 3-4 ilyen fokú képzettséggel, általában nem nagyon jutnak ennél a szintnél magasabbra.
 
-**4. fok** — A karakter megbecsült, elismert mestere szakmájának, tudásával, teljesítményével sehol nem vall szégyent. Észak tudós főik, a fejvadászrendek mestergyilkosai, a legkiválóbb bajvívók rendelkeznek a "mesterségükre" leginkább jellemző képzettség ezen szintjével.
+**4. fok** — A karakter megbecsült, elismert mestere szakmájának, tudásával, teljesítményével sehol nem vall szégyent. Észak tudós fői, a fejvadászrendek mestergyilkosai, a legkiválóbb bajvívók rendelkeznek a "mesterségükre" leginkább jellemző képzettség ezen szintjével.
 
 **5. fok** — Aki ilyen magas fokú ismeret birtokában van, az már ritkán talál komoly vetélytársra, méltó ellenfélre. Szinte mindig országosan ismert tudósok, művészek, hadvezérek, nemegyszer iskolaalapítók, feltalálók, nagymesterek.
 
@@ -23,7 +23,7 @@ Minden képzettségnél öt különböző tudásszintet különböztetünk meg, 
 
 Akadnak azonban olyan képzettségek is, melyek ismeretének meghatározásában jóval finomabb skálát kell alkalmaznunk. Ezek hatékonyságának mértékét százalékban mérjük, s ezért Százalékos képzettségnek nevezzük.
 
-Minden karakter külön időráfordítás és tanulás nélkül is rendelkezik bizonyos eséllyel ezen képzettségek alkalmazásakor, még akkor is, ha soha nem tanulta azt senkitől. Ezt nevezzük százalékos alapértéknek, ami megegyezik a vonatkozó Tulajdonság értékével. (Például egy tolvaj egy két és fél láb magasan nyíló erkélyre akar feljutni, akkor Mászás próbát kell tennie. Tegyük fel, hogy nem fejlesztette ezt a képzettségét, így százalékos alapértéke megegyezik az Ügyességével, ami legyen mondjuk 16. Így tehát 16%-a van rá, hogy képes lesz felmászni. A KM ezt +35-tel módosítja, mivel a tolvajnál van mászóvas, ráadásul a fal kövei elég sok fogódzkodót kínálnak. A próbára tehát összesen 51%-a van.)
+Minden karakter külön időráfordítás és tanulás nélkül is rendelkezik bizonyos eséllyel ezen képzettségek alkalmazásakor, még akkor is, ha soha nem tanulta azt senkitől. Ezt nevezzük százalékos alapértéknek, ami megegyezik a vonatkozó Tulajdonság értékével. (Például egy tolvaj egy két és fél láb magasan nyíló erkélyre akar feljutni, akkor Mászás próbát kell tennie. Tegyük fel, hogy nem fejlesztette ezt a képzettségét, így százalékos alapértéke megegyezik az Ügyességével, ami legyen mondjuk 16. Így tehát 16%-a van rá, hogy képes lesz felmászni. A KM ezt 35%-tel módosítja, mivel a tolvajnál van mászóvas, ráadásul a fal kövei elég sok fogódzkodót kínálnak. A próbára tehát összesen 51%-a van.)
 
 A Százalékos képzettség használatának sikerét úgy döntjük el, hogy k100-zal dobunk, s amennyiben a dobás eredménye kisebb vagy egyenlő mint a képzettség százalékértéke, úgy a próba sikerült. Ha a dobás értéke nagyobb, akkor a feladatot elrontottuk.
 

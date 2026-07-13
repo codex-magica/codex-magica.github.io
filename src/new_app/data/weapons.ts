@@ -36,7 +36,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 0,
     isMagical: false,
-    description: "Ököl: Egy régi mondás szerint mindig kéznél van. Ha más fegyver nincs, ez ís megteszi. Igazán mesteri használói a harcművészek.",
+    description: "Ököl: Egy régi mondás szerint mindig kéznél van. Ha más fegyver nincs, ez is megteszi. Igazán mesteri használói a harcművészek.",
   },
   {
     name: "vasököl",
@@ -66,7 +66,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 10,
     isMagical: false,
-    description: "Garott: Más néven fojtóhurok — tipikusan orgyilkos fegyver, csak az orvtámadás képzettséggel alkalmazható, fegyverhasználat képzettség nem szükséges hozzá. Nem más, mint egy kb. 60-80 ynevi hüvelykes acélhuzal, mindkét végén fogantyúval. A támadó áldozata mögé osonva hurkot vet a nyakába, és addig szorítja, míg az illető megfullad, vagy át nem vágja a torkát a vékony huzal. Az áldozat körönként elszenved 1k10 Sp-t, amíg meg nem hal vagy ki nem szabadul. A szabadulásra igen kicsi az esélye, hiszen szorongatott helyzete miatt nem sok mindent tehet, csak az alábbi levonásokkal támadhat, sikeres Akaraterőpróba után: Gyorsaság -5, Ügyesség -5, ezáltal elveszíti azon képzettségeit, melyeknek Tulajdonságkövetelményét nem tudja teljesíteni, Emellett a Tulajdonságcsökkenés miatt harcértékei a következő módon változnak: KÉ: -5, TÉ: -10, VÉ: -10, dobó-, vagy célzófegyvert pedig nem használhat. Persze a támadó is némileg kiszolgáltatott helyzetben van, őt a Harc helyhez kötve módosítói sújtják. Ha az áldozat sikeres támadást hajt végre támadóján, akkor annak kell Akaraterőpróbát tennie, vajon sikerül-e továbbra is fogva tartania áldozatát.\nTermészetesen ez a fegyver csak és kizárólag hátulról és meglepetésszerűen alkalmazható, nyílt közelharcban semmi haszna nincs. Sebzése figyelemreméltó 2k6. Túlütésnél az első körben — és csakis ekkor — a garott ÉP-t is sebezhet, a hirtelen rántás következtében.",
+    description: "Garott: Más néven fojtóhurok — tipikusan orgyilkos fegyver, csak az orvtámadás képzettséggel alkalmazható, fegyverhasználat képzettség nem szükséges hozzá. Nem más, mint egy kb. 60-80 ynevi hüvelykes acélhuzal, mindkét végén fogantyúval. A támadó áldozata mögé osonva hurkot vet a nyakába, és addig szorítja, míg az illető megfullad, vagy át nem vágja a torkát a vékony huzal. Az áldozat körönként elszenved 1k10 Sp-t, amíg meg nem hal vagy ki nem szabadul. A szabadulásra igen kicsi az esélye, hiszen szorongatott helyzete miatt nem sok mindent tehet, csak az alábbi levonásokkal támadhat, sikeres Akaraterőpróba után: Gyorsaság -5, Ügyesség -5, ezáltal elveszíti azon képzettségeit, melyeknek Tulajdonságkövetelményét nem tudja teljesíteni. Emellett a Tulajdonságcsökkenés miatt harcértékei a következő módon változnak: KÉ: -5, TÉ: -10, VÉ: -10, dobó- vagy célzófegyvert pedig nem használhat. Persze a támadó is némileg kiszolgáltatott helyzetben van, őt a Harc helyhez kötve módosítói sújtják. Ha az áldozat sikeres támadást hajt végre támadóján, akkor annak kell Akaraterőpróbát tennie, vajon sikerül-e továbbra is fogva tartania áldozatát.\nTermészetesen ez a fegyver csak és kizárólag hátulról és meglepetésszerűen alkalmazható, nyílt közelharcban semmi haszna nincs. Sebzése figyelemreméltó 2k6. Túlütésnél az első körben — és csakis ekkor — a garott Ép-t is sebezhet, a hirtelen rántás következtében.",
   },
   {
     name: "tűgyűrű",
@@ -273,7 +273,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "Az amazonok hagyományos, leginkább a predoci egyeneskardra emlékeztető, majd 1 ynevi láb hosszú pengéje, mely vágásra és szúrásra egyaránt alkalmas, s mely markolatkosárral is bír. A pengét gyakran díszítik az adott mesterre, klánra jellemző vésetekkel, gyakorlottabb szem, még a viselője családfájáról megtudhat egyet s mást.",
+    description: "Az amazonok hagyományos, leginkább a predoci egyeneskardra emlékeztető, majd 1 ynevi láb hosszú pengéje, mely vágásra és szúrásra egyaránt alkalmas, s mely markolatkosárral is bír. A pengét gyakran díszítik az adott mesterre, klánra jellemző vésetekkel. A gyakorlottabb szem még a viselője családfájáról megtudhat egyet s mást.",
   },
   {
     name: "fejvadászkard",
@@ -995,7 +995,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 30,
     isMagical: false,
-    description: "",
+    description: "A legelterjedtebb és legváltozatosabb formában megjelenő fegyver. Nyele általában 2-4 ynevi láb hosszú. Ahány tája csak van Ynevnek, annyi féle és forma fejjel készítik. A több száz, esetenként több ezer éves kísérletezés eredményeképpen igen letisztult, célratörő formákat nyertek. Megfigyelhető azonban némi egyezés az alabárdok különböző típusai között is. Alapvető felépítésben mindegyik tartalmaz egy egyenes vagy enyhén görbülő pengerészt, egy hosszabb-rövidebb egyenes döfőhegyet, valamint egy ütőtüskét a bárdpenge hátoldalán. Hogy azután ezen elemek közül melyik kap nagyobb hangsúlyt, illetve melyiket hanyagolják el, s milyen alakban, variációkban jelenítik meg őket, az adja az egyes fegyverek eredetiségét. Ez a három alapelem látja el egyben az alabárd három alapvető funkcióját — a vágást, a szúrást illetve a zúzást. A harmadik megsegítésére az ütőtüskét gyakran tompára és súlyosra készítik. Előfordul az is, hogy az ütőtüske vagy a bárdlap csőre hosszabb és erősen hátrahajlik — ez különösen lovasok lerántásánál nagy előny. Mindezen előnyei mellett persze megvan a maga hátránya is, nevezetesen, hogy túlságosan nagy; ez pedig a kezelését, szállítását, forgatását meglehetősen nehézkessé teszi (főleg szűk helyen). Az aprólékosan kimunkált, gyakran díszítésekkel ellátott fej miatt meglehetősen drága fegyver.",
   },
   {
     name: "lándzsa",
@@ -1014,7 +1014,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Minden nyeles fegyver közül talán a legelterjedtebb. Szerte Yneven rengeteg féle és fajta heggyel készítik. Sokfelé dobják, másutt közelharcra használják. A Sheral déli lejtőinek tövében élő nomád nép lándzsája alig másfél lábnyi, azonban ennek majdnem fele az élesre fent hegy, amivel úgy is harcolhatnak, mint más a kardvágással. Említést érdemel még a dzsadok széles pengéjű, kétméteres lándzsája, ami már talán átmenet az alabárd felé, akár a keskeny, szögletes gorviki, és a hihetetlenül hosszú yllinori lándzsa. Egyes helyeken külön kultúrája alakult ki a lándzsavívásnak.\n\nA hajításra is kialakított kisebb méretű lándzsákat a karakterek a fegyver TÉ-jével megegyező CÉ módosítóval dobhatják.",
   },
   {
     name: "lovaskopja",
@@ -1033,7 +1033,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Kizárólag öklelésre szolgáló nyeles fegyver. Felépítésében egy túlméretezett, három-négy méter hosszú lándzsára emlékeztet. Általában könnyű vértezetű lovasság vagy gyalogosok ellen használják. Fejlettebb változatainál bőr vagy fa tárcsát húznak rá, ami a kopjás karját és testét védi. A leglényegesebb különbség a nehézlovas kopjához képest, hogy a lovas — ha jobb kezében tartja — a ló jobb oldalán döf vele. A nehézlovas kopját ezzel szemben a ló nyaka mögött keresztben tartják, és a ló bal oldalára döfnek vele.",
   },
   {
     name: "nehézlovas kopja",
@@ -1052,7 +1052,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 35,
     isMagical: false,
-    description: "",
+    description: "A könnyűlovas változat nagyobb, súlyosabb kivitele. Hossza az öt ynevi lábnyit is elérheti, a kézvédő tárcsa pedig szerves része a nyélnek. Jellegzetes lovagi fegyver, a lovas fémvérteken külön kopjatartó kampót — úgynevezett ordot — alakítanak ki a kopja tartásának megkönnyítésére.\n\nAz öklelőkopját a lovas jobbjával megmarkolja, s könyökével az oldalához szorítja. Támadáskor kiemelkedik a nyeregből, merev lábbal megtámasztja magát a kengyelben és a nyereg hátsó kápáján, így ér el megfelelően szilárd tartást. A könnyűlovas kopját még valamennyire lehet irányítani menet közben, a nehezet viszont alig. Efféle harcmodor a lovagok és paplovagok körében dívik igazán, különösen a Pyarroni Államközösségben és Shadonban.",
   },
   {
     name: "pika",
@@ -1071,7 +1071,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Északon — főleg Abasziszban és Toronban — kialakult fegyver, a lándzsának egy egészen különleges válfaja. Ez a két és fél ynevi láb hosszú döfőalkalmatosság félelmetes fegyver. A kétlábnyi nyél végére erősítik a fél lábnyi, szögletes keresztmetszetű, vékony szuronyt, amit ugyan nem éleznek ki, de annál hegyesebbre fennek. A nyárs tövében kis, kerek fémlap található, ami a védekezést, az ellenfél fegyverének megakasztását szolgálja. Elkészítése nagyon egyszerű és olcsó, mindazonáltal hihetetlenül hatékony lovasok ellen, ezért Abasziszban és Toronban a hadsereg nagy részét ilyen fegyverrel látják el. A pika az Északi Szövetség országaiban is ismert, ott azonban kevésbé használatos.",
   },
   {
     name: "szigony",
@@ -1090,7 +1090,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Leginkább a halásznépek munkaeszköze, fegyverként csak akkor forgatják, ha rákényszerülnek. A visszafelé fogazott, hosszú, vékony hegy igen súlyos sebeket ejt, ha a döfés után hirtelen kirántják. A szigonyvetők fegyverük végéhez gyakran vékony, erős zsineget erősítenek, amivel azután vissza tudják rántani az eldobott eszközt. Ez lényegében a halászat során alakult így, de harc közben is szívesen alkalmazzák, hiszen segítségével egy kör leforgása alatt újra fegyverükhöz jutnak. A szigony másik változata a háromágú szigony, ami eredetileg szintén halászatra szolgált, ám jelenleg már sokkal inkább a gladiátorok cégére, semmint a halászoké. Leginkább Abasziszban elterjedt, ahol a viadalokon gyakran hálóval együtt használják. Alapvetően kétféle alakban készítik. Az elsőnél a három hegy egy síkban, egymás mellett helyezkedik el, a másiknál pedig körív mentén. Mindkét fegyver kiválóan alkalmas fegyvertörésre és lefegyverzésre. E képzettségek használatakor a szigonyt használó harcos +10-et kap TÉ-jére.",
   },
 
 
@@ -1152,8 +1152,8 @@ export const WeaponValues: WeaponInfo[] = [
     cost: "1e 50r",
     KÉ: 10,
     TÉ: 0,
-    VÉ: 5,
-    CÉ: 2,
+    VÉ: 2,
+    CÉ: 5,
     range: "20 láb",
     weight: "0.5",
     canDisarm: false,

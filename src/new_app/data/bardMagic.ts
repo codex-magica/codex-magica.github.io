@@ -38,7 +38,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "A dal hossza + 10perc",
   save: ["Asztrális"],
-  description: "A bárd ezzel a varázslattal társainak harci kedvét növelheti (saját magát nem jelölheti meg célpontként). A dal általában pattogó, csatába hívó induló, de lehet akár lélekemelő hősi rege is. Minden olyan lény KÉ-je 5-tel, TÉ-je 10-zel nő, Bátorsága (NJK-k esetében) 3 ponttal emelkedik, aki a varázslás pillanatában a dalt hallotta.\n\nA Bátorság dalának hatása alatt álló személyek csak akkor válhatnak félelem alapú mágia alanyává, ha annak erőssége meghaladja a Bátorság daláét, illetve a magasabb erősítésű dalmágia semlegesíti az alacsonyabb erősítésű félelem alapú mágiák hatását. A varázslat manapontonként 2 E-t ad."
+  description: "A bárd ezzel a varázslattal társainak harci kedvét növelheti (saját magát nem jelölheti meg célpontként). A dal általában pattogó, csatába hívó induló, de lehet akár lélekemelő hősi rege is. Minden olyan lény KÉ-je 5-tel, TÉ-je 10-zel nő, Bátorsága (NJK-k esetében) 3 ponttal emelkedik, aki a varázslás pillanatában a dalt hallotta.\n\nA Bátorság dalának hatása alatt álló személyek csak akkor válhatnak félelem alapú mágia alanyává, ha annak erőssége meghaladja a Bátorság daláét, illetve a magasabb erősítésű dalmágia semlegesíti az alacsonyabb erősítésű félelem alapú mágiák hatását."
 }, {
   name: "Bénítás dala",
   type: "Dalmágia",
@@ -51,11 +51,11 @@ export const BardMagicValues: BardMagicInfo[] = [{
 }, {
   name: "Dalegyesítés",
   type: "Dalmágia",
-  cost: "+5 Mp",
-  castingTime: "Az egyesített dalok hossza",
+  cost: "+5 Mp minden újabb varázslat után",
+  castingTime: "Lásd a leírást!",
   range: "Hallótávolság",
   duration: "A dalok hossza",
-  description: "Ez a varázslat pusztán egy akkord, egy felütés, melynek segítségével két vagy akár több, különböző hatású dalból egyetlen, harmadik dal születik. A zene összetettebbé, bonyolultabbá válik, a két varázslat pedig egyszerre fejti ki hatását. A varázslatok megidézéséhez annyi időre van szükség mint a dalok Varázslási ideje összesen, majd ezek után együtt működnek tovább. \n\nAz így született dal Manapont igénye megegyezik az összekötött varázslatok Manapont igényének összegével, plusz minden két dal közti dalegyesítő elem további 5 Manapontot emészt fel.\n\nIly módon kombinálható például a Nyugalom és az Álom dala. A két együttesen ható varázslat minden tekintetben úgy működik, mintha a bárd egyenként használná őket. A Dalegyesítést a Mágia dalával együtt alkalmazva nem Dalmágia típusú, hanem Hangmágia alapú varázslatok is működhetnek a fenti módon."
+  description: "Ez a varázslat pusztán egy akkord, egy felütés, melynek segítségével két vagy akár több, különböző hatású dalból egyetlen, harmadik dal születik. A zene összetettebbé, bonyolultabbá válik, a két varázslat pedig egyszerre fejti ki hatását. A varázslatok megidézéséhez annyi időre van szükség, mint a dalok Varázslási ideje összesen, majd ezek után együtt működnek tovább.\n\nIly módon kombinálható például a Nyugalom és az Álom dala. A két együttesen ható varázslat minden tekintetben úgy működik, mintha a bárd egyenként használná őket. A Dalegyesítést a Mágia dalával együtt alkalmazva nem Dalmágia típusú, hanem Hangmágia alapú varázslatok is működhetnek a fenti módon."
 }, {
   name: "Ellentétek dala",
   type: "Dalmágia",
@@ -112,7 +112,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
 }, {
   name: "Távolság dala",
   type: "Dalmágia",
-  cost: "Lásd a leírást!",
+  cost: "3 × a szorzószám",
   castingTime: "1 szegmens",
   range: "Hallótávolság",
   duration: "A dal hossza",
@@ -237,7 +237,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "20 m és látható",
   duration: "1 kör/szint",
-  description: "A bárd fénylő kontúrvonalat helyezhet el saját magán, más lényen, de akár tárgyakon is (ennek feltétele, hogy lássa a célpontot, és annak mérete ne haladja meg egy emberét).\n\nHa magára olvassa a varázslatot, a fény derengő, hatalmat sejtető aura lesz, mely sokkal erősebbnek, tökéletesebbnek mutatja őt. Karizmájára a varázslat idejére +l-et kap.\n\nHa a fényaura másra kerül, annak testét vékony, erős fénycsík öleli körül. így sötétben könnyebb eltalálni: a reá támadó ellenfél nem szenvedi el a sötétségből eredő negatív módosítókat."
+  description: "A bárd fénylő kontúrvonalat helyezhet el saját magán, más lényen, de akár tárgyakon is (ennek feltétele, hogy lássa a célpontot, és annak mérete ne haladja meg egy emberét).\n\nHa magára olvassa a varázslatot, a fény derengő, hatalmat sejtető aura lesz, mely sokkal erősebbnek, tökéletesebbnek mutatja őt. Karizmájára a varázslat idejére +1-et kap.\n\nHa a fényaura másra kerül, annak testét vékony, erős fénycsík öleli körül. így sötétben könnyebb eltalálni: a reá támadó ellenfél nem szenvedi el a sötétségből eredő negatív módosítókat."
 }, {
   name: "Bűvharc",
   type: "Fénymágia",
@@ -285,7 +285,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "Önmaga",
   duration: "1 kör/szint",
-  description: "A bárd ezzel a varázslattal hosszú fénycsóvát teremthet, melynek erőssége a Quiron-tenger híres világítótornyaival is felveheti a versenyt. A fény forrása a bárd bal tenyere, innen a fény tölcsér alakban szóródik. A sugár hossza 20 ynevi láb, de a fényforrás tiszta időben, még több mérföldről is látható. Aki a csóva sugarába kerül, azonnal be kell hunynia a szemét, ellenkező esetben 1k6 percre megvakul."
+  description: "A bárd ezzel a varázslattal hosszú fénycsóvát teremthet, melynek erőssége a Quiron-tenger híres világítótornyaival is felveheti a versenyt. A fény forrása a bárd bal tenyere, innen a fény tölcsér alakban szóródik. A sugár hossza 20 ynevi láb, de a fényforrás tiszta időben, még több mérföldről is látható. Aki a csóva sugarába kerül, annak azonnal be kell hunynia a szemét, ellenkező esetben 1k6 percre megvakul."
 }, {
   name: "Fényvarázs",
   type: "Fénymágia",
@@ -534,5 +534,5 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 kör",
   range: "20 m",
   duration: "1 perc/szint",
-  description: "A varázslat egyszerre hat a hang- és a látványillúziók területén. A bárd ennek segítségével ellenfelei számára látszólagosan felgyorsíthatja az idő múlását, legalábbis környezetükben. Az illúzió lényege, hogy az áldozatok környezetében minden a felgyorsult idő szerint reagál. Például, ha az ellenfél egy erdei úton áll, akkor a növények szemmel látható sebességgel növekedni kezdenek, az állatok szinte követhetetlen gyorsasággal mozognak, a nap sebesen halad pályáján. Ha barlangban, földalatti folyosón járt láthatja, ahogy a por lerakódik a padlón, pókhálók terjeszkednek a sarokban. A múló idő persze csak illúzió, de hang és kép is tartozik hozzá A történések sebességét a bárd választhatja meg, de legfeljebb százszorosra gyorsíthatja az idő folyását A varázslat ideje alatt az áldozatok csupán az illúziót látják, s a normál tér hangjai is csak gyengén jutnak el hozzájuk. Azonban, ha valamelyik célpont elhagyja a kijelölt területet, akkor a varázslat feloszlik róla."
+  description: "A varázslat egyszerre hat a hang- és a látványillúziók területén. A bárd ennek segítségével ellenfelei számára látszólagosan felgyorsíthatja az idő múlását, legalábbis környezetükben. Az illúzió lényege, hogy az áldozatok környezetében minden a felgyorsult idő szerint reagál. Például, ha az ellenfél egy erdei úton áll, akkor a növények szemmel látható sebességgel növekedni kezdenek, az állatok szinte követhetetlen gyorsasággal mozognak, a nap sebesen halad pályáján. Ha barlangban, földalatti folyosón jár, láthatja, ahogy a por lerakódik a padlón, pókhálók terjeszkednek a sarokban. A múló idő persze csak illúzió, de hang és kép is tartozik hozzá. A történések sebességét a bárd választhatja meg, de legfeljebb százszorosra gyorsíthatja az idő folyását. A varázslat ideje alatt az áldozatok csupán az illúziót látják, s a normál tér hangjai is csak gyengén jutnak el hozzájuk. Azonban, ha valamelyik célpont elhagyja a kijelölt területet, akkor a varázslat lefoszlik róla."
 }]

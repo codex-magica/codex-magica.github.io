@@ -480,7 +480,7 @@ export const PrayerValues: PrayerInfo[] = [{
   type: "Litánia",
   source: "Kis Arkánum",
   cost: "6",
-  castingTime: "1 szegmens",
+  castingTime: "1 szegmens/E",
   range: "20 m",
   duration: "Egyszeri",
   description: "A fohászt csak szabad ég alatt lehet megidézni. A pap éles kiáltása nyomán hirtelen felmorajlik az ég és a jobbja által kijelölt helyre villámnyaláb sújt le a magasból. Ellentétben a mágiahasználók villámaival, ez nem az ujjhegyéből, hanem az áldozat feje feletti magasságból csap le, így fedezékbe vonulni, pajzsot a pap felé tartani teljesen felesleges. A kiszemelt célpontot látnia kell a papnak, s felé kell mutatnia a fohász alkalmazásakor. A villám sebzése a fohász minden E-je után 1k10 Sp. A villám minden esetben a fejet találja el."
@@ -875,7 +875,7 @@ export const PrayerValues: PrayerInfo[] = [{
   duration: "10 perc",
   description: "Ezen fohásszal a pap bármiféle, mágikus képességekkel nem rendelkező állatot megidézhet. A fohász kántálása közben meg kell neveznie az állat faját, s ha ilyen tartózkodik a hatóterületen, akkor közülük a legközelebb lévő 1k10 példány haladéktalanul a paphoz siet. Ha ezen a területen nincs ilyen állat, a fohász hatástalan marad, s a Kegy pontok is elvesznek.\n\nAz állatok, miután megérkeztek, barátsággal viseltetnek a pap iránt, és az Időtartam lejártáig maradnak vele. Ha képesek kommunikálni, a pap parancsokat is adhat nekik, amiket a józan ész határain belül az állatok megkísérelnek teljesíteni. Ha nem találnak közös nyelvet, az állatok akkor is megvédik a papot harc esetén, de mást nem tehetnek érte."
 }, {
-  name: "Vízlégzés",
+  name: "Vízlélegzés",
   domains: ["Természet"],
   type: "Rituálé",
   source: "Nagy Arkánum",
@@ -1268,7 +1268,7 @@ export const PrayerValues: PrayerInfo[] = [{
   type: "Litánia",
   source: "Sogron",
   cost: "6",
-  castingTime: "1 szegmens",
+  castingTime: "1 szegmens/E",
   range: "Leírásban",
   duration: "Egyszeri",
   description: "Ezzel a fohásszal a tűz őselemi síkjának melegéből formál egy csóvát a Tűzkobra szolgája. Hangos üvöltésével pokoli forróságot szabadít arra, aki a fohász idején előtte áll. De nem csak támadó jelleggel szokás alkalmazni, bizonyos esetekben az adott környezet kiszárítására - gyúlékonyabbá tételére használják. A fohász minden E-je egy ynevi lábbal növeli a hőcsóva hosszát és 1kő-tal az okozott sebzést."

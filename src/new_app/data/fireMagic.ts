@@ -95,7 +95,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "3 kör",
-  description: "A varázslat befejeztekor a tűzvarázslót - vagy azt a kizárólag egyetlenegy, Zónáján belül tartózkodó személyt, akit meghatároz - Tűzaura veszi körül. Ez úgy hat, mint valami lángokból álló vértezet: beborítja, védelmezi az illetőt. Testétől mintegy tíz ynevi hüvelyk távolságra lobog, védettjét a mozgásban és a látásban egyáltalán nem akadályozza, és nem is sebzi; mi több, a ruháit, tárgyait sem lobbantja lángra; befelé semmilyen hőhatást nem fejt ki. Ellenben azoknak, akik azAura védettjét megérinteni, puszta kézzel megütni szándékoznak - vagyis az Aurán átnyúlni kívánnak - égési sebet okoz, valamint a kívülről behatoló éghető anyagokat lángra lobbantja. Ez a sebzés minden benyúlási kísérlet esetén Erősségenként 1k6 Sp."
+  description: "A varázslat befejeztekor a tűzvarázslót - vagy azt a kizárólag egyetlenegy, Zónáján belül tartózkodó személyt, akit meghatároz - Tűzaura veszi körül. Ez úgy hat, mint valami lángokból álló vértezet: beborítja, védelmezi az illetőt. Testétől mintegy tíz ynevi hüvelyk távolságra lobog, védettjét a mozgásban és a látásban egyáltalán nem akadályozza, és nem is sebzi; mi több, a ruháit, tárgyait sem lobbantja lángra; befelé semmilyen hőhatást nem fejt ki. Ellenben azoknak, akik az Aura védettjét megérinteni, puszta kézzel megütni szándékoznak - vagyis az Aurán átnyúlni kívánnak - égési sebet okoz, valamint a kívülről behatoló éghető anyagokat lángra lobbantja. Ez a sebzés minden benyúlási kísérlet esetén Erősségenként 1k6 Sp."
 }, {
   name: "Tűzcsóva",
   type: "Iskolaformák",
@@ -151,7 +151,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "6",
   castingTime: "1 szegmens/E",
   duration: "4 kör",
-  description: "A varázslat létrejöttekor a tűzvarázsló egyetlen mozdulattal kijelöl egy 3 ynevi láb átmérőjű körívet, ahol Tűzgyűrű keletkezik, melynek lángnyelvei maximum húsz\n\nynevi hüvelyk magasak. Mikor bárki vagy bármi áthatolni kíván a gyűrűn, a tűz felcsap és lángba borítja a behatolót. Az éghető anyagok nyomban meggyulladnak, az élőlények Erősségenként 1k6 Sp sebet szenvednek el."
+  description: "A varázslat létrejöttekor a tűzvarázsló egyetlen mozdulattal kijelöl egy 3 ynevi láb átmérőjű körívet, ahol Tűzgyűrű keletkezik, melynek lángnyelvei maximum húsz ynevi hüvelyk magasak. Mikor bárki vagy bármi áthatolni kíván a gyűrűn, a tűz felcsap és lángba borítja a behatolót. Az éghető anyagok nyomban meggyulladnak, az élőlények Erősségenként 1k6 Sp sebet szenvednek el."
 }, {
   name: "Tűzhenger",
   type: "Szabad elemi formák",
@@ -249,7 +249,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "10",
   castingTime: "1 szegmens/E",
   duration: "4 kör",
-  description: "A varázslat szinte mindenben megegyezik a Tűzaura varázslattal, csupán egy fontos különbség van a kettő között. A Perzselő aura nem a testtől 5-10 ynevi hüvelykih öleli körül a tűzvarázsló testét, hanem annál távolabb. Az aura testtől való távolsága 1-120 ynevi hüvelyk között változtatható a tűzvarázsló kívánsága szerint. így sokkal könnyebb lesz egyszerre védekezni és támadni is, hiszen a kicsivel több, mint egy ynevi lábnyi maximális távolságú aura már minden 5. kategóriánál kisebb fegyver forgatóján sebez, ha a támadó megpróbál közelharcra alkalmas távolságon belülre kerülni.\n\nAz aura éppen aktuális távolsága egy szegmensnyi koncentráció után egy újabb szegmens alatt megváltoztatható. A tűzvarázsló természetesen támadásra is felhasználhatja a Perzselő aurát, amely minden rajta keresztülhaladón 1k6 Sp-t sebez a varázslat minden E-je után."
+  description: "A varázslat szinte mindenben megegyezik a Tűzaura varázslattal, csupán egy fontos különbség van a kettő között. A Perzselő aura nem a testtől 5-10 ynevi hüvelykig öleli körül a tűzvarázsló testét, hanem annál távolabb. Az aura testtől való távolsága 1-120 ynevi hüvelyk között változtatható a tűzvarázsló kívánsága szerint. Így sokkal könnyebb lesz egyszerre védekezni és támadni is, hiszen a kicsivel több, mint egy ynevi lábnyi maximális távolságú aura már minden 5. kategóriánál kisebb fegyver forgatóján sebez, ha a támadó megpróbál közelharcra alkalmas távolságon belülre kerülni.\n\nAz aura éppen aktuális távolsága egy szegmensnyi koncentráció után egy újabb szegmens alatt megváltoztatható. A tűzvarázsló természetesen támadásra is felhasználhatja a Perzselő aurát, amely minden rajta keresztülhaladón 1k6 Sp-t sebez a varázslat minden E-je után."
 }, {
   name: "Szolga hívása",
   type: "Tűzmágia magasiskolája",
@@ -284,7 +284,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "8",
   castingTime: "1 kör",
   duration: "1 óra",
-  description: "Miután a tűzvarázsló befejezte a varázslást, 1 kör áll rendelkezésre, hogy bal keze hüvelykujjával megjelöljön egy pontot, ahol érintése nyomán apró varázsjel vörösük föl. A jel érzékel minden előtte elhaladót és minden alkalommal akkora Erősségű Tűznyilat lő ki rá, mint a Tűzszem aktuális E-je. A varázslat minden kilőtt lövedék után egyet veszít Erősségéből (egy 24 Mp-os Tűzszem első elhaladáskor tehát 3k6, második alkalommal 2k6, harmadik alkalommal 1k6 Sp égési sebet okoz, majd szertefoszlik).\n\nAlapesetben a Tűznyíl 1 ynevi láb távolságig érzékel és hat, azonban ez a távolság kitolható, minden +1 Mp-ért egy lábbal. Az időtartam is növelhető, minden +1 Mp-ért egy órával tovább maradnak fönt a varázslatot egybetartó kötések.\n\nA Tűznyíl CÉ-je 30, mely alapértékkcl kell Célzó dobást tenni a sikeres találathoz. A nyíl csakis találat esetén okoz sebet."
+  description: "Miután a tűzvarázsló befejezte a varázslást, 1 kör áll rendelkezésre, hogy bal keze hüvelykujjával megjelöljön egy pontot, ahol érintése nyomán apró varázsjel vöröslik föl. A jel érzékel minden előtte elhaladót és minden alkalommal akkora Erősségű Tűznyilat lő ki rá, mint a Tűzszem aktuális E-je. A varázslat minden kilőtt lövedék után egyet veszít Erősségéből (egy 24 Mp-os Tűzszem első elhaladáskor tehát 3k6, második alkalommal 2k6, harmadik alkalommal 1k6 Sp égési sebet okoz, majd szertefoszlik).\n\nAlapesetben a Tűznyíl 1 ynevi láb távolságig érzékel és hat, azonban ez a távolság kitolható, minden +1 Mp-ért egy lábbal. Az időtartam is növelhető, minden +1 Mp-ért egy órával tovább maradnak fönt a varázslatot egybetartó kötések.\n\nA Tűznyíl CÉ-je 30, mely alapértékkel kell Célzó dobást tenni a sikeres találathoz. A nyíl csakis találat esetén okoz sebet."
 }, {
   name: "Fekete tűz",
   type: "Közönséges tüzek befolyásolása",
@@ -351,7 +351,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
 }, {
   name: "Lángfestés",
   type: "Őstüzek befolyásolása",
-  cost: "2",
+  cost: "Lásd a leírást!",
   castingTime: "1 szegmens/E",
   duration: "Lásd a leírást!",
   description: [

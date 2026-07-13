@@ -18,11 +18,15 @@ export const magicRules1 = {
 
     "Hangmágia": `A Hangmágia egy igen különleges mágiaforma, mely nem sorolható egyetlen a Hetedkorban ismert mágiatípusba sem. Anyagi kivetülése nincs, így sem az Anyagi, sem az Elemi mágia körébe nem tartozhat, de nem fejt ki hatást az elmére, így szintén nem sorolható az Asztrál- és Mentálvarázslatok közé.
 
+Bár a feljegyzések meglehetősen hiányosak, a témával foglalkozó kutatók közül többen erre alapozzák merész álláspontjukat, miszerint a bárdok mágiája ősibb gyökerekre nyúlik vissza, mint azt a Hetedkorban bárki képzelné.
+
+A bárdok számára mindenesetre a Hangmágia nem több, mint újabb trükkök tárháza, melyekkel szemfényvesztő tudományukat vagy művészetük kibontakozását segíthetik elő.
+
 Mivel az ide tartozó varázslatok nem a célpontokra, hanem az általuk keltett, vagy általuk érzékelt hangokra vannak hatással, így ellenük Mágiaellenállásnak helye nincs. A varázslatok Erőssége egységesen 1 E.`,
 
     "Fénymágia": `A Fénymágia az Elemi Mágia változata, mely a fényt nem elemi formájában idézi meg, hanem a bárd kívánta minta szerint alakítja át. Így félrevezethető az érzékelés, hiszen csupán a szem látja oda a fénynyalábokból szőtt képet, ahol valójában nincs ott. Az efféle érzékcsalódást nevezik illúziónak.
 
-**I.** Az illúziók varázslatai soha sem hatnak másra, csak a fénysugarakra, s bár a varázslatok Erőssége egységesen 1 E, ellenük Mágiaellenállásnak helye nincs.
+**I.** Az illúziók varázslatai sohasem hatnak másra, csak a fénysugarakra, s bár a varázslatok Erőssége egységesen 1 E, ellenük Mágiaellenállásnak helye nincs.
 **II.** Minden, a bárdok által létrehozott kép valódi természete könnyen felismerhető, ha valaki megkísérli megérinteni őket: keze ugyanis átsiklik a fényjátékon. Az illúzió felismerése azonban nem jelenti azt, hogy a kép eltűnik. Az illúzió továbbra is ott marad, s a mögötte található tárgyakat eltakarja.
 **III.** Ahhoz, hogy valaki első pillantásra felismerje az apró pontatlanságokat a fény alkotta képben, s rájöjjön illúzió voltára, igen kicsi az esély. Sőt, ha a bárd kellő időt fordít a varázslat megformálására, még a legfigyelmesebb szemlélőt is becsaphatja.
 **IV.** Annak eldöntésére, hogy valaki gyanút fog-e az illúzió láttán, Érzékeléspróbát köteles dobni a KM által meghatározott módosítókkal.`,

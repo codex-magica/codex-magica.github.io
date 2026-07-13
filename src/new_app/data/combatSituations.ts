@@ -14,7 +14,7 @@ export interface CombatSituation {
 }
 
 export const combatSituationsIntro =
-  "A Kezdeményező, Támadó és Célzó dobás eredményességét nagyban befolyásolhatja a harci helyzet. Ez magában foglalja a küzdő felek egymáshoz viszonyított helyzetéből, illetve a környezetükből származó előnyöket és hátrányokat. A következőkben másféltucatnyi különböző harci helyzetet említünk és kommentálunk.";
+  "A Kezdeményező, Támadó és Célzó dobás eredményességét nagyban befolyásolhatja a harci helyzet. Ez magában foglalja a küzdő felek egymáshoz viszonyított helyzetéből, illetve a környezetükből származó előnyöket és hátrányokat. A következőkben majd másféltucatnyi különböző harci helyzetet említünk és kommentálunk.";
 
 export const CombatSituations: CombatSituation[] = [
   {
@@ -105,7 +105,7 @@ export const CombatSituations: CombatSituation[] = [
     name: "Harc kábultan",
     ke: "-10", te: "-20", ve: "-10", ce: "-30",
     description: [
-      "Mindazok, akik valamilyen okból nincsenek teljesen tudatában cselekedeteiknek (akár alkohol, akár különböző mákonyok hatása miatt), a fenti hátrányokkal harcolnak.",
+      "Mindazok, akik valamilyen okból nincsenek teljesen tudatában cselekedeteiknek (akár alkohol, akár különböző mákonyok hatása miatt), a következő hátrányokkal harcolnak:",
     ],
   },
   {
@@ -140,8 +140,8 @@ export const CombatSituations: CombatSituation[] = [
       "Az érintett fél egyetlen célja, hogy megóvja magát a támadásoktól. Kizárólag a védekezésre összpontosít, ami (míg a körülmények engedik), folyamatos hátrálást jelenthet, ehhez pedig jelentős helyre van szükség (lásd még Egészkörös cselekedetek!).",
       "Ha kizárólag a védekezésre összpontosít a célpont és van helye is a hátrálásra, akkor a VÉ-je 40-nel nő, míg a Kezdeményezés az ellenfélé lesz. A védekező harcban visszatámadásra nincs mód.",
       "Ez esetben azonban más cselekvést nem tud végrehajtani. A védekezéssel egyidejűleg nem használhat pszit, mágiát, nem vehet elő addig elrakott fegyvereket, felszerelési tárgyakat, nem tud előre menni, egy helyben maradni, hanem folyamatosan hátrál és hárít.",
-      "small:Ha falhoz szorítják, vagy szorosan körbeveszik — „Harc helyhez kötve” — hiába változatlan az erőfeszítése, a védekezés kevésbé lesz hatékony, a Védő Érték mindössze +25-tel nő.",
-      "small:Ha kénytelen megosztani a figyelmét, mert a védekezés közben pszit, mágiát stb. kíván használni, a védekezés korántsem olyan hatékony, mint teljes összpontosítás esetén. Ekkor a Védő Érték csupán +10-zel nő.",
+      "small:Ha falhoz szorítják, vagy szorosan körbeveszik — „Harc helyhez kötve” — hiába változatlan az erőfeszítése, a védekezés kevésbé lesz hatékony, a Védő érték mindössze +25-tel nő.",
+      "small:Ha kénytelen megosztani a figyelmét, mert a védekezés közben pszit, mágiát stb. kíván használni, a védekezés korántsem olyan hatékony, mint teljes összpontosítás esetén. Ekkor a Védő érték csupán +10-zel nő.",
     ],
   },
 ];
