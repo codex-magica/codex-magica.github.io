@@ -39,11 +39,14 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 
 ## Content gaps — re-OCR / check the scan
 
-- **ch16 Harci láz**: only 1. fok present; fokok 2–5 missing entirely (page 137/138 gap).
-- **ch16 Pajzsfal**: the Sün formation says "Hasonló mint a pajzsfal", but no Pajzsfal entry exists;
-  Falkataktika also lacks its own `####` heading.
-- **ch16 Lopódzás**: the Módosítók list survives with only 2 rows ("Kőpadló 10%", "Vastag szőnyeg
-  -20%"), signs dubious; more rows likely lost.
+- ~~**ch16 Harci láz**: fokok 2–5 missing~~ — **RESOLVED**: restored from app data (skillsText.ts
+  lvl_2–lvl_5, legacy source had the full text).
+- **ch16 Pajzsfal**: the Sün formation says "Hasonló mint a pajzsfal", but no Pajzsfal entry exists
+  — missing from the app data too, so not reconstructable; needs the scan. (The Falkataktika
+  half is fine: data agrees it's a paragraph under Tiadlani kettős, not its own entry.)
+- ~~**ch16 Lopódzás**: Módosítók list truncated/signs dubious~~ — **RESOLVED**: reconstructed from
+  the app data's coherent modifier table as +10% / +20% / -10% / -20% (Kőpadló / Vastag szőnyeg /
+  Kavicságy / Száraz avar, nyikorgó fapadló) — verify magnitudes against the print.
 - **ch11 Darton-paplovag, advantage I.**: truncated mid-sentence ("…hozzáférhetnek uruk egyedi") —
   rest lost in OCR.
 - **ch21**: page comments jump `page 207` → `page 210`; pages 208–209 absent (illustrations?).
@@ -76,10 +79,11 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 - **ch14**: lángtőr column missing Időigény value.
 - **ch15**: varázslóbot rules II vs III contradict (Ψp/Mp "bónuszok nélkül" vs "teljesen a normális
   módon", near-duplicate sentences); "Pszi (kyr) 4. fok" (starting table) vs "3. fok" (lar-dori text).
-- **ch16**: Vallásismeret nehézség III (entry) vs II (summary table); Kultúra/Nyelvtudás rows show
-  nehézség I with IV-like Kp costs; "Képzetlen fegyverforgatás" cited at both 167. and 174. oldal;
-  Hamisítás "A csalást felfedni **nem** ellenpróba dobandó" (spurious "nem"?); "22-4 plusz Kp" and
-  "1 és 4 évébe" garbled numbers in worked examples.
+- **ch16**: Kultúra/Nyelvtudás rows show nehézség I with IV-like Kp costs; "22-4 plusz Kp" and
+  "1 és 4 évébe" garbled numbers in worked examples (skillsRules.ts mirrors the same text, so no
+  independent witness). Resolved meanwhile: Vallásismeret entry III→**II** (table + data agree);
+  "Képzetlen fegyverforgatás" ref fixed to **174.** oldal (ch17 heading sits on page 174);
+  Hamisítás "nem" → "**kívánók**" (app data preserved the original word).
 - **ch17**: "a 15-nél hosszabb varázslatokhoz" — unit missing (15 szegmens?); duplicated footnote
   blockquote after the reload table; 00-ás szabály "+3 Ép" unverified.
 - **ch18 vs ch19**: Ép-regeneration onset — ch18 "1 nap pihenés / egyébként 5 nap" vs ch19 "3 nap /
@@ -95,18 +99,19 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
   Ébredés cost/ME; Felfedés meditáció idő; Levitáció + Tetszhalál listed 4. szint in table but under
   the 5. fokú body section; Kyr Metódus definition includes itself ("a Pyarroni Módszer és a Kyr
   Metódus azon darabjait" — one name likely wrong, Godoni Örökség?).
-- **ch24**: Tanulmány "Varázslás ideje: 3 perc" (entry) vs "Min. 3 perc" (table); "a Mágia dalával
-  együtt alkalmazva" references a spell that doesn't exist in the chapter.
-- **ch25**: Csapás "Fohász hossza" 1 szegmens/E (entry) vs 3 szegmens/E (table); Noir szférák cell
-  "Lélek, Lélek vagy Halál" (duplicated?); Patkányidézés "30-50 k10 patkányt" odd dice notation;
-  Kígyótűz "1k6 Ep" (analogous fire prayers use Sp); Rettegés "VÉ: +10" in a penalty list.
+- **ch24**: ~~Tanulmány "Varázslás ideje: 3 perc" (entry) vs "Min. 3 perc" (table)~~ — **RESOLVED**
+  (entry set to "Min. 3 perc", matching table + app data); "a Mágia dalával együtt alkalmazva"
+  references a spell that doesn't exist in the chapter.
+- **ch25**: Noir szférák cell "Lélek, Lélek vagy Halál" (duplicated?); Kígyótűz "1k6 Ep"
+  (analogous fire prayers use Sp); Rettegés "VÉ: +10" in a penalty list. Resolved meanwhile:
+  Csapás table 3 szegmens/E → **1 szegmens/E** (entry + app data agree); Patkányidézés →
+  **30+5k10** (rules call, both sources corrected).
 
 ## Cross-chapter terminology — decide once, normalize book-wide
 
-- **Rejtőzés vs Rejtőzködés** — unresolved even within ch16 (summary table "Rejtőzködés", entry
-  heading "Rejtőzés"). All other variants were settled by ch16 canon: Harctéri gyakorlat,
-  Orvtámadás, Kínzás, Kétkezes harc — but earlier chapters (esp. ch08 skill lists: "Kínokozás",
-  "Hátbaszúrás") still carry old variants and could be normalized now.
+- ~~**Rejtőzés vs Rejtőzködés**~~ — **RESOLVED**: normalized to **Rejtőzködés** book-wide
+  (22 occurrences; app model name is the canon) and in witchMagic.ts prose; ch08's stale
+  "Kínokozás" → Kínzás and "Hátbaszúrás" → Orvtámadás also normalized.
 - **Closing quote mark**: most chapters use „…" (straight closer); ch06 uses „…” — pick one.
 - **"P.sz." vs "P. sz."** spacing (ch12 vs ch13 and others).
 - **Weapon-name spacing** table-vs-prose: hosszú kard/Hosszúkard, rövid kard/Rövidkard,
@@ -123,7 +128,7 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
   P.sz. **3692**. Also Livina vs Livinia city spelling.
 - **ch15**: founders "Ouirin Dan Jeir" and "Rielon Ouar" — "Ou" is a classic OCR misread of "Qu";
   also "Ewiramtó" (Ewiram-tó?).
-- **ch02**: "Doar-don-hegység" (Doardon-hegység?).
+- ~~**ch02**: "Doar-don-hegység"~~ — already reads "Doardon-hegység" in the current text; done.
 - **ch03**: "Feketerendek" (plural among singular order names); "Isten Kardja" listed both as
   Lovagrend and as Domvik-paplovag rend; exotic names (Marico con Rabora, Maida Saluquas, Stella
   Prosylens, Ascens Morga) unverifiable.
@@ -142,11 +147,59 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 - ch08: "Száz, hogy esik egy útszéli fogadóban…" (opening garbled).
 - ch10: "Belső szerkezetének vázát a kvalitheia-besorolás…" (verb structure broken);
   "kvalitheitáival" vs "kvalitheia".
-- ch16: Pusztítás restriction "Csakis 3-as, vagy nagyobb tagjaival…"; Szexuális kultúra 5. fok
-  (verb missing after "olyan szinten … meg").
-- ch21: "pénz- és hamisítóverés jogát"; egykezes kardok intro (no predicate); emrelin sentence
-  (no predicate).
-- ch22: Kitérés vs céllövő sentence ("…s a kilőtt lövedékek számától függően érvényesül a Túlerő
-  szabály" — words dropped); Érzékélesítés "1 E — 10%, illetve - módosító" (value missing).
+- ~~ch16 Pusztítás, Szexuális kultúra 5. fok~~ — **RESOLVED** from app data ("Csakis 3-as, vagy
+  nagyobb méretkategóriájú fegyverekre vehető fel. Az egyéb kategória tagjaival…"; "olyan szinten
+  **őrjítik** meg szeretőit").
+- ch21: "pénz- és hamisítóverés jogát"; egykezes kardok intro last sentence (no predicate).
+  The emrelin sentence is **settled**: legacy app data has it verbatim — it's original phrasing.
+- ch22: Kitérés sentence **settled** (legacy data identical — original phrasing);
+  ~~Érzékélesítés~~ — **RESOLVED** from app data ("1 E = 10%, illetve **-1** módosító").
 - ch25: Kegy-pont maximum sentence ("…csak istenük vallásában való elmélyedéstől, hitüknek ereje,
   amit…"); Szélkeltés "Csak kisebb hajók tartós irányú sebbel alkalmas…".
+
+---
+
+# Book ↔ app data cross-check (2026-07) — remaining items
+
+The confident fixes from the 32-agent data audit were applied and committed ("a lot of book vs
+data cross check"). App conventions settled along the way: spell ranges stay in **meters**; plain
+`N/E` cost suffixes stay **omitted** (E-scaling by cost multiplication is implied — keep only
+informative notations like `1/2 E`, `12 - 4/E`, `6/hasonmás`, formulas, `Lásd a leírást!`).
+What's left:
+
+## Undecided — data and book conflict, need the print or a rules call
+
+- **witchMagic / Csábítás**: data "a varázslat erősítéséhez **+5 E** járul" vs book "**-5 E**"
+  (when the victim touches the witch). Logic favors +5 (touching should strengthen the charm) —
+  verify against the print, then align the loser.
+- ~~**skillsText / Fegyverhasználat** csatacsillag category~~ — **RESOLVED**: the finding had it
+  backwards; the data's table was right (Buzogányok incl. csatacsillag under 3. méretkategória,
+  matching ch21). Book ch16's mangled lines fixed instead: 3. kat "- Csatacsillag stb." →
+  "- Buzogányok (tollas buzogány, harci kalapács, csatacsillag stb.)", 4. kat Buzogányok →
+  "(kétkezes buzogány, láncos buzogány stb.)" — verify against the print.
+
+Resolved by rules call (2026-07-13, applied to book + data): **Távoli tűz** = "közöljön" (book
+corrected); **Patkányidézés** = "30+5k10" (both sources corrected, plus the entry's OCR junk:
+parancsainak, Tharr, 2k10); **Sárkány tánca** duration = "1 kör" (data set to the table value;
+book entry still says "Lásd a leírást!" — book-internal conflict only); **Emlékbevésés/
+Emlékfelidézés** split stays as-is (both castingTime "1 kör").
+
+## Optional polish — equivalent values, book is just more explicit (1 kör = 10 s)
+
+- ~~prayers/witch dual time forms~~ — **RESOLVED**: adopted the book's explicit forms
+  ("30 kör (5 perc)" etc.) for Vízlélegzés, Vérgyűjtés, Vérzés, Szélkeltés, Istenalak, Jósálom.
+
+## Structural / coverage
+
+- ~~magicRules6.ts missing "Godoni Örökség" prose~~ — **RESOLVED**: copied the ch22 section in as
+  `sub["Godoni örökség"]` (compendium keys sub-rules by the psi type name). Still open: the
+  mirrored Kyr self-reference sentence ("a Pyarroni Módszer és a Kyr Metódus azon darabjait") —
+  see the ch22 bullet above; if the book gets corrected, mirror it in magicRules6.ts.
+- **skillsText.ts descriptions are partially app-adapted**, not verbatim this-book text
+  (Akrobatika is fully rewritten and requires Erő+Ügyesség where the book header says only
+  Ügyesség). Decide per skill whether to track this book edition or keep the adapted text; don't
+  blindly "correct" stats against the book.
+- The audit was a single pass with cheap agents over the legacy-migrated files (bard/witch/
+  warlock/fire/prayers/psi/skills/weapons/armor); entries reported as matching were not
+  double-checked. A second sweep of the long description texts could catch stragglers.
+  (magas*, poisons, and the magicRules prose files verified clean — transcribed from this edition.)

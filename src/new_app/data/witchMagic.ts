@@ -56,7 +56,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   castingTime: "1 sz",
   range: "20 m",
   duration: "6 kör",
-  description: "A varázslat szintén a női varázstudók és az éjszaka misztikus kapcsolatával magyarázható. A boszorkány megváltoztathatja egy hely fényviszonyait: az árnyékok kiterjedését. Ez annyit tesz, hogy az érintett területen minden árnyék eredeti méretének kétszeresére nyúlik, vagy felére zsugorodik. A varázslat hatására módosul a Rejtőzés képzettséghez tartozó képzettségpróba is, mivel sűrű, nagy kiterjedésű árnyékban sokkal könnyebb észrevétlennek maradni, mint a kivilágított helyen. A Rejtőzés képzettséget módosító érték maximum plusz-mínusz 25% lehet. A varázslat hatósugara 20 ynevi láb."
+  description: "A varázslat szintén a női varázstudók és az éjszaka misztikus kapcsolatával magyarázható. A boszorkány megváltoztathatja egy hely fényviszonyait: az árnyékok kiterjedését. Ez annyit tesz, hogy az érintett területen minden árnyék eredeti méretének kétszeresére nyúlik, vagy felére zsugorodik. A varázslat hatására módosul a Rejtőzködés képzettséghez tartozó képzettségpróba is, mivel sűrű, nagy kiterjedésű árnyékban sokkal könnyebb észrevétlennek maradni, mint a kivilágított helyen. A Rejtőzködés képzettséget módosító érték maximum plusz-mínusz 25% lehet. A varázslat hatósugara 20 ynevi láb."
 }, {
   name: "Csapdakeresés - Alap",
   type: "Misztikus képességek",
@@ -625,7 +625,7 @@ export const WitchMagicValues: WitchMagicInfo[] = [{
   name: "Jósálom",
   type: "Álommágia",
   cost: "2",
-  castingTime: "5 p",
+  castingTime: "30 kör",
   range: "Önmaga",
   duration: "6 óra",
   save: "Lásd a leírást!",

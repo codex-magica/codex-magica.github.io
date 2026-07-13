@@ -434,7 +434,7 @@ export const PsiValues: PsiInfo[] = [{
   domain: "Test",
   cost: "2",
   castingTime: "1 szegmens",
-  duration: "Lásd a leírást!",
+  duration: "1 kör",
   description: [
     "A Sárkány tánca az ősi szörnyetegek időtlen álmaihoz hasonló állapotba, egyfajta transzba ragadja alkalmazóját. Amíg korábban a Sárkány dühe alkalmazásakor még csak a szellem harmóniáját terjesztett ki a testre, addigra most már a szellem harcol. Az alkalmazó csapásai mintegy rendre az ellenfél védtelen pontjaira találnak, mintha tudná hová kell sújtania.\n\nA diszciplína fenntartása gyenge koncentrációt igényel, ezért ezzel párhuzamosan csak az Aranyharang, Kiáltás és a Sárkány dühe és ébredése diszciplínák alkalmazhatóak és a Statikus pajzsok sem bomlanak le.\n\nA diszciplína alkalmazása nagyon megterheli a testet és a szellemet. Ezért a harcművész a Sárkány táncát maximálisan annyi körig képes fenntartani, amennyi a Tapasztalati szintje. A Sárkány táncának befejeztével annyi kört kell pihenéssel töltenie, mielőtt újra használhatná az alkalmazást, amennyit a diszciplína hatása alatt töltött. A pihenés itt mindössze annyit jelent, hogy a karakternek hagyományos harcot kell folytatnia, de más diszciplínákat alkalmazhat.\n\nA harcművészek és a kardművészek nem mindegyik általuk -smert fegyverrel képesek Sárkánytáncot folytatni: az egyes csakis az általuk a Harcművészet képzettségnél kiválasztott fegyverrel, vagy puszta testükkel alkalmazhatják.\n\nA megérzések és a belső látás vezette harcmodor miatt a Slan elmélyülve az összpontosításban szellemi fölényét fizikailag is érvényesíti. Ezt mutatja meg az alábbi táblázat.",
     "table:Alkalmazás szintje*\tKÉ\tTÉ, VÉ\n\n1.\t+2\t+5\n\n3.\t+4\t+10\n\n5.\t+6\t+15\n\n7.\t+8\t+20\n\n9.\t+10\t+25\n\n11.\t+12\t+30",
