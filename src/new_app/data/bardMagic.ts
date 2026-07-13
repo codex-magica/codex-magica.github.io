@@ -47,7 +47,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "A dal hossza + 1k6 kör",
   save: ["Mentális"],
-  description: "A dal hatására azon célpontoknak, akik hallótávolságon belül tartózkodtak és elvétették a Mágiaellenállásukat, gondolataik középpontjába a mágikus zene kerül. Látszólag el- bambulnak és mozdulatlanul, üveges tekintettel merednek maguk elé. Az így elbájolt áldozatok csak a mágia megszűntével nyerik vissza uralmukat gondolataik felett, vagy abban az esetben, ha valaki sebet ejt rajtuk."
+  description: "A dal hatására azon célpontoknak, akik hallótávolságon belül tartózkodtak és elvétették a Mágiaellenállásukat, gondolataik középpontjába a mágikus zene kerül. Látszólag elbambulnak és mozdulatlanul, üveges tekintettel merednek maguk elé. Az így elbájolt áldozatok csak a mágia megszűntével nyerik vissza uralmukat gondolataik felett, vagy abban az esetben, ha valaki sebet ejt rajtuk."
 }, {
   name: "Dalegyesítés",
   type: "Dalmágia",
@@ -108,7 +108,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "A dal hossza + 1k6 kör",
   save: ["Asztrális"],
-  description: "A bárd énekének hatására minden célpont, aki hallótávolságon belül tartózkodik és Mágiaellenállása sikertelen, közönyössé válik, elveszti harci kedvét. Haragjuk, indulataik elszállnak, megnyugszanak, míg ha a dal közben elszen- derednek, álmuk zavartalan és nyugodt lesz. Ha ebben az állapotban megtámadják őket, újra fegyverükhöz kapnak, s harcolni kezdenek. Ekkor már nem nyugtathatok meg újabb Nyugalom dalával."
+  description: "A bárd énekének hatására minden célpont, aki hallótávolságon belül tartózkodik és Mágiaellenállása sikertelen, közönyössé válik, elveszti harci kedvét. Haragjuk, indulataik elszállnak, megnyugszanak, míg ha a dal közben elszenderednek, álmuk zavartalan és nyugodt lesz. Ha ebben az állapotban megtámadják őket, újra fegyverükhöz kapnak, s harcolni kezdenek. Ekkor már nem nyugtathatók meg újabb Nyugalom dalával."
 }, {
   name: "Távolság dala",
   type: "Dalmágia",
@@ -301,7 +301,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "Önmaga",
   duration: "10 perc/szint",
-  description: "A varázslat segítségével a bárd magára idézhet egy tetszőleges vértezetet, s egy pajzsot. Mindkét tárgy illúzió, de alakja, kidolgozása maga lesz a tökéletesség. A varázslat egyrészt elkápráztathatja a szemlélőt, másrészt megtévesztheti. Kiválóan alkalmas a varázslat lovagi tornákon való megjelenésre, vagy bármi más, nemesek részvételével zajló társadalmi eseményre. Fontos szerepe a varázslatnak harcban lehet, ahol az ellenfél nem sejti a vért illúzió voltát. Ezért megpróbál a páncéllal nem fedett, pajzzsal nem védett területekre támadni, minek következtében Támadó értéke 10-zel csökken.\n\nAzonban mivel a Fényvért hangot nem ad (a teljes vérte- zet nem csörömpöl, az eresztékek nem nyikorognak), ezért csendes helyen hamar lelepleződhet. Ha ellenfele a vért illúzió voltára rájött, a negatív módosító is érvényét veszti. Ugyanakkor a bárd még így is használhatja a pajzsot - ha rejtett mozgásra készül, ez tökéletesen álcázhatja azt, mivel továbbra sem válik átlátszóvá."
+  description: "A varázslat segítségével a bárd magára idézhet egy tetszőleges vértezetet, s egy pajzsot. Mindkét tárgy illúzió, de alakja, kidolgozása maga lesz a tökéletesség. A varázslat egyrészt elkápráztathatja a szemlélőt, másrészt megtévesztheti. Kiválóan alkalmas a varázslat lovagi tornákon való megjelenésre, vagy bármi más, nemesek részvételével zajló társadalmi eseményre. Fontos szerepe a varázslatnak harcban lehet, ahol az ellenfél nem sejti a vért illúzió voltát. Ezért megpróbál a páncéllal nem fedett, pajzzsal nem védett területekre támadni, minek következtében Támadó értéke 10-zel csökken.\n\nAzonban mivel a Fényvért hangot nem ad (a teljes vértezet nem csörömpöl, az eresztékek nem nyikorognak), ezért csendes helyen hamar lelepleződhet. Ha ellenfele a vért illúzió voltára rájött, a negatív módosító is érvényét veszti. Ugyanakkor a bárd még így is használhatja a pajzsot - ha rejtett mozgásra készül, ez tökéletesen álcázhatja azt, mivel továbbra sem válik átlátszóvá."
 }, {
   name: "Fókuszált fény",
   type: "Fénymágia",
@@ -309,7 +309,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "Önmaga",
   duration: "1 kör/3 szint",
-  description: "Azon kevés varázslatok egyike, mellyel a bárd közvetlen módon sebezheti meg ellenfelét. A környezet fényének energiáját a varázslat egyetlen pontba gyűjti össze, s ezzel gyilkos forró- ságot teremt. A környező fényforrások hirtelen elhalványulnak, ahova pedig az összegyűjtött nyaláb mutat, minden gyúlékony anyag másodperceken belül lángra lobban. A fénynyaláb 5 lépés hosszú, és irányát a bárd szabadon irányíthatja.\n\nA varázslat erőssége attól függ, hogy a környezetből menynyi fényt képes fókuszálni. Verőfényes napsütésben akár 3k6 Sp-t is sebez körönként, alkonyaikor vagy máglya közelében 2k6-ot, fáklya vagy mécsesfénynél csupán 1k6 Sp-t sebez, holdfénynél 1 Sp-t, míg csillagtalan éjszakán a varázslat hatástalan marad.\n\nEz azonban a teljes kör (10 szegmens) alatt elszenvedhető maximális sebzés, amennyiben valaki kevesebb ideig tartóz-kodik a nyaláb útjában, úgy arányosan kevesebb sebződést szenved el.\n\nAbban az esetben, ha a bárd ellenfele szemeit veszi célba, akkor az áldozat sikeres Gyorsaságpróbával védekezhet a hatás ellen. Természetesen a sikeres próba esetén is megsérül, viszont sikerül megőriznie szeme világát. Sikertelen próba esetén, ha a sebzés legalább 1 Ép, a karakter megvakul 1k6 órára, 3 Ép felett viszont maradandóan megvakul."
+  description: "Azon kevés varázslatok egyike, mellyel a bárd közvetlen módon sebezheti meg ellenfelét. A környezet fényének energiáját a varázslat egyetlen pontba gyűjti össze, s ezzel gyilkos forróságot teremt. A környező fényforrások hirtelen elhalványulnak, ahova pedig az összegyűjtött nyaláb mutat, minden gyúlékony anyag másodperceken belül lángra lobban. A fénynyaláb 5 lépés hosszú, és irányát a bárd szabadon irányíthatja.\n\nA varázslat erőssége attól függ, hogy a környezetből mennyi fényt képes fókuszálni. Verőfényes napsütésben akár 3k6 Sp-t is sebez körönként, alkonyatkor vagy máglya közelében 2k6-ot, fáklya vagy mécsesfénynél csupán 1k6 Sp-t sebez, holdfénynél 1 Sp-t, míg csillagtalan éjszakán a varázslat hatástalan marad.\n\nEz azonban a teljes kör (10 szegmens) alatt elszenvedhető maximális sebzés, amennyiben valaki kevesebb ideig tartózkodik a nyaláb útjában, úgy arányosan kevesebb sebződést szenved el.\n\nAbban az esetben, ha a bárd ellenfele szemeit veszi célba, akkor az áldozat sikeres Gyorsaságpróbával védekezhet a hatás ellen. Természetesen a sikeres próba esetén is megsérül, viszont sikerül megőriznie szeme világát. Sikertelen próba esetén, ha a sebzés legalább 1 Ép, a karakter megvakul 1k6 órára, 3 Ép felett viszont maradandóan megvakul."
 }, {
   name: "Hasonmás",
   type: "Fénymágia",
@@ -325,7 +325,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 kör",
   range: "20 m",
   duration: "10 perc/szint",
-  description: "A bárd szintenként 1 ynevi köbláb térfogatú területen belül akármilyen általa elképzelt dolgot megjeleníthet. A kép pusztán fényillúzíó, hangja, szaga, tapintása nincs. Az illúzió helyhez kötött, tehát mindvégig megidézése helyén marad, azonban az adott területen belül mozgatható a bárd kívánsága szerint (ebben az esetben a bárdnak mindvégig látnia és koncentrálnia kell rá).\n\nHa az illúzió mozdulatlan, a bárdnak nem szükséges koncentrálnia, bármilyen más tevékenységet végezhet. Ameny- nyiben a bárd megszakítja a koncentrációt, a kép nem tűnik el, csak mozdulatlanná merevedik ott, ahol a koncentráció végeztével maradt. A bárd később bármikor bekapcsolódhat ismét a kép mozgatásába, további Mana pont ráfordítása nélkül."
+  description: "A bárd szintenként 1 ynevi köbláb térfogatú területen belül akármilyen általa elképzelt dolgot megjeleníthet. A kép pusztán fényillúzió, hangja, szaga, tapintása nincs. Az illúzió helyhez kötött, tehát mindvégig megidézése helyén marad, azonban az adott területen belül mozgatható a bárd kívánsága szerint (ebben az esetben a bárdnak mindvégig látnia és koncentrálnia kell rá).\n\nHa az illúzió mozdulatlan, a bárdnak nem szükséges koncentrálnia, bármilyen más tevékenységet végezhet. Amennyiben a bárd megszakítja a koncentrációt, a kép nem tűnik el, csak mozdulatlanná merevedik ott, ahol a koncentráció végeztével maradt. A bárd később bármikor bekapcsolódhat ismét a kép mozgatásába, további Mana pont ráfordítása nélkül."
 }, {
   name: "Illúziótalaj",
   type: "Fénymágia",

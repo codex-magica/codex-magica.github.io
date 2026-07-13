@@ -123,7 +123,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "5",
   castingTime: "1 szegmens/E",
   duration: "Egyszeri",
-  description: "A tűzvarázsló a Zónáján belül eső területen meghatározhat egy tetszés szerinti pontot, amely a robbanás epicentrumaként fog szolgálni. A robbanás mindazoknál«, akik a középpont 1 ynevi láb körzetén belül tartózkodnak, minden E után 1k6 sebet fog okozni. Ha a tűzvarázsló a tűzkitörést - több Mp felhasználásával - nagyobb erősséggel idézi meg, akkor már a távolabb állók is részesülnek a hatásából - minél távolabb tartózkodnak, annál kevésbé. A sebzés az epicentrumtól távolodva lábanként 1k6-tál csökken."
+  description: "A tűzvarázsló a Zónáján belül eső területen meghatározhat egy tetszés szerinti pontot, amely a robbanás epicentrumaként fog szolgálni. A robbanás mindazoknál, akik a középpont 1 ynevi láb körzetén belül tartózkodnak, minden E után 1k6 sebet fog okozni. Ha a tűzvarázsló a tűzkitörést - több Mp felhasználásával - nagyobb erősséggel idézi meg, akkor már a távolabb állók is részesülnek a hatásából - minél távolabb tartózkodnak, annál kevésbé. A sebzés az epicentrumtól távolodva lábanként 1k6-tal csökken."
 }, {
   name: "Tűznyíl",
   type: "Iskolaformák",
@@ -165,7 +165,7 @@ export const FireMagicValues: FireMagicInfo[] = [{
   cost: "12",
   castingTime: "1 szegmens/E",
   duration: "3 kör",
-  description: "A varázslat létrejöttekor gyűrű alakban egyre erősebb lánghullámok indulnak útnak a középpontban álló tűzvarázsló felől, aki bal nyitott tenyerével a föld felé sújtva indítja útnak a lángokat, egészen Zónájának határáig (20 ynevi láb). A hullámok 1 kör alatt megteszik ezt a távolságot, és minden útjukba eső éghető anyagot lángra lobbantanak. Minden körben egy-egy új hullám születik, az első annyiszor lk6-ot sebez, amennyi a varázslat E-je, a második hullám 1k6-tal többet, a harmadik újabb 1k6-tal többet, és így tovább, az Időtartam végeztéig."
+  description: "A varázslat létrejöttekor gyűrű alakban egyre erősebb lánghullámok indulnak útnak a középpontban álló tűzvarázsló felől, aki bal nyitott tenyerével a föld felé sújtva indítja útnak a lángokat, egészen Zónájának határáig (20 ynevi láb). A hullámok 1 kör alatt megteszik ezt a távolságot, és minden útjukba eső éghető anyagot lángra lobbantanak. Minden körben egy-egy új hullám születik, az első annyiszor 1k6-ot sebez, amennyi a varázslat E-je, a második hullám 1k6-tal többet, a harmadik újabb 1k6-tal többet, és így tovább, az Időtartam végeztéig."
 }, {
   name: "Tűzzápor",
   type: "Szabad elemi formák",

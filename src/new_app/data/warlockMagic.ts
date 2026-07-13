@@ -212,7 +212,7 @@ export const WarlockMagicValues: WarlockMagicInfo[] = [{
   castingTime: "10 perc",
   range: "5 m/szint sugarú kör",
   duration: "Maradandó",
-  description: "Sokban hasonlít a Túlvilági birtok varázslathoz.\n\nA meg-átkozott területen a rothadás és az enyészet sebessége többszörösére gyorsul.\n\nA folyamat szemmel nem követhető, annál jóval lassabban zajlik, ám a természetes sebességnek így is vagy százszorosa.\n\nMinden tárgy gyorsan széthull, a szövetek és fatárgyak egy-két napig maradnak csak használhatók.\n\nA területen tartózkodó, vág)' oda betévedő lények percenként kötelesek fertőzés elleni Egészségpróbát dobni, különben a Rontásoknál leírt Rútság varázslat áldozatául esnek.\n\nA terület és az átok feloldásának módja ez esetben is csak a papi Szertartás varázslat vagy a varázslói Destrukció."
+  description: "Sokban hasonlít a Túlvilági birtok varázslathoz.\n\nA meg-átkozott területen a rothadás és az enyészet sebessége többszörösére gyorsul.\n\nA folyamat szemmel nem követhető, annál jóval lassabban zajlik, ám a természetes sebességnek így is vagy százszorosa.\n\nMinden tárgy gyorsan széthull, a szövetek és fatárgyak egy-két napig maradnak csak használhatók.\n\nA területen tartózkodó, vagy oda betévedő lények percenként kötelesek fertőzés elleni Egészségpróbát dobni, különben a Rontásoknál leírt Rútság varázslat áldozatául esnek.\n\nA terület és az átok feloldásának módja ez esetben is csak a papi Szertartás varázslat vagy a varázslói Destrukció."
 }, {
   type: "Necrográfia",
   name: "Azonosítás",
