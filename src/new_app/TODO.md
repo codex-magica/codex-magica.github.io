@@ -70,10 +70,10 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
   correct; race-maximum table fixed 17 → 16.
 - ~~**ch04** amazon Fegyverismeret~~ — **RESOLVED from scan (p38)**: print says **2. fok** (empty
   Kp cell is correct); md fixed.
-- **ch05** — **checked against scan (p47)**: the "Kp: 14 Pont (14 Kp)" line AND the itemized column
-  summing to 27 are both genuinely printed → RULES CALL needed. Weapon table matches print exactly;
-  lovagkard Sebzés **3k6+2 is genuinely printed** (ch21's lovagkard says 2k6+2 → erratum candidate,
-  sample-character sheet only).
+- ~~**ch05** lovag Kp 14 vs 27~~ — both genuinely printed (scan p47); **closed as not important**
+  (sample-character sheet only, not modeled in the app). Weapon table matches print exactly
+  and is internally consistent: lovagkard 3k6+2 = 3k6 (ch21 table, weapons.ts) + the character's
+  +2 Erő damage bonus (fvn 1k6+2 shows the same +2) — the old "possibly 2k6+2" suspicion was wrong.
 - ~~**ch06** items~~ — **RESOLVED from scans (p54/55/58)**: the 2. fok rows are bare in print
   ("Fegyverhasználat" / "2 Fegyverhasználat" — the weapon lists were OCR-duplicated; md fixed);
   Árnyékjáték is fine (10 láb radius, center up to 20 láb — no conflict); darkness bonus is
@@ -91,11 +91,13 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 - ~~**ch13** Vándorvillám~~ — **RESOLVED from scan (p115)**: print says "Mana pont: **+15**"; md fixed.
 - ~~**ch14** lángtőr Időigény~~ — **settled from scan (p118)**: the cell is genuinely blank in the
   print (printing gap in the book); all other lángtőr values verified correct.
-- **ch15** — **checked from scans (p124–126, 129)**: BOTH conflicts are genuine print → RULES CALL:
-  (a) varázslóbot point II ("bónuszok nélkül") vs point III ("teljesen a normális módon") — the
-  near-duplicate sentence really is printed twice with opposite qualifiers; (b) starting tables
-  (p124 varázsló, p125 lar-dori) say Pszi (kyr) **4. fok** while lar-dori point III prose (p126)
-  says **3. fok** (Belsőszigeti/Északi students swap it for Godoni Örökség 3. fok).
+- **ch15** — **checked from scans (p124–126, 129)**: (a) varázslóbot point II ("bónuszok nélkül")
+  vs point III ("teljesen a normális módon") — genuine print conflict, RULES CALL still open (not
+  modeled in the app; lean: II, the more restrictive non-duplicated wording). (b) ~~Pszi (kyr) 4 vs
+  3 fok~~ — **RESOLVED** by rules call (2026-07-13): the tables win — base varázsló Pszi (kyr)
+  **4. fok**; the Lar-Dor swap grants Godoni Örökség **3. fok** (prose says so twice). Only the
+  prose's misstatement of the base fok was errata'd ("nem a Pszi (kyr) képzettség ~~3.~~ **4.**
+  fokát…"). classes.ts already implemented exactly this.
 - ~~**ch16** Kultúra/Nyelvtudás rows + worked examples~~ — **RESOLVED from scans (p132/134)**:
   both rows are the standard I-progression **1/3/8/15/25** (md fixed); the examples read
   "**2+2=4** plusz Kp" and "1 és **¾** évébe" (md + skillsRules.ts fixed). Earlier: Vallásismeret
@@ -103,8 +105,10 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 - ~~**ch17** items~~ — **RESOLVED from scans (p168/174/175)**: it's "az **1s-nél** hosszabb
   varázslatokhoz" (1 szegmens, not 15 — fixed); the footnote appears once in print (duplicate
   blockquote removed); 00-ás szabály "+3 Ép" **confirmed** as printed.
-- **ch18 vs ch19** Ép-regen onset — **both pages scanned (p178: 1 nap/5 nap; p184: 3 nap/egy hét)**:
-  genuine cross-chapter contradiction in the print → RULES CALL.
+- ~~**ch18 vs ch19** Ép-regen onset~~ — **RESOLVED** by rules call (2026-07-13): **ch18 wins**
+  (1 nap pihenés / egyébként 5 nap — the chapter that owns the rule, and ch19 explicitly defers to
+  it); ch19's sentence errata'd from "3 nap / egy hét" to match. (Scans: p178 vs p184 — the
+  contradiction was genuine print.)
 - ~~**ch18** zuhanás~~ — **RESOLVED from scan (p178)**: print says MGT-je "**Fp** veszteségként
   hozzáadódik" (md's "Ép" was OCR) — paragraph is internally consistent now. Still open (not
   scanned): the 5-max-Ép vs "gyengébb" 8-max-Ép example.
@@ -115,14 +119,12 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
   was renamed to **nehéz csatabárd** (matching its own section heading). **Print checked (p198)**:
   the book genuinely prints "csatacsillag" twice (2k6+2 and 2k6) and "kétkezes csatabárd" under the
   "Nehéz csatabárd" heading — our renames stand as deliberate errata of a printed typo.
-- **ch22**: table-vs-body conflicts **checked against the scans (2026-07-13, pages 221/222/227/232/234)**
-  — all are genuine in print, not OCR; the md mirrors the book faithfully. Still need a RULES CALL
-  (app data currently sides with the body text in each):
-  - Fájdalomcsillapítás: body Ψp 1, "1 E-je 1 Fp" (p221) vs table "1/2 Fp" (p234); psi.ts cost "1".
-  - Ébredés: body Ψp 1 (p222) vs table "1/E"; psi.ts cost "1". (ME resolved: print table says
-    **Mentális** — md table row fixed, data already had it.)
-  - Felfedés: body Ψp 3 + meditáció "Lásd a leírást!" (p227) vs table "3/E" + "1 szegmens";
-    psi.ts "3" + "Lásd a leírást!".
+- ~~**ch22** table-vs-body cost conflicts~~ — **checked against the scans (pages 221/222/227/234;
+  all genuine print, md faithful) and CLOSED by rules call (2026-07-13): the body text wins**, the
+  app data already sided with it — Fájdalomcsillapítás Ψp 1 ("1 E-je 1 Fp"), Ébredés Ψp 1,
+  Felfedés Ψp 3 + meditáció "Lásd a leírást!". No changes; the summary-table variants (1/2 Fp,
+  1/E, 3/E + 1 szegmens) are treated as the erroneous side, left as printed. (Ébredés ME resolved
+  separately: print table says **Mentális** — md fixed, data already had it.)
   - ~~Levitáció + Tetszhalál 4. vs 5. szint~~ — **settled**: table + psi.ts both say 4. szint;
     the print (p232) really does place them amid the 5. fokú entries — sloppy print layout, book
     left as printed. (Their psi.ts durations aligned to the print table: 1 kör / 1 óra; Kitérés
