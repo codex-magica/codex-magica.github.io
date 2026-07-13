@@ -53,7 +53,8 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 - **ch22**: regeneration table row `Alvás**` — the `**` footnote is missing (only `*` exists).
 - **ch19 herb table**: first row lists "Benedekfű" as an *ailment* (it's a remedy) — the real
   ailment name was lost; the "Sebek" row appears merged with a lost "Kelés" row.
-- **ch03**: "### Harcművész iskolák — 10 pont" has no list items (dropped by OCR, or empty in book?).
+- ~~**ch03**: "Harcművész iskolák" empty list~~ — **RESOLVED**: confirmed intentionally empty
+  in the book; nothing to restore.
 - **ch01**: `## A harc` heading sits over a section about what roleplaying is — heading likely wrong.
 - **ch10**: chapter body opens "Papjai gondolkodásukban…" with no antecedent (lead-in sentence lost);
   orphan footnote asterisk "útján.*" with no footnote text.
@@ -63,7 +64,8 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 
 ## Stat / rules contradictions — need a rules call or the book
 
-- **ch02**: udvari ork Asztrál max **16** (prose) vs **17** (race-maximum table).
+- ~~**ch02**: udvari ork Asztrál 16 vs 17~~ — **RESOLVED** by rules call: prose (**16**) is
+  correct; race-maximum table fixed 17 → 16.
 - **ch04**: sample amazon has Fegyverismeret 3. fok with empty Kp cell (base package grants 2. fok).
 - **ch05**: lovag "Kp: 14 pont" vs itemized Kp column summing to 27; suspicious weapon table
   (fvn KÉ 31 vs lovagkard KÉ 36; lovagkard Sebzés 3k6+2, possibly 2k6+2).
@@ -150,8 +152,9 @@ applied directly to `src/book/*.md`.) Quotes are greppable in the chapter files.
 - ~~ch16 Pusztítás, Szexuális kultúra 5. fok~~ — **RESOLVED** from app data ("Csakis 3-as, vagy
   nagyobb méretkategóriájú fegyverekre vehető fel. Az egyéb kategória tagjaival…"; "olyan szinten
   **őrjítik** meg szeretőit").
-- ch21: "pénz- és hamisítóverés jogát"; egykezes kardok intro last sentence (no predicate).
-  The emrelin sentence is **settled**: legacy app data has it verbatim — it's original phrasing.
+- ch21: egykezes kardok intro last sentence (no predicate). Settled: "pénz- és hamisítóverés
+  jogát" is as printed in the book; the emrelin sentence is verbatim in the legacy app data —
+  both are original phrasing.
 - ch22: Kitérés sentence **settled** (legacy data identical — original phrasing);
   ~~Érzékélesítés~~ — **RESOLVED** from app data ("1 E = 10%, illetve **-1** módosító").
 - ch25: Kegy-pont maximum sentence ("…csak istenük vallásában való elmélyedéstől, hitüknek ereje,
@@ -169,9 +172,8 @@ What's left:
 
 ## Undecided — data and book conflict, need the print or a rules call
 
-- **witchMagic / Csábítás**: data "a varázslat erősítéséhez **+5 E** járul" vs book "**-5 E**"
-  (when the victim touches the witch). Logic favors +5 (touching should strengthen the charm) —
-  verify against the print, then align the loser.
+- ~~**witchMagic / Csábítás** ±5 E~~ — **RESOLVED** by rules call (2026-07-13): it's **+5 E**;
+  book corrected, data was already right.
 - ~~**skillsText / Fegyverhasználat** csatacsillag category~~ — **RESOLVED**: the finding had it
   backwards; the data's table was right (Buzogányok incl. csatacsillag under 3. méretkategória,
   matching ch21). Book ch16's mangled lines fixed instead: 3. kat "- Csatacsillag stb." →
