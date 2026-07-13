@@ -36,7 +36,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   cost: "1/2 E",
   castingTime: "1 perc",
   range: "Hallótávolság",
-  duration: "A dal hossza + 10perc",
+  duration: "A dal hossza + 10 perc",
   save: ["Asztrális"],
   description: "A bárd ezzel a varázslattal társainak harci kedvét növelheti (saját magát nem jelölheti meg célpontként). A dal általában pattogó, csatába hívó induló, de lehet akár lélekemelő hősi rege is. Minden olyan lény KÉ-je 5-tel, TÉ-je 10-zel nő, Bátorsága (NJK-k esetében) 3 ponttal emelkedik, aki a varázslás pillanatában a dalt hallotta.\n\nA Bátorság dalának hatása alatt álló személyek csak akkor válhatnak félelem alapú mágia alanyává, ha annak erőssége meghaladja a Bátorság daláét, illetve a magasabb erősítésű dalmágia semlegesíti az alacsonyabb erősítésű félelem alapú mágiák hatását."
 }, {
@@ -73,7 +73,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "Hallótávolság",
   duration: "Végleges",
   save: ["Mentális"],
-  description: "A varázslat alkalmazásakor a bárd egyetlen célpontot jelölhet meg, s a dal segítségével lehetségessé válik emlékek, élmények elhelyezése az áldozat elméjében. A varázslattal maximálisan egy órányi emlék írható be az áldozat tudatába, de ehhez üres helyre van szükség. Ez lehet természetes felejtés, de előidézhető a Feledés dalával is. így akár egy egész óra átírhatóvá válik valaki emlékezetében.\n\nAzonban a varázslat alanya rájöhet arra, hogy mágia áldozatává vált, ha a bárd nyilvánvalóan lehetetlen, vagy olyan emlékeket plántál belé, amiket a varázslat alanya magától biztosan nem tenne meg. Ilyenkor Intelligenciapróbára jogosult, a KM által megítélt módosítókkal. Siker esetén feltámadhat benne a gyanú, hogy emlékei hamisak, netán csak álmodta őket stb."
+  description: "A varázslat alkalmazásakor a bárd egyetlen célpontot jelölhet meg, s a dal segítségével lehetségessé válik emlékek, élmények elhelyezése az áldozat elméjében. A varázslattal maximálisan egy órányi emlék írható be az áldozat tudatába, de ehhez üres helyre van szükség. Ez lehet természetes felejtés, de előidézhető a Feledés dalával is. Így akár egy egész óra átírhatóvá válik valaki emlékezetében.\n\nAzonban a varázslat alanya rájöhet arra, hogy mágia áldozatává vált, ha a bárd nyilvánvalóan lehetetlen, vagy olyan emlékeket plántál belé, amiket a varázslat alanya magától biztosan nem tenne meg. Ilyenkor Intelligenciapróbára jogosult, a KM által megítélt módosítókkal. Siker esetén feltámadhat benne a gyanú, hogy emlékei hamisak, netán csak álmodta őket stb."
 }, {
   name: "Feledés dala",
   type: "Dalmágia",
@@ -116,7 +116,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "Hallótávolság",
   duration: "A dal hossza",
-  description: "Ez a varázslat bármely daltípusú varázslattal együtt használható. Nem a dal hangerejét, csak a varázslat hatótávolságát növeli meg. A bárdnak nem kell hangosan játszania, a hangfoszlányok mégis utat találnak a lármán, ricsajon, falakon át. A hatósugár kétszeresére, háromszorosára stb. növelhető, méghozzá a kétszeres növelés 6, a háromszoros 9, a négyszeres 12 Mana-pontért, stb. A varázslat hatóideje megegyezik a „hangosított” dal időtartamával."
+  description: "Ez a varázslat bármely daltípusú varázslattal együtt használható. Nem a dal hangerejét, csak a varázslat hatótávolságát növeli meg. A bárdnak nem kell hangosan játszania, a hangfoszlányok mégis utat találnak a lármán, ricsajon, falakon át. A hatósugár kétszeresére, háromszorosára stb. növelhető, méghozzá a kétszeres növelés 6, a háromszoros 9, a négyszeres 12 Mana pontért, stb. A varázslat hatóideje megegyezik a „hangosított” dal időtartamával."
 }, {
   name: "Zavarodottság dala",
   type: "Dalmágia",
@@ -133,7 +133,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 kör",
   range: "A bárd hangszere",
   duration: "10 perc/szint",
-  description: "A bárd hangszerének hangját változtathatja meg a varázslat segítségével. A hangszer bármilyen, a bárd által ismert hangszer hangján megszólalhat, s tökéletesen utánozza azt. A bárd új hangokat, hangzást is létrehozhat, ha talál egy viszonyítási hangot, amiből a dallamskála létrejöhet. Lehet ez madárhang vagy akár távoli, ismeretlen hangszer egy-egy dallamfoszlánya is. További Mana pontok felhasználásával a hangzás megsokszorozható, avagy más hangszerek is szólhatnak a mű alatt. A Mana pontok többszörözésével újabb hangszerek vagy szólamok is megszólaltathatók egyszerre. így egy igazi, magas Tapasztalati szintű bárd tíz-tizenöt ember helyett is játszhat több, egymástól különböző hangszeren, kánonhatást keltve."
+  description: "A bárd hangszerének hangját változtathatja meg a varázslat segítségével. A hangszer bármilyen, a bárd által ismert hangszer hangján megszólalhat, s tökéletesen utánozza azt. A bárd új hangokat, hangzást is létrehozhat, ha talál egy viszonyítási hangot, amiből a dallamskála létrejöhet. Lehet ez madárhang vagy akár távoli, ismeretlen hangszer egy-egy dallamfoszlánya is. További Mana pontok felhasználásával a hangzás megsokszorozható, avagy más hangszerek is szólhatnak a mű alatt. A Mana pontok többszörözésével újabb hangszerek vagy szólamok is megszólaltathatók egyszerre. Így egy igazi, magas Tapasztalati szintű bárd tíz-tizenöt ember helyett is játszhat több, egymástól különböző hangszeren, kánonhatást keltve."
 }, {
   name: "Csend",
   type: "Hangmágia",
@@ -189,7 +189,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "Az üzenet hossza",
   range: "Érintés",
   duration: "Lásd a leírást!",
-  description: "A varázslat egy láthatatlan hangforrást teremt, amely kétpercnyi szöveg, vagy zene tárolására és egyetlen-egyszeri visszaadására képes. A bárdnak ehhez hangosan el kell mondania a szöveget, vagy elő kell játszani a zenét. Ezt megteheti a saját hangján, de akár mágikusan előidézett hangon is, a varázslat mindig pontosan azt a hanghatást adja vissza, ami a varázslást követően elhangzik (a bárd akaratától függően csak az ő hangját, de akár a háttérzajokat vagy más hangját is). A hangforrásba varázslatot ily módon eltárolni nem lehetséges.\n\nA hanghatás csak akkor jön létre, ha a bárd által meghatározott feltételek teljesülnek. Ezek lehetnek időponthoz kötöttek, mint napszak, egy bizonyos nap meghatározott órája, vagy bármilyen jövőbeli meghatározott időpont. Lehetnek személyhez kötöttek, mint jelenléte, halála vagy a személy egy mozdulata (azonban ez esetben mindenképp egy konkrét személyt kell megnevezni célpontként). Illetve lehetnek eseményhez köthetőek, mint egy ajtó nyitódása, ha valaki elhalad a hangforrás előtt, vagy ha valaki fegyvert ránt a hangforrás által őrzött teremben. A varázslat mindaddig „várakozik”, míg a megszabott feltétel nem teljesül."
+  description: "A varázslat egy láthatatlan hangforrást teremt, amely kétpercnyi szöveg, vagy zene tárolására és egyetlenegyszeri visszaadására képes. A bárdnak ehhez hangosan el kell mondania a szöveget, vagy elő kell játszani a zenét. Ezt megteheti a saját hangján, de akár mágikusan előidézett hangon is, a varázslat mindig pontosan azt a hanghatást adja vissza, ami a varázslást követően elhangzik (a bárd akaratától függően csak az ő hangját, de akár a háttérzajokat vagy más hangját is). A hangforrásba varázslatot ily módon eltárolni nem lehetséges.\n\nA hanghatás csak akkor jön létre, ha a bárd által meghatározott feltételek teljesülnek. Ezek lehetnek időponthoz kötöttek, mint napszak, egy bizonyos nap meghatározott órája, vagy bármilyen jövőbeli meghatározott időpont. Lehetnek személyhez kötöttek, mint jelenléte, halála vagy a személy egy mozdulata (azonban ez esetben mindenképp egy konkrét személyt kell megnevezni célpontként). Illetve lehetnek eseményhez köthetőek, mint egy ajtó nyitódása, ha valaki elhalad a hangforrás előtt, vagy ha valaki fegyvert ránt a hangforrás által őrzött teremben. A varázslat mindaddig „várakozik”, míg a megszabott feltétel nem teljesül."
 }, {
   name: "Nyelvzagyválás",
   type: "Hangmágia",
@@ -229,7 +229,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 kör",
   range: "Önmaga",
   duration: "10 perc/szint",
-  description: "A bárd megváltoztathatja külsejét, de ez is csak látványillúzió lesz. A formának nem kell emberinek lennie, a nem, a testmagasság, a testalkat is szabadon változhat, de a megjelenített lény maximálisan ember méretű lehet. Ha a bárd konkrét személy vonásait kívánja felvenni, ahhoz előbb a bárdnak Tanulmányt kell végeznie az adott személyről.\n\nA hang is a bárd saját hangja lesz, így ennek használata, ha a varázslatot más módszerekkel nem támogatják meg, minden képpen felfedi az illúziót. Fontos, hogy az illúzió követhesse a bárd mozgását, így hihető maradjon, ezért a felvett alaknak egyetlen fejjel és legfeljebb négy végtaggal kell rendelkeznie. Az illúzióra így nem kell folyamatosan koncentrálnia, hiszen a kép saját mozgásmintát követhet.\n\nAmennyiben a felvett lény alakja a fent leírtaknak nem felel meg, az illúzió könnyen felfedezhető. A bárd a lény semmiféle tulajdonságát nem kapja meg, az átváltozás csak fényjáték lesz, semmi egyéb. Az illúzió annál hihetőbb, minél közelebb áll az utánzott lény az emberhez, s minél többször vette fel az adott alakot a bárd a korábbiakban - hiszen utánoznia kell a lény jellegzetes mozgásformáit (kutya esetében például négykézlábra kell ereszkednie stb.)."
+  description: "A bárd megváltoztathatja külsejét, de ez is csak látványillúzió lesz. A formának nem kell emberinek lennie, a nem, a testmagasság, a testalkat is szabadon változhat, de a megjelenített lény maximálisan ember méretű lehet. Ha a bárd konkrét személy vonásait kívánja felvenni, ahhoz előbb a bárdnak Tanulmányt kell végeznie az adott személyről.\n\nA hang is a bárd saját hangja lesz, így ennek használata, ha a varázslatot más módszerekkel nem támogatják meg, mindenképpen felfedi az illúziót. Fontos, hogy az illúzió követhesse a bárd mozgását, így hihető maradjon, ezért a felvett alaknak egyetlen fejjel és legfeljebb négy végtaggal kell rendelkeznie. Az illúzióra így nem kell folyamatosan koncentrálnia, hiszen a kép saját mozgásmintát követhet.\n\nAmennyiben a felvett lény alakja a fent leírtaknak nem felel meg, az illúzió könnyen felfedezhető. A bárd a lény semmiféle tulajdonságát nem kapja meg, az átváltozás csak fényjáték lesz, semmi egyéb. Az illúzió annál hihetőbb, minél közelebb áll az utánzott lény az emberhez, s minél többször vette fel az adott alakot a bárd a korábbiakban - hiszen utánoznia kell a lény jellegzetes mozgásformáit (kutya esetében például négykézlábra kell ereszkednie stb.)."
 }, {
   name: "Aura",
   type: "Fénymágia",
@@ -237,7 +237,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "20 m és látható",
   duration: "1 kör/szint",
-  description: "A bárd fénylő kontúrvonalat helyezhet el saját magán, más lényen, de akár tárgyakon is (ennek feltétele, hogy lássa a célpontot, és annak mérete ne haladja meg egy emberét).\n\nHa magára olvassa a varázslatot, a fény derengő, hatalmat sejtető aura lesz, mely sokkal erősebbnek, tökéletesebbnek mutatja őt. Karizmájára a varázslat idejére +1-et kap.\n\nHa a fényaura másra kerül, annak testét vékony, erős fénycsík öleli körül. így sötétben könnyebb eltalálni: a reá támadó ellenfél nem szenvedi el a sötétségből eredő negatív módosítókat."
+  description: "A bárd fénylő kontúrvonalat helyezhet el saját magán, más lényen, de akár tárgyakon is (ennek feltétele, hogy lássa a célpontot, és annak mérete ne haladja meg egy emberét).\n\nHa magára olvassa a varázslatot, a fény derengő, hatalmat sejtető aura lesz, mely sokkal erősebbnek, tökéletesebbnek mutatja őt. Karizmájára a varázslat idejére +1-et kap.\n\nHa a fényaura másra kerül, annak testét vékony, erős fénycsík öleli körül. Így sötétben könnyebb eltalálni: a reá támadó ellenfél nem szenvedi el a sötétségből eredő negatív módosítókat."
 }, {
   name: "Bűvharc",
   type: "Fénymágia",
@@ -245,7 +245,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "Önmaga",
   duration: "Egyszeri",
-  description: "Összetett fénymágia, segítségével a bárd közelharcban zavarja meg ellenfelét. A bárd fegyvert forgató keze egyetlen támadás erejéig láthatatlanná halványul, illúzióképe elválik a valóságos kéztől, s harc közben egyéni életet él. Csak valósan végrehajtható mozgásokat végez, így elég nehezen fedezhető fel a csalás. Az illúziókéz és -fegyver természetesen nem okoz valódi sebzést, s ha a bárd nem ügyel eléggé, a fantomfegyver egyszerűen keresztülsiklik az ellenfél hárításra emelt pengéjén, leleplezve ezzel a szemfényvesztést.\n\nÁltalában ravasz támadáskombinációk befejezéséhez használják: két-három pengeváltás után az ellenfél hiába emeli hárításra a kardját az illúzió csapás ellen, a bárd fegyvere egészen máshonnan sújt le. Ebből fakadóan a bárd egyik támadása meglepetésszerűnek számít (+30 TÉ és dobás nélkül is ő nyeri a kezdeményezést)."
+  description: "Összetett fénymágia, segítségével a bárd közelharcban zavarja meg ellenfelét. A bárd fegyvert forgató keze egyetlen támadás erejéig láthatatlanná halványul, illúzióképe elválik a valóságos kéztől, s harc közben egyéni életet él. Csak valósan végrehajtható mozgásokat végez, így elég nehezen fedezhető fel a csalás. Az illúziókéz és -fegyver természetesen nem okoz valódi sebzést, s ha a bárd nem ügyel eléggé, a fantomfegyver egyszerűen keresztülsiklik az ellenfél hárításra emelt pengéjén, leleplezve ezzel a szemfényvesztést.\n\nÁltalában ravasz támadáskombinációk befejezéséhez használják: két-három pengeváltás után az ellenfél hiába emeli hárításra a kardját az illúziócsapás ellen, a bárd fegyvere egészen máshonnan sújt le. Ebből fakadóan a bárd egyik támadása meglepetésszerűnek számít (+30 TÉ és dobás nélkül is ő nyeri a kezdeményezést)."
 }, {
   name: "Délibáb",
   type: "Fénymágia",
@@ -261,7 +261,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "3 szegmens",
   range: "20 m",
   duration: "1 perc/szint",
-  description: "A bárd ezen varázslattal láthatatlanná válhat, ám képe mégsem tűnik el a szemlélők elől. Az Önnön testéről visszaverődő fénysugarakat ugyanis „áthelyezi” a tér egy tetszőleges, ám 20 ynevi lábon belül eső pontjára. A bárd képe tehát ott jelenik meg. Az illúzió tökéletes, s mindenben híven követi létrehozója mozdulatait.\n\nFigyelem! A mozdulatok nem hamisíthatóak, s a hang is mindig a valódi bárd irányából érkezik. A bárd egyébként bármely pillanatban belesétálhat saját illúzióképébe, a varázslatot ez nem befolyásolja. A varázslat kiválóan kombinálható a Hangkivetítés varázslattal."
+  description: "A bárd ezen varázslattal láthatatlanná válhat, ám képe mégsem tűnik el a szemlélők elől. Az önnön testéről visszaverődő fénysugarakat ugyanis „áthelyezi” a tér egy tetszőleges, ám 20 ynevi lábon belül eső pontjára. A bárd képe tehát ott jelenik meg. Az illúzió tökéletes, s mindenben híven követi létrehozója mozdulatait.\n\nFigyelem! A mozdulatok nem hamisíthatóak, s a hang is mindig a valódi bárd irányából érkezik. A bárd egyébként bármely pillanatban belesétálhat saját illúzióképébe, a varázslatot ez nem befolyásolja. A varázslat kiválóan kombinálható a Hangkivetítés varázslattal."
 }, {
   name: "Fantomsereg",
   type: "Fénymágia",
@@ -333,7 +333,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 perc",
   range: "50 m sugarú kör",
   duration: "10 perc/szint",
-  description: "Igen egyszerű illúzió, jelentősége mégis méreteiben rejlik - a bárd 50 ynevi láb sugarú kör alapterületű talaj képét változtathatja meg. Az illúzióval bármilyen talajtípus képe létrehozható, legyen az tó, mocsár, legelő, kőút avagy ezek kombinációja. Az egyetlen hátrány az, hogy a befolyásolható magasság csupán 1/2 ynevi láb. így erdők, sziklafalak, hegyek ezzel a varázslattal nem teremthetők. Mindettől függetlenül kiválóan alkalmas például csapdák elfedésére."
+  description: "Igen egyszerű illúzió, jelentősége mégis méreteiben rejlik - a bárd 50 ynevi láb sugarú kör alapterületű talaj képét változtathatja meg. Az illúzióval bármilyen talajtípus képe létrehozható, legyen az tó, mocsár, legelő, kőút avagy ezek kombinációja. Az egyetlen hátrány az, hogy a befolyásolható magasság csupán 1/2 ynevi láb. Így erdők, sziklafalak, hegyek ezzel a varázslattal nem teremthetők. Mindettől függetlenül kiválóan alkalmas például csapdák elfedésére."
 }, {
   name: "Irányvesztés",
   type: "Fénymágia",
@@ -397,7 +397,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 kör",
   range: "Önmaga",
   duration: "10 perc/szint",
-  description: "A varázslatot kétféleképpen is alkalmazhatja a bárd, helyzetének megfelelően. Az egyik felhasználási mód hasonlatos az Alakváltáshoz, de csak a bárd arca változtatható meg így. Az arc csak akkor utánozhat konkrét személyt, ha a bárd előtte Tanulmányt végzett rajta.\n\nEllenkező esetben a varázslat csak arra szolgál, hogy a bárd érzelmeit leplezni tudja. Az illúzió saját arcát fogja megjeleníteni, de rajta az érzelmek a gondolatainak, és nem érzelmeinek megfelelően látszanak meg. így a bárdot sokkal nehezebb hazugságon kapni, s kártyában vagy egyéb szerencsejátékban is komoly ellenfél lehet. Arcvonásai nem árulhatnak el meglepetést, csak ha ő maga kívánja."
+  description: "A varázslatot kétféleképpen is alkalmazhatja a bárd, helyzetének megfelelően. Az egyik felhasználási mód hasonlatos az Alakváltáshoz, de csak a bárd arca változtatható meg így. Az arc csak akkor utánozhat konkrét személyt, ha a bárd előtte Tanulmányt végzett rajta.\n\nEllenkező esetben a varázslat csak arra szolgál, hogy a bárd érzelmeit leplezni tudja. Az illúzió saját arcát fogja megjeleníteni, de rajta az érzelmek a gondolatainak, és nem érzelmeinek megfelelően látszanak meg. Így a bárdot sokkal nehezebb hazugságon kapni, s kártyában vagy egyéb szerencsejátékban is komoly ellenfél lehet. Arcvonásai nem árulhatnak el meglepetést, csak ha ő maga kívánja."
 }, {
   name: "Nyílzápor",
   type: "Fénymágia",
@@ -405,7 +405,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "50 m",
   duration: "1 kör/szint",
-  description: "A varázslat képes megsokszorozni egy kilőtt vagy elhajított eszköz képét, legyen az nyíl, parittyakő, tőr avagy jól célzott dárda. Minden egyes repülő fegyvernek még 5 hasonmása születik a semmiből. Ez különösen akkor hatásos, ha egyszerre többen használják íjukat. így 10-12 kilőtt vessző 50- 60 nyílvesszőt tartalmazó felhővé változik. Ekkor a célpont hiába összpontosít a kitérésre, képtelen megmondani, melyik lövedék az igazi és melyik nem (még akkor sem, ha sejti, hogy illúzióval áll szemben), így nem kapja meg a kitérésből származó VÉ módosítót (ez alól kivételt képez a Kitérés diszciplína, ami továbbra is tökéletesen alkalmazható)."
+  description: "A varázslat képes megsokszorozni egy kilőtt vagy elhajított eszköz képét, legyen az nyíl, parittyakő, tőr avagy jól célzott dárda. Minden egyes repülő fegyvernek még 5 hasonmása születik a semmiből. Ez különösen akkor hatásos, ha egyszerre többen használják íjukat. Így 10-12 kilőtt vessző 50-60 nyílvesszőt tartalmazó felhővé változik. Ekkor a célpont hiába összpontosít a kitérésre, képtelen megmondani, melyik lövedék az igazi és melyik nem (még akkor sem, ha sejti, hogy illúzióval áll szemben), így nem kapja meg a kitérésből származó VÉ módosítót (ez alól kivételt képez a Kitérés diszciplína, ami továbbra is tökéletesen alkalmazható)."
 }, {
   name: "Rejtjel",
   type: "Fénymágia",
@@ -413,7 +413,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 perc",
   range: "Érintés",
   duration: "1 hónap",
-  description: "Ha a bárd ezzel a varázslattal ír meg egy legfeljebb egy oldalas szöveget, az kétféleképpen működhet. Az első lehetőség az, hogy az írás mindig látható, s egy bizonyos feltétel bekövetkeztekor eltűnik. A második eset ennek fordítottja, azaz a szavak láthatatlanok, s csak a feltétel teljesülésekor válnak olvashatóvá.\n\nA két varázslat típus dupla Mana pontért kombinálható egyazon pergamenen is, így még ravaszabb kombinációk megalkotására alkalmas. A feltétel, amihez a szöveg változása kötött, bármi lehet: akár a P.sz. 3712. év Bosszú havának 12. napja, de lehet a Bosszú havának 12. napja, mivel abból minden évben előfordul egy. Lehet a feltétel egy bizonyos nap időpontja, egy személy vagy akár csillagfény jelenléte is."
+  description: "Ha a bárd ezzel a varázslattal ír meg egy legfeljebb egy oldalas szöveget, az kétféleképpen működhet. Az első lehetőség az, hogy az írás mindig látható, s egy bizonyos feltétel bekövetkeztekor eltűnik. A második eset ennek fordítottja, azaz a szavak láthatatlanok, s csak a feltétel teljesülésekor válnak olvashatóvá.\n\nA két varázslattípus dupla Mana pontért kombinálható egyazon pergamenen is, így még ravaszabb kombinációk megalkotására alkalmas. A feltétel, amihez a szöveg változása kötött, bármi lehet: akár a P.sz. 3712. év Bosszú havának 12. napja, de lehet a Bosszú havának 12. napja, mivel abból minden évben előfordul egy. Lehet a feltétel egy bizonyos nap időpontja, egy személy vagy akár csillagfény jelenléte is."
 }, {
   name: "Rémítés",
   type: "Fénymágia",
@@ -445,7 +445,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "10 m",
   duration: "1 nap/szint",
-  description: "Az egyik legszórakoztatóbb varázslat, mely igen köny- nyen használható, s hatása biztosan teljes siker. A mágia egy terület színét változtatja meg. A beszínezendő terület nagysága fél ynevi négyzetláb szintenként. A varázslat bármilyen szín létrehozására képes, de csak foltokat tud befesteni, így képet nem alkothat vele a bárd. Színvarázs segítségével megváltoztatható egy-egy ruhadarab, de akár a haj vagy a bőr színe is."
+  description: "Az egyik legszórakoztatóbb varázslat, mely igen könnyen használható, s hatása biztosan teljes siker. A mágia egy terület színét változtatja meg. A beszínezendő terület nagysága fél ynevi négyzetláb szintenként. A varázslat bármilyen szín létrehozására képes, de csak foltokat tud befesteni, így képet nem alkothat vele a bárd. Színvarázs segítségével megváltoztatható egy-egy ruhadarab, de akár a haj vagy a bőr színe is."
 }, {
   name: "Tárgy láthatatlanság",
   type: "Fénymágia",
@@ -461,7 +461,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens ",
   range: "Érintés",
   duration: "1 óra/szint",
-  description: "A varázslatot egy létező tárgyra kell rámondani, mire annak anyagminősége, színe, kidolgozottsága látszatra átalakul. A tárgy mibenléte az illúzióval nem változtatható meg, azaz egy asztal mindenkeppen asztal marad, eredeti formáját megtartva. Anyaga viszont megváltoztatható, a látvány erejéig. Az eddigi faasztal látszatra kővé vagy akár arannyá is formálható. A tárgy maximális térfogata szintenként 1 ynevi köbláb lehet. Az illúzió viszonylag tartós, mert szorosan kötődik a tárgy anyagi valóságához. Az átalakulás természetesen csak a látványt érinti, az anyagminőséget nem, így az érintés könnyen leleplezheti a csalást."
+  description: "A varázslatot egy létező tárgyra kell rámondani, mire annak anyagminősége, színe, kidolgozottsága látszatra átalakul. A tárgy mibenléte az illúzióval nem változtatható meg, azaz egy asztal mindenképpen asztal marad, eredeti formáját megtartva. Anyaga viszont megváltoztatható, a látvány erejéig. Az eddigi faasztal látszatra kővé vagy akár arannyá is formálható. A tárgy maximális térfogata szintenként 1 ynevi köbláb lehet. Az illúzió viszonylag tartós, mert szorosan kötődik a tárgy anyagi valóságához. Az átalakulás természetesen csak a látványt érinti, az anyagminőséget nem, így az érintés könnyen leleplezheti a csalást."
 }, {
   name: "Távolság torzítás",
   type: "Fénymágia",
@@ -469,7 +469,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 kör",
   range: "Lásd a leírást!",
   duration: "1 perc/szint",
-  description: "Ezzel az illúzióval a bárd a célpont számára minden távolságot nagyobbnak vagy kisebbnek láttathat, mint amekkora az valójában. Ezt a varázslatot saját magán is alkalmazhatja, ekkor a távcsövet helyettesíti, ám máson egészen más szerepe is lehet. Folyosók hossza, utak távolsága torzítható el teljesen a varázslattal.\n\nA maximális kezelhető távolság 10 ynevi mérföld, s a legnagyobb torzítási arány 1 az 50-hez lehet. Azaz 50 ynevi lábnyí távolság egy ynevi lábnak vagy 2500 ynevi lábnak tűnhet.\n\nEz azonban a célzást nem könnyíti meg jelentősen, mivel a torz távolság lehetetlenné teszi a lövedék ívének kiszámítását."
+  description: "Ezzel az illúzióval a bárd a célpont számára minden távolságot nagyobbnak vagy kisebbnek láttathat, mint amekkora az valójában. Ezt a varázslatot saját magán is alkalmazhatja, ekkor a távcsövet helyettesíti, ám máson egészen más szerepe is lehet. Folyosók hossza, utak távolsága torzítható el teljesen a varázslattal.\n\nA maximális kezelhető távolság 10 ynevi mérföld, s a legnagyobb torzítási arány 1 az 50-hez lehet. Azaz 50 ynevi lábnyi távolság egy ynevi lábnak vagy 2500 ynevi lábnak tűnhet.\n\nEz azonban a célzást nem könnyíti meg jelentősen, mivel a torz távolság lehetetlenné teszi a lövedék ívének kiszámítását."
 }, {
   name: "Vakon látás",
   type: "Fénymágia",
@@ -485,7 +485,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "1 szegmens",
   range: "10 m",
   duration: "1 kör/szint",
-  description: "A mágia lényege, hogy az áldozat szeme előtt egy hajszálnyival minden fényt kiolt - akár egy hártyavékony sötétség-varázs. Az áldozat csak a varázslat hatóidejének lejártával lesz képes újra látni mindaddig a Harc vakon negatív módosítóit kénytelen elszenvedni:\n\nKÉ: -20, TÉ: -60, VÉ: -60, CÉ: -150"
+  description: "A mágia lényege, hogy az áldozat szeme előtt egy hajszálnyival minden fényt kiolt - akár egy hártyavékony sötétségvarázs. Az áldozat csak a varázslat hatóidejének lejártával lesz képes újra látni mindaddig a Harc vakon negatív módosítóit kénytelen elszenvedni:\n\nKÉ: -20, TÉ: -60, VÉ: -60, CÉ: -150"
 }, {
   name: "Figyelemelterelés",
   type: "Egyéb bárdmágia",
@@ -509,7 +509,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   castingTime: "Lásd a leírást!",
   range: "Hallótáv",
   duration: "Végleges",
-  description: "A bárd ezzel a varázslattal bármilyen verset vagy dalt, melyet hall, első alkalommal megtanulhat. így nem kell több órán át gyakorolnia, akár azonnal előadhatja. A varázslatot a dal hallgatása közben kell megidézni, s az időtartam a próza, vers vagy dal előadásának idejével egyezik meg."
+  description: "A bárd ezzel a varázslattal bármilyen verset vagy dalt, melyet hall, első alkalommal megtanulhat. Így nem kell több órán át gyakorolnia, akár azonnal előadhatja. A varázslatot a dal hallgatása közben kell megidézni, s az időtartam a próza, vers vagy dal előadásának idejével egyezik meg."
 }, {
   name: "Hangtanulmány",
   type: "Egyéb bárdmágia",
@@ -526,7 +526,7 @@ export const BardMagicValues: BardMagicInfo[] = [{
   range: "5 m",
   duration: "1 perc/szint",
   save: ["Asztrális"],
-  description: "A varázslat segítségével a bárd egy ezüstösen ragyogó fény- gömböcskét teremthet, mely lassan imbolyogva mozog az áldozat szeme előtt. A fény hatása álomba, vagy hipnotikus állapotba ringathatja célpontját, a bárd óhaja szerint. Ha az áldozat elvéti Mágiaellenállását, akkor álomba merül, vagy félig öntudatlan állapotba kerül. Ha elalszik, akkor csak két óra elteltével lehet felébreszteni, addig szinte reménytelen; csakis Sp-t sebet okozó sérülés esetén ébred fel, vagy mágia segítségével ébreszthető fel. Ha hipnotikus állapotba került, akkor a bárd utasításokat adhat neki, melyeket teljesítenie kell. Az utasítások száma csakis a végrehajtásukhoz szükséges idő hosszától és a varázslat időtartamától függ. A parancs nem lehet olyan, mely öngyilkosságra sarkallja a célpontot, ilyen utasítás kiadása esetén azonnal szétfoszlik a varázslat."
+  description: "A varázslat segítségével a bárd egy ezüstösen ragyogó fénygömböcskét teremthet, mely lassan imbolyogva mozog az áldozat szeme előtt. A fény hatása álomba, vagy hipnotikus állapotba ringathatja célpontját, a bárd óhaja szerint. Ha az áldozat elvéti Mágiaellenállását, akkor álomba merül, vagy félig öntudatlan állapotba kerül. Ha elalszik, akkor csak két óra elteltével lehet felébreszteni, addig szinte reménytelen; csakis Sp-t sebet okozó sérülés esetén ébred fel, vagy mágia segítségével ébreszthető fel. Ha hipnotikus állapotba került, akkor a bárd utasításokat adhat neki, melyeket teljesítenie kell. Az utasítások száma csakis a végrehajtásukhoz szükséges idő hosszától és a varázslat időtartamától függ. A parancs nem lehet olyan, mely öngyilkosságra sarkallja a célpontot, ilyen utasítás kiadása esetén azonnal szétfoszlik a varázslat."
 }, {
   name: "Rohanó idő",
   type: "Egyéb bárdmágia",
