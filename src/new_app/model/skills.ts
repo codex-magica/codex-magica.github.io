@@ -26,6 +26,7 @@ export interface BranchLevel {
   chooseAttrs?: boolean; // "open": the player sets this branch's attribute requirements (Művészetek)
   capFok?: SkillFok; // a node at this depth can't exceed this fok directly (Fegyverhasználat kategória = 2)
   branchAbove?: SkillFok; // to exceed `branchAbove`, you MUST branch to the next depth (forced branching)
+  optional?: boolean; // subtype is optional: the row shows NO field by default (revealed via "Specializálás")
 }
 // A choice forced when an instance reaches a fok. attrBonus = the existing fok-4 +1 attribute pick;
 // path = a committing choice that gates later progress (Pszi tudat/test at fok 3).
@@ -84,8 +85,12 @@ const build = (r: Raw): SkillDef => ({
   hardReq: (r.hard ?? []).map(ref),
   softReq: (r.soft ?? []).map(ref),
   perFokEffects: r.perFok,
-  // Explicit branch wins; else a fixed level from `subtypes`; else non-branchable.
-  branch: r.branch ?? (r.subtypes ? [{ label: "altípus", source: "fixed", options: r.subtypes.map((name) => ({ name })) }] : undefined),
+  // Explicit branch wins; else a fixed level from `subtypes`. Every other NON-percentage skill gets an
+  // optional open branch — so it's re-learnable and can be specialized on demand, but shows no subtype field
+  // by default (revealed per-instance via "Specializálás"). Percentage skills stay non-branchable.
+  branch: r.branch ?? (r.subtypes
+    ? [{ label: "altípus", source: "fixed", options: r.subtypes.map((name) => ({ name })) }]
+    : r.pct ? undefined : [{ label: "altípus", source: "open", optional: true }]),
   fokTriggers: r.fokTriggers,
   subtypes: r.subtypes ?? (r.branch?.[0]?.source === "fixed" ? r.branch[0].options?.map((o) => o.name) : undefined),
 });

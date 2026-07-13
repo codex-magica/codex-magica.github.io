@@ -219,7 +219,10 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
       skillPurchases: l.skillPurchases.map((p) => (!p.id && sameSkill(p, skill, oldSubtype) ? { ...p, subtype: newSubtype || undefined } : p)),
     }));
     const subtypeOverrides = { ...record.subtypeOverrides };
-    const hasGeneralGrant = derived.grantedSkills.some((g) => g.skill === skill && !g.origSubtype && !g.subtype);
+    // A bare/general grant is identified by its STABLE origSubtype (undefined), NOT by `subtype` — `subtype`
+    // reflects the very override we're setting here, so after the first character it would look specialised
+    // and (wrongly) flip this to false, dropping the override and resetting the field on every later keystroke.
+    const hasGeneralGrant = derived.grantedSkills.some((g) => g.skill === skill && !g.origSubtype);
     if (hasGeneralGrant && newSubtype) subtypeOverrides[skill] = newSubtype;
     else delete subtypeOverrides[skill]; // unspecialise / no grant → drop the override so nothing strays
     const migrate = <T extends { skill: string; subtype?: string; variantId?: string }>(list: T[] | undefined): T[] | undefined =>

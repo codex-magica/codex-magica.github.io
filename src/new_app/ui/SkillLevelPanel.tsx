@@ -68,6 +68,10 @@ export const SkillLevelPanel: React.FC<Props> = ({
   const [relearnOpen, setRelearnOpen] = useState(false);
   // Step 2 of the relearn picker: the chosen skill, awaiting its starting fok.
   const [relearnSkill, setRelearnSkill] = useState<string | null>(null);
+  // Whether the "specialize a skill" picker is open (reveal the subtype field on an optional-branch row).
+  const [specializeOpen, setSpecializeOpen] = useState(false);
+  // Optional-branch skills the user opted to specialize this session — their base row shows the subtype field.
+  const [specializing, setSpecializing] = useState<Set<string>>(new Set());
   // The `skill|subtype` key of the Tanul button whose start-fok popover is open (re-learn only), or null.
   const [tanulOpen, setTanulOpen] = useState<string | null>(null);
   // The skill name whose fok-4 "+1 attribute" popover is open, or null.
@@ -153,6 +157,13 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // Skills that can be RE-learned (added as another independent row): branchable AND already learned/owned.
   const relearnable = SKILLS.filter(
     (d) => d.branch != null && (ownedInstances.some((s) => s.skill === d.name) || variants.some((p) => p.skill === d.name))
+  );
+
+  // Optional-branch skills (Futás, Taktika, …): re-learnable like any branch, but their subtype field stays
+  // hidden until specialized. Offer, in the Specializálás picker, those with an unspecialized base instance.
+  const isOptionalBranch = (skill: string) => SKILL_BY_NAME[skill]?.branch?.[0]?.optional === true;
+  const specializable = SKILLS.filter(
+    (d) => isOptionalBranch(d.name) && !specializing.has(d.name) && ownedInstances.some((s) => s.skill === d.name && !s.subtype)
   );
 
   const skillHasContent = (name: string) =>
@@ -516,11 +527,15 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const atMax = isPct ? cur >= 100 : cur >= 5;
     const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step, inst.subtype, inst.attrs);
     const showFok4 = !isPct && cur >= 4;
-    const branchable = SKILL_BY_NAME[inst.skill]?.branch != null;
+    const branchDef = SKILL_BY_NAME[inst.skill]?.branch;
+    // Real branches always show the subtype control; an OPTIONAL branch (Futás …) shows it only once
+    // specialized — it already has a subtype, or the user picked it in the Specializálás menu this session.
+    const showSubtype =
+      branchDef != null && (branchDef[0]?.optional !== true || !!inst.subtype || specializing.has(inst.skill));
     return rowShell(
       keyOf(inst.skill, inst.origSubtype) + ":g",
       nameGroup(inst.skill, teacher),
-      branchable
+      showSubtype
         ? subtypeControl(inst.skill, inst.subtype || "", (v) =>
             inst.origSubtype != null
               ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
@@ -617,6 +632,39 @@ export const SkillLevelPanel: React.FC<Props> = ({
           {filterSeg("tanult", "Tanult")}
           {filterSeg("egyeb", "Egyéb")}
         </HStack>
+        <HStack spacing="8px" flexShrink={0}>
+        {specializable.length > 0 && (
+          <Box position="relative" flexShrink={0}>
+            <Box as="button" type="button" title="Egy képzettség egyedi altípusának megadása (pl. Futás — hosszútáv)"
+              onClick={() => setSpecializeOpen((o) => !o)}
+              display="inline-flex" alignItems="center" gap="5px" px="11px" py="7px" borderRadius="9px"
+              border="1px solid" borderColor="fieldBd" bg="transparent" color="accentTx" fontWeight={600}
+              fontFamily="system-ui" fontSize="13px" whiteSpace="nowrap" _hover={{ borderColor: "accent", bg: "accentSoft" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" /></svg>
+              Specializálás
+            </Box>
+            {specializeOpen && (
+              <>
+                <Box position="fixed" inset={0} zIndex={29} onClick={() => setSpecializeOpen(false)} />
+                <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="8px" minW="220px" maxH="320px" overflowY="auto" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
+                  <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px" whiteSpace="nowrap">
+                    Melyiket specializálod?
+                  </Text>
+                  <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" px="8px" pb="7px" maxW="240px">
+                    Egyedi altípust adhatsz a képzettségnek (pl. Futás — hosszútáv); a mező csak ekkor jelenik meg.
+                  </Text>
+                  {specializable.map((d) => (
+                    <Box as="button" key={d.name} type="button" w="100%" textAlign="left" px="8px" py="8px" borderRadius="8px"
+                      fontFamily="system-ui" fontSize="14px" fontWeight={600} color="fg" _hover={{ bg: "accentSoft", color: "accentTx" }}
+                      onClick={() => { setSpecializing((prev) => new Set(prev).add(d.name)); setSpecializeOpen(false); }}>
+                      {d.name}
+                    </Box>
+                  ))}
+                </Box>
+              </>
+            )}
+          </Box>
+        )}
         {relearnable.length > 0 && (
           <Box position="relative" flexShrink={0}>
             <Box as="button" type="button" title="Egy már tanult, ágazható képzettség újratanulása"
@@ -660,6 +708,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
             )}
           </Box>
         )}
+        </HStack>
       </HStack>
 
       <Box sx={{
