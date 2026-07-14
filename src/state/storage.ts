@@ -7,7 +7,6 @@ import { makeStats } from "../model/attributes";
 import { CLASSES, CLASS_NAMES } from "../model/classes";
 import { RACE_NAMES } from "../model/races";
 import { defaultSelections } from "../model/choices";
-import { defaultRecord } from "./defaultRecord";
 
 const KEY = "magus.roster.v1";
 const TOMB_KEY = "magus.tombstones.v1";
@@ -16,9 +15,6 @@ const TOMB_MAX_AGE_MS = 180 * 24 * 3600 * 1000; // prune half-year-old tombstone
 // Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
 export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
-// Deep clone the demo seed — a shallow spread would share `levels`/`pointBuy`/... with the module constant.
-const seedRoster = (): CharacterRecord[] => [JSON.parse(JSON.stringify(defaultRecord)) as CharacterRecord];
-
 // Legacy migrations applied on load. Path choices are matched by the trigger LABEL, so a renamed
 // trigger ("Pszi út" → "Pszi fa") must be remapped or old records lose their committed choice.
 export const migrateRecord = (r: CharacterRecord): CharacterRecord =>
@@ -26,15 +22,16 @@ export const migrateRecord = (r: CharacterRecord): CharacterRecord =>
     ? { ...r, pathChoices: r.pathChoices.map((c) => (c.trigger === "Pszi út" ? { ...c, trigger: "Pszi fa" } : c)) }
     : r;
 
+// First run starts empty (the demo seed lives on only as the derive.test.ts golden fixture);
+// the welcome screen's empty state points at "Új karakter".
 export const loadRoster = (): CharacterRecord[] => {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return seedRoster(); // first run → seed with the demo character
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.length ? (parsed as CharacterRecord[]).map(migrateRecord) : []; // [] = user deleted all
-    return seedRoster(); // corrupt (non-array) payload → fall back to the seed, same as the catch branch
+    return Array.isArray(parsed) ? (parsed as CharacterRecord[]).map(migrateRecord) : [];
   } catch {
-    return seedRoster();
+    return [];
   }
 };
 
