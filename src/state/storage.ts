@@ -83,6 +83,44 @@ export const addTombstone = (id: string): void => {
   saveTombstones(t);
 };
 
+// ── sync base (id → the updatedAt this device last agreed with the cloud on) ─────────────────────
+// The "common ancestor" for three-way merging: it lets the merge tell a safe fast-forward ("only
+// the cloud moved") apart from a true conflict ("both sides moved"). Entries are written only
+// after a successful pull or push — never optimistically — so a failed push can't masquerade as
+// "in sync" and let the cloud overwrite an unpushed local edit.
+
+export type SyncBase = Record<string, number>;
+
+const readMap = (key: string): Record<string, number> => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) ?? "{}");
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+    const out: Record<string, number> = {};
+    for (const [id, ts] of Object.entries(parsed)) if (typeof ts === "number") out[id] = ts;
+    return out;
+  } catch {
+    return {};
+  }
+};
+
+const BASE_KEY = "magus.syncbase.v1";
+
+export const loadSyncBase = (): SyncBase => readMap(BASE_KEY);
+
+export const saveSyncBase = (b: SyncBase): void => {
+  try {
+    localStorage.setItem(BASE_KEY, JSON.stringify(b));
+  } catch {
+    /* ignore */
+  }
+};
+
+export const bumpSyncBase = (entries: SyncBase): void => {
+  const b = loadSyncBase();
+  Object.assign(b, entries);
+  saveSyncBase(b);
+};
+
 export const clearTombstone = (id: string): void => {
   const t = loadTombstones();
   if (id in t) {

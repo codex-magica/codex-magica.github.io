@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CharacterRecord } from "../model/character";
-import { addTombstone, clearTombstone, clone, genId, loadRoster, loadTombstones, saveRoster } from "./storage";
-import { CloudUser, fetchCloudDocs, mergeRosters, pushToCloud, restoreSession, signInInteractive, signOutCloud } from "./cloudSync";
+import { addTombstone, bumpSyncBase, clearTombstone, clone, genId, loadRoster, loadSyncBase, loadTombstones, saveRoster, saveSyncBase, saveTombstones } from "./storage";
+import { CloudUser, ConflictPair, fetchCloudDocs, mergeRosters, pushToCloud, restoreSession, signInInteractive } from "./cloudSync";
 
 export type SyncStatus = "off" | "connecting" | "on" | "error";
 
@@ -12,6 +12,8 @@ export interface SyncApi {
   disable: () => void; // stops syncing; local data stays
 }
 
+export type ConflictChoice = "local" | "cloud" | "both";
+
 export interface RosterApi {
   records: CharacterRecord[];
   get: (id: string) => CharacterRecord | undefined;
@@ -19,6 +21,9 @@ export interface RosterApi {
   remove: (id: string) => void;
   duplicate: (id: string) => void;
   sync: SyncApi;
+  conflicts: ConflictPair[]; // pending sync conflicts awaiting a user decision
+  resolveConflict: (id: string, choice: ConflictChoice) => void;
+  dismissConflicts: () => void; // "decide later" — they resurface on the next merge
 }
 
 const SYNC_FLAG_KEY = "magus.sync.v1";
@@ -41,9 +46,10 @@ const PUSH_DEBOUNCE_MS = 2500;
 
 // The character roster, persisted to local storage on every change. Local storage is always the
 // source of truth; when Google sync is on, changes are also write-through pushed to Firestore
-// (debounced), and app start merges the cloud copy in (per-character last-write-wins). A push
-// missed because the tab closed early is harmless: the next start's merge sees the newer local
-// `updatedAt` and uploads it then.
+// (debounced), and a pull-merge (per-character last-write-wins) runs on app start AND whenever the
+// tab becomes visible/focused again — so picking up the iPad after editing on the phone shows the
+// fresh data without a manual reload. A push missed because the tab closed early is harmless: the
+// next merge sees the newer local `updatedAt` and uploads it then.
 export function useRoster(): RosterApi {
   const [records, setRecords] = useState<CharacterRecord[]>(() => loadRoster());
   const [sync, setSync] = useState<{ status: SyncStatus; email: string | null }>(() => ({
@@ -70,7 +76,13 @@ export function useRoster(): RosterApi {
     dirtyIdsRef.current = new Set();
     deletedIdsRef.current = new Set();
     try {
-      await pushToCloud(user.uid, recs, loadTombstones(), tombIds);
+      const tombs = loadTombstones();
+      await pushToCloud(user.uid, recs, tombs, tombIds);
+      // pushes landed → these versions are now the recorded common ancestor
+      const baseBump: Record<string, number> = {};
+      recs.forEach((r) => (baseBump[r.id] = r.updatedAt ?? 0));
+      tombIds.forEach((id) => (baseBump[id] = tombs[id] ?? 0));
+      bumpSyncBase(baseBump);
       setSync((s) => (s.status === "error" ? { ...s, status: "on" } : s));
     } catch (e) {
       // Re-queue and surface the error; the next edit (or the next app start's merge) retries.
@@ -90,12 +102,68 @@ export function useRoster(): RosterApi {
     }, PUSH_DEBOUNCE_MS);
   };
 
-  const runInitialSync = async (user: CloudUser): Promise<void> => {
-    const cloud = await fetchCloudDocs(user.uid);
-    const tombs = loadTombstones();
-    const { roster, pushRecords, pushTombstoneIds } = mergeRosters(recordsRef.current, tombs, cloud);
-    setRecords(roster);
-    await pushToCloud(user.uid, pushRecords, tombs, pushTombstoneIds);
+  // Cheap merged-vs-current check: `updatedAt` is stamped on every mutation, so id+updatedAt pairs
+  // are a faithful fingerprint. Skipping the no-op setRecords avoids re-rendering open sheets on
+  // every tab switch.
+  const rosterEqual = (a: CharacterRecord[], b: CharacterRecord[]): boolean =>
+    a.length === b.length && a.every((r, i) => r.id === b[i].id && r.updatedAt === b[i].updatedAt);
+
+  const pullingRef = useRef(false);
+  const lastPullRef = useRef(0);
+  const [conflicts, setConflicts] = useState<ConflictPair[]>([]);
+
+  const pullMerge = async (user: CloudUser): Promise<void> => {
+    if (pullingRef.current) return;
+    pullingRef.current = true;
+    try {
+      lastPullRef.current = Date.now();
+      const cloud = await fetchCloudDocs(user.uid);
+      const tombs = loadTombstones();
+      const prevBase = loadSyncBase();
+      const { roster, pushRecords, pushTombstoneIds, conflicts: found, nextBase } = mergeRosters(recordsRef.current, tombs, cloud, prevBase);
+      if (!rosterEqual(recordsRef.current, roster)) setRecords(roster);
+      setConflicts(found);
+
+      // A merge can resurrect a locally-deleted character (edit-beats-delete) — drop its tombstone.
+      const liveTombs = { ...tombs };
+      let tombsChanged = false;
+      roster.forEach((r) => {
+        if (r.id in liveTombs) {
+          delete liveTombs[r.id];
+          tombsChanged = true;
+        }
+      });
+      if (tombsChanged) saveTombstones(liveTombs);
+
+      // Persist the base conservatively: ids we still need to push keep their OLD base until the
+      // push lands — otherwise a failed push would read as "in sync" and the cloud could later
+      // fast-forward over an unpushed local edit.
+      const pendingIds = new Set<string>([...pushRecords.map((r) => r.id), ...pushTombstoneIds]);
+      const safeBase = { ...nextBase };
+      pendingIds.forEach((id) => {
+        if (prevBase[id] !== undefined) safeBase[id] = prevBase[id];
+        else delete safeBase[id];
+      });
+      saveSyncBase(safeBase);
+      await pushToCloud(user.uid, pushRecords, liveTombs, pushTombstoneIds);
+      saveSyncBase(nextBase);
+    } finally {
+      pullingRef.current = false;
+    }
+  };
+
+  // Visibility/focus refresh: push out local dirt first so the merge compares settled state, then
+  // pull. Throttled so rapid tab/app switching doesn't spam Firestore reads.
+  const refreshFromCloud = async (): Promise<void> => {
+    const user = userRef.current;
+    if (!user || Date.now() - lastPullRef.current < 15000) return;
+    try {
+      await flushPush();
+      await pullMerge(user);
+      setSync((s) => (s.status === "error" ? { ...s, status: "on" } : s));
+    } catch (e) {
+      console.error("Google sync refresh failed", e);
+    }
   };
 
   const connect = async (interactive: boolean): Promise<void> => {
@@ -108,7 +176,7 @@ export function useRoster(): RosterApi {
         return;
       }
       userRef.current = user;
-      await runInitialSync(user);
+      await pullMerge(user);
       setSyncFlag(true);
       setSync({ status: "on", email: user.email });
     } catch (e) {
@@ -120,11 +188,17 @@ export function useRoster(): RosterApi {
 
   useEffect(() => {
     if (syncFlagOn()) void connect(false);
-    const onHide = () => {
+    const onVisibility = () => {
       if (document.visibilityState === "hidden") void flushPush();
+      else void refreshFromCloud();
     };
-    document.addEventListener("visibilitychange", onHide);
-    return () => document.removeEventListener("visibilitychange", onHide);
+    const onFocus = () => void refreshFromCloud();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -133,14 +207,17 @@ export function useRoster(): RosterApi {
     void connect(true);
   };
 
+  // Disabling sync only stops syncing — it does NOT sign out of Firebase. The session is shared
+  // with the edge-gate login (and its cookie refresh), and keeping it also makes re-enabling sync
+  // instant, with no popup. Real sign-out is the logout button.
   const disable = (): void => {
     setSyncFlag(false);
     userRef.current = null;
     if (pushTimerRef.current !== null) window.clearTimeout(pushTimerRef.current);
     dirtyIdsRef.current = new Set();
     deletedIdsRef.current = new Set();
+    setConflicts([]);
     setSync({ status: "off", email: null });
-    void signOutCloud().catch(() => {});
   };
 
   const get = (id: string) => records.find((r) => r.id === id);
@@ -177,5 +254,41 @@ export function useRoster(): RosterApi {
     schedulePush();
   };
 
-  return { records, get, upsert, remove, duplicate, sync: { status: sync.status, email: sync.email, enable, disable } };
+  const resolveConflict = (id: string, choice: ConflictChoice) => {
+    const c = conflicts.find((x) => x.id === id);
+    if (!c) return;
+    setConflicts((cs) => cs.filter((x) => x.id !== id));
+    if (choice === "cloud") {
+      // Adopt the cloud version as-is: nothing to upload, we're simply in sync at its timestamp.
+      setRecords((rs) => rs.map((r) => (r.id === id ? c.cloud : r)));
+      bumpSyncBase({ [id]: c.cloud.updatedAt ?? 0 });
+      return;
+    }
+    // Keeping (also) the local version is itself an edit: re-stamp it so every other device
+    // fast-forwards to the resolution instead of re-detecting the same conflict.
+    const keptLocal = { ...c.local, updatedAt: Date.now() };
+    dirtyIdsRef.current.add(id);
+    if (choice === "local") {
+      setRecords((rs) => rs.map((r) => (r.id === id ? keptLocal : r)));
+    } else {
+      const copy = { ...clone(c.cloud), id: genId(), name: `${c.cloud.name} (felhő)`, updatedAt: Date.now() };
+      dirtyIdsRef.current.add(copy.id);
+      setRecords((rs) => [...rs.map((r) => (r.id === id ? keptLocal : r)), copy]);
+    }
+    schedulePush();
+  };
+
+  const dismissConflicts = () => setConflicts([]);
+
+  return {
+    records,
+    get,
+    upsert,
+    remove,
+    duplicate,
+    sync: { status: sync.status, email: sync.email, enable, disable },
+    conflicts,
+    resolveConflict,
+    dismissConflicts,
+  };
 }

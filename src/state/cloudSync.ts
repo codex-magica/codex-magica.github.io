@@ -8,7 +8,7 @@
 
 import { CharacterRecord } from "../model/character";
 import { getFirebase } from "./firebase";
-import { Tombstones, migrateRecord } from "./storage";
+import { SyncBase, Tombstones, migrateRecord } from "./storage";
 
 export interface CloudUser {
   uid: string;
@@ -23,18 +23,30 @@ interface CloudDoc {
   json?: string; // absent on tombstone docs
 }
 
+export interface ConflictPair {
+  id: string;
+  local: CharacterRecord; // this device's version (kept on screen while the user decides)
+  cloud: CharacterRecord; // the other device's version
+}
+
 export interface MergeResult {
   roster: CharacterRecord[]; // what the local roster should become
   pushRecords: CharacterRecord[]; // local characters that won and must be uploaded
   pushTombstoneIds: string[]; // local deletions that won and must be uploaded
+  conflicts: ConflictPair[]; // both sides changed since the common ancestor — user must decide
+  nextBase: SyncBase; // the base map to persist once this merge (and its pushes) settle
 }
 
 const toUser = (u: { uid: string; email: string | null }): CloudUser => ({ uid: u.uid, email: u.email });
 
-// Interactive sign-in — the one-time popup. Throws if the user closes it.
+// Interactive sign-in. Waits for the persisted session to restore first — right after page load
+// auth.currentUser is still null while IndexedDB is read, and checking it synchronously would open
+// a popup that flashes and auto-closes. The popup only opens when there is truly no session (the
+// genuine first sign-in on this device). Throws if the user closes it.
 export const signInInteractive = async (): Promise<CloudUser> => {
+  const existing = await restoreSession();
+  if (existing) return existing;
   const { auth, authMod } = await getFirebase();
-  if (auth.currentUser) return toUser(auth.currentUser);
   const cred = await authMod.signInWithPopup(auth, new authMod.GoogleAuthProvider());
   return toUser(cred.user);
 };
@@ -79,9 +91,16 @@ const parseCloudRecord = (id: string, cdoc: CloudDoc): CharacterRecord | null =>
   }
 };
 
-// Per-character last-write-wins across three sources: local records, local tombstones, cloud docs.
-// Ties go to the cloud (nothing to upload). A corrupt/unparseable cloud doc never deletes local data.
-export const mergeRosters = (local: CharacterRecord[], tombstones: Tombstones, cloud: Map<string, CloudDoc>): MergeResult => {
+// Three-way merge per character, against the recorded common ancestor (`base`):
+//   - only the cloud moved → fast-forward silently (the everyday "other device edited" case)
+//   - only this device moved → push silently
+//   - both moved → record vs record is a ConflictPair for the user to resolve;
+//                  edit vs delete auto-resolves in favor of the edit (no data loss);
+//   - no base recorded (pre-existing data / first sync here) → legacy last-write-wins,
+//     and the winner seeds the base so future merges are three-way.
+// A corrupt/unparseable cloud doc never deletes local data. Conflicted ids stay at their old base
+// (and keep the local version on screen) until the user decides.
+export const mergeRosters = (local: CharacterRecord[], tombstones: Tombstones, cloud: Map<string, CloudDoc>, base: SyncBase): MergeResult => {
   const localById = new Map(local.map((r) => [r.id, r]));
   const ids = new Set<string>();
   local.forEach((r) => ids.add(r.id));
@@ -91,35 +110,115 @@ export const mergeRosters = (local: CharacterRecord[], tombstones: Tombstones, c
   const roster: CharacterRecord[] = [];
   const pushRecords: CharacterRecord[] = [];
   const pushTombstoneIds: string[] = [];
+  const conflicts: ConflictPair[] = [];
+  const nextBase: SyncBase = {};
 
   ids.forEach((id) => {
     const rec = localById.get(id);
     // A live local record outranks its own leftover tombstone (it was re-created after deletion).
     const localTs = rec ? rec.updatedAt ?? 0 : tombstones[id] ?? 0;
     const cdoc = cloud.get(id);
+    const b = base[id];
 
-    if (cdoc && cdoc.updatedAt >= localTs) {
-      if (cdoc.deleted) return; // cloud deletion wins → drop locally
-      const parsed = parseCloudRecord(id, cdoc);
-      if (parsed) {
-        roster.push(parsed);
-        return;
+    if (!cdoc) {
+      if (rec) {
+        roster.push(rec);
+        pushRecords.push(rec);
+        nextBase[id] = localTs;
       }
-      // fall through: cloud doc is corrupt — treat local as the winner
+      return; // tombstone-only: nothing exists anywhere anymore
     }
 
-    if (rec) {
+    const cloudTs = cdoc.updatedAt;
+    const cloudRec = cdoc.deleted ? null : parseCloudRecord(id, cdoc);
+
+    if (!cdoc.deleted && !cloudRec) {
+      // corrupt cloud doc — local (record or deletion) overwrites it
+      if (rec) {
+        roster.push(rec);
+        pushRecords.push(rec);
+        nextBase[id] = localTs;
+      } else if (tombstones[id]) {
+        pushTombstoneIds.push(id);
+        nextBase[id] = localTs;
+      }
+      return;
+    }
+
+    if (b === undefined) {
+      // no common ancestor known → legacy last-write-wins (ties go to the cloud)
+      if (cloudTs >= localTs) {
+        if (!cdoc.deleted) {
+          roster.push(cloudRec!);
+          nextBase[id] = cloudTs;
+        }
+      } else if (rec) {
+        roster.push(rec);
+        pushRecords.push(rec);
+        nextBase[id] = localTs;
+      } else {
+        pushTombstoneIds.push(id);
+        nextBase[id] = localTs;
+      }
+      return;
+    }
+
+    const localChanged = localTs !== b;
+    const cloudChanged = cloudTs !== b;
+
+    if (!localChanged && !cloudChanged) {
+      if (rec) {
+        roster.push(rec);
+        nextBase[id] = b;
+      }
+      return;
+    }
+    if (!localChanged) {
+      // fast-forward to the cloud (deletion included)
+      if (!cdoc.deleted) {
+        roster.push(cloudRec!);
+        nextBase[id] = cloudTs;
+      }
+      return;
+    }
+    if (!cloudChanged) {
+      // only this device moved → push (record or deletion)
+      if (rec) {
+        roster.push(rec);
+        pushRecords.push(rec);
+        nextBase[id] = localTs;
+      } else {
+        pushTombstoneIds.push(id);
+        nextBase[id] = localTs;
+      }
+      return;
+    }
+
+    // both sides moved since the base
+    if (!rec && cdoc.deleted) return; // deleted on both — they agree
+    if (!rec) {
+      // deleted here, edited elsewhere → the edit wins (resurrect; caller clears the tombstone)
+      roster.push(cloudRec!);
+      nextBase[id] = cloudTs;
+      return;
+    }
+    if (cdoc.deleted) {
+      // edited here, deleted elsewhere → the edit wins
       roster.push(rec);
       pushRecords.push(rec);
-    } else if (cdoc && !cdoc.deleted) {
-      pushTombstoneIds.push(id); // deleted locally after the cloud copy was written
+      nextBase[id] = localTs;
+      return;
     }
+    // record vs record: genuine conflict — keep local on screen, let the user decide
+    roster.push(rec);
+    conflicts.push({ id, local: rec, cloud: cloudRec! });
+    nextBase[id] = b;
   });
 
   // Keep local ordering stable: existing local order first, cloud-only additions appended.
   const order = new Map(local.map((r, i) => [r.id, i]));
-  roster.sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9));
-  return { roster, pushRecords, pushTombstoneIds };
+  roster.sort((a, b2) => (order.get(a.id) ?? 1e9) - (order.get(b2.id) ?? 1e9));
+  return { roster, pushRecords, pushTombstoneIds, conflicts, nextBase };
 };
 
 const recordDoc = (r: CharacterRecord): CloudDoc => ({

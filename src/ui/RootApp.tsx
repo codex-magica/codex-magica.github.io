@@ -4,6 +4,7 @@ import { initAuthCookieRefresh } from "../state/authCookie";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
+import { SyncConflictModal } from "./SyncConflictModal";
 import { useRoster } from "../state/useRoster";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
@@ -65,6 +66,16 @@ export const RootApp: React.FC = () => {
           initialRecord={creator.record}
           onClose={() => setCreator(null)}
           onCommit={commit}
+        />
+      )}
+
+      {/* Sync conflicts are global: a focus-refresh can detect one on any screen. One at a time. */}
+      {roster.conflicts.length > 0 && !creator && (
+        <SyncConflictModal
+          conflict={roster.conflicts[0]}
+          remaining={roster.conflicts.length}
+          onResolve={(choice) => roster.resolveConflict(roster.conflicts[0].id, choice)}
+          onClose={roster.dismissConflicts}
         />
       )}
     </>
