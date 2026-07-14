@@ -1,7 +1,7 @@
 import { Stat, Stats } from "../model/attributes";
 import { CombatChannel, Pool, Resource } from "../model/effects";
 import { InventoryItem, VitalKey } from "../model/character";
-import { Discount } from "./skillCost";
+import { Discount, SkillScope } from "./skillCost";
 
 export interface Contribution {
   source: string;
@@ -44,6 +44,20 @@ export interface SpellView {
 
 export type DerivedKeyOut = "Ép" | "Fp" | "MME" | "AME" | "Sebzésbónusz" | "Mozgás";
 
+// One KAP-relevant operation in the build ledger, as the engine actually charged it. The ledger view
+// renders these directly — no string keys to reconstruct on the UI side.
+export interface LedgerEntry {
+  level: number;
+  kind: "skill" | "alloc" | "hm" | "ghm" | "stat";
+  // Within-level identity: alloc → the resource target; hm/ghm → the channel; stat → `${stat}:${source}`;
+  // skill → the engine's stable instance key (matching is by `idx` though, not this).
+  id: string;
+  idx?: number; // skill entries: the purchase's position within that level's skillPurchases
+  cost: number; // KAP charged (0 = free, e.g. granted HM, km/race stat increases)
+  before: number; // the affected running value, before → after (alloc/hm re-based onto the final total)
+  after: number;
+}
+
 export interface DerivedCharacter {
   level: number;
   baseStats: Stats;
@@ -66,9 +80,8 @@ export interface DerivedCharacter {
   // Non-variant purchases that raise nothing (to ≤ inherited) — auto-pruned so no phantom purchases linger.
   // `idx` pins the exact entry in that level's skillPurchases (same-key twins must not be co-deleted).
   redundantPurchases: { level: number; idx: number; skill: string; subtype?: string }[];
-  teaching: Record<string, number>; // skill name → best teacher (oktatás) level, ignoring subtype scoping
   teachingDiscounts: Discount[]; // raw active teacher discounts (subtype-aware) — for per-branch teacher/cost
-  costMultipliers: { skill?: string; category?: string; allSkills?: boolean; factor: number }[]; // school Kp-cost penalties (Barbár ×1.5) — the UI must show the multiplied cost
+  costMultipliers: (SkillScope & { factor: number })[]; // school Kp-cost penalties (Barbár ×1.5) — the UI must show the multiplied cost
   spells: SpellView[];
   // Special abilities (tag grants). `source` is the human-readable origin ("Faj: Elf", "Kaszt: Harcos",
   // "Háttér: …") the sheet groups by; `atLevel` (>1) is the level the ability activates at.
@@ -78,10 +91,8 @@ export interface DerivedCharacter {
   inventory: InventoryItem[];
   provenance: Record<string, Contribution[]>;
   diagnostics: Diagnostic[];
-  // KAP charged per ledger operation, keyed `L{lvl}:{kind}:{id}` (skill/alloc/hm/stat) — for the ledger view.
-  ledgerCosts: Record<string, number>;
-  // The running value an operation changed, before → after (same keys as ledgerCosts).
-  ledgerDelta: Record<string, { before: number; after: number }>;
+  // Every KAP-relevant operation, in fold order — drives the ledger view.
+  ledger: LedgerEntry[];
   // Resources granted by skills at their current fok (fok 3→+1, 4→+2, 5→+3), PER LEVEL (indexed by level−1) —
   // the amount scales with the skill's fok, so it grows as the skill is raised across levels. Drives the
   // Szintlépési nyereségek panel; HM grants are distributed via grantedHmAssignments, the rest fold into pools/Fp.

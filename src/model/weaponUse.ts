@@ -7,7 +7,7 @@
 //   fok 3 — +2 KÉ, +5 TÉ/VÉ/CÉ (weapon-SPECIFIC: only the instance named for this weapon counts)
 //   fok 4+ — +5 KÉ, +10 TÉ/VÉ/CÉ (not cumulative with fok 3); fok 5 also +1 Sp damage
 
-import { WeaponInfo, WeaponValues } from "../data/weapons";
+import { WeaponInfo, WeaponValues, baseWeaponName } from "../data/weapons";
 import { SKILL_BY_NAME } from "./skills";
 
 // Minimal structural view of an owned skill instance (the engine's OwnedSkill satisfies it).
@@ -22,9 +22,7 @@ const NO_BONUS = { ke: 0, te: 0, ve: 0, ce: 0 };
 const TIER3 = { ke: 2, te: 5, ve: 5, ce: 5 };
 const TIER4 = { ke: 5, te: 10, ve: 10, ce: 10 };
 
-// Same normalization the skill catalog uses for branch children: a trailing "(...)" variant collapses
-// to the base weapon.
-const baseName = (n: string) => n.replace(/\s*\([^)]*\)\s*$/, "").trim().toLowerCase();
+const baseName = (n: string) => baseWeaponName(n).toLowerCase();
 const wnum = (v: number | string | undefined): number => {
   if (typeof v === "number") return v;
   const m = String(v ?? "").match(/-?\d+/);
@@ -54,6 +52,71 @@ export interface WeaponUse {
 }
 
 export const weaponByName = (name: string): WeaponInfo | undefined => WeaponValues.find((w) => w.name === name);
+
+// The built-in, non-removable first weapon row: bare hands (Pusztakezes harc governs it).
+export const FIST = "pusztakezes harc";
+
+// One row of the sheet's Harcértékek weapon list: the resolved training + the weapon-adjusted damage
+// string + the calculator payload for the melee/ranged weapon modal.
+export interface WeaponRowView {
+  w: WeaponInfo;
+  use: WeaponUse;
+  dmg: string;
+  modal:
+    | { kind: "melee"; name: string; dmg: string; baseKE: number; baseTE: number; baseVE: number }
+    | { kind: "ranged"; name: string; dmg: string; range?: string; baseCE: number };
+}
+
+// Build the weapon rows for the sheet: the fist row first (always), then the pinned weapons. Pure
+// weapon-math — the melee damage bonus and the weapon-adjusted calculator base values live here, next
+// to resolveWeaponUse, so the sheet component only renders.
+export function buildWeaponRows(
+  pinned: string[],
+  skills: SkillView[],
+  combat: { KÉ: number; TÉ: number; VÉ: number; CÉ: number },
+  sebzesBonus: number
+): WeaponRowView[] {
+  return [FIST, ...pinned]
+    .map((name) => weaponByName(name))
+    .filter((w): w is WeaponInfo => w != null)
+    .map((w) => {
+      const use = resolveWeaponUse(w, skills);
+      const melee = use.kind === "melee";
+      const dmgPlus = use.dmgBonus + (melee ? sebzesBonus : 0);
+      const dmg = `${use.baseDmg}${dmgPlus > 0 ? ` +${dmgPlus}` : ""}`;
+      const modal = melee
+        ? { kind: "melee" as const, name: w.name, dmg, baseKE: combat.KÉ + use.ke, baseTE: combat.TÉ + use.te, baseVE: combat.VÉ + use.ve }
+        : { kind: "ranged" as const, name: w.name, dmg, range: w.range, baseCE: combat.CÉ + use.ce };
+      return { w, use, dmg, modal };
+    });
+}
+
+// "Pusztakezes harc 2. fok" would repeat the fist row's name — collapse to "2. fok" there.
+export const masteryLabel = (r: WeaponRowView): string =>
+  r.use.fok === 0 ? "képzetlen" : r.use.skillLabel.toLowerCase() === r.w.name.toLowerCase() ? `${r.use.fok}. fok` : `${r.use.skillLabel} ${r.use.fok}. fok`;
+
+const USE_KEY = { KÉ: "ke", TÉ: "te", VÉ: "ve", CÉ: "ce" } as const;
+export type CombatKey = keyof typeof USE_KEY;
+export const weaponUseKey = (k: CombatKey) => USE_KEY[k];
+
+// Breakdown lines the combat-info modal appends in weapon mode (weapon value + mastery bonus, itemized).
+export function weaponExtraFor(row: WeaponRowView | undefined, k: string): { label: string; amount: number }[] | undefined {
+  if (!row || !(k in USE_KEY)) return undefined;
+  const uk = USE_KEY[k as CombatKey];
+  return [
+    { label: row.w.name, amount: row.use.weaponVals[uk] },
+    { label: `${row.use.skillLabel} ${row.use.fok}. fok`, amount: row.use.masteryVals[uk] },
+  ];
+}
+
+// Grouped add-picker options; already-pinned weapons and the built-in fist row removed.
+export const weaponPickerGroups = (pinned: string[]): { group: string; items: WeaponInfo[] }[] =>
+  Array.from(new Set(WeaponValues.map((w) => w.subType)))
+    .map((g) => ({
+      group: g,
+      items: WeaponValues.filter((w) => w.subType === g && w.name !== FIST && !pinned.includes(w.name)),
+    }))
+    .filter((g) => g.items.length > 0);
 
 // Untrained damage: −1 per die (book ch.17, "kockadobásonként 1 ponttal kevesebbet, de legalább 1 Sp")
 // folded into an NkM(+X) dice expression; non-dice damage strings get a textual suffix instead.

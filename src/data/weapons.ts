@@ -22,6 +22,11 @@ export interface WeaponInfo {
   description: string | string[];
 }
 
+// A trailing "(...)" variant (e.g. "elf íj (lélektelen)") collapses to the base weapon — for training
+// purposes it's the same weapon. The skill catalog's branch children and the sheet's weapon resolution
+// MUST use the same normalization, so it lives here next to the data.
+export const baseWeaponName = (n: string): string => n.replace(/\s*\([^)]*\)\s*$/, "").trim();
+
 export const WeaponValues: WeaponInfo[] = [
   {
     name: "pusztakezes harc",

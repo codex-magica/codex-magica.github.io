@@ -5,7 +5,7 @@ import { CharacterSheet } from "./CharacterSheet";
 import { Compendium } from "./Compendium";
 import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
-import { skillModalBody, skillModalSub, spellModalByName } from "./compendiumData";
+import { skillModalContent, spellModalByName } from "./compendiumData";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
@@ -54,11 +54,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   // Same modal content the compendium shows, plus a character-aware strip and (for fok skills) the
   // current fok so the modal greys out the levels the character hasn't reached yet.
   const openSkillModal = (name: string, fok: number, percent?: number | null) =>
-    setModal({
-      kind: "skill", name, sub: skillModalSub(name), body: skillModalBody(name),
-      levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
-      currentFok: percent == null && fok > 0 ? fok : undefined,
-    });
+    setModal(skillModalContent(name, { fok, percent }));
   const openSpellModal = (name: string) => {
     const sp = spellModalByName(name);
     setModal({ kind: "spell", name, sub: sp?.sub, body: sp?.body || [] });

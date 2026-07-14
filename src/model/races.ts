@@ -3,7 +3,7 @@
 
 import { Stats } from "./attributes";
 import { GrantEntry, grant } from "./effects";
-import { SkillFok } from "./common";
+import { teachAt, teachCat, teachSub } from "./grantDsl";
 
 export interface AgeCategory {
   name: string;
@@ -22,13 +22,8 @@ export interface RaceDef {
 // the full age table (with stat penalties for old age etc.) later.
 const adult: AgeCategory[] = [{ name: "Ifjúkor", statMods: {} }];
 
-// Innate racial teaching talent: the listed skills are learned as if from an `uptoLevel`-fok teacher
-// (a (fok − 2) Kp/fok discount up to that fok — e.g. fok 3 → 1 Kp up to 3, fok 4 → 2 Kp up to 4).
-const teach = (uptoLevel: SkillFok, ...skills: string[]): GrantEntry[] =>
-  skills.map((skill) => grant({ kind: "teachingDiscount", skill, uptoLevel }));
-// Teacher scoped to ONE branch of a skill (e.g. Vadonjárás(erdő) only, not Vadonjárás in general).
-const teachSub = (uptoLevel: SkillFok, skill: string, subtype: string): GrantEntry =>
-  grant({ kind: "teachingDiscount", skill, subtype, uptoLevel });
+// Innate racial teaching talent = the shared teachAt/teachSub DSL: the listed skills are learned as if
+// from an `uptoLevel`-fok teacher (a (fok − 2) Kp/fok discount up to that fok).
 
 export const RACES: Record<string, RaceDef> = {
   Ember: {
@@ -48,8 +43,8 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Infralátás" }),
       grant({ kind: "tag", tag: "Erős nekromancia érzékenység" }),
       grant({ kind: "combatBonus", channel: "CÉ", amount: 10 }),
-      ...teach(4, "Állatismeret", "Idomítás", "Lovaglás"),
-      teachSub(4, "Vadonjárás", "erdő"),
+      ...teachAt(4, "Állatismeret", "Idomítás", "Lovaglás"),
+      teachSub("Vadonjárás", "erdő", 4),
     ],
     ageCategories: adult,
   },
@@ -63,8 +58,8 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Infralátás" }),
       grant({ kind: "tag", tag: "Gyenge nekromancia érzékenység" }),
       grant({ kind: "combatBonus", channel: "CÉ", amount: 5 }),
-      ...teach(3, "Állatismeret", "Idomítás", "Lovaglás"),
-      teachSub(3, "Vadonjárás", "erdő"),
+      ...teachAt(3, "Állatismeret", "Idomítás", "Lovaglás"),
+      teachSub("Vadonjárás", "erdő", 3),
     ],
     ageCategories: adult,
   },
@@ -83,8 +78,8 @@ export const RACES: Record<string, RaceDef> = {
       grant({ kind: "tag", tag: "Infralátás" }),
       grant({ kind: "tag", tag: "Idő és irányérzék" }),
       grant({ kind: "tag", tag: "Archeológiai érzék" }),
-      ...teach(4, "Építészet", "Térképészet", "Mechanika", "Szakma"),
-      teachSub(4, "Művészetek", "szobrászat"),
+      ...teachAt(4, "Építészet", "Térképészet", "Mechanika", "Szakma"),
+      teachSub("Művészetek", "szobrászat", 4),
     ],
     ageCategories: adult,
   },
@@ -92,7 +87,7 @@ export const RACES: Record<string, RaceDef> = {
     name: "Kyr Származék",
     cost: 1,
     statLimits: { Erő: 17, Gyorsaság: 18, Ügyesség: 18, Állóképesség: 17, Egészség: 17, Karizma: 19, Intelligencia: 19, Akaraterő: 18, Asztrál: 19, Érzékelés: 18 },
-    grants: [grant({ kind: "teachingDiscount", category: "Szociális", uptoLevel: 4 })],
+    grants: teachCat(4, "Szociális"),
     ageCategories: adult,
   },
 };

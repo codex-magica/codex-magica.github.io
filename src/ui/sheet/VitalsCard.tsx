@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Box, Heading, HStack, Text } from "@chakra-ui/react";
+import { Box, HStack, Text } from "@chakra-ui/react";
 import { VitalKey } from "../../model/character";
 import { VIT_TOKEN } from "../../model/vitals";
-import { ModalShell, ModalHeader } from "../Modal";
-import { NumPad } from "../NumPad";
+import { NumPadDialog } from "./NumPadDialog";
 import { Card, SecHead, Empty } from "./primitives";
 
 export interface VitalRow { key: VitalKey; label: string; kind: string; cur: number; max: number }
@@ -12,31 +11,25 @@ const pct = (cur: number, max: number) => (max > 0 ? Math.max(0, Math.min(100, (
 
 // heal/damage (Ép, Fp) · use/gain (Mana, Kegy, Pszi) calculator
 const VitalModal: React.FC<{ v: VitalRow; onSetCur: (n: number) => void; onClose: () => void }> = ({ v, onSetCur, onClose }) => {
-  const [amount, setAmount] = useState("");
-  const amt = parseInt(amount, 10) || 0;
   const healable = v.kind === "hp" || v.kind === "fp";
-  const downLabel = healable ? "− Sebzés" : "− Felhasználás";
-  const upLabel = healable ? "+ Gyógyítás" : "+ Visszanyerés";
   const set = (n: number) => onSetCur(Math.max(0, Math.min(n, v.max)));
-  const apply = (mode: "heal" | "damage") => { if (amt <= 0) return; set(mode === "heal" ? v.cur + amt : v.cur - amt); setAmount(""); };
-
   return (
-    <ModalShell onClose={onClose} width="min(360px, 100%)">
-      <ModalHeader onClose={onClose} pt={{ base: "14px", md: "18px" }} pb={{ base: "10px", md: "13px" }}>
-        <Heading as="h3" fontSize={{ base: "18px", md: "20px" }} fontWeight={700} color="fg">{v.label}</Heading>
-        <Text mt="2px" fontSize={{ base: "19px", md: "22px" }} fontWeight={700} color={v.cur === 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>{v.cur} / {v.max}</Text>
-      </ModalHeader>
-      <Box flex="1 1 auto" overflowY="auto" px="20px" pt={{ base: "10px", md: "14px" }} pb={{ base: "14px", md: "20px" }}>
-        <Box h={{ base: "8px", md: "9px" }} borderRadius="3px" bg="vitTrack" overflow="hidden" mb={{ base: "10px", md: "14px" }}><Box h="100%" w={`${pct(v.cur, v.max)}%`} bg={VIT_TOKEN[v.kind]} borderRadius="3px" transition="width .3s" /></Box>
-        <NumPad value={amount} onChange={setAmount} />
-        {/* decrease (damage/use) is the more common action → it sits on the right, under the thumb */}
-        <HStack gap="9px" mt={{ base: "9px", md: "12px" }}>
-          <Box as="button" type="button" onClick={() => apply("heal")} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="good" bg="transparent" color="good" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45} _hover={amt > 0 ? { bg: "accentSoft" } : undefined}>{upLabel}</Box>
-          <Box as="button" type="button" onClick={() => apply("damage")} flex="1" py={{ base: "9px", md: "11px" }} borderRadius="9px" border="1px solid" borderColor="bad" bg="transparent" color="bad" fontWeight={700} fontSize="15px" opacity={amt > 0 ? 1 : 0.45} _hover={amt > 0 ? { bg: "accentSoft" } : undefined}>{downLabel}</Box>
-        </HStack>
-        <Box as="button" type="button" onClick={() => set(v.max)} w="100%" mt={{ base: "8px", md: "10px" }} py={{ base: "8px", md: "9px" }} borderRadius="9px" border="1px solid" borderColor="fieldBd" bg="fieldBg" color="accentTx" fontWeight={600} fontSize="14px" _hover={{ borderColor: "accent" }}>Teljes feltöltés</Box>
-      </Box>
-    </ModalShell>
+    <NumPadDialog
+      title={v.label}
+      readout={<Text as="span" color={v.cur === 0 ? "bad" : "accentTx"}>{v.cur} / {v.max}</Text>}
+      topContent={
+        <Box h={{ base: "8px", md: "9px" }} borderRadius="3px" bg="vitTrack" overflow="hidden" mb={{ base: "10px", md: "14px" }}>
+          <Box h="100%" w={`${pct(v.cur, v.max)}%`} bg={VIT_TOKEN[v.kind]} borderRadius="3px" transition="width .3s" />
+        </Box>
+      }
+      upLabel={healable ? "+ Gyógyítás" : "+ Visszanyerés"}
+      downLabel={healable ? "− Sebzés" : "− Felhasználás"}
+      onUp={(amt) => set(v.cur + amt)}
+      onDown={(amt) => set(v.cur - amt)}
+      tertiaryLabel={() => "Teljes feltöltés"}
+      onTertiary={() => set(v.max)}
+      onClose={onClose}
+    />
   );
 };
 

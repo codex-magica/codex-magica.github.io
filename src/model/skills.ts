@@ -6,8 +6,8 @@
 
 import { Stat, STAT_BY_SHORT } from "./attributes";
 import { Effect, GrantEntry, grant } from "./effects";
-import { SkillCategory, SkillDifficulty, SkillFok, SkillRef } from "./common";
-import { WeaponValues } from "../data/weapons";
+import { DEITIES, SkillCategory, SkillDifficulty, SkillFok, SkillRef } from "./common";
+import { WeaponValues, baseWeaponName } from "../data/weapons";
 
 export type SkillCost = number[] | "percentage"; // cumulative Kp per fok (length 5), or %-based
 
@@ -45,8 +45,12 @@ export interface SkillDef {
   perFokEffects?: Partial<Record<SkillFok, Effect[]>>;
   branch?: BranchLevel[]; // branching structure; absent ⇒ non-branchable
   fokTriggers?: FokTrigger[]; // choices forced at a fok
-  subtypes?: string[]; // DEPRECATED (kept for the not-yet-migrated UI/engine); derived from branch[0]
 }
+
+// Enumerated subtype options (a fixed first branch level, e.g. Vallásismeret deities, Fegyverhasználat
+// categories). undefined ⇒ free-form or non-branchable. Instances of such skills MUST pick a subtype.
+export const fixedSubtypesOf = (def: SkillDef | undefined): string[] | undefined =>
+  def?.branch?.[0]?.source === "fixed" ? def.branch[0].options?.map((o) => o.name) : undefined;
 
 // Default cumulative cost curves by difficulty (book ch.16). Used unless a skill overrides.
 export const TIER_COST: Record<SkillDifficulty, number[]> = {
@@ -92,7 +96,6 @@ const build = (r: Raw): SkillDef => ({
     ? [{ label: "altípus", source: "fixed", options: r.subtypes.map((name) => ({ name })) }]
     : r.pct ? undefined : [{ label: "altípus", source: "open", optional: true }]),
   fokTriggers: r.fokTriggers,
-  subtypes: r.subtypes ?? (r.branch?.[0]?.source === "fixed" ? r.branch[0].options?.map((o) => o.name) : undefined),
 });
 
 // Weapon-group categories for Fegyverhasználat: fok 1–2 at the group, then branch to a specific weapon
@@ -105,7 +108,7 @@ const wpn = (...subTypes: string[]): string[] => {
   const out: string[] = [];
   for (const w of WeaponValues) {
     if (!subTypes.includes(w.subType)) continue;
-    const name = w.name.replace(/\s*\([^)]*\)\s*$/, "").trim();
+    const name = baseWeaponName(w.name);
     if (!seen.has(name)) { seen.add(name); out.push(name); }
   }
   return out;
@@ -214,7 +217,7 @@ const RAW: Raw[] = [
   {
     name: "Vallásismeret", cat: "Tudományos", diff: "II", attrs: ["Int", "Aszt"], hard: ["Kultúra"],
     // Subtype = the deity; a priest's Vallásismeret(deity) opens that god's szakrális prayers.
-    subtypes: ["Arel", "Darton", "Domvik", "Dreina", "Krad", "Kyel", "Ranagol", "Sogron", "Tharr", "Uwel"],
+    subtypes: [...DEITIES],
     // Fok 3+ grants Kegy per level (needs the Kegyelt pool), plus per-level TME from faith.
     perFok: {
       3: [
@@ -294,9 +297,6 @@ export const SKILL_BY_NAME: Record<string, SkillDef> = SKILLS.reduce(
   },
   {} as Record<string, SkillDef>
 );
-
-export const isPercentageSkill = (name: string): boolean =>
-  SKILL_BY_NAME[name]?.cost === "percentage";
 
 // Convenience used by grants when a class/race teaches a starting skill.
 export const taughtSkill = (

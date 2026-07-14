@@ -6,11 +6,30 @@ const theme = extendTheme({
   },
   fonts: {
     body: 'Warnock, sans-serif',
+    // UI micro-text (labels, captions, chips) — the serif is for content, system-ui for chrome.
+    ui: 'system-ui',
+  },
+  textStyles: {
+    // The uppercase overline label used by panel sub-headers, popover titles, nav sections, table
+    // headers… Use `textStyle="overline"` + a color; override fontSize/letterSpacing where a variant
+    // genuinely differs.
+    overline: {
+      fontFamily: 'ui',
+      fontSize: '10px',
+      fontWeight: 700,
+      letterSpacing: '.09em',
+      textTransform: 'uppercase',
+    },
+  },
+  shadows: {
+    popover: '0 16px 40px rgba(0,0,0,.32)',
+    modal: '0 24px 64px rgba(0,0,0,.42)',
   },
   semanticTokens: {
     colors: {
       // "Sima pergamen + Halk" design system (handover) — warm parchment, OKLCH light/dark pairs.
       page: { default: 'oklch(0.95 0.006 250)', _dark: 'oklch(0.205 0.016 258)' },
+      overlayBg: { default: 'rgba(16,14,24,.55)', _dark: 'rgba(16,14,24,.55)' }, // modal/drawer backdrop dim
       sheet: { default: 'oklch(0.995 0.003 250)', _dark: 'oklch(0.247 0.016 258)' },
       fg: { default: 'oklch(0.28 0.015 258)', _dark: 'oklch(0.92 0.008 250)' },
       // fg-mut is the app's existing "muted" label color.

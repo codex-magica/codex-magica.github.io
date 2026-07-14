@@ -5,21 +5,17 @@ import { SearchIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "./ParchPanel";
 import { ModalState } from "./DetailModal";
 import { Markdown } from "./Markdown";
-import { compNames } from "./sampleData";
-import { tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
-import { MAGIC_RULES, stripTitleHeading } from "../data/magicRules";
-import { combatSituationsIntro } from "../data/combatSituations";
-import { mundaneItemsIntro } from "../data/mundaneItems";
-import { poisonsIntro, poisonRules } from "../data/poisons";
+import { TABS, tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
+import { stripTitleHeading } from "../data/magicRules";
 import { SearchPalette, SearchButton, SearchEntry, prewarmSearchIndex } from "./CompendiumSearch";
-import { skillsRules } from "../data/skillsRules";
+import { OpenBookIcon } from "./icons";
 import { SKILLS } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
 import introMd from "../book/01-bevezeto.md";
 import charMd from "../book/02-karakteralkotas.md";
 
-// rulebook chapters shown via the Markdown renderer; tab indices start at CHAPTER_BASE (after the data tabs)
-const CHAPTER_BASE = 13;
+// rulebook chapters shown via the Markdown renderer; tab indices start right after the data tabs
+const CHAPTER_BASE = TABS.length;
 const CHAPTERS = [
   { name: "Bevezető", md: introMd },
   { name: "Karakteralkotás", md: charMd },
@@ -35,15 +31,8 @@ interface Props {
   mobileTrailing?: React.ReactNode;
 }
 
-// sidebar nav groups (indices into compNames): Képzettségek stands alone, then Harc, Mágia, Felszerelés
-const MAGIC_TABS = [1, 2, 3, 4, 5, 6, 7];
-const GEAR_TABS = [8, 9, 11, 12];
-const COMBAT_TAB = 10;
-const ITEMS_TAB = 11;
-const POISONS_TAB = 12;
-
-// intro paragraph shown under the page heading on tabs that have one
-const TAB_INTROS: Record<number, string> = { [COMBAT_TAB]: combatSituationsIntro, [ITEMS_TAB]: mundaneItemsIntro, [POISONS_TAB]: poisonsIntro };
+// sidebar section order — the tabs themselves come from the TABS registry (standalone items first)
+const NAV_GROUPS = ["Harc", "Mágia", "Felszerelés"] as const;
 
 const NavSection: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Box display="flex" alignItems="center" gap="10px" mt="20px" mb="6px">
@@ -90,9 +79,7 @@ const RulesChip: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <Box as="button" type="button" onClick={onClick} display="inline-flex" alignItems="center" gap="4px" px="9px" py="3px" borderRadius="999px"
     border="1px solid" borderColor="accentBd" bg="accentSoft" color="accentTx" fontFamily="system-ui" fontSize="11px" fontWeight={700} whiteSpace="nowrap"
     flexShrink={0} _hover={{ borderColor: "accent" }}>
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H4z" /><path d="M20 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H20z" />
-    </svg>
+    <OpenBookIcon size={11} />
     Szabályok
   </Box>
 );
@@ -174,16 +161,17 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   }, [compTab, pendingTick]);
 
   const chapter = compTab >= CHAPTER_BASE ? CHAPTERS[compTab - CHAPTER_BASE] : null;
-  const title = compNames[compTab];
-  const isSkills = compTab === 0;
-  const blocks: TableBlock[] = isSkills || chapter ? [] : tabBlocks(compTab);
+  const tab = chapter ? undefined : TABS[compTab];
+  const title = tab?.name ?? "";
+  const isSkills = tab?.special === "skills";
+  const blocks: TableBlock[] = isSkills || !tab ? [] : tabBlocks(compTab);
 
   const openRow = (r: TableRow) => onOpenModal({ kind: "spell", name: r.name, sub: r.modalSub, body: r.body || [] });
 
-  // rules prose for the current school (if any), plus a helper to open it in the markdown modal
-  const schoolRules = MAGIC_RULES[title];
-  // chapter-level rules for the main heading: skills have their own; magic schools use schoolRules
-  const headingRules = isSkills ? skillsRules : compTab === POISONS_TAB ? poisonRules : schoolRules?.rules;
+  // rules prose for the current tab, plus a helper to open it in the markdown modal
+  const schoolRules = tab?.rules;
+  // chapter-level rules for the main heading: the tab's own (skills, poisons) or the school's
+  const headingRules = tab?.headingRules ?? schoolRules?.rules;
   const openRules = (name: string, sub: string, md: string) =>
     onOpenModal({ kind: "rules", name, sub, body: [], markdown: stripTitleHeading(md, name) });
 
@@ -259,13 +247,13 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       {CHAPTERS.map((c, i) => (
         <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => go(CHAPTER_BASE + i)}>{c.name}</NavItem>
       ))}
-      <NavItem active={compTab === 0} onClick={() => go(0)}>{compNames[0]}</NavItem>
-      <NavSection>Harc</NavSection>
-      <NavItem active={compTab === COMBAT_TAB} onClick={() => go(COMBAT_TAB)}>{compNames[COMBAT_TAB]}</NavItem>
-      <NavSection>Mágia</NavSection>
-      {MAGIC_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => go(i)}>{compNames[i]}</NavItem>)}
-      <NavSection>Felszerelés</NavSection>
-      {GEAR_TABS.map((i) => <NavItem key={i} active={compTab === i} onClick={() => go(i)}>{compNames[i]}</NavItem>)}
+      {TABS.map((t, i) => (t.group == null ? <NavItem key={t.name} active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem> : null))}
+      {NAV_GROUPS.map((g) => (
+        <React.Fragment key={g}>
+          <NavSection>{g}</NavSection>
+          {TABS.map((t, i) => (t.group === g ? <NavItem key={t.name} active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem> : null))}
+        </React.Fragment>
+      ))}
     </>
   );
 
@@ -296,7 +284,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
 
       {/* Mobile nav drawer */}
       {navOpen && (
-        <Box display={{ base: "block", md: "none" }} position="fixed" inset={0} zIndex={44} bg="rgba(16,14,24,.55)" animation={`${fadeIn} .18s ease`} onClick={() => setNavOpen(false)}>
+        <Box display={{ base: "block", md: "none" }} position="fixed" inset={0} zIndex={44} bg="overlayBg" animation={`${fadeIn} .18s ease`} onClick={() => setNavOpen(false)}>
           <Box
             as="nav" position="absolute" top={0} bottom={0} left={0} w="min(320px, 86vw)" bg="page" borderRight="1px solid" borderColor="hair"
             px="14px" py="16px" pb="max(16px, env(safe-area-inset-bottom))" overflowY="auto" boxShadow="12px 0 40px rgba(0,0,0,.3)"
@@ -321,9 +309,9 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         <Text display={{ base: "none", md: "block" }} fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
         </Text>
-        {TAB_INTROS[compTab] && (
+        {tab?.intro && (
           <Text fontSize="13.5px" lineHeight="1.65" color="muted" textAlign="center" maxW="680px" mx="auto" mb="24px">
-            {TAB_INTROS[compTab]}
+            {tab.intro}
           </Text>
         )}
 
@@ -351,7 +339,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
               </Box>
             ))}
           </Box>
-        ) : compTab === ITEMS_TAB ? (
+        ) : tab?.layout === "masonry" ? (
           // price lists flow into two masonry columns so the short tables don't stack into one long strip
           <Box maxW="900px" mx="auto" sx={{ columnCount: { base: 1, md: 2 }, columnGap: "22px" }}>
             {blocks.map((b) => (
@@ -359,10 +347,10 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
             ))}
           </Box>
         ) : (
-          <Box display="flex" flexDirection="column" gap="22px" maxW={compTab === COMBAT_TAB || compTab === POISONS_TAB ? "760px" : undefined} mx="auto" w="100%">
-            {/* the weapons table's crammed no-scroll mode only works with desktop widths — on
+          <Box display="flex" flexDirection="column" gap="22px" maxW={tab?.layout === "narrow" ? "760px" : undefined} mx="auto" w="100%">
+            {/* the dense (crammed no-scroll) weapons mode only works with desktop widths — on
                 mobile it falls back to the normal horizontally scrollable layout */}
-            {blocks.map((b) => renderBlock(b, compTab === 8 && !isMobile))}
+            {blocks.map((b) => renderBlock(b, tab?.layout === "dense" && !isMobile))}
           </Box>
         )}
         </>

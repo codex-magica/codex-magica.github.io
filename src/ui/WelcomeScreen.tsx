@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Box, Flex, Heading, HStack, IconButton, Text } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
+import { ConfirmModal } from "./ConfirmModal";
 import { ZoneBar } from "./ZoneBar";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
@@ -160,8 +161,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       </Box>
 
       {menuView && (
-        <Flex position="fixed" inset={0} zIndex={40} bg="rgba(16,14,24,.5)" align="center" justify="center" p="28px" onClick={() => setMenuId(null)}>
-          <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w="min(340px, 100%)" overflow="hidden" style={{ boxShadow: "0 22px 60px rgba(0,0,0,.4)" }}>
+        <Flex position="fixed" inset={0} zIndex={40} bg="overlayBg" align="center" justify="center" p="28px" onClick={() => setMenuId(null)}>
+          <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w="min(340px, 100%)" overflow="hidden" boxShadow="modal">
             <Box px="22px" pt="18px" pb="14px" borderBottom="1px solid" borderColor="rule" textAlign="center">
               <Text fontSize="20px" fontWeight={700} color="fg">{menuView.name}</Text>
               <Text fontFamily="system-ui" fontSize="12px" color="muted" mt="2px">{menuView.line} · {menuView.level}. szint</Text>
@@ -178,20 +179,9 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       )}
 
       {confirmLogout && (
-        <Flex position="fixed" inset={0} zIndex={50} bg="rgba(16,14,24,.5)" align="center" justify="center" p="28px" onClick={() => setConfirmLogout(false)}>
-          <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p="24px" w="min(360px, 100%)" style={{ boxShadow: "0 22px 60px rgba(0,0,0,.4)" }}>
-            <Text fontSize="20px" fontWeight={700} color="fg" textAlign="center">Kijelentkezés</Text>
-            <Text fontFamily="system-ui" fontSize="14px" color="muted" mt="8px" mb="22px" textAlign="center">Biztosan ki szeretnél jelentkezni?</Text>
-            <HStack gap="10px">
-              <Box as="button" type="button" onClick={() => setConfirmLogout(false)} flex="1 1 0" px="16px" py="10px" borderRadius="9px" border="1px solid" borderColor="rule" bg="transparent" color="fg" fontWeight={600} fontSize="14px" _hover={{ bg: "accentSoft" }}>
-                Mégse
-              </Box>
-              <Box as="button" type="button" onClick={logout} flex="1 1 0" px="16px" py="10px" borderRadius="9px" border="1px solid" borderColor="bad" bg="badSoft" color="bad" fontWeight={700} fontSize="14px" _hover={{ bg: "bad", color: "accentFg" }}>
-                Kijelentkezés
-              </Box>
-            </HStack>
-          </ParchPanel>
-        </Flex>
+        <ConfirmModal title="Kijelentkezés" confirmLabel="Kijelentkezés" onConfirm={logout} onClose={() => setConfirmLogout(false)}>
+          Biztosan ki szeretnél jelentkezni?
+        </ConfirmModal>
       )}
     </Flex>
   );

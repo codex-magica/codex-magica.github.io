@@ -4,27 +4,36 @@ import { genId } from "./storage";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { CombatChannel, Resource } from "../model/effects";
 import { Stat } from "../model/attributes";
-import { skillKey } from "../model/common";
+import { instanceKey, sameInstance } from "../model/common";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
 import { DerivedCharacter } from "../engine/types";
 
-// Ephemeral match key for a skill instance (a branch by variantId, else skill+subtype). Used only for
-// in-memory matching — never stored (fok4Bonuses keeps the structured fields).
-const instanceKey = (variantId: string | undefined, skill: string, subtype: string | undefined): string =>
-  variantId ? `v:${variantId}` : `s:${skillKey(skill, subtype)}`;
+// derive() memoized per record OBJECT. Records are treated immutably (every setter spreads), so one
+// record object always derives to the same sheet — the prune pipeline and the hook's useMemo can then
+// share a single derivation per edit instead of re-running the full engine 4×.
+const deriveCache = new WeakMap<CharacterRecord, DerivedCharacter>();
+const deriveCached = (rec: CharacterRecord): DerivedCharacter => {
+  let d = deriveCache.get(rec);
+  if (!d) {
+    d = derive(RULES, rec);
+    deriveCache.set(rec, d);
+  }
+  return d;
+};
 
 // Per-instance choice stores are tied to a skill INSTANCE existing (at the required fok). If the instance
 // drops below the threshold or is removed, the stored choice is stale — drop it so it can't silently
 // resurrect when the skill is learned again later (fok-4 +1, Pszi path, chosen attrs).
-const pruneStaleInstanceChoices = (rec: CharacterRecord): CharacterRecord => {
+// All prunes take the PRE-prune derivation: none of them changes any skill fok or granted background
+// (documented per prune), so one shared derive is sound.
+const pruneStaleInstanceChoices = (rec: CharacterRecord, derived: DerivedCharacter): CharacterRecord => {
   if (!rec.fok4Bonuses?.length && !rec.pathChoices?.length && !rec.skillAttrChoices?.length) return rec;
-  const derived = derive(RULES, rec);
   const fok4Valid = new Set<string>();
   const pathValid = new Set<string>();
   const existValid = new Set<string>();
   for (const s of derived.skills) {
-    const key = instanceKey(s.variantId, s.skill, s.origSubtype ?? s.subtype);
+    const key = instanceKey({ skill: s.skill, subtype: s.origSubtype ?? s.subtype, variantId: s.variantId });
     existValid.add(key);
     if (s.percent == null && s.fok >= 4) fok4Valid.add(key);
     const trig = RULES.skills[s.skill]?.fokTriggers?.find((t) => t.kind === "path");
@@ -33,15 +42,15 @@ const pruneStaleInstanceChoices = (rec: CharacterRecord): CharacterRecord => {
   const out = { ...rec };
   let changed = false;
   if (rec.fok4Bonuses?.length) {
-    const kept = rec.fok4Bonuses.filter((b) => fok4Valid.has(instanceKey(b.variantId, b.skill, b.subtype)));
+    const kept = rec.fok4Bonuses.filter((b) => fok4Valid.has(instanceKey(b)));
     if (kept.length !== rec.fok4Bonuses.length) { out.fok4Bonuses = kept; changed = true; }
   }
   if (rec.pathChoices?.length) {
-    const kept = rec.pathChoices.filter((c) => pathValid.has(instanceKey(c.variantId, c.skill, c.subtype)));
+    const kept = rec.pathChoices.filter((c) => pathValid.has(instanceKey(c)));
     if (kept.length !== rec.pathChoices.length) { out.pathChoices = kept; changed = true; }
   }
   if (rec.skillAttrChoices?.length) {
-    const kept = rec.skillAttrChoices.filter((c) => existValid.has(instanceKey(c.variantId, c.skill, c.subtype)));
+    const kept = rec.skillAttrChoices.filter((c) => existValid.has(instanceKey(c)));
     if (kept.length !== rec.skillAttrChoices.length) { out.skillAttrChoices = kept; changed = true; }
   }
   return changed ? out : rec;
@@ -50,9 +59,9 @@ const pruneStaleInstanceChoices = (rec: CharacterRecord): CharacterRecord => {
 // A skill purchase that no longer raises the fok (e.g. an earlier level now reaches it) is a phantom. Drop
 // it so the record only ever holds purchases that do something. (Branches are never phantom — engine skips
 // them.) Removing a no-op doesn't change any fok, so a single pass converges.
-const pruneRedundantPurchases = (rec: CharacterRecord): CharacterRecord => {
+const pruneRedundantPurchases = (rec: CharacterRecord, derived: DerivedCharacter): CharacterRecord => {
   if (!rec.levels.some((l) => l.skillPurchases.length)) return rec;
-  const { redundantPurchases } = derive(RULES, rec);
+  const { redundantPurchases } = derived;
   if (!redundantPurchases.length) return rec;
   const dead = new Set(redundantPurchases.map((r) => `${r.level}:${r.idx}`));
   let changed = false;
@@ -67,9 +76,9 @@ const pruneRedundantPurchases = (rec: CharacterRecord): CharacterRecord => {
 
 // A background that becomes GRANTED (via a class/spec change) while the player had also CHOSEN it would be
 // double-charged and its checkbox locked — drop the redundant chosen entry so only the free grant remains.
-const pruneGrantedChosenBg = (rec: CharacterRecord): CharacterRecord => {
+const pruneGrantedChosenBg = (rec: CharacterRecord, derived: DerivedCharacter): CharacterRecord => {
   if (!rec.backgrounds.some((b) => b.source === "chosen")) return rec;
-  const granted = new Set(derive(RULES, rec).grantedBackgrounds);
+  const granted = new Set(derived.grantedBackgrounds);
   const kept = rec.backgrounds.filter((b) => !(b.source === "chosen" && granted.has(b.background)));
   return kept.length === rec.backgrounds.length ? rec : { ...rec, backgrounds: kept };
 };
@@ -106,8 +115,13 @@ export interface CharacterBuilderApi {
 export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: CharacterRecord) => void): CharacterBuilderApi {
   // Every write is cleaned: phantom (no-op) skill purchases are dropped, then stale fok-4 choices. Keeps the
   // record canonical so editing an earlier level can't leave orphaned/redundant entries on later ones.
-  const setRecord = (r: CharacterRecord) => rawSetRecord(pruneGrantedChosenBg(pruneStaleInstanceChoices(pruneRedundantPurchases(r))));
-  const derived = useMemo(() => derive(RULES, record), [record]);
+  // ONE derivation feeds all three prunes; when nothing is pruned the same record object (and thus the
+  // cached derivation) flows into the hook's `derived` below.
+  const setRecord = (r: CharacterRecord) => {
+    const d = deriveCached(r);
+    rawSetRecord(pruneGrantedChosenBg(pruneStaleInstanceChoices(pruneRedundantPurchases(r, d), d), d));
+  };
+  const derived = useMemo(() => deriveCached(record), [record]);
 
   const update = (patch: Partial<CharacterRecord>) => setRecord({ ...record, ...patch });
 
@@ -226,7 +240,7 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     if (hasGeneralGrant && newSubtype) subtypeOverrides[skill] = newSubtype;
     else delete subtypeOverrides[skill]; // unspecialise / no grant → drop the override so nothing strays
     const migrate = <T extends { skill: string; subtype?: string; variantId?: string }>(list: T[] | undefined): T[] | undefined =>
-      list?.map((c) => (c.variantId == null && c.skill === skill && (c.subtype ?? "") === (oldSubtype ?? "") ? { ...c, subtype: newSubtype || undefined } : c));
+      list?.map((c) => (sameInstance(c, { skill, subtype: oldSubtype }) ? { ...c, subtype: newSubtype || undefined } : c));
     setRecord({
       ...record,
       subtypeOverrides,
@@ -276,17 +290,17 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
   // The +1 attribute a fok-4 skill instance grants (multi-attr skills; single-attr auto-apply in the
   // engine). Stored structurally in record.fok4Bonuses, keyed by the instance; null clears it.
   const setSkillFok4Stat = (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => {
-    const key = instanceKey(variantId, skill, subtype);
-    const list = (record.fok4Bonuses ?? []).filter((b) => instanceKey(b.variantId, b.skill, b.subtype) !== key);
-    if (stat) list.push({ skill, subtype, variantId, stat });
+    const ref = { skill, subtype, variantId };
+    const list = (record.fok4Bonuses ?? []).filter((b) => !sameInstance(b, ref));
+    if (stat) list.push({ ...ref, stat });
     setRecord({ ...record, fok4Bonuses: list });
   };
 
   // A committing path choice (Pszi tudat/test at fok 3), stored per instance + trigger; null clears it.
   const setSkillPathChoice = (skill: string, subtype: string | undefined, variantId: string | undefined, trigger: string, value: string | null) => {
-    const key = instanceKey(variantId, skill, subtype) + "|" + trigger;
-    const list = (record.pathChoices ?? []).filter((c) => instanceKey(c.variantId, c.skill, c.subtype) + "|" + c.trigger !== key);
-    if (value) list.push({ skill, subtype, variantId, trigger, value });
+    const ref = { skill, subtype, variantId };
+    const list = (record.pathChoices ?? []).filter((c) => !(sameInstance(c, ref) && c.trigger === trigger));
+    if (value) list.push({ ...ref, trigger, value });
     setRecord({ ...record, pathChoices: list });
   };
 
@@ -294,9 +308,9 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
   // record.skillAttrChoices (like fok4Bonuses) — not on a purchase — so it saves for granted or
   // earlier-level instances too. `level` is unused (kept for call-site symmetry).
   const setSkillChosenAttrs = (_level: number, skill: string, subtype: string | undefined, variantId: string | undefined, attrs: Stat[]) => {
-    const key = instanceKey(variantId, skill, subtype);
-    const list = (record.skillAttrChoices ?? []).filter((c) => instanceKey(c.variantId, c.skill, c.subtype) !== key);
-    if (attrs.length) list.push({ skill, subtype, variantId, attrs });
+    const ref = { skill, subtype, variantId };
+    const list = (record.skillAttrChoices ?? []).filter((c) => !sameInstance(c, ref));
+    if (attrs.length) list.push({ ...ref, attrs });
     setRecord({ ...record, skillAttrChoices: list });
   };
 

@@ -10,10 +10,10 @@ import {
   Fok4Bonus,
 } from "../model/character";
 import { STAT_KEYS, STAT_SHORT, Stat } from "../model/attributes";
-import { skillKey } from "../model/common";
+import { findInstanceChoice, sameInstance } from "../model/common";
 import { SKILL_BY_NAME } from "../model/skills";
 import { BACKGROUNDS } from "../model/backgrounds";
-import { DerivedCharacter } from "../engine/types";
+import { DerivedCharacter, LedgerEntry } from "../engine/types";
 
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 
@@ -56,29 +56,24 @@ const Empty: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" py="2px">{children}</Text>
 );
 
-// The fok-4 +1 attribute chosen for a skill instance (a branch by variantId, else skill+subtype), or undefined.
-const bonusFor = (bonuses: Fok4Bonus[], skill: string, subtype?: string, variantId?: string): Stat | undefined =>
-  bonuses.find((b) => (variantId != null ? b.variantId === variantId : b.variantId == null && b.skill === skill && (b.subtype ?? "") === (subtype ?? "")))?.stat as Stat | undefined;
-
 // Every item of a level as ONE flat, ordered list (no type grouping). The fok-4 +1 attribute is shown
 // inline on the very skill purchase that reached fok 4. (Bonuses on GRANTED fok-4 instances — which have
 // no purchase to inline onto, e.g. the wizard's Pszi — are listed in their own top-level section instead.)
-const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; deltas: Record<string, { before: number; after: number }>; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[]; subtypeOverrides?: Record<string, string> }> = ({ lvl, costs, deltas, fok4, grants, subtypeOverrides }) => {
+const LevelBlock: React.FC<{ lvl: LevelRecord; ledger: LedgerEntry[]; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[] }> = ({ lvl, ledger, fok4, grants }) => {
   const L = lvl.level;
-  const fmtDelta = (key: string, pct = false): string | undefined => {
-    const d = deltas[key];
-    if (!d) return undefined;
+  const fmtDelta = (en: LedgerEntry | undefined, pct = false): string | undefined => {
+    if (!en) return undefined;
     const u = pct ? "%" : "";
-    return `${d.before}${u} → ${d.after}${u}`;
+    return `${en.before}${u} → ${en.after}${u}`;
   };
-  // Match the engine's ledger keys: a non-variant purchase is keyed by its OVERRIDE-resolved subtype
-  // (a renamed granted subtype), not the raw stored one — else the cost/delta lookup misses (shows 0 KAP).
-  const keySub = (skill: string, subtype?: string) => subtypeOverrides?.[skillKey(skill, subtype)] || subtype;
-  const skillItems = lvl.skillPurchases.map((p) => {
-    const refKey = p.id ? `var:${p.id}` : skillKey(p.skill, keySub(p.skill, p.subtype));
-    const bonus = p.to >= 4 ? bonusFor(fok4, p.skill, p.subtype, p.id) : undefined;
+  // The engine emits one typed entry per operation — skill purchases join by their position within the
+  // level, everything else by (kind, id). No key reconstruction on the UI side.
+  const entryFor = (kind: LedgerEntry["kind"], id: string) => ledger.find((e) => e.level === L && e.kind === kind && e.id === id);
+  const skillItems = lvl.skillPurchases.map((p, i) => {
+    const en = ledger.find((e) => e.level === L && e.kind === "skill" && e.idx === i);
+    const bonus = p.to >= 4 ? (findInstanceChoice(fok4, { skill: p.skill, subtype: p.subtype, variantId: p.id })?.stat as Stat | undefined) : undefined;
     const pct = SKILL_BY_NAME[p.skill]?.cost === "percentage";
-    return { tag: "képz", text: fmtPurchase(p) + (bonus ? `  ·  +1 ${STAT_SHORT[bonus]} (4. fok)` : ""), cost: costs[`${L}:skill:${refKey}`] ?? 0, delta: fmtDelta(`${L}:skill:${refKey}`, pct) };
+    return { tag: "képz", text: fmtPurchase(p) + (bonus ? `  ·  +1 ${STAT_SHORT[bonus]} (4. fok)` : ""), cost: en?.cost ?? 0, delta: fmtDelta(en, pct) };
   });
 
   // Order: attribute buys → skills → HM → resource allocations (Fp/Mana/…). Attribute buys come BEFORE
@@ -86,12 +81,13 @@ const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; de
   // affect skill cost, so they sit last.
   const items: { tag: string; text: string; cost?: number; delta?: string }[] = [];
   for (const s of lvl.statIncreases) {
-    items.push({ tag: "tul", text: fmtStat(s), cost: s.source === "kap" ? (costs[`${L}:stat:${s.stat}:${s.source}`] ?? 0) : 0, delta: fmtDelta(`${L}:stat:${s.stat}:${s.source}`) });
+    const en = entryFor("stat", `${s.stat}:${s.source}`);
+    items.push({ tag: "tul", text: fmtStat(s), cost: en?.cost ?? 0, delta: fmtDelta(en) });
   }
   items.push(...skillItems);
-  for (const h of lvl.grantedHmAssignments ?? []) items.push({ tag: "hm", text: `${h.channel} (kapott)`, cost: costs[`${L}:ghm:${h.channel}`] ?? 0, delta: fmtDelta(`${L}:ghm:${h.channel}`) });
-  for (const h of lvl.hmAssignments) items.push({ tag: "hm", text: `${h.channel} (vett)`, cost: costs[`${L}:hm:${h.channel}`] ?? 0, delta: fmtDelta(`${L}:hm:${h.channel}`) });
-  for (const a of lvl.allocations) items.push({ tag: a.target, text: a.target, cost: costs[`${L}:alloc:${a.target}`] ?? 0, delta: fmtDelta(`${L}:alloc:${a.target}`) });
+  for (const h of lvl.grantedHmAssignments ?? []) { const en = entryFor("ghm", h.channel); items.push({ tag: "hm", text: `${h.channel} (kapott)`, cost: en?.cost ?? 0, delta: fmtDelta(en) }); }
+  for (const h of lvl.hmAssignments) { const en = entryFor("hm", h.channel); items.push({ tag: "hm", text: `${h.channel} (vett)`, cost: en?.cost ?? 0, delta: fmtDelta(en) }); }
+  for (const a of lvl.allocations) { const en = entryFor("alloc", a.target); items.push({ tag: a.target, text: a.target, cost: en?.cost ?? 0, delta: fmtDelta(en) }); }
   if (lvl.notes) items.push({ tag: "jegyz", text: lvl.notes });
 
   return (
@@ -112,7 +108,6 @@ const LevelBlock: React.FC<{ lvl: LevelRecord; costs: Record<string, number>; de
 
 export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCharacter }> = ({ record, derived }) => {
   const [raw, setRaw] = useState(false);
-  const costs = derived.ledgerCosts;
   const pointBuy = STAT_KEYS.map((s) => `${STAT_SHORT[s]} ${record.pointBuy[s]}`).join("  ·  ");
   const adottsag = Object.entries(record.adottsag ?? {}).filter(([, v]) => v).map(([k, v]) => `${STAT_SHORT[k as Stat]} +${v}`);
   const adottsagCost = Object.values(record.adottsag ?? {}).reduce((s, v) => s + (v || 0), 0); // 1 KAP / point
@@ -122,7 +117,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
   // fok-4 bonuses on instances that have NO fok-4 purchase (i.e. granted at fok 4) — they have no skill
   // line to inline onto, so they get their own section.
   const grantedFok4 = fok4.filter((b) =>
-    !record.levels.some((l) => l.skillPurchases.some((p) => p.to >= 4 && (b.variantId != null ? b.variantId === p.id : b.variantId == null && b.skill === p.skill && (b.subtype ?? "") === (p.subtype ?? ""))))
+    !record.levels.some((l) => l.skillPurchases.some((p) => p.to >= 4 && sameInstance(b, { skill: p.skill, subtype: p.subtype, variantId: p.id })))
   );
 
   return (
@@ -170,7 +165,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
             </>
           )}
 
-          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} costs={costs} deltas={derived.ledgerDelta} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} subtypeOverrides={record.subtypeOverrides} />)}
+          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} ledger={derived.ledger} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} />)}
 
           {record.kmAdjustments.length > 0 && (
             <Box mt="14px">

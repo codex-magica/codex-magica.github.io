@@ -1,9 +1,10 @@
 import React from "react";
-import { Box, Heading, HStack, Text } from "@chakra-ui/react";
+import { Box, HStack, Text } from "@chakra-ui/react";
 import { CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { CombatChannel, Resource } from "../model/effects";
 import { Stepper } from "./Stepper";
+import { PanelHeading, SubHeader } from "./controls";
 import { FS_NAME, ROW_PY } from "./tokens";
 
 interface Props {
@@ -15,13 +16,6 @@ interface Props {
 
 const CHANNELS: CombatChannel[] = ["KÉ", "TÉ", "VÉ", "CÉ"];
 const RES_LABEL: Record<Resource, string> = { Mana: "Mana", Psi: "Pszi", Kegy: "Kegy", HM: "HM", Fp: "Fp", Kp: "Kp" };
-
-const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNode }> = ({ children, trailing }) => (
-  <HStack justify="space-between" mt="13px" mb="1px" align="center" minH="24px">
-    <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx">{children}</Text>
-    {trailing}
-  </HStack>
-);
 
 // The character's per-level gains from skill levels (and, in future, other level-up abilities). Resource
 // grants (Mana/Pszi/Kegy/Fp) already fold into the pool totals on the Pontvásárlás panel; HM grants are
@@ -40,9 +34,7 @@ export const LevelGainsPanel: React.FC<Props> = ({ level, record, derived, onGra
 
   return (
     <Box>
-      <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} mb={1} color="fg">
-        Szintlépési bónuszok <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
-      </Heading>
+      <PanelHeading title="Szintlépési bónuszok" level={level} />
       <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={2} maxW="62ch">
         Speciális képzettségek szintje és egyéb szintlépési bónuszok.
       </Text>

@@ -1,7 +1,8 @@
 import React from "react";
-import { Box, HStack, IconButton, useColorMode } from "@chakra-ui/react";
+import { Box, Heading, HStack, IconButton, Text, useColorMode } from "@chakra-ui/react";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { BTN_H } from "./tokens";
+import { OpenBookIcon } from "./icons";
 
 // Small shared controls reused across screens. Previously each was redefined per file.
 
@@ -12,11 +13,7 @@ const ZONE_ICON: Record<string, React.ReactNode> = {
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
     </svg>
   ),
-  kompendium: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H4z" /><path d="M20 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H20z" />
-    </svg>
-  ),
+  kompendium: <OpenBookIcon size={16} />,
 };
 
 // The Karakter / Kompendium-style zone-switch pill. Shared by ZoneBar and AppShell's top bar.
@@ -53,6 +50,33 @@ export const DarkToggle: React.FC = () => {
     <IconButton aria-label="Sötét mód váltása" size="sm" variant="ghost" color="muted" icon={colorMode === "light" ? <MoonIcon /> : <SunIcon />} onClick={toggleColorMode} />
   );
 };
+
+// The uppercase section label inside a creator panel, with an optional right-aligned control.
+// Previously copy-pasted into PointBuyPanel and LevelGainsPanel.
+export const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNode }> = ({ children, trailing }) => (
+  <HStack justify="space-between" mt="13px" mb="1px" align="center" minH="24px">
+    <Text textStyle="overline" fontSize="11px" letterSpacing=".11em" color="catTx">{children}</Text>
+    {trailing}
+  </HStack>
+);
+
+// A creator panel's heading: title + optional "— N. szint" suffix + optional trailing (KAP chip).
+export const PanelHeading: React.FC<{ title: string; level?: number; trailing?: React.ReactNode; mb?: number }> = ({ title, level, trailing, mb = 1 }) => (
+  <HStack justify="space-between" mb={mb} align="center">
+    <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">
+      {title}
+      {level != null && <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint"> — {level}. szint</Text>}
+    </Heading>
+    {trailing}
+  </HStack>
+);
+
+// The right-aligned "KAP: n" balance readout next to a panel heading.
+export const KapReadout: React.FC<{ kap: number }> = ({ kap }) => (
+  <Text fontFamily="ui" fontSize="13px" fontWeight={700} color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
+    KAP: {kap}
+  </Text>
+);
 
 // The small outlined "✕" remove button used by the creator panels (skills, point-buy).
 export const DeleteButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (

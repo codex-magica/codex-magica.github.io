@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Flex, Input, Text } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { ModalState } from "./DetailModal";
-import { compNames } from "./sampleData";
-import { tabBlocks, skillModalBody, skillModalSub } from "./compendiumData";
+import { TABS, tabBlocks, skillModalBody, skillModalSub } from "./compendiumData";
 import { SKILLS } from "../model/skills";
 
 // ── Spotlight-style compendium search ──────────────────────────────────────────────────────────
@@ -36,24 +35,19 @@ export function searchIndex(): SearchEntry[] {
   const out: SearchEntry[] = [];
   for (const s of SKILLS) {
     out.push({
-      name: s.name, tab: 0, page: compNames[0], block: s.category,
+      name: s.name, tab: 0, page: TABS[0].name, block: s.category,
       modal: { kind: "skill", name: s.name, sub: skillModalSub(s.name), body: skillModalBody(s.name) },
     });
   }
-  for (let tab = 1; tab < compNames.length; tab++) {
+  for (let tab = 1; tab < TABS.length; tab++) {
+    const def = TABS[tab];
     for (const block of tabBlocks(tab)) {
       for (const r of block.rows) {
-        // right-aligned context value: spell cost (Mp/Kegy/Ψp — the part of the modal sub after the
-        // school name), item price, poison price. Long non-values ("Lásd a leírást!") are dropped.
-        const value =
-          tab <= 7 ? r.modalSub?.split("·")[1]?.trim()
-          : tab === 8 ? r.cells[1] // weapon damage
-          : tab === 9 ? r.modalSub?.split("·")[0]?.trim() // "SFÉ n" (armor) / "VÉ n" (shield)
-          : tab === 11 ? r.cells[0]
-          : tab === 12 && block.title === "Példamérgek" ? r.cells[4]
-          : undefined;
+        // right-aligned context value from the tab registry (spell cost, item price, weapon damage…).
+        // Long non-values ("Lásd a leírást!") are dropped.
+        const value = def.searchValue?.(r, block.title);
         out.push({
-          name: r.name, tab, page: compNames[tab], block: block.title,
+          name: r.name, tab, page: def.name, block: block.title,
           value: value && value.length <= 16 ? value : undefined,
           modal: r.body?.length ? { kind: "spell", name: r.name, sub: r.modalSub, body: r.body } : undefined,
         });
@@ -118,8 +112,7 @@ const glyphPath: Record<string, React.ReactNode> = {
   coin: <><circle cx="12" cy="12" r="8" /><path d="M12 8.5v7M9.5 10.5c0-1 1-1.7 2.5-1.7s2.5.7 2.5 1.6c0 2.4-5 1.6-5 3.9 0 1 1 1.7 2.5 1.7s2.5-.7 2.5-1.6" /></>,
   drop: <><path d="M12 3.5s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" /></>,
 };
-const tabGlyph = (tab: number) =>
-  tab === 0 ? "book" : tab <= 7 ? "spark" : tab === 8 ? "sword" : tab === 9 ? "shield" : tab === 10 ? "burst" : tab === 11 ? "coin" : "drop";
+const tabGlyph = (tab: number) => TABS[tab]?.glyph ?? "book";
 
 const Glyph: React.FC<{ kind: string }> = ({ kind }) => (
   <Box w="30px" h="30px" flexShrink={0} borderRadius="8px" bg="chipBg" border="1px solid" borderColor="chipBd" color="accentTx" display="flex" alignItems="center" justifyContent="center">

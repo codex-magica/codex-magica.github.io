@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Box, Heading, HStack, Input, Text, VStack } from "@chakra-ui/react";
-import { ModalShell } from "./Modal";
+import { ConfirmModal } from "./ConfirmModal";
 import { CharacterBuilderApi } from "../state/useCharacterBuilder";
 import { derive } from "../engine/derive";
 import { RULES } from "../model/rulesDb";
@@ -109,9 +109,12 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   // The per-level panels must show skills/pools AS OF the level being edited (not the final state) — else
   // raising a skill at an earlier level would start from its level-N value. Re-derive the record truncated
   // to the active level; for the last level (and level-up) that's the full derived already.
-  const editDerived = activeLevel >= record.levels.length
-    ? derived
-    : derive(RULES, { ...record, levels: record.levels.slice(0, activeLevel) });
+  const isLastLevel = activeLevel >= record.levels.length;
+  const truncDerived = useMemo(
+    () => (isLastLevel ? null : derive(RULES, { ...record, levels: record.levels.slice(0, activeLevel) })),
+    [isLastLevel, record, activeLevel]
+  );
+  const editDerived = truncDerived ?? derived;
 
   const fieldRow = (label: string, control: React.ReactNode, last?: boolean) => (
     <HStack key={label} align="center" py="9px" borderBottom={last ? undefined : "1px solid"} borderColor="hair" spacing={3}>
@@ -261,47 +264,23 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
       )}
 
       {pendingClass && (
-        <ModalShell onClose={() => setPendingClass(null)} width="min(440px, 100%)">
-          <Box p="22px">
-            <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>Kaszt módosítása</Heading>
-            <Text fontSize="14px" color="muted" lineHeight="1.55" mb={4}>
-              A kaszt <b>{record.class}</b> → <b>{pendingClass}</b> módosítása megváltoztatja a kapott
-              képzettségeket, hátteret és a kaszthoz kötött választásokat. A magasabb szinteken elköltött
-              pontok érvénytelenné válhatnak: a fölöslegessé vált képzettségvásárlások automatikusan
-              törlődnek, a túlköltött szinteket pedig jelöljük. Folytatod?
-            </Text>
-            <HStack justify="flex-end" gap="9px">
-              <Box as="button" type="button" onClick={() => setPendingClass(null)} px="15px" py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="15px" _hover={{ borderColor: "accent" }}>
-                Mégse
-              </Box>
-              <Box as="button" type="button" onClick={() => { applyClassChange(pendingClass); setPendingClass(null); }} px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="bad" bg="bad" color="white" fontWeight={700} fontSize="15px">
-                Kaszt módosítása
-              </Box>
-            </HStack>
-          </Box>
-        </ModalShell>
+        <ConfirmModal title="Kaszt módosítása" confirmLabel="Kaszt módosítása"
+          onConfirm={() => { applyClassChange(pendingClass); setPendingClass(null); }} onClose={() => setPendingClass(null)}>
+          A kaszt <b>{record.class}</b> → <b>{pendingClass}</b> módosítása megváltoztatja a kapott
+          képzettségeket, hátteret és a kaszthoz kötött választásokat. A magasabb szinteken elköltött
+          pontok érvénytelenné válhatnak: a fölöslegessé vált képzettségvásárlások automatikusan
+          törlődnek, a túlköltött szinteket pedig jelöljük. Folytatod?
+        </ConfirmModal>
       )}
 
       {pendingRace && (
-        <ModalShell onClose={() => setPendingRace(null)} width="min(440px, 100%)">
-          <Box p="22px">
-            <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>Faj módosítása</Heading>
-            <Text fontSize="14px" color="muted" lineHeight="1.55" mb={4}>
-              A faj <b>{record.race}</b> → <b>{pendingRace}</b> módosítása megváltoztatja a faji
-              képességeket, tulajdonság-maximumokat és bónuszokat. A magasabb szinteken elköltött pontok
-              érvénytelenné válhatnak: a fölöslegessé vált vásárlások automatikusan törlődnek, a
-              tulajdonság-pontokat pedig újra az új maximumokhoz kell igazítani. Folytatod?
-            </Text>
-            <HStack justify="flex-end" gap="9px">
-              <Box as="button" type="button" onClick={() => setPendingRace(null)} px="15px" py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="15px" _hover={{ borderColor: "accent" }}>
-                Mégse
-              </Box>
-              <Box as="button" type="button" onClick={() => { applyRaceChange(pendingRace); setPendingRace(null); }} px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="bad" bg="bad" color="white" fontWeight={700} fontSize="15px">
-                Faj módosítása
-              </Box>
-            </HStack>
-          </Box>
-        </ModalShell>
+        <ConfirmModal title="Faj módosítása" confirmLabel="Faj módosítása"
+          onConfirm={() => { applyRaceChange(pendingRace); setPendingRace(null); }} onClose={() => setPendingRace(null)}>
+          A faj <b>{record.race}</b> → <b>{pendingRace}</b> módosítása megváltoztatja a faji
+          képességeket, tulajdonság-maximumokat és bónuszokat. A magasabb szinteken elköltött pontok
+          érvénytelenné válhatnak: a fölöslegessé vált vásárlások automatikusan törlődnek, a
+          tulajdonság-pontokat pedig újra az új maximumokhoz kell igazítani. Folytatod?
+        </ConfirmModal>
       )}
     </Box>
   );

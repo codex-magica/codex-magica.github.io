@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { Box, Heading, HStack, Select, Text } from "@chakra-ui/react";
+import { Box, HStack, Select, Text } from "@chakra-ui/react";
 import { CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { CombatChannel, Pool, Resource } from "../model/effects";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { RACES } from "../model/races";
+import { CLASSES } from "../model/classes";
 import { ATTR_KAP_COST, KAP_RATE } from "../engine/constants";
 import { Stepper } from "./Stepper";
-import { DeleteButton } from "./controls";
+import { DeleteButton, KapReadout, PanelHeading, SubHeader } from "./controls";
 import { FIELD_SX, FS_NAME, ROW_PY } from "./tokens";
 import { CombatInfoModal } from "./InfoModals";
 
@@ -27,15 +28,6 @@ const PSEUDO: { pool: Pool; label: string }[] = [
   { pool: "Kegy", label: "Kegy" },
 ];
 
-const SubHeader: React.FC<{ children: React.ReactNode; trailing?: React.ReactNode }> = ({ children, trailing }) => (
-  <HStack justify="space-between" mt="13px" mb="1px" align="center" minH="24px">
-    <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx">
-      {children}
-    </Text>
-    {trailing}
-  </HStack>
-);
-
 export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, onResource, onStat }) => {
   const lvl = getLevelRecord(record, level);
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
@@ -46,6 +38,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
   const caps = RACES[record.race]?.statLimits;
   const existingPools = PSEUDO.filter(({ pool }) => derived.pools.magic[pool]);
 
+  const suggested = CLASSES[record.class]?.suggestedAllocation;
   const [adding, setAdding] = useState(false);
   // Clicked harcérték label → formula-with-values + definition modal.
   const [combatInfo, setCombatInfo] = useState<string | null>(null);
@@ -77,17 +70,15 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
 
   return (
     <Box>
-      <HStack justify="space-between" mb={1} align="center">
-        <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">
-          Pontvásárlás <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
-        </Heading>
-        <Text fontFamily="system-ui" fontSize="13px" fontWeight={700} color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
-          KAP: {kap}
-        </Text>
-      </HStack>
-      <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={2} maxW="62ch">
+      <PanelHeading title="Pontvásárlás" level={level} trailing={<KapReadout kap={kap} />} />
+      <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={suggested ? 1 : 2} maxW="62ch">
         Közös KAP-ból (Int + 50 − hátterek) a Képzettségek panellel.
       </Text>
+      {suggested && (
+        <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={2} maxW="62ch">
+          A könyv ajánlott elosztása ({record.class}): {Object.entries(suggested).map(([k, v]) => `${k === "Psi" ? "Pszi" : k} ${v}`).join(" · ")}
+        </Text>
+      )}
 
       {/* Harcérték (HM) + Fp — extra HM bought with KAP. The FREE skill-granted HM is distributed in the
           Szintlépési nyereségek panel; the (= N) value below is the total combat value (granted + bought). */}

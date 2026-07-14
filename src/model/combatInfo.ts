@@ -1,7 +1,8 @@
-// Definitions + formula structure for the harcértékek (and magic-defense values) — used by the character
-// sheet's clickable Harcértékek panel. Definitions are the book's glossary entries (ch. 01).
+// Definitions + formula structure for the harcértékek (and magic-defense values). The engine computes
+// KÉ/TÉ/VÉ/CÉ from `stats` + `base` here, and the character sheet's clickable Harcértékek panel renders
+// the same data as a breakdown. Definitions are the book's glossary entries (ch. 01).
 
-import { Stat, Stats } from "./attributes";
+import { Stat } from "./attributes";
 
 export interface CombatValueInfo {
   key: string; // KÉ | TÉ | VÉ | CÉ | MME | AME | Sebzésbónusz
@@ -65,25 +66,3 @@ export const COMBAT_INFO: Record<string, CombatValueInfo> = {
   },
 };
 
-// The formula parts with substituted values: attribute terms, optional fixed base, then the tracked
-// bonus sources from the engine's provenance — HM allocations grouped into one line, every other source
-// (race/class combatBonus, e.g. "Faj: Elf" CÉ) itemized by name. Any untracked remainder goes to the
-// residual line (MME/AME statikus védelem), so the sum always reconciles with the final value.
-export function combatBreakdown(
-  info: CombatValueInfo,
-  stats: Stats,
-  total: number,
-  contributions: { source: string; amount: number }[] = []
-): { label: string; value: number }[] {
-  const parts: { label: string; value: number }[] = info.stats.map((s) => ({ label: s, value: stats[s] }));
-  if (info.base) parts.push({ label: info.base.label, value: info.base.value });
-  let hm = 0;
-  for (const c of contributions) {
-    if (c.source.startsWith("HM ")) hm += c.amount; // "HM (vett) L2" / "HM (kapott) L3" → one grouped line
-    else parts.push({ label: c.source, value: c.amount });
-  }
-  if (hm !== 0) parts.push({ label: "HM elosztás", value: hm });
-  const residual = total - parts.reduce((a, p) => a + p.value, 0);
-  if (residual !== 0 || parts.length === 0) parts.push({ label: info.residualLabel, value: residual });
-  return parts;
-}

@@ -14,7 +14,18 @@ import { SkillValues } from "../data/skillsText";
 import { MagasMagiaValues } from "../data/magasMagia";
 import { CombatSituations } from "../data/combatSituations";
 import { MundaneItems } from "../data/mundaneItems";
-import { PoisonValues, PoisonEffects, PoisonCraftCosts, PoisonCraftPrices, ONSET_TIMES, DURATION_TIMES } from "../data/poisons";
+import { PoisonValues, PoisonEffects, PoisonCraftCosts, PoisonCraftPrices, ONSET_TIMES, DURATION_TIMES, poisonsIntro, poisonRules } from "../data/poisons";
+import { combatSituationsIntro } from "../data/combatSituations";
+import { mundaneItemsIntro } from "../data/mundaneItems";
+import { skillsRules } from "../data/skillsRules";
+import { SchoolRules } from "../data/magicRules";
+import { magicRules1 } from "../data/magicRules1";
+import { magicRules2 } from "../data/magicRules2";
+import { magicRules3 } from "../data/magicRules3";
+import { magicRules4 } from "../data/magicRules4";
+import { magicRules5 } from "../data/magicRules5";
+import { magicRules6 } from "../data/magicRules6";
+import { magicRules7 } from "../data/magicRules7";
 import { SKILLS } from "../model/skills";
 
 export interface TableCol { label: string; align?: "center" | "right" }
@@ -28,6 +39,41 @@ export interface TableRow {
   weapon?: { kind: "melee" | "ranged"; damage: string; range?: string; ke?: number; te?: number; ve?: number; ce?: number };
 }
 export interface TableBlock { title: string; nameLabel: string; columns: TableCol[]; rows: TableRow[]; footer?: string }
+
+// ── the tab registry ──────────────────────────────────────────────────────────
+// ONE entry per compendium tab (the index in this array IS the tab id). Nav grouping, search glyphs,
+// rules prose, intros and layout quirks all live here — adding or reordering a tab means editing this
+// array only. The rulebook chapters (Markdown pages) follow at indices >= TABS.length (Compendium.tsx).
+export interface TabDef {
+  name: string;
+  group: "Harc" | "Mágia" | "Felszerelés" | null; // sidebar section; null = standalone top-level item
+  glyph: "book" | "spark" | "sword" | "shield" | "burst" | "coin" | "drop"; // search-result icon family
+  special?: "skills"; // tab 0 renders the skill catalog from the model, not TableBlocks
+  rules?: SchoolRules; // magic-school rules prose (chapter-level + per-block)
+  headingRules?: string; // chapter-level rules for non-school tabs (skills, poisons)
+  intro?: string; // paragraph under the page heading
+  layout?: "dense" | "masonry" | "narrow"; // weapons: cram columns; items: two columns; text-ish: 760px
+  // small right-aligned context in search results (spell cost, price, damage…)
+  searchValue?: (row: TableRow, blockTitle: string) => string | undefined;
+}
+
+const spellCost = (r: TableRow) => r.modalSub?.split("·")[1]?.trim();
+
+export const TABS: TabDef[] = [
+  { name: "Képzettségek", group: null, glyph: "book", special: "skills", headingRules: skillsRules },
+  { name: "Bárdmágia", group: "Mágia", glyph: "spark", rules: magicRules1, searchValue: spellCost },
+  { name: "Szakrális Mágia", group: "Mágia", glyph: "spark", rules: magicRules2, searchValue: spellCost },
+  { name: "Boszorkánymágia", group: "Mágia", glyph: "spark", rules: magicRules3, searchValue: spellCost },
+  { name: "Boszorkánymesteri mágia", group: "Mágia", glyph: "spark", rules: magicRules4, searchValue: spellCost },
+  { name: "Tűzmágia", group: "Mágia", glyph: "spark", rules: magicRules5, searchValue: spellCost },
+  { name: "Pszi", group: "Mágia", glyph: "spark", rules: magicRules6, searchValue: spellCost },
+  { name: "Magasmágia", group: "Mágia", glyph: "spark", rules: magicRules7, searchValue: spellCost },
+  { name: "Fegyverek", group: "Felszerelés", glyph: "sword", layout: "dense", searchValue: (r) => r.cells[1] },
+  { name: "Páncélok", group: "Felszerelés", glyph: "shield", searchValue: (r) => r.modalSub?.split("·")[0]?.trim() },
+  { name: "Harci helyzetek", group: "Harc", glyph: "burst", layout: "narrow", intro: combatSituationsIntro },
+  { name: "Tárgyak és árak", group: "Felszerelés", glyph: "coin", layout: "masonry", intro: mundaneItemsIntro, searchValue: (r) => r.cells[0] },
+  { name: "Mérgek", group: "Felszerelés", glyph: "drop", layout: "narrow", intro: poisonsIntro, headingRules: poisonRules, searchValue: (r, block) => (block === "Példamérgek" ? r.cells[4] : undefined) },
+];
 
 const arr = (d: string | string[]): string[] => (Array.isArray(d) ? d : [d]);
 const dash = (v: unknown): string => (v === undefined || v === null || v === "" || v === "-" ? "—" : String(v));
@@ -99,7 +145,19 @@ const magasCost = (s: SpellLike) => {
 };
 const MAGAS: Field[] = [["Mana", magasCost], ["Erősség", (s) => dash(s.erosseg)], ["Idő", (s) => dash(s.castingTime)], ["Hatótáv", (s) => dash(s.range)], ["Időtartam", (s) => dash(s.duration)], ["ME", (s) => join(s.save)]];
 
+// The blocks are pure functions of static data — build each tab once, on first visit, and reuse
+// (Compendium re-renders per keystroke in search; rebuilding hundreds of rows each time is waste).
+const tabBlocksCache = new Map<number, TableBlock[]>();
 export function tabBlocks(tab: number): TableBlock[] {
+  let blocks = tabBlocksCache.get(tab);
+  if (!blocks) {
+    blocks = buildTabBlocks(tab);
+    tabBlocksCache.set(tab, blocks);
+  }
+  return blocks;
+}
+
+function buildTabBlocks(tab: number): TableBlock[] {
   switch (tab) {
     case 1: // Bárdmágia
       return spellBlocks(BardMagicValues, "type", "Varázslat", "Bárdmágia", "Mp", COMMON);
@@ -326,18 +384,34 @@ export function skillModalSub(name: string): string {
 }
 
 // Every spell row (tabs 1–7) indexed by name → the SAME modalSub + body the compendium renders, so
-// the character sheet can open an identical modal just from a spell name.
-const spellIndex = (() => {
-  const m = new Map<string, { sub: string; body: string[] }>();
-  for (const tab of [1, 2, 3, 4, 5, 6, 7]) {
-    for (const block of tabBlocks(tab)) {
-      for (const r of block.rows) if (!m.has(r.name)) m.set(r.name, { sub: r.modalSub || "", body: r.body || [] });
+// the character sheet can open an identical modal just from a spell name. Built lazily on the first
+// lookup — the app shouldn't pay for all seven spell tabs at startup.
+let spellIndex: Map<string, { sub: string; body: string[] }> | null = null;
+export function spellModalByName(name: string): { sub: string; body: string[] } | null {
+  if (!spellIndex) {
+    spellIndex = new Map();
+    for (const tab of [1, 2, 3, 4, 5, 6, 7]) {
+      for (const block of tabBlocks(tab)) {
+        for (const r of block.rows) if (!spellIndex.has(r.name)) spellIndex.set(r.name, { sub: r.modalSub || "", body: r.body || [] });
+      }
     }
   }
-  return m;
-})();
-export function spellModalByName(name: string): { sub: string; body: string[] } | null {
   return spellIndex.get(name) || null;
+}
+
+// The full skill-modal content, identical everywhere it opens (compendium, creator panel, sheet).
+// With `own`, adds the character-aware strip ("A te fokod…") and the current-fok gating.
+export function skillModalContent(name: string, own?: { fok: number; percent?: number | null }) {
+  const percent = own?.percent;
+  const fok = own?.fok ?? 0;
+  return {
+    kind: "skill" as const,
+    name,
+    sub: skillModalSub(name),
+    body: skillModalBody(name),
+    levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
+    currentFok: percent == null && fok > 0 ? fok : undefined,
+  };
 }
 
 export function skillModalBody(name: string): string[] {

@@ -3,7 +3,8 @@ import { Resource } from "../model/effects";
 export const POINT_BUY_TOTAL = 135;
 export const ATTR_MAX = 20; // a Tulajdonság abszolút maximuma (Adottsággal is)
 export const BASE_KAP_PER_LEVEL = 50;
-export const VE_BASE = 60; // VÉ = Ügy + Gy + 60 + HM
+// The VÉ base (60) lives in model/combatInfo.ts (COMBAT_INFO.VÉ.base) — the combat formulas are
+// data-driven off COMBAT_INFO so the engine and the sheet's breakdown share one source.
 
 // KAP cost to buy one point of each resource.
 export const KAP_RATE: Record<Resource, number> = {

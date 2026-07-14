@@ -3,7 +3,7 @@
 
 import { Stats } from "./attributes";
 import { CombatChannel, Effect, Resource } from "./effects";
-import { SkillFok } from "./common";
+import { SkillFok, SkillInstanceRef } from "./common";
 
 export const SCHEMA_VERSION = 1;
 
@@ -67,32 +67,22 @@ export interface StatIncrease {
 }
 
 // The +1 attribute a fok-4 skill INSTANCE grants (multi-attribute skills only; single-attribute ones
-// auto-apply in the engine). Identified structurally by the instance: a user branch by its `variantId`,
-// otherwise the skill + subtype (covers grants at fok 4 too, e.g. the wizard's Pszi, which have no
-// purchase). Lives on the record (not a per-level ledger) — it's a per-instance choice, not a KAP spend.
-export interface Fok4Bonus {
-  skill: string;
-  subtype?: string;
-  variantId?: string;
+// auto-apply in the engine). Identified by SkillInstanceRef (covers grants at fok 4 too, e.g. the
+// wizard's Pszi, which have no purchase). Lives on the record (not a per-level ledger) — it's a
+// per-instance choice, not a KAP spend.
+export interface Fok4Bonus extends SkillInstanceRef {
   stat: keyof Stats;
 }
 
 // A committing "path" choice forced when a skill INSTANCE reaches a trigger fok (Pszi tudat/test at fok 3).
-// Identified like Fok4Bonus (a branch by variantId, else skill+subtype).
-export interface SkillPathChoice {
-  skill: string;
-  subtype?: string;
-  variantId?: string;
+export interface SkillPathChoice extends SkillInstanceRef {
   trigger: string; // the FokTrigger label (e.g. "Pszi fa")
   value: string; // the chosen option (e.g. "tudat")
 }
 
-// Player-set attribute requirements for an open chooseAttrs branch (Művészetek). Per instance (a branch by
-// variantId, else skill+subtype) — NOT on the purchase, so it survives for granted/cross-level instances.
-export interface SkillAttrChoice {
-  skill: string;
-  subtype?: string;
-  variantId?: string;
+// Player-set attribute requirements for an open chooseAttrs branch (Művészetek). Per instance — NOT on
+// the purchase, so it survives for granted/cross-level instances.
+export interface SkillAttrChoice extends SkillInstanceRef {
   attrs: (keyof Stats)[];
 }
 

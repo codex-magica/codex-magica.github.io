@@ -56,6 +56,3 @@ export const makeStats = (value = 0): Stats => ({
   Asztrál: value,
   Érzékelés: value,
 });
-
-export const sumStats = (s: Stats): number =>
-  STAT_KEYS.reduce((acc, k) => acc + (s[k] || 0), 0);

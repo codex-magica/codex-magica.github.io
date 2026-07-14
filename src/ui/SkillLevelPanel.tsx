@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import { Box, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
-import { CharacterRecord, getLevelRecord } from "../model/character";
-import { DerivedCharacter } from "../engine/types";
-import { SKILLS, SKILL_BY_NAME } from "../model/skills";
-import { Stat, STAT_SHORT, STAT_KEYS } from "../model/attributes";
-import { SkillCategory, SKILL_CATEGORIES } from "../model/common";
-import { skillKpCost, teachingUptoFor } from "../engine/skillCost";
+import { Box, HStack, Text } from "@chakra-ui/react";
+import { CharacterRecord } from "../model/character";
+import { DerivedCharacter, OwnedSkill } from "../engine/types";
+import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT } from "../model/skills";
+import { Stat } from "../model/attributes";
+import { SkillCategory, SKILL_CATEGORIES, findInstanceChoice, sameInstance, skillKey } from "../model/common";
+import { SKILL_BY_NAME } from "../model/skills";
 import { Stepper } from "./Stepper";
 import { DetailModal, ModalState } from "./DetailModal";
-import { skillModalSub, skillModalBody } from "./compendiumData";
+import { skillModalContent } from "./compendiumData";
 import { FS_NAME, ROW_PY } from "./tokens";
-
-type View = "meglevo" | "tanult" | "egyeb"; // meglévő = megszerzett · tanult = van rá oktató · egyéb = a többi
+import { KapReadout, PanelHeading } from "./controls";
+import { buildSkillPanelData, View } from "./skills/skillPanelData";
+import { TeacherBadge, KapottBadge, Fok4Badge, PathBadge, AttrsBadge } from "./skills/badges";
+import { SubtypeControl } from "./skills/SubtypeControl";
+import { TanulButton, SpecializeMenu, RelearnMenu } from "./skills/SkillPickerMenu";
 
 interface Props {
   level: number;
@@ -29,25 +32,6 @@ interface Props {
   onSetChosenAttrs: (level: number, skill: string, subtype: string | undefined, variantId: string | undefined, attrs: Stat[]) => void;
 }
 
-const keyOf = (skill: string, subtype?: string) => (subtype ? `${skill}|${subtype}` : skill);
-
-// phones: the subtype control gets its own full-width line in the row; md+: a compact inline field
-const SUBW = { base: "100%", md: "128px" };
-// The suggested start fok for re-learning (branching): most second branches start at 3 (e.g. a new weapon
-// in a known category).
-const RELEARN_DEFAULT_FOK = 3;
-
-// ── shared inline bits (tokenized to the "Kódex" system) ──
-const TeacherBadge: React.FC<{ n: number }> = ({ n }) => (
-  <Box as="span" fontFamily="system-ui" fontSize="10px" fontWeight={700} px="5px" borderRadius="5px" bg="teacherBg" color="teacherTx" lineHeight="1.4" flexShrink={0}>
-    T{n}
-  </Box>
-);
-const KapottBadge: React.FC<{ text?: string }> = ({ text = "kapott" }) => (
-  <Box as="span" fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".08em" textTransform="uppercase" px="6px" py="2px" borderRadius="5px" bg="kapottBg" color="kapottTx" whiteSpace="nowrap" flexShrink={0}>
-    {text}
-  </Box>
-);
 export const SkillLevelPanel: React.FC<Props> = ({
   level,
   record,
@@ -64,22 +48,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
   onSetChosenAttrs,
 }) => {
   const [view, setView] = useState<View>("meglevo");
-  // Whether the "relearn a skill" picker (add another instance of an already-learned branchable skill) is open.
-  const [relearnOpen, setRelearnOpen] = useState(false);
-  // Step 2 of the relearn picker: the chosen skill, awaiting its starting fok.
-  const [relearnSkill, setRelearnSkill] = useState<string | null>(null);
-  // Whether the "specialize a skill" picker is open (reveal the subtype field on an optional-branch row).
-  const [specializeOpen, setSpecializeOpen] = useState(false);
   // Optional-branch skills the user opted to specialize this session — their base row shows the subtype field.
   const [specializing, setSpecializing] = useState<Set<string>>(new Set());
-  // The `skill|subtype` key of the Tanul button whose start-fok popover is open (re-learn only), or null.
-  const [tanulOpen, setTanulOpen] = useState<string | null>(null);
-  // The skill name whose fok-4 "+1 attribute" popover is open, or null.
-  const [fok4Open, setFok4Open] = useState<string | null>(null);
-  // The instance key whose Pszi-path popover is open, or null.
-  const [pathOpen, setPathOpen] = useState<string | null>(null);
-  // The instance key whose "choose attributes" popover is open (Művészetek), or null.
-  const [attrsOpen, setAttrsOpen] = useState<string | null>(null);
   // Skill-details modal (same content as the compendium / sheet), opened by clicking a skill name.
   const [skillModal, setSkillModal] = useState<ModalState | null>(null);
   const openSkillModal = (name: string) => {
@@ -87,395 +57,17 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const isPct = owned.some((s) => s.percent != null);
     const percent = isPct ? Math.max(0, ...owned.map((s) => s.percent ?? 0)) : null;
     const fok = isPct ? 0 : Math.max(0, ...owned.map((s) => s.fok));
-    setSkillModal({
-      kind: "skill",
-      name,
-      sub: skillModalSub(name),
-      body: skillModalBody(name),
-      levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
-      currentFok: percent == null && fok > 0 ? fok : undefined,
-    });
-  };
-  const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
-  const lvl = getLevelRecord(record, level);
-  const purchases = lvl?.skillPurchases ?? [];
-  // Variant (relearned) instances are independent extra rows. A variant added at an earlier level is still
-  // owned here, so gather variant purchases from EVERY level up to the active one — else the row would
-  // vanish (and the skill could look unowned in all filters) when switching levels. Edits route by id.
-  const variants = record.levels.filter((l) => l.level <= level).flatMap((l) => l.skillPurchases.filter((p) => p.id));
-
-  // Floor maps are keyed by the instance's STABLE identity (origSubtype ?? subtype) — two granted instances
-  // whose overrides were both cleared to "" stay distinct (the engine keeps them apart by origSubtype).
-  const grantedFloor: Record<string, number> = {};
-  derived.grantedSkills.forEach((g) => {
-    grantedFloor[keyOf(g.skill, g.origSubtype ?? g.subtype)] = g.percent != null ? g.percent : g.fok;
-  });
-  // The dec floor on THIS level: grants + everything bought in PRIOR levels (can't un-learn past progress).
-  // floorByLevel[level-1] is the snapshot at the start of this level — equals grants at level 1.
-  const inheritedFloor: Record<string, number> = {};
-  (derived.floorByLevel[level - 1] ?? derived.grantedSkills).forEach((g) => {
-    inheritedFloor[keyOf(g.skill, g.origSubtype ?? g.subtype)] = g.percent != null ? g.percent : g.fok;
-  });
-
-  // User-added branches carry a variantId in the derived list; everything else is a "real" owned instance
-  // (trunk / grant). This is collision-proof — an unnamed branch no longer masquerades as the trunk.
-  const ownedInstances = derived.skills.filter((s) => s.variantId == null);
-  // Teacher (oktatás) level for a specific INSTANCE — subtype-aware, so a branch-scoped teacher (e.g. Elf's
-  // Vadonjárás(erdő)) only counts for that branch.
-  const teacherOf = (skill: string, subtype?: string) => teachingUptoFor(derived.teachingDiscounts, SKILL_BY_NAME[skill], subtype);
-  // Is the WHOLE skill taught (a general / category / all-skills teacher, not a branch-scoped one)?
-  const generallyTaught = (skill: string) => {
-    const def = SKILL_BY_NAME[skill];
-    return derived.teachingDiscounts.some((d) => !d.subtype && (d.allSkills || (d.skill ? d.skill === skill : d.category === def.category)));
-  };
-  // Distinct subtypes of a skill that have a dedicated (branch-scoped) teacher, e.g. Vadonjárás → ["erdő"].
-  const taughtBranchesOf = (skill: string) =>
-    Array.from(new Set(derived.teachingDiscounts.filter((d) => d.subtype && d.skill === skill).map((d) => d.subtype!)));
-  // A step's Kp cost, INCLUDING any school cost multiplier (Barbár ×1.5) — must match what the engine
-  // charges (derive.ts), else the shown +N and the affordability gate would both understate the price.
-  const costMultOf = (skill: string): number => {
-    const def = SKILL_BY_NAME[skill];
-    let m = 1;
-    for (const cm of derived.costMultipliers) if (cm.allSkills || cm.skill === skill || (cm.category != null && cm.category === def.category)) m = Math.max(m, cm.factor);
-    return m;
-  };
-  const stepCost = (skill: string, from: number, to: number, subtype?: string, attrs?: Stat[]) => {
-    const base = skillKpCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill, subtype), derived.effectiveStats, attrs).kp;
-    const m = costMultOf(skill);
-    return m === 1 ? base : Math.ceil(base * m);
-  };
-  // Datalist suggestions for an open free-text branch: the subtypes already learned for this skill, plus any
-  // branch the character has an oktató for (e.g. Vadonjárás erdő). Free text still allowed.
-  const subtypeSuggestions = (skill: string): string[] =>
-    Array.from(
-      new Set([
-        ...derived.skills.filter((s) => s.skill === skill && s.subtype).map((s) => s.subtype!),
-        ...derived.teachingDiscounts.filter((d) => d.subtype && d.skill === skill).map((d) => d.subtype!),
-      ])
-    );
-
-  // Skills that can be RE-learned (added as another independent row): branchable AND already learned/owned.
-  const relearnable = SKILLS.filter(
-    (d) => d.branch != null && (ownedInstances.some((s) => s.skill === d.name) || variants.some((p) => p.skill === d.name))
-  );
-
-  // Optional-branch skills (Futás, Taktika, …): re-learnable like any branch, but their subtype field stays
-  // hidden until specialized. Offer, in the Specializálás picker, those with an unspecialized base instance.
-  const isOptionalBranch = (skill: string) => SKILL_BY_NAME[skill]?.branch?.[0]?.optional === true;
-  const specializable = SKILLS.filter(
-    (d) => isOptionalBranch(d.name) && !specializing.has(d.name) && ownedInstances.some((s) => s.skill === d.name && !s.subtype)
-  );
-
-  const skillHasContent = (name: string) =>
-    ownedInstances.some((s) => s.skill === name) || variants.some((p) => p.skill === name);
-  // A list row: a skill, optionally pinned to a taught BRANCH (subtype) — so "Vadonjárás (erdő)" can sit in
-  // Tanult while the general "Vadonjárás" sits in Egyéb.
-  type Entry = { skill: string; subtype?: string };
-  const entriesInCat = (cat: SkillCategory): Entry[] => {
-    const defs = SKILLS.filter((d) => d.category === cat);
-    if (view === "meglevo") return defs.filter((d) => skillHasContent(d.name)).map((d) => ({ skill: d.name }));
-    if (view === "egyeb")
-      // Not owned AND the whole skill isn't taught. A branch-scoped teacher does NOT pull the general skill out.
-      return defs.filter((d) => !skillHasContent(d.name) && !generallyTaught(d.name)).map((d) => ({ skill: d.name }));
-    // tanult: generally-taught skills as-is, plus a pinned entry per branch-scoped taught branch.
-    const entries: Entry[] = [];
-    for (const d of defs) {
-      if (generallyTaught(d.name)) entries.push({ skill: d.name });
-      else for (const sub of taughtBranchesOf(d.name)) entries.push({ skill: d.name, subtype: sub });
-    }
-    return entries;
+    setSkillModal(skillModalContent(name, { fok, percent }));
   };
 
-  // ── reusable controls ──
-  const subtypeInput = (value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, list?: string) => (
-    <Input
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      list={list}
-      w={SUBW}
-      flexShrink={0}
-      size="sm"
-      bg="fieldBg"
-      borderColor="fieldBd"
-      borderRadius="7px"
-      color="fg"
-      fontStyle="italic"
-      fontSize="13.5px"
-      focusBorderColor="accent"
-      _focus={{ borderColor: "accent", boxShadow: "0 0 0 2px var(--chakra-colors-accentSoft)" }}
-    />
-  );
+  const data = buildSkillPanelData(record, derived, level);
+  const { kap, variants, ownedInstances, teacherOf, stepCost } = data;
 
-  // Subtype editor: a closed dropdown when the skill declares a fixed `subtypes` set, else free text.
-  // For enumerated skills the subtype is MANDATORY — an empty one is flagged invalid (red).
-  // For a two-tier skill (Fegyverhasználat) at a fok ABOVE the category cap, the instance is a specific
-  // weapon — offer a datalist of all weapons rather than the category dropdown.
-  const subtypeControl = (skill: string, value: string, setValue: (v: string) => void, fok?: number) => {
-    const lvl0 = SKILL_BY_NAME[skill]?.branch?.[0];
-    if (lvl0?.branchAbove != null && fok != null && fok > lvl0.branchAbove) {
-      const all = lvl0.options?.flatMap((o) => o.children ?? []) ?? [];
-      const listId = `wl-all-${skill}`.replace(/[^a-zA-Z0-9]+/g, "-");
-      return (
-        <Box flexShrink={0} w={SUBW}>
-          {subtypeInput(value, (e) => setValue(e.target.value), "konkrét fegyver…", all.length ? listId : undefined)}
-          {all.length > 0 && <datalist id={listId}>{Array.from(new Set(all)).map((c) => <option key={c} value={c} />)}</datalist>}
-        </Box>
-      );
-    }
-    const opts = SKILL_BY_NAME[skill]?.subtypes;
-    if (opts && opts.length) {
-      const invalid = !value;
-      return (
-        <Select
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="altípus kötelező…"
-          isInvalid={invalid}
-          errorBorderColor="bad"
-          w={SUBW}
-          flexShrink={0}
-          size="sm"
-          bg="fieldBg"
-          borderColor={invalid ? "bad" : "fieldBd"}
-          borderRadius="7px"
-          color="fg"
-          fontSize="13.5px"
-          focusBorderColor="accent"
-        >
-          {opts.map((o) => <option key={o} value={o}>{o}</option>)}
-        </Select>
-      );
-    }
-    const sugg = subtypeSuggestions(skill);
-    const listId = `sub-${skill}`.replace(/[^a-zA-Z0-9]+/g, "-");
-    return (
-      <Box flexShrink={0} w={SUBW}>
-        {subtypeInput(value, (e) => setValue(e.target.value), "altípus", sugg.length ? listId : undefined)}
-        {sugg.length > 0 && <datalist id={listId}>{sugg.map((c) => <option key={c} value={c} />)}</datalist>}
-      </Box>
-    );
-  };
-
-  // The start-fok chooser shared by the relearn flows: fok buttons 1–5, 3 highlighted as the default.
-  const startFokButtons = (pick: (n: number) => void) => (
-    <HStack gap="6px" px="8px" pb="8px">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Box as="button" key={n} type="button"
-          w={{ base: "44px", md: "38px" }} h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
-          borderColor={n === RELEARN_DEFAULT_FOK ? "accent" : "fieldBd"} bg={n === RELEARN_DEFAULT_FOK ? "accentSoft" : "fieldBg"}
-          color={n === RELEARN_DEFAULT_FOK ? "accentTx" : "fg"} fontWeight={700} fontSize="15px"
-          display="flex" alignItems="center" justifyContent="center" sx={{ fontVariantNumeric: "tabular-nums" }}
-          _hover={{ borderColor: "accent", bg: "accentSoft", color: "accentTx" }}
-          onClick={() => pick(n)}>
-          {n}.
-        </Box>
-      ))}
-    </HStack>
-  );
-
-  // Learn a skill — a quiet outline button with the open-book icon (signals "learn", not "selected"). A
-  // `subtype` pre-specialises the learn (e.g. a taught branch: Vadonjárás(erdő)). When the skill is ALREADY
-  // owned (this is a RE-learn), a popover asks which fok the new instance starts from (levels below = free).
-  const tanulBtn = (name: string, subtype?: string) => {
-    const relearn = skillHasContent(name);
-    const openKey = `${name}|${subtype ?? ""}`;
-    const open = tanulOpen === openKey;
-    return (
-      <Box position="relative" flexShrink={0}>
-        <Box
-          as="button"
-          type="button"
-          title={relearn ? "Újratanulás — melyik fokról induljon?" : "Képzettség tanulása"}
-          border="1px solid"
-          borderColor="fieldBd"
-          bg="transparent"
-          color="accentTx"
-          px="13px"
-          py="7px"
-          borderRadius="9px"
-          fontWeight={600}
-          fontSize={{ base: "16.5px", md: "15px" }}
-          whiteSpace="nowrap"
-          display="inline-flex"
-          alignItems="center"
-          gap="7px"
-          _hover={{ borderColor: "accent", bg: "accentSoft" }}
-          onClick={() => (relearn ? setTanulOpen(open ? null : openKey) : onUpsert(level, name, subtype, 1))}
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 5.5h6.5a3 3 0 0 1 3 3V20a2.4 2.4 0 0 0-2.4-2.4H2z" />
-            <path d="M22 5.5h-6.5a3 3 0 0 0-3 3V20a2.4 2.4 0 0 1 2.4-2.4H22z" />
-          </svg>
-          Tanul
-        </Box>
-        {open && (
-          <>
-            <Box position="fixed" inset={0} zIndex={29} onClick={() => setTanulOpen(null)} />
-            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="8px" minW="max-content" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px" whiteSpace="nowrap">
-                Hányadik fokról indul?
-              </Text>
-              <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" px="8px" pb="7px" maxW="240px">
-                1 fölött a korábbi fokok ingyenesek, de az új ág nem csökkenthető alájuk.
-              </Text>
-              {startFokButtons((n) => { onAddVariant(level, name, undefined, n, subtype); setTanulOpen(null); })}
-            </Box>
-          </>
-        )}
-      </Box>
-    );
-  };
-
-  // The player's stored fok-4 +1 choice for a specific INSTANCE (a branch by variantId, else skill+subtype).
+  // The player's stored per-instance choices (fok-4 +1, Pszi path).
   const fok4Stat = (skill: string, subtype?: string, variantId?: string): Stat | undefined =>
-    record.fok4Bonuses?.find((b) =>
-      variantId != null ? b.variantId === variantId : b.variantId == null && b.skill === skill && (b.subtype ?? "") === (subtype ?? "")
-    )?.stat as Stat | undefined;
-
-  // The "4. fok: +1 tulajdonság" badge for one fok-4 instance (identified by skill+subtype, or variantId for
-  // a branch). Single-attr → a quiet info chip (auto-applied by the engine); multi-attr → a popover picker,
-  // loud (red) until a choice is made. Every fok-4 instance carries its own.
-  const fok4Badge = (skill: string, subtype?: string, variantId?: string, instAttrs?: Stat[]) => {
-    const attrs = instAttrs && instAttrs.length ? instAttrs : SKILL_BY_NAME[skill]?.attrs ?? [];
-    if (attrs.length === 0) return null;
-    if (attrs.length === 1) {
-      return (
-        <Box as="span" fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".04em" px="6px" py="2px" borderRadius="5px" bg="accentSoft" color="accentTx" whiteSpace="nowrap" flexShrink={0} title={`4. fok: +1 ${attrs[0]}`}>
-          +1 {STAT_SHORT[attrs[0]]}
-        </Box>
-      );
-    }
-    const openKey = variantId ? `v:${variantId}` : `s:${keyOf(skill, subtype)}`;
-    const chosen = fok4Stat(skill, subtype, variantId);
-    const open = fok4Open === openKey;
-    return (
-      <Box position="relative" flexShrink={0}>
-        <Box as="button" type="button" title="4. fok: válassz +1 tulajdonságot" onClick={() => setFok4Open(open ? null : openKey)}
-          display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
-          fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
-          bg={chosen ? "accentSoft" : "badSoft"} color={chosen ? "accentTx" : "bad"} borderColor={chosen ? "accentBd" : "bad"}>
-          {chosen ? `+1 ${STAT_SHORT[chosen]}` : "+1 tul.?"}
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-        </Box>
-        {open && (
-          <>
-            <Box position="fixed" inset={0} zIndex={29} onClick={() => setFok4Open(null)} />
-            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW={{ base: 0, md: "max-content" }} maxW={{ base: "min(320px, 86vw)", md: "none" }} sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">+1 tulajdonság (4. fok)</Text>
-              <HStack gap="7px" flexWrap={{ base: "wrap", md: "nowrap" }}>
-                {attrs.map((a) => (
-                  <Box as="button" key={a} type="button" onClick={() => { onSetFok4Stat(skill, subtype, variantId, a); setFok4Open(null); }}
-                    px="12px" h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
-                    borderColor={a === chosen ? "accent" : "fieldBd"} bg={a === chosen ? "accentSoft" : "fieldBg"} color={a === chosen ? "accentTx" : "fg"}
-                    fontWeight={700} fontSize="14px" display="flex" alignItems="center" justifyContent="center" whiteSpace="nowrap" _hover={{ borderColor: "accent" }}>
-                    {a}
-                  </Box>
-                ))}
-              </HStack>
-            </Box>
-          </>
-        )}
-      </Box>
-    );
-  };
-
-  // Pszi-style committing path badge (tudat/test at fok 3). Loud (red) until the player commits; forced.
-  const pathChoiceVal = (skill: string, subtype: string | undefined, variantId: string | undefined, trigger: string): string | undefined =>
-    record.pathChoices?.find((c) => (variantId != null ? c.variantId === variantId : c.variantId == null && c.skill === skill && (c.subtype ?? "") === (subtype ?? "")) && c.trigger === trigger)?.value;
-  const pathBadge = (skill: string, subtype: string | undefined, variantId: string | undefined, fok: number) => {
-    const trig = SKILL_BY_NAME[skill]?.fokTriggers?.find((t) => t.kind === "path");
-    if (!trig || trig.kind !== "path" || fok < trig.atFok) return null;
-    const openKey = (variantId ? `v:${variantId}` : `s:${keyOf(skill, subtype)}`) + `|${trig.label}`;
-    const chosen = pathChoiceVal(skill, subtype, variantId, trig.label);
-    const open = pathOpen === openKey;
-    return (
-      <Box position="relative" flexShrink={0}>
-        <Box as="button" type="button" title={`${trig.atFok}. fok: ${trig.label} választása`} onClick={() => setPathOpen(open ? null : openKey)}
-          display="inline-flex" alignItems="center" gap="4px" px="7px" py="3px" borderRadius="6px" border="1px solid"
-          fontFamily="system-ui" fontSize="9.5px" fontWeight={700} letterSpacing=".04em" whiteSpace="nowrap"
-          bg={chosen ? "accentSoft" : "badSoft"} color={chosen ? "accentTx" : "bad"} borderColor={chosen ? "accentBd" : "bad"}>
-          {chosen ?? trig.label + "?"}
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-        </Box>
-        {open && (
-          <>
-            <Box position="fixed" inset={0} zIndex={29} onClick={() => setPathOpen(null)} />
-            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" minW={{ base: 0, md: "max-content" }} maxW={{ base: "min(320px, 86vw)", md: "none" }} sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px" whiteSpace="nowrap">{trig.label} ({trig.atFok}. fok)</Text>
-              <HStack gap="7px" flexWrap={{ base: "wrap", md: "nowrap" }}>
-                {trig.options.map((o) => (
-                  <Box as="button" key={o} type="button" onClick={() => { onSetPathChoice(skill, subtype, variantId, trig.label, o === chosen ? null : o); setPathOpen(null); }}
-                    px="12px" h={{ base: "44px", md: "38px" }} borderRadius="9px" border="1px solid"
-                    borderColor={o === chosen ? "accent" : "fieldBd"} bg={o === chosen ? "accentSoft" : "fieldBg"} color={o === chosen ? "accentTx" : "fg"}
-                    fontWeight={700} fontSize="14px" display="flex" alignItems="center" justifyContent="center" whiteSpace="nowrap" _hover={{ borderColor: "accent" }}>
-                    {o}
-                  </Box>
-                ))}
-              </HStack>
-            </Box>
-          </>
-        )}
-      </Box>
-    );
-  };
-
-  // Attribute-requirement badge, shown on EVERY skill instance that has governing attributes. Lists the
-  // attrs as short names; any UNMET one (effective stat < 10 + fok) is yellow. For an open chooseAttrs skill
-  // (Művészetek) it's an editable picker (red until chosen); otherwise it's a read-only info pill.
-  const attrsBadge = (skill: string, subtype: string | undefined, variantId: string | undefined, current: Stat[], unmetAttrs: Stat[]) => {
-    const chooseAttrs = SKILL_BY_NAME[skill]?.branch?.some((b) => b.chooseAttrs) ?? false;
-    if (!chooseAttrs && current.length === 0) return null; // fixed skill with no attribute requirements
-    const unmet = (a: Stat) => unmetAttrs.includes(a); // computed by the engine (matches the KAP penalty)
-    const empty = chooseAttrs && current.length === 0;
-    const bg = empty ? "badSoft" : chooseAttrs ? "accentSoft" : "fieldBg";
-    const tx = empty ? "bad" : chooseAttrs ? "accentTx" : "muted";
-    const bd = empty ? "bad" : chooseAttrs ? "accentBd" : "fieldBd";
-    const chipSx = { display: "inline-flex", alignItems: "center", gap: "4px", px: "7px", py: "3px", borderRadius: "6px", border: "1px solid", fontFamily: "system-ui", fontSize: "9.5px", fontWeight: 700, letterSpacing: ".04em", whiteSpace: "nowrap", bg, color: tx, borderColor: bd } as const;
-    const inner = current.length ? (
-      <Box as="span" display="inline-flex" alignItems="center">
-        {current.map((a, i) => (
-          <React.Fragment key={a}>
-            {i > 0 && <Box as="span" opacity={0.5} mx="1px">·</Box>}
-            <Box as="span" color={unmet(a) ? "warn" : undefined} title={unmet(a) ? `${a}: nem elég magas (a képzés drágább)` : a}>{STAT_SHORT[a]}</Box>
-          </React.Fragment>
-        ))}
-      </Box>
-    ) : "tul.?";
-
-    if (!chooseAttrs)
-      return <Box {...chipSx} flexShrink={0} title="Tulajdonság-igény">{inner}</Box>;
-
-    const openKey = (variantId ? `v:${variantId}` : `s:${keyOf(skill, subtype)}`) + "|attrs";
-    const open = attrsOpen === openKey;
-    const toggle = (a: Stat) => onSetChosenAttrs(level, skill, subtype, variantId, current.includes(a) ? current.filter((x) => x !== a) : current.concat([a]));
-    return (
-      <Box position="relative" flexShrink={0}>
-        <Box as="button" type="button" title="Válaszd meg a tulajdonság-igényt" onClick={() => setAttrsOpen(open ? null : openKey)} {...chipSx}>
-          {inner}
-          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-        </Box>
-        {open && (
-          <>
-            <Box position="fixed" inset={0} zIndex={29} onClick={() => setAttrsOpen(null)} />
-            <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="13px" w="max-content" maxW="280px" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-              <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" mb="9px">Tulajdonság-igény</Text>
-              <HStack gap="6px" flexWrap="wrap">
-                {STAT_KEYS.map((a) => (
-                  <Box as="button" key={a} type="button" onClick={() => toggle(a)}
-                    px="9px" h="34px" borderRadius="8px" border="1px solid"
-                    borderColor={current.includes(a) ? "accent" : "fieldBd"} bg={current.includes(a) ? "accentSoft" : "fieldBg"} color={current.includes(a) ? "accentTx" : "fg"}
-                    fontWeight={700} fontSize="12.5px" display="flex" alignItems="center" justifyContent="center" _hover={{ borderColor: "accent" }}>
-                    {STAT_SHORT[a]}
-                  </Box>
-                ))}
-              </HStack>
-            </Box>
-          </>
-        )}
-      </Box>
-    );
-  };
+    findInstanceChoice(record.fok4Bonuses, { skill, subtype, variantId })?.stat as Stat | undefined;
+  const pathChoiceFor = (skill: string, subtype?: string, variantId?: string) => (trigger: string): string | undefined =>
+    record.pathChoices?.find((c) => sameInstance(c, { skill, subtype, variantId }) && c.trigger === trigger)?.value;
 
   const nameGroup = (name: string, teacher: number) => (
     <HStack spacing="7px" flex="0 1 auto" minW={0}>
@@ -489,8 +81,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
     left: React.ReactNode,
     subtype: React.ReactNode,
     kapott: React.ReactNode,
-    stepper: React.ReactNode,
-    trailing: React.ReactNode
+    stepper: React.ReactNode
   ) => (
     // md+: one line (name · subtype · badges · ~ · stepper). base: a fixed three-line rhythm —
     // name+badges, then the subtype control full-width, then the stepper line (badge left, stepper right).
@@ -502,7 +93,6 @@ export const SkillLevelPanel: React.FC<Props> = ({
           {subtype}
         </Box>
       )}
-      {trailing}
       {kapott}
       <Box flex="1 1 auto" minW="8px" display={{ base: "none", md: "block" }} />
       <Box order={{ base: 3, md: 0 }} flexBasis={{ base: "100%", md: "auto" }} minW={0} display="flex">
@@ -512,38 +102,48 @@ export const SkillLevelPanel: React.FC<Props> = ({
   );
 
   // A granted or first-learned instance (no variant id) — an independent row. A branchable skill always
-  // shows its subtype control (fixed dropdown / free text / fok-aware weapon); its subtype edits go through
-  // the origSubtype-keyed override (grants) or the combined learned setter.
-  const instRow = (inst: { skill: string; subtype?: string; origSubtype?: string; fok: number; percent?: number; attrs?: Stat[]; unmetAttrs?: Stat[]; placeholder?: boolean }) => {
+  // shows its subtype control; its subtype edits go through the origSubtype-keyed override (grants) or
+  // the combined learned setter.
+  const instRow = (inst: OwnedSkill) => {
     const isPct = inst.percent != null;
     const cur = isPct ? inst.percent! : inst.fok;
-    // Stable instance identity: purchases and per-instance choices (fok-4, path, attrs) address a granted
-    // instance by its ORIGINAL subtype, so renaming/clearing the display name never orphans them.
+    // Stable instance identity: purchases and per-instance choices address a granted instance by its
+    // ORIGINAL subtype, so renaming/clearing the display name never orphans them.
     const idSub = inst.origSubtype ?? inst.subtype;
-    const grantFloor = grantedFloor[keyOf(inst.skill, idSub)] || 0;
-    const floor = inheritedFloor[keyOf(inst.skill, idSub)] || 0;
+    const grantFloor = data.grantedFloor[skillKey(inst.skill, idSub)] || 0;
+    const floor = data.inheritedFloor[skillKey(inst.skill, idSub)] || 0;
     const teacher = teacherOf(inst.skill, inst.subtype);
-    const step = isPct ? (teacher > 0 ? 5 : 3) : 1;
+    const step = isPct ? (teacher > 0 ? PERCENT_KP_RATE_TAUGHT : PERCENT_KP_RATE) : 1;
     const atMax = isPct ? cur >= 100 : cur >= 5;
     const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step, inst.subtype, inst.attrs);
     const showFok4 = !isPct && cur >= 4;
-    const branchDef = SKILL_BY_NAME[inst.skill]?.branch;
     // Real branches always show the subtype control; an OPTIONAL branch (Futás …) shows it only once
-    // specialized — it already has a subtype, or the user picked it in the Specializálás menu this session.
-    const showSubtype =
-      branchDef != null && (branchDef[0]?.optional !== true || !!inst.subtype || specializing.has(inst.skill));
+    // specialized — it already has a subtype, or the user picked it in the Specializálás menu.
+    const branchDef = SKILL_BY_NAME[inst.skill]?.branch;
+    const showSubtype = branchDef != null && (branchDef[0]?.optional !== true || !!inst.subtype || specializing.has(inst.skill));
     return rowShell(
-      keyOf(inst.skill, inst.origSubtype) + ":g",
+      skillKey(inst.skill, inst.origSubtype) + ":g",
       nameGroup(inst.skill, teacher),
-      showSubtype
-        ? subtypeControl(inst.skill, inst.subtype || "", (v) =>
+      showSubtype ? (
+        <SubtypeControl
+          skill={inst.skill}
+          value={inst.subtype || ""}
+          onChange={(v) =>
             inst.origSubtype != null
-              ? onOverride(keyOf(inst.skill, inst.origSubtype), v)
-              : onSetSubtype(level, inst.skill, inst.subtype, v), cur)
-        : null,
-      <>{grantFloor > 0 && <KapottBadge />}{inst.placeholder && <KapottBadge text="válassz" />}{showFok4 && fok4Badge(inst.skill, idSub, undefined, inst.attrs)}{pathBadge(inst.skill, idSub, undefined, cur)}</>,
+              ? onOverride(skillKey(inst.skill, inst.origSubtype), v)
+              : onSetSubtype(level, inst.skill, inst.subtype, v)}
+          fok={cur}
+          suggestions={data.subtypeSuggestions(inst.skill)}
+        />
+      ) : null,
+      <>
+        {grantFloor > 0 && <KapottBadge />}
+        {inst.placeholder && <KapottBadge text="válassz" />}
+        {showFok4 && <Fok4Badge attrs={inst.attrs ?? []} chosen={fok4Stat(inst.skill, idSub)} onPick={(a) => onSetFok4Stat(inst.skill, idSub, undefined, a)} />}
+        <PathBadge skill={inst.skill} fok={cur} chosenFor={pathChoiceFor(inst.skill, idSub)} onPick={(trigger, value) => onSetPathChoice(inst.skill, idSub, undefined, trigger, value)} />
+      </>,
       <HStack spacing="7px" flexShrink={0} w={{ base: "100%", md: "auto" }}>
-        {attrsBadge(inst.skill, idSub, undefined, inst.attrs ?? [], inst.unmetAttrs ?? [])}
+        <AttrsBadge skill={inst.skill} current={inst.attrs ?? []} unmetAttrs={inst.unmetAttrs ?? []} onToggle={(attrs) => onSetChosenAttrs(level, inst.skill, idSub, undefined, attrs)} />
         <Box flex="1 1 auto" display={{ base: "block", md: "none" }} />
         <Stepper
           fixed
@@ -555,14 +155,13 @@ export const SkillLevelPanel: React.FC<Props> = ({
           onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, idSub) : onUpsert(level, inst.skill, idSub, cur - step))}
           onInc={() => onUpsert(level, inst.skill, idSub, cur + step)}
         />
-      </HStack>,
-      null
+      </HStack>
     );
   };
 
   // A RE-learned instance (its own variant id): an independent extra row — subtype + fok + delete. Only
-  // ever branchable skills (the relearn picker offers only those), so never a percentage skill.
-  // `from` (start fok) marks the skipped-for-free early levels: the floor it can't be lowered below.
+  // ever branchable skills, so never a percentage skill. `from` (start fok) marks the skipped-for-free
+  // early levels: the floor it can't be lowered below.
   const varRow = (p: { id?: string; skill: string; subtype?: string; from?: number; to: number }) => {
     const atMax = p.to >= 5;
     const vFloor = Math.max(1, p.from ?? 1);
@@ -574,10 +173,14 @@ export const SkillLevelPanel: React.FC<Props> = ({
     return rowShell(
       p.id!,
       nameGroup(p.skill, teacherOf(p.skill, p.subtype)),
-      subtypeControl(p.skill, p.subtype || "", (v) => onPatchVariant(level, p.id!, { subtype: v }), p.to),
-      <>{(p.from ?? 1) > 1 && <KapottBadge text={`${p.from}. foktól`} />}{showFok4 && fok4Badge(p.skill, p.subtype, p.id, vAttrs)}{pathBadge(p.skill, p.subtype, p.id, p.to)}</>,
+      <SubtypeControl skill={p.skill} value={p.subtype || ""} onChange={(v) => onPatchVariant(level, p.id!, { subtype: v })} fok={p.to} suggestions={data.subtypeSuggestions(p.skill)} />,
+      <>
+        {(p.from ?? 1) > 1 && <KapottBadge text={`${p.from}. foktól`} />}
+        {showFok4 && <Fok4Badge attrs={vAttrs ?? []} chosen={fok4Stat(p.skill, p.subtype, p.id)} onPick={(a) => onSetFok4Stat(p.skill, p.subtype, p.id, a)} />}
+        <PathBadge skill={p.skill} fok={p.to} chosenFor={pathChoiceFor(p.skill, p.subtype, p.id)} onPick={(trigger, value) => onSetPathChoice(p.skill, p.subtype, p.id, trigger, value)} />
+      </>,
       <HStack spacing="7px" flexShrink={0} w={{ base: "100%", md: "auto" }}>
-        {attrsBadge(p.skill, p.subtype, p.id, vAttrs ?? [], vUnmet)}
+        <AttrsBadge skill={p.skill} current={vAttrs ?? []} unmetAttrs={vUnmet} onToggle={(attrs) => onSetChosenAttrs(level, p.skill, p.subtype, p.id, attrs)} />
         <Box flex="1 1 auto" display={{ base: "block", md: "none" }} />
         <Stepper
           fixed
@@ -589,8 +192,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
           onDec={() => (p.to <= vFloor ? onRemoveVariant(level, p.id!) : onPatchVariant(level, p.id!, { to: p.to - 1 }))}
           onInc={() => onPatchVariant(level, p.id!, { to: p.to + 1 })}
         />
-      </HStack>,
-      null
+      </HStack>
     );
   };
 
@@ -602,7 +204,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       px="12px"
       py="6px"
       borderRadius="8px"
-      fontFamily="system-ui"
+      fontFamily="ui"
       fontSize="13px"
       fontWeight={600}
       whiteSpace="nowrap"
@@ -617,14 +219,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
 
   return (
     <Box>
-      <HStack justify="space-between" mb={2} align="center">
-        <Heading fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">
-          Képzettségek <Text as="span" fontSize=".65em" fontWeight={500} color="fgFaint">— {level}. szint</Text>
-        </Heading>
-        <Text fontFamily="system-ui" fontSize="13px" fontWeight={700} color={kap < 0 ? "bad" : "accentTx"} sx={{ fontVariantNumeric: "tabular-nums" }}>
-          KAP: {kap}
-        </Text>
-      </HStack>
+      <PanelHeading title="Képzettségek" level={level} mb={2} trailing={<KapReadout kap={kap} />} />
 
       <HStack justify="space-between" align="center" mb={1} spacing="8px">
         <HStack spacing="2px" bg="band" border="1px solid" borderColor="hair" borderRadius="10px" p="3px" w="fit-content">
@@ -633,81 +228,8 @@ export const SkillLevelPanel: React.FC<Props> = ({
           {filterSeg("egyeb", "Egyéb")}
         </HStack>
         <HStack spacing="8px" flexShrink={0}>
-        {specializable.length > 0 && (
-          <Box position="relative" flexShrink={0}>
-            <Box as="button" type="button" title="Egy képzettség egyedi altípusának megadása (pl. Futás — hosszútáv)"
-              onClick={() => setSpecializeOpen((o) => !o)}
-              display="inline-flex" alignItems="center" gap="5px" px="11px" py="7px" borderRadius="9px"
-              border="1px solid" borderColor="fieldBd" bg="transparent" color="accentTx" fontWeight={600}
-              fontFamily="system-ui" fontSize="13px" whiteSpace="nowrap" _hover={{ borderColor: "accent", bg: "accentSoft" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" /></svg>
-              Specializálás
-            </Box>
-            {specializeOpen && (
-              <>
-                <Box position="fixed" inset={0} zIndex={29} onClick={() => setSpecializeOpen(false)} />
-                <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="8px" minW="220px" maxH="320px" overflowY="auto" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-                  <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px" whiteSpace="nowrap">
-                    Melyiket specializálod?
-                  </Text>
-                  <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" px="8px" pb="7px" maxW="240px">
-                    Egyedi altípust adhatsz a képzettségnek (pl. Futás — hosszútáv); a mező csak ekkor jelenik meg.
-                  </Text>
-                  {specializable.map((d) => (
-                    <Box as="button" key={d.name} type="button" w="100%" textAlign="left" px="8px" py="8px" borderRadius="8px"
-                      fontFamily="system-ui" fontSize="14px" fontWeight={600} color="fg" _hover={{ bg: "accentSoft", color: "accentTx" }}
-                      onClick={() => { setSpecializing((prev) => new Set(prev).add(d.name)); setSpecializeOpen(false); }}>
-                      {d.name}
-                    </Box>
-                  ))}
-                </Box>
-              </>
-            )}
-          </Box>
-        )}
-        {relearnable.length > 0 && (
-          <Box position="relative" flexShrink={0}>
-            <Box as="button" type="button" title="Egy már tanult, ágazható képzettség újratanulása"
-              onClick={() => { setRelearnOpen((o) => !o); setRelearnSkill(null); }}
-              display="inline-flex" alignItems="center" gap="5px" px="11px" py="7px" borderRadius="9px"
-              border="1px solid" borderColor="fieldBd" bg="transparent" color="accentTx" fontWeight={600}
-              fontFamily="system-ui" fontSize="13px" whiteSpace="nowrap" _hover={{ borderColor: "accent", bg: "accentSoft" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-              Újratanulás
-            </Box>
-            {relearnOpen && (
-              <>
-                <Box position="fixed" inset={0} zIndex={29} onClick={() => { setRelearnOpen(false); setRelearnSkill(null); }} />
-                <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair" borderRadius="12px" p="8px" minW="220px" maxH="320px" overflowY="auto" sx={{ boxShadow: "0 16px 40px rgba(0,0,0,.32)" }}>
-                  {relearnSkill == null ? (
-                    <>
-                      <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px">
-                        Melyiket tanulod újra?
-                      </Text>
-                      {relearnable.map((d) => (
-                        <Box as="button" key={d.name} type="button" w="100%" textAlign="left" px="8px" py="8px" borderRadius="8px"
-                          fontFamily="system-ui" fontSize="14px" fontWeight={600} color="fg" _hover={{ bg: "accentSoft", color: "accentTx" }}
-                          onClick={() => setRelearnSkill(d.name)}>
-                          {d.name}
-                        </Box>
-                      ))}
-                    </>
-                  ) : (
-                    <>
-                      <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="muted" px="8px" py="6px" whiteSpace="nowrap">
-                        {relearnSkill} — hányadik fokról indul?
-                      </Text>
-                      <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" px="8px" pb="7px" maxW="240px">
-                        1 fölött a korábbi fokokat máshol már megtanulta — azok ingyenesek, és az új ág nem csökkenthető alájuk.
-                      </Text>
-                      {startFokButtons((n) => { onAddVariant(level, relearnSkill, undefined, n); setRelearnOpen(false); setRelearnSkill(null); })}
-                    </>
-                  )}
-                </Box>
-              </>
-            )}
-          </Box>
-        )}
+          <SpecializeMenu options={data.specializable(specializing)} onPick={(name) => setSpecializing((prev) => new Set(prev).add(name))} />
+          <RelearnMenu options={data.relearnable} onPick={(skill, startFok) => onAddVariant(level, skill, undefined, startFok)} />
         </HStack>
       </HStack>
 
@@ -718,11 +240,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
         "& > div:last-child > :last-child > :last-child": { borderBottom: "none" },
       }}>
         {SKILL_CATEGORIES.map((cat) => {
-          const entries = entriesInCat(cat);
+          const entries = data.entriesInCat(cat as SkillCategory, view);
           if (entries.length === 0) return null;
           return (
             <Box key={cat}>
-              <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx" mt="13px" mb="1px">
+              <Text textStyle="overline" fontSize="11px" letterSpacing=".11em" color="catTx" mt="13px" mb="1px">
                 {cat}
               </Text>
               {entries.map((e) => {
@@ -738,7 +260,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
                       <Box as="button" type="button" onClick={() => openSkillModal(e.skill)} title="Részletek" textAlign="left" fontSize={FS_NAME} fontWeight={600} color="fg" whiteSpace="nowrap" minW={0} overflow="hidden" textOverflow="ellipsis" _hover={{ color: "accentTx", textDecoration: "underline" }}>{label}</Box>
                       {teacherOf(e.skill, e.subtype) > 0 && <TeacherBadge n={teacherOf(e.skill, e.subtype)} />}
                       <Box flex="1 1 auto" minW="8px" />
-                      {tanulBtn(e.skill, e.subtype)}
+                      <TanulButton
+                        relearn={data.skillHasContent(e.skill)}
+                        onLearn={() => onUpsert(level, e.skill, e.subtype, 1)}
+                        onRelearn={(n) => onAddVariant(level, e.skill, undefined, n, e.subtype)}
+                      />
                     </HStack>
                   );
                 }
@@ -757,12 +283,12 @@ export const SkillLevelPanel: React.FC<Props> = ({
 
       {derived.allowedSkills.length > 0 && (
         <Box mt="16px" pt="12px" borderTop="1px solid" borderColor="hair">
-          <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".11em" textTransform="uppercase" color="catTx" mb="6px">
+          <Text textStyle="overline" fontSize="11px" letterSpacing=".11em" color="catTx" mb="6px">
             Tanulható — KM engedélyével
           </Text>
           <HStack flexWrap="wrap" gap="7px">
             {derived.allowedSkills.map((a, i) => (
-              <Box key={i} as="span" fontFamily="system-ui" fontSize="12.5px" fontWeight={600} px="9px" py="4px" borderRadius="7px" bg="fieldBg" border="1px dashed" borderColor="fieldBd" color="muted" whiteSpace="nowrap">
+              <Box key={i} as="span" fontFamily="ui" fontSize="12.5px" fontWeight={600} px="9px" py="4px" borderRadius="7px" bg="fieldBg" border="1px dashed" borderColor="fieldBd" color="muted" whiteSpace="nowrap">
                 {a.skill}{a.subtype ? ` (${a.subtype})` : ""}
               </Box>
             ))}

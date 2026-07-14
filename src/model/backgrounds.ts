@@ -126,5 +126,3 @@ export const BACKGROUNDS: Record<string, BackgroundDef> = {
     description: "Időnként megmagyarázhatatlan megérzések (KM-vezérelt).",
   },
 };
-
-export const BACKGROUND_NAMES = Object.keys(BACKGROUNDS);

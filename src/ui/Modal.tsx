@@ -14,8 +14,8 @@ export const ModalShell: React.FC<{
   overlayPad?: string;
   children: React.ReactNode;
 }> = ({ onClose, width, maxH = "92vh", zIndex = 45, overlayPad = "20px", children }) => (
-  <Box position="fixed" inset={0} zIndex={zIndex} bg="rgba(16,14,24,.55)" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}>
-    <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={maxH} display="flex" flexDirection="column" overflow="hidden" style={{ boxShadow: "0 24px 64px rgba(0,0,0,.42)" }}>
+  <Box position="fixed" inset={0} zIndex={zIndex} bg="overlayBg" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}>
+    <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={maxH} display="flex" flexDirection="column" overflow="hidden" boxShadow="modal">
       {children}
     </ParchPanel>
   </Box>

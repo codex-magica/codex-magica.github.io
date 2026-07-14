@@ -1,10 +1,33 @@
 import React from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
-import { Stat } from "../model/attributes";
+import { Stat, Stats } from "../model/attributes";
 import { DerivedCharacter } from "../engine/types";
-import { COMBAT_INFO, combatBreakdown } from "../model/combatInfo";
+import { COMBAT_INFO, CombatValueInfo } from "../model/combatInfo";
 import { ATTRIBUTE_INFO } from "../model/attributeInfo";
 import { ModalShell } from "./Modal";
+
+// The formula parts with substituted values: attribute terms, optional fixed base, then the tracked
+// bonus sources from the engine's provenance — HM allocations grouped into one line, every other source
+// (race/class combatBonus, e.g. "Faj: Elf" CÉ) itemized by name. Any untracked remainder goes to the
+// residual line (MME/AME statikus védelem), so the sum always reconciles with the final value.
+function combatBreakdown(
+  info: CombatValueInfo,
+  stats: Stats,
+  total: number,
+  contributions: { source: string; amount: number }[] = []
+): { label: string; value: number }[] {
+  const parts: { label: string; value: number }[] = info.stats.map((s) => ({ label: s, value: stats[s] }));
+  if (info.base) parts.push({ label: info.base.label, value: info.base.value });
+  let hm = 0;
+  for (const c of contributions) {
+    if (c.source.startsWith("HM ")) hm += c.amount; // "HM (vett) L2" / "HM (kapott) L3" → one grouped line
+    else parts.push({ label: c.source, value: c.amount });
+  }
+  if (hm !== 0) parts.push({ label: "HM elosztás", value: hm });
+  const residual = total - parts.reduce((a, p) => a + p.value, 0);
+  if (residual !== 0 || parts.length === 0) parts.push({ label: info.residualLabel, value: residual });
+  return parts;
+}
 
 // Minimal inline-markdown: renders **bold** spans (the value-ladder range labels), leaves the rest as text.
 const RichText: React.FC<{ text: string }> = ({ text }) => (

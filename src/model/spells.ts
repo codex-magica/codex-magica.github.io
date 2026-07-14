@@ -4,7 +4,7 @@
 //             background proxy: Mágikus fogékonyság / Pszi érzékenység / Kegyelt háttér gate the pool).
 //   castable = known AND the pool currently holds >= cost.
 import { Pool } from "./effects";
-import { SkillFok } from "./common";
+import { DEITIES, SkillFok } from "./common";
 import { SpellLike } from "../data/types";
 import { BardMagicValues } from "../data/bardMagic";
 import { FireMagicValues } from "../data/fireMagic";
@@ -13,12 +13,7 @@ import { WarlockMagicValues } from "../data/warlockMagic";
 import { PsiValues } from "../data/psi";
 import { MagasMagiaValues } from "../data/magasMagia";
 import { PrayerValues } from "../data/prayers";
-import { magasFok1 } from "../data/magasFok1";
-import { magasFok2 } from "../data/magasFok2";
-import { magasFok3 } from "../data/magasFok3";
-import { magasFok4 } from "../data/magasFok4";
-import { magasFok5 } from "../data/magasFok5";
-import { magasFok6 } from "../data/magasFok6";
+import { FOK_BY_GOV } from "../data/magasFokOverrides";
 
 // `path`: the owning skill instance must have COMMITTED to this fokTrigger path (Pszi tudat/test at fok 3)
 // — fok 1–2 disciplines are common, fok 3+ only come from the chosen ág (book ch.16).
@@ -93,18 +88,6 @@ const MAGAS_GOV: Record<string, string | null> = {
   "Szimpatikus mágia": null, // general Magasmágia only
   "Egyéb Mágikus Módszerek": null,
 };
-// Per-spell governing-skill fok overrides (default 3), SCOPED BY GOVERNING SKILL so a same-named spell
-// in a different category (e.g. "Aura" in Elemi vs Asztrál) gets the right tier. From the book: e.g.
-// Szabad Elemi Formák need Őselemi 5, anyagcsoport-2 Transzmutáció needs Alkímia 4, etc.
-const FOK_BY_GOV: Record<string, Record<string, number>> = {
-  "Őselemi mágia": magasFok1,
-  "Alkímia": magasFok2,
-  "Lélektan": magasFok3,
-  "Rúnamágia": magasFok4,
-  "Nekromancia": magasFok5,
-  "Démonológia": magasFok5,
-  "Számtan/Mértan": magasFok6,
-};
 const magas = build(MagasMagiaValues, "Magasmágia", "Mana", (s) => {
   const reqs: SpellReq[] = [{ skill: "Magasmágia", fok: 3 }]; // umbrella stays at the casting threshold
   const gov = MAGAS_GOV[s.type ?? ""];
@@ -113,10 +96,10 @@ const magas = build(MagasMagiaValues, "Magasmágia", "Mana", (s) => {
 });
 
 // ── E. Prayers — deity-specific need Vallásismeret(deity); Általános/Kis Arkánum at fok 3, Nagy Arkánum at fok 5 ──
-const DEITIES = new Set(["Arel", "Darton", "Domvik", "Dreina", "Krad", "Kyel", "Ranagol", "Sogron", "Tharr", "Uwel"]);
+const DEITY_SET = new Set<string>(DEITIES);
 const prayerReq = (s: SpellLike): SpellReq[] => {
   const src = s.source as string;
-  if (DEITIES.has(src)) return [{ skill: "Vallásismeret", subtype: src, fok: 3 }];
+  if (DEITY_SET.has(src)) return [{ skill: "Vallásismeret", subtype: src, fok: 3 }];
   if (src === "Nagy Arkánum") return [{ skill: "Vallásismeret", fok: 5 }];
   return [{ skill: "Vallásismeret", fok: 3 }]; // Általános, Kis Arkánum
 };
