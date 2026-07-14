@@ -628,7 +628,7 @@ export const CLASSES: Record<string, ClassDef> = {
       tag("Stílusharc"),
       bg("Pszi érzékenység"),
       ...teach("Harcművészet", "Harctéri gyakorlat", "Fájdalomtűrés", "Fegyverismeret", "Kétkezesharc", "Vakharc", "Vértviselet", "Pszi", "Élettan", "Orvoslás", "Herbalizmus", "Futás", "Akrobatika", "Esés", "Művészetek", "Nyelvtudás", "Kultúra", "Párbaj", "Udvari etikett/intrika", "Írás/olvasás"),
-      equip("Iskola hagyományos fegyvere (irei)"),
+      equip("Iskola hagyományos fegyvere(rei)"),
       restrict("Merev fémpáncél sosem viselhető."),
     ],
     baseSkills: [
