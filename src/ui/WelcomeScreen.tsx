@@ -70,7 +70,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const menuView = views.find((v) => v.id === menuId);
 
   return (
-    <Flex direction="column" h="100vh" sx={{ "@supports (height: 100dvh)": { height: "100dvh" } }} overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
       <ZoneBar
         active="karakter"
         onKarakter={() => {}}

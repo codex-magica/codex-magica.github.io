@@ -71,7 +71,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   );
 
   return (
-    <Flex direction="column" h="100vh" sx={{ "@supports (height: 100dvh)": { height: "100dvh" } }} overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
       {/* Top app bar — on phones the compendium view hosts its own merged bar instead */}
       <Box display={{ base: isSheet ? "block" : "none", md: "block" }} flexShrink={0} bg="page" borderBottom="1px solid" borderColor="hair">
         <HStack px={SIDE} py={{ base: 0, md: "9px" }} h={{ base: "54px", md: "auto" }} gap={{ base: "10px", md: "14px" }} flexWrap="wrap" align="center">

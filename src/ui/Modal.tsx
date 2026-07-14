@@ -9,13 +9,15 @@ import { ParchPanel } from "./ParchPanel";
 export const ModalShell: React.FC<{
   onClose: () => void;
   width: string; // e.g. "min(360px, 100%)"
-  maxH?: string;
+  maxH?: string; // screen-relative (vh) — divided by the desktop UI scale so it stays a true screen fraction
   zIndex?: number;
   overlayPad?: string;
   children: React.ReactNode;
 }> = ({ onClose, width, maxH = "92vh", zIndex = 45, overlayPad = "20px", children }) => (
   <Box position="fixed" inset={0} zIndex={zIndex} bg="overlayBg" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}>
-    <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={maxH} display="flex" flexDirection="column" overflow="hidden" boxShadow="modal">
+    {/* vh resolves against the REAL viewport, but #root's desktop scaling (--app-zoom, index.css)
+        multiplies rendered lengths — divide so "92vh" still means 92% of the screen when scaled. */}
+    <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={`calc((${maxH}) / var(--app-zoom, 1))`} display="flex" flexDirection="column" overflow="hidden" boxShadow="modal">
       {children}
     </ParchPanel>
   </Box>

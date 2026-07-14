@@ -12,7 +12,7 @@ export const CompendiumScreen: React.FC<{ onExit: () => void }> = ({ onExit }) =
   const [compTab, setCompTab] = useState(0);
   const [modal, setModal] = useState<ModalState | null>(null);
   return (
-    <Flex direction="column" h="100vh" sx={{ "@supports (height: 100dvh)": { height: "100dvh" } }} overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
       <Box display={{ base: "none", md: "block" }} flexShrink={0}>
         <ZoneBar active="kompendium" onKarakter={onExit} onKompendium={() => {}} />
       </Box>

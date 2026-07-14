@@ -210,7 +210,7 @@ export const SearchPalette: React.FC<{
   return (
     <Box position="fixed" inset={0} zIndex={46} bg="rgba(16,14,24,.55)" onClick={onClose}>
       <Box
-        position="absolute" top={{ base: "max(12px, env(safe-area-inset-top))", md: "14vh" }} left="50%" transform="translateX(-50%)" w="min(620px, calc(100vw - 24px))"
+        position="absolute" top={{ base: "max(12px, env(safe-area-inset-top))", md: "calc(14vh / var(--app-zoom, 1))" }} left="50%" transform="translateX(-50%)" w="min(620px, calc(100vw / var(--app-zoom, 1) - 24px))"
         bg="page" border="1px solid" borderColor="hair" borderRadius="14px" overflow="hidden"
         boxShadow="0 24px 64px rgba(0,0,0,.42)" onClick={(e) => e.stopPropagation()} onKeyDown={onKeyDown}
       >
@@ -233,7 +233,7 @@ export const SearchPalette: React.FC<{
             Nincs találat a(z) „{query.trim()}” kifejezésre.
           </Text>
         ) : (
-          <Box ref={listRef} maxH={{ base: "42vh", md: "min(54vh, 480px)" }} overflowY="auto" py="7px" sx={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}>
+          <Box ref={listRef} maxH={{ base: "42vh", md: "min(calc(54vh / var(--app-zoom, 1)), 480px)" }} overflowY="auto" py="7px" sx={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}>
             {hits.map((h, i) => (
               <ResultRow
                 key={`${h.entry.tab}:${h.entry.block}:${h.entry.name}`}

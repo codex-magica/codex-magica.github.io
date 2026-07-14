@@ -25,3 +25,34 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Big desktops: the type scale is tuned for phones/iPads/laptops (md = 1200px), so on wide screens
+   everything reads a bit small. The styles are px-based throughout, so instead of re-tuning dozens
+   of font sizes, scale the WHOLE UI as one unit: transform-scale #root and divide its layout box by
+   the same factor, so the scaled canvas is exactly the viewport again (content stays centered, no
+   overflow). transform — not `zoom` — because its interactions are fully specified and identical
+   across browsers: viewport units resolve against the real viewport, and position:fixed descendants
+   (modals, the creator) anchor to #root's box, which visually equals the screen. The transform is
+   applied even at scale 1 so fixed-positioning semantics don't flip at the breakpoint.
+   Media queries still see the real viewport, so the md (1200px) breakpoint is unaffected. */
+:root { --app-zoom: 1; }
+@media (min-width: 1680px) { :root { --app-zoom: 1.1; } }
+@media (min-width: 2200px) { :root { --app-zoom: 1.2; } }
+
+body {
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+#root {
+  overflow: hidden;
+  transform: scale(var(--app-zoom));
+  transform-origin: 0 0;
+  width: calc(100vw / var(--app-zoom));
+  height: calc(100vh / var(--app-zoom));
+}
+/* the app shells fill #root with height:100% — the dynamic-viewport handling lives here once */
+@supports (height: 100dvh) {
+  body { height: 100dvh; }
+  #root { height: calc(100dvh / var(--app-zoom)); }
+}
