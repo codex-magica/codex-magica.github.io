@@ -1,13 +1,16 @@
-import React, { useMemo, useState } from "react";
-import { Box, Flex, Heading, HStack, IconButton, Text } from "@chakra-ui/react";
+import React, { useMemo, useRef, useState } from "react";
+import { Box, Flex, Heading, HStack, IconButton, Input, Text } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
 import { ConfirmModal } from "./ConfirmModal";
+import { ModalShell } from "./Modal";
 import { ZoneBar } from "./ZoneBar";
+import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { RULES } from "../model/rulesDb";
 import { derive } from "../engine/derive";
 import { SyncApi } from "../state/useRoster";
 import { signOutCloud } from "../state/cloudSync";
+import { exportRecordFile, parseImportedRecord } from "../state/transfer";
 
 interface Props {
   records: CharacterRecord[];
@@ -17,6 +20,8 @@ interface Props {
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
+  onImport: (record: CharacterRecord) => void;
+  onRename: (id: string, name: string) => void;
   onOpenCompendium: () => void;
 }
 
@@ -35,6 +40,7 @@ const RenameIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 const CopyIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>;
 const TrashIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>;
 const ImportIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>;
+const ExportIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 8l5-5 5 5" /><path d="M12 3v12" /></svg>;
 const LogoutIcon = <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
 const CloudIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .42-8.98 7 7 0 0 0-13.6 1.98A4 4 0 0 0 6 19z" /></svg>;
 
@@ -56,11 +62,30 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
   </Box>
 );
 
-export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onOpenCompendium }) => {
+export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmSyncOff, setConfirmSyncOff] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [renameId, setRenameId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const hoverShadow = useParchmentHoverShadow();
+
+  const handleImportFile = (file: File | undefined) => {
+    if (!file) return;
+    void file.text().then((text) => {
+      const rec = parseImportedRecord(text);
+      if (rec) {
+        setImportError(null);
+        onImport(rec);
+      } else {
+        setImportError("Érvénytelen karakterfájl — az importáláshoz az alkalmazásból exportált .json fájl kell.");
+      }
+    });
+  };
+
 
   const views: CardView[] = useMemo(
     () =>
@@ -75,6 +100,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
     [records]
   );
   const menuView = views.find((v) => v.id === menuId);
+  const deleteView = views.find((v) => v.id === confirmDeleteId);
 
   return (
     <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
@@ -188,10 +214,26 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
               : "Google-szinkron bekapcsolása"}
           </Box>
           <Text as="span" opacity={0.5}>·</Text>
-          <Box as="button" type="button" display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
+          <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
           <Text as="span" opacity={0.5}>·</Text>
           <Text as="span">{records.length} / 12 hely felhasználva</Text>
         </HStack>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json,.json"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            handleImportFile(e.target.files?.[0]);
+            e.target.value = ""; // allow re-picking the same file
+          }}
+        />
+
+        {(sync.message || importError) && (
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="bad" mt="9px" maxW="52ch" mx="auto">
+            {importError ?? sync.message}
+          </Text>
+        )}
       </Box>
       </Box>
 
@@ -204,13 +246,58 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
             </Box>
             <Box p="8px">
               <MenuItem icon={PencilIcon} onClick={() => { const i = menuView.id; setMenuId(null); onEdit(i); }}>Szerkesztés</MenuItem>
-              <MenuItem icon={RenameIcon} onClick={() => setMenuId(null)}>Átnevezés</MenuItem>
+              <MenuItem icon={RenameIcon} onClick={() => { const i = menuView.id; setMenuId(null); setRenameValue(menuView.name); setRenameId(i); }}>Átnevezés</MenuItem>
               <MenuItem icon={CopyIcon} onClick={() => { const i = menuView.id; setMenuId(null); onDuplicate(i); }}>Másolat készítése</MenuItem>
+              <MenuItem icon={ExportIcon} onClick={() => { const r = records.find((x) => x.id === menuView.id); setMenuId(null); if (r) exportRecordFile(r); }}>Exportálás fájlba</MenuItem>
               <Box h="1px" bg="rule" mx="10px" my="6px" />
-              <MenuItem icon={TrashIcon} onClick={() => { const i = menuView.id; setMenuId(null); onDelete(i); }} danger>Törlés</MenuItem>
+              <MenuItem icon={TrashIcon} onClick={() => { const i = menuView.id; setMenuId(null); setConfirmDeleteId(i); }} danger>Törlés</MenuItem>
             </Box>
           </ParchPanel>
         </Flex>
+      )}
+
+      {deleteView && (
+        <ConfirmModal
+          title="Karakter törlése"
+          confirmLabel="Törlés"
+          onConfirm={() => {
+            const i = deleteView.id;
+            setConfirmDeleteId(null);
+            onDelete(i);
+          }}
+          onClose={() => setConfirmDeleteId(null)}
+        >
+          Biztosan törlöd <Text as="span" fontWeight={700} color="fg">{deleteView.name}</Text> karaktert?
+          Ez nem vonható vissza{sync.status === "on" ? ", és a törlés minden szinkronizált eszközödre átterjed" : ""}.
+        </ConfirmModal>
+      )}
+
+      {renameId && (
+        <ModalShell onClose={() => setRenameId(null)} width="min(400px, 100%)">
+          <Box p="22px">
+            <Heading fontSize="18px" fontWeight={700} color="fg" mb={3}>Átnevezés</Heading>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const name = renameValue.trim();
+                if (!name) return;
+                const i = renameId;
+                setRenameId(null);
+                onRename(i, name);
+              }}
+            >
+              <Input {...FIELD_SX} size="md" autoFocus value={renameValue} onChange={(e) => setRenameValue(e.target.value)} placeholder="Karakter neve" />
+              <HStack justify="flex-end" gap="9px" mt={4}>
+                <Box as="button" type="button" onClick={() => setRenameId(null)} px="15px" py="9px" borderRadius="9px" border="1px solid" borderColor="hair" bg="transparent" color="muted" fontWeight={600} fontSize="15px" _hover={{ borderColor: "accent" }}>
+                  Mégse
+                </Box>
+                <Box as="button" type="submit" px="18px" py="9px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx" fontWeight={700} fontSize="15px" opacity={renameValue.trim() ? 1 : 0.5}>
+                  Mentés
+                </Box>
+              </HStack>
+            </form>
+          </Box>
+        </ModalShell>
       )}
 
       {confirmSyncOff && (

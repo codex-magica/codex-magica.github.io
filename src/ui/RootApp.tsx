@@ -55,6 +55,11 @@ export const RootApp: React.FC = () => {
           onEdit={editChar}
           onDuplicate={roster.duplicate}
           onDelete={roster.remove}
+          onImport={roster.upsert}
+          onRename={(id, name) => {
+            const r = roster.get(id);
+            if (r) roster.upsert({ ...r, name });
+          }}
           onOpenCompendium={() => setScreen("compendium")}
         />
       )}

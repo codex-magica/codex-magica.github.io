@@ -39,27 +39,42 @@ export interface MergeResult {
 
 const toUser = (u: { uid: string; email: string | null }): CloudUser => ({ uid: u.uid, email: u.email });
 
-// Interactive sign-in. Waits for the persisted session to restore first — right after page load
-// auth.currentUser is still null while IndexedDB is read, and checking it synchronously would open
-// a popup that flashes and auto-closes. The popup only opens when there is truly no session (the
-// genuine first sign-in on this device). Throws if the user closes it.
+// Auth state is primed once at app start and kept live from then on. This matters for Safari:
+// signInWithPopup must run with no real async work between the user's tap and the popup opening,
+// or the popup gets blocked. With the state pre-resolved, the awaits on the click path are
+// already-settled promises (microtasks), which survive the gesture window.
+let currentUser: CloudUser | null = null;
+let authKnown: Promise<void> | null = null;
+
+export const primeAuthState = (): Promise<void> => {
+  if (!authKnown) {
+    authKnown = getFirebase().then(
+      ({ auth, authMod }) =>
+        new Promise<void>((resolve) => {
+          authMod.onAuthStateChanged(auth, (u) => {
+            currentUser = u ? toUser(u) : null; // permanent listener — tracks sign-in/out for good
+            resolve(); // repeat calls are no-ops
+          });
+        })
+    );
+  }
+  return authKnown;
+};
+
+// Interactive sign-in. Reuses the session when there is one (no popup); opens the popup only for
+// the genuine first sign-in on this device. Throws if the user closes/blocks it.
 export const signInInteractive = async (): Promise<CloudUser> => {
-  const existing = await restoreSession();
-  if (existing) return existing;
-  const { auth, authMod } = await getFirebase();
+  await primeAuthState(); // resolved long before a human can find the button — no real gap
+  if (currentUser) return currentUser;
+  const { auth, authMod } = await getFirebase(); // already resolved → microtask
   const cred = await authMod.signInWithPopup(auth, new authMod.GoogleAuthProvider());
   return toUser(cred.user);
 };
 
 // Silent session restore on app start (resolves null if the stored session is gone/revoked).
 export const restoreSession = async (): Promise<CloudUser | null> => {
-  const { auth, authMod } = await getFirebase();
-  return new Promise((resolve) => {
-    const unsubscribe = authMod.onAuthStateChanged(auth, (u) => {
-      unsubscribe();
-      resolve(u ? toUser(u) : null);
-    });
-  });
+  await primeAuthState();
+  return currentUser;
 };
 
 export const signOutCloud = async (): Promise<void> => {
@@ -209,6 +224,13 @@ export const mergeRosters = (local: CharacterRecord[], tombstones: Tombstones, c
       nextBase[id] = localTs;
       return;
     }
+    if (localTs === cloudTs) {
+      // same version on both sides (e.g. our own push landed but its confirmation was lost) —
+      // they only LOOK divergent from the stale base; they're in sync
+      roster.push(rec);
+      nextBase[id] = localTs;
+      return;
+    }
     // record vs record: genuine conflict — keep local on screen, let the user decide
     roster.push(rec);
     conflicts.push({ id, local: rec, cloud: cloudRec! });
@@ -229,14 +251,43 @@ const recordDoc = (r: CharacterRecord): CloudDoc => ({
   json: JSON.stringify(r),
 });
 
-export const pushToCloud = async (uid: string, records: CharacterRecord[], tombstones: Tombstones, tombstoneIds: string[]): Promise<void> => {
-  if (records.length === 0 && tombstoneIds.length === 0) return;
+// Conditional push (optimistic locking). A blind write would be document-level last-write-wins:
+// two devices editing near-simultaneously would let the second push silently overwrite the first,
+// destroying the divergent version before any pull could ever detect the conflict. So each write
+// happens in a transaction and only lands if the cloud doc is still the version this device
+// expected (`expected[id]`, normally the sync base) — or already carries our own timestamp (a
+// retried push is idempotent). Rejected ids are returned so the caller can run a pull-merge,
+// which is where the conflict surfaces to the user.
+export const pushToCloud = async (
+  uid: string,
+  records: CharacterRecord[],
+  tombstones: Tombstones,
+  tombstoneIds: string[],
+  expected: Record<string, number | undefined>
+): Promise<string[]> => {
+  if (records.length === 0 && tombstoneIds.length === 0) return [];
   const { fsMod, db, col } = await charsCollection(uid);
-  const batch = fsMod.writeBatch(db);
-  for (const r of records) batch.set(fsMod.doc(col, r.id), recordDoc(r) as unknown as Record<string, unknown>);
-  for (const id of tombstoneIds) {
-    const tomb: CloudDoc = { v: 0, name: "", updatedAt: tombstones[id] ?? Date.now(), deleted: true };
-    batch.set(fsMod.doc(col, id), tomb as unknown as Record<string, unknown>);
-  }
-  await batch.commit();
+  const items = [
+    ...records.map((r) => ({ id: r.id, rec: r as CharacterRecord | null })),
+    ...tombstoneIds.map((id) => ({ id, rec: null as CharacterRecord | null })),
+  ];
+  const stale: string[] = [];
+  await fsMod.runTransaction(db, async (tx) => {
+    stale.length = 0; // transactions may retry — start clean
+    const refs = items.map((it) => fsMod.doc(col, it.id));
+    const snaps: Array<{ exists: () => boolean; data: () => unknown }> = [];
+    for (const ref of refs) snaps.push(await tx.get(ref)); // reads must precede writes
+    items.forEach((it, i) => {
+      const cloudTs = snaps[i].exists() ? (snaps[i].data() as CloudDoc).updatedAt : undefined;
+      const ownTs = it.rec ? it.rec.updatedAt ?? 0 : tombstones[it.id];
+      const ok = cloudTs === undefined || cloudTs === expected[it.id] || cloudTs === ownTs;
+      if (!ok) {
+        stale.push(it.id);
+        return;
+      }
+      const data: CloudDoc = it.rec ? recordDoc(it.rec) : { v: 0, name: "", updatedAt: tombstones[it.id] ?? Date.now(), deleted: true };
+      tx.set(refs[i], data as unknown as Record<string, unknown>);
+    });
+  });
+  return stale;
 };

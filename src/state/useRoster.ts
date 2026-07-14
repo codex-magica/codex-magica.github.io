@@ -8,9 +8,20 @@ export type SyncStatus = "off" | "connecting" | "on" | "error";
 export interface SyncApi {
   status: SyncStatus;
   email: string | null;
+  message: string | null; // user-facing reason when connecting failed
   enable: () => void; // opens the one-time Google popup (or reconnects after an error)
   disable: () => void; // stops syncing; local data stays
 }
+
+// Translate sign-in failures into something actionable; null = the user just cancelled the popup.
+const signInErrorMessage = (e: unknown): string | null => {
+  const code = (e as { code?: string })?.code ?? "";
+  if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") return null;
+  if (code === "auth/popup-blocked") return "A böngésző blokkolta a bejelentkezési ablakot — engedélyezd a felugró ablakokat ehhez az oldalhoz, majd próbáld újra.";
+  if (code === "auth/unauthorized-domain") return "Erről a címről nem engedélyezett a Google-bejelentkezés (Firebase: Authentication → Authorized domains).";
+  if (code === "auth/network-request-failed") return "Hálózati hiba — ellenőrizd a kapcsolatot, majd próbáld újra.";
+  return `A bejelentkezés nem sikerült${code ? ` (${code})` : ""}.`;
+};
 
 export type ConflictChoice = "local" | "cloud" | "both";
 
@@ -52,9 +63,10 @@ const PUSH_DEBOUNCE_MS = 2500;
 // next merge sees the newer local `updatedAt` and uploads it then.
 export function useRoster(): RosterApi {
   const [records, setRecords] = useState<CharacterRecord[]>(() => loadRoster());
-  const [sync, setSync] = useState<{ status: SyncStatus; email: string | null }>(() => ({
+  const [sync, setSync] = useState<{ status: SyncStatus; email: string | null; message: string | null }>(() => ({
     status: syncFlagOn() ? "connecting" : "off",
     email: null,
+    message: null,
   }));
 
   const userRef = useRef<CloudUser | null>(null);
@@ -77,13 +89,23 @@ export function useRoster(): RosterApi {
     deletedIdsRef.current = new Set();
     try {
       const tombs = loadTombstones();
-      await pushToCloud(user.uid, recs, tombs, tombIds);
-      // pushes landed → these versions are now the recorded common ancestor
+      // Expect the cloud to still be at our recorded base; anything else means another device
+      // wrote in between and this push must not clobber it.
+      const stale = await pushToCloud(user.uid, recs, tombs, tombIds, loadSyncBase());
+      const staleSet = new Set(stale);
+      // landed pushes → those versions are now the recorded common ancestor
       const baseBump: Record<string, number> = {};
-      recs.forEach((r) => (baseBump[r.id] = r.updatedAt ?? 0));
-      tombIds.forEach((id) => (baseBump[id] = tombs[id] ?? 0));
+      recs.forEach((r) => {
+        if (!staleSet.has(r.id)) baseBump[r.id] = r.updatedAt ?? 0;
+      });
+      tombIds.forEach((id) => {
+        if (!staleSet.has(id)) baseBump[id] = tombs[id] ?? 0;
+      });
       bumpSyncBase(baseBump);
       setSync((s) => (s.status === "error" ? { ...s, status: "on" } : s));
+      // Rejected pushes = the cloud moved under us → pull-merge now; it either replays the push
+      // cleanly or raises the conflict dialog. (Not re-queued as dirty — the merge owns them.)
+      if (stale.length > 0) void pullMerge(user);
     } catch (e) {
       // Re-queue and surface the error; the next edit (or the next app start's merge) retries.
       recs.forEach((r) => dirtyIdsRef.current.add(r.id));
@@ -145,8 +167,18 @@ export function useRoster(): RosterApi {
         else delete safeBase[id];
       });
       saveSyncBase(safeBase);
-      await pushToCloud(user.uid, pushRecords, liveTombs, pushTombstoneIds);
-      saveSyncBase(nextBase);
+      // These pushes were decided against the snapshot we just fetched, so that snapshot is
+      // exactly what the cloud must still look like; a mismatch means a same-moment write from
+      // another device, and the next merge (focus/edit) will pick it up as a conflict.
+      const expected: Record<string, number | undefined> = {};
+      cloud.forEach((d, id) => (expected[id] = d.updatedAt));
+      const stale = await pushToCloud(user.uid, pushRecords, liveTombs, pushTombstoneIds, expected);
+      const finalBase = { ...nextBase };
+      stale.forEach((id) => {
+        if (prevBase[id] !== undefined) finalBase[id] = prevBase[id];
+        else delete finalBase[id];
+      });
+      saveSyncBase(finalBase);
     } finally {
       pullingRef.current = false;
     }
@@ -167,22 +199,24 @@ export function useRoster(): RosterApi {
   };
 
   const connect = async (interactive: boolean): Promise<void> => {
-    setSync({ status: "connecting", email: null });
+    setSync({ status: "connecting", email: null, message: null });
     try {
       const user = interactive ? await signInInteractive() : await restoreSession();
       if (!user) {
         // Stored session gone (revoked / cleared) — a popup is needed, but only on user action.
-        setSync({ status: "error", email: null });
+        setSync({ status: "error", email: null, message: "A korábbi bejelentkezés lejárt — kattints az újracsatlakozáshoz." });
         return;
       }
       userRef.current = user;
       await pullMerge(user);
       setSyncFlag(true);
-      setSync({ status: "on", email: user.email });
+      setSync({ status: "on", email: user.email, message: null });
     } catch (e) {
       console.error("Google sync connect failed", e);
       userRef.current = null;
-      setSync({ status: syncFlagOn() ? "error" : "off", email: null });
+      const message = interactive ? signInErrorMessage(e) : "A szinkron kapcsolódása nem sikerült — próbáld újra.";
+      // message === null → the user closed the popup themselves; not an error state
+      setSync({ status: message !== null && syncFlagOn() ? "error" : "off", email: null, message });
     }
   };
 
@@ -217,7 +251,7 @@ export function useRoster(): RosterApi {
     dirtyIdsRef.current = new Set();
     deletedIdsRef.current = new Set();
     setConflicts([]);
-    setSync({ status: "off", email: null });
+    setSync({ status: "off", email: null, message: null });
   };
 
   const get = (id: string) => records.find((r) => r.id === id);
@@ -265,7 +299,11 @@ export function useRoster(): RosterApi {
       return;
     }
     // Keeping (also) the local version is itself an edit: re-stamp it so every other device
-    // fast-forwards to the resolution instead of re-detecting the same conflict.
+    // fast-forwards to the resolution instead of re-detecting the same conflict. Acknowledge the
+    // cloud version we're overriding by bumping the base to it — the conditional push then
+    // expects exactly that version. (If the cloud moves yet again before the push lands, the
+    // push is rejected and the merge re-raises the conflict against the newer version.)
+    bumpSyncBase({ [id]: c.cloud.updatedAt ?? 0 });
     const keptLocal = { ...c.local, updatedAt: Date.now() };
     dirtyIdsRef.current.add(id);
     if (choice === "local") {
@@ -286,7 +324,7 @@ export function useRoster(): RosterApi {
     upsert,
     remove,
     duplicate,
-    sync: { status: sync.status, email: sync.email, enable, disable },
+    sync: { status: sync.status, email: sync.email, message: sync.message, enable, disable },
     conflicts,
     resolveConflict,
     dismissConflicts,

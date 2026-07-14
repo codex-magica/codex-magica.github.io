@@ -5,12 +5,14 @@
 // Harmless in local dev, where there is no edge gate.
 
 import { getFirebase } from "./firebase";
+import { primeAuthState } from "./cloudSync";
 
 let started = false;
 
 export const initAuthCookieRefresh = (): void => {
   if (started) return;
   started = true;
+  void primeAuthState(); // resolve the session early so a later sync-enable tap can popup Safari-safely
   void getFirebase().then(({ auth, authMod }) => {
     authMod.onIdTokenChanged(auth, (user) => {
       if (!user) return; // sign-out clears the cookie explicitly in the logout flow
