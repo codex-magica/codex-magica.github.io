@@ -95,7 +95,7 @@ function applySkillPurchases(ctx: DeriveCtx, L: number, lvlRec: LevelRecord): vo
     const rAttrs = instAttrs(ctx, sp.skill, effSub, sp.parent, attrChoiceFor(ctx, sp.skill, sp.subtype, sp.id));
     const tUpto = sp.teachingUpto != null ? sp.teachingUpto : teachingUptoFor(ctx.discounts, def, effSub);
     // Final price incl. the school cost penalty (e.g. Barbár ×1.5 Kp) — shared with the level-up UI.
-    const cost = skillStepCost(def, from, sp.to, tUpto, ctx.effective, rAttrs, ctx.costMultipliers);
+    const cost = skillStepCost(def, from, sp.to, tUpto, ctx.effective, rAttrs, ctx.costMultipliers, effSub);
     const kp = cost.kp;
     ctx.kapBalance -= kp; // 1 Kp = 1 KAP, drawn directly from the shared pool
     // One entry per purchase, joined by position (`idx`) — two same-key ops in one level (raw +

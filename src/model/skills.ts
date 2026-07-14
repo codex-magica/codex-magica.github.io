@@ -8,6 +8,7 @@ import { Stat, STAT_BY_SHORT } from "./attributes";
 import { Effect, GrantEntry, grant } from "./effects";
 import { DEITIES, SkillCategory, SkillDifficulty, SkillFok, SkillRef } from "./common";
 import { WeaponValues, baseWeaponName } from "../data/weapons";
+import { martialSuggestions } from "./martialArts";
 
 export type SkillCost = number[] | "percentage"; // cumulative Kp per fok (length 5), or %-based
 
@@ -24,6 +25,7 @@ export interface BranchLevel {
   source: "fixed" | "open"; // enumerated dropdown vs free-form (player-typed)
   options?: BranchOption[]; // for "fixed"
   chooseAttrs?: boolean; // "open": the player sets this branch's attribute requirements (Művészetek)
+  suggest?: string[]; // "open": datalist hints (still free text) — e.g. the Harcművészet styles + weapons
   capFok?: SkillFok; // a node at this depth can't exceed this fok directly (Fegyverhasználat kategória = 2)
   branchAbove?: SkillFok; // to exceed `branchAbove`, you MUST branch to the next depth (forced branching)
   optional?: boolean; // subtype is optional: the row shows NO field by default (revealed via "Specializálás")
@@ -145,7 +147,9 @@ const RAW: Raw[] = [
   { name: "Fegyverismeret", cat: "Harci", diff: "II", attrs: ["Int", "Érz"] },
   { name: "Hadvezetés", cat: "Harci", diff: "III", attrs: ["Int", "Krz"], soft: ["Lélektan", "Térképészet"] },
   { name: "Harci láz", cat: "Harci", diff: "II", attrs: ["Áks", "Egs"] },
-  { name: "Harcművészet", cat: "Harci", diff: "IV", attrs: ["Erő", "Gy", "Ügy", "Akr"], branch: [{ label: "stílus", source: "open" }] },
+  // Free text (a KM's style or school can be anything), but suggested: the four styles (the fok 1–2
+  // form), the unarmed art and every weapon (the fok-3+ commitment) — see model/martialArts.
+  { name: "Harcművészet", cat: "Harci", diff: "IV", attrs: ["Erő", "Gy", "Ügy", "Akr"], branch: [{ label: "stílus", source: "open", suggest: martialSuggestions() }] },
   {
     name: "Harctéri gyakorlat", cat: "Harci", diff: "II", attrs: ["Gy", "Ügy", "Érz"],
     // Fok 3+ grants HM per level (book ch.16, line 470/474/480).

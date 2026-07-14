@@ -72,7 +72,7 @@ export function buildSkillPanelData(record: CharacterRecord, derived: DerivedCha
   const taughtBranchesOf = (skill: string) =>
     Array.from(new Set(derived.teachingDiscounts.filter((d) => d.subtype && d.skill === skill).map((d) => d.subtype!)));
   const stepCost = (skill: string, from: number, to: number, subtype?: string, attrs?: Stat[]) =>
-    skillStepCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill, subtype), derived.effectiveStats, attrs, derived.costMultipliers).kp;
+    skillStepCost(SKILL_BY_NAME[skill], from, to, teacherOf(skill, subtype), derived.effectiveStats, attrs, derived.costMultipliers, subtype).kp;
   // Datalist suggestions for an open free-text branch: subtypes already learned, plus any branch the
   // character has an oktató for. Free text still allowed.
   const subtypeSuggestions = (skill: string): string[] =>

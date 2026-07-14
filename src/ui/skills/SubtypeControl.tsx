@@ -78,11 +78,14 @@ export const SubtypeControl: React.FC<{
       </Select>
     );
   }
+  // The character's own subtypes and taught branches come first, then the skill's built-in hints
+  // (Harcművészet: styles, the unarmed art, the weapons) — still free text either way.
   const listId = `sub-${skill}`.replace(/[^a-zA-Z0-9]+/g, "-");
+  const hints = Array.from(new Set([...suggestions, ...(lvl0?.suggest ?? [])]));
   return (
     <Box flexShrink={0} w={SUBW}>
-      <SubtypeInput value={value} onChange={(e) => onChange(e.target.value)} placeholder="altípus" list={suggestions.length ? listId : undefined} />
-      {suggestions.length > 0 && <datalist id={listId}>{suggestions.map((c) => <option key={c} value={c} />)}</datalist>}
+      <SubtypeInput value={value} onChange={(e) => onChange(e.target.value)} placeholder={lvl0?.label ?? "altípus"} list={hints.length ? listId : undefined} />
+      {hints.length > 0 && <datalist id={listId}>{hints.map((c) => <option key={c} value={c} />)}</datalist>}
     </Box>
   );
 };

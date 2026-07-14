@@ -9,6 +9,7 @@
 
 import { WeaponInfo, WeaponValues, baseWeaponName } from "../data/weapons";
 import { SKILL_BY_NAME } from "./skills";
+import { CombatMod, MartialStyle, SWORDMASTER_WEAPONS, TRADITIONAL_WEAPONS, parseMartialSubtype, styleTeachesWeapon, techniquesFor, unarmedStyle } from "./martialArts";
 
 // Minimal structural view of an owned skill instance (the engine's OwnedSkill satisfies it).
 export interface SkillView {
@@ -18,6 +19,7 @@ export interface SkillView {
 }
 
 const FIST_GROUP = "Ököltávolságban alkalmazott fegyverek"; // governed by Pusztakezes harc, not Fegyverhasználat
+const MARTIAL_GROUP = "Harcművész fegyverek"; // the traditional ten — governed by Harcművészet (ch.9)
 const NO_BONUS = { ke: 0, te: 0, ve: 0, ce: 0 };
 const TIER3 = { ke: 2, te: 5, ve: 5, ce: 5 };
 const TIER4 = { ke: 5, te: 10, ve: 10, ce: 10 };
@@ -29,12 +31,7 @@ const wnum = (v: number | string | undefined): number => {
   return m ? parseInt(m[0], 10) : 0;
 };
 
-export interface CombatMod {
-  ke: number;
-  te: number;
-  ve: number;
-  ce: number;
-}
+export type { CombatMod } from "./martialArts";
 
 export interface WeaponUse {
   weapon: WeaponInfo;
@@ -43,7 +40,8 @@ export interface WeaponUse {
   skillLabel: string; // "Fegyverhasználat" | "Pusztakezes harc" — for the row badge
   weaponVals: CombatMod; // the weapon's own combat values (zeroed below fok 2)
   masteryVals: CombatMod; // the fok-3+ professional bonus
-  ke: number; // weaponVals + masteryVals — add to the character's combat values
+  extras: { label: string; vals: CombatMod }[]; // stacking technique bonuses (Shien-su, Dhala-saa)
+  ke: number; // weaponVals + masteryVals + extras — add to the character's combat values
   te: number;
   ve: number;
   ce: number;
@@ -103,9 +101,11 @@ export const weaponUseKey = (k: CombatKey) => USE_KEY[k];
 export function weaponExtraFor(row: WeaponRowView | undefined, k: string): { label: string; amount: number }[] | undefined {
   if (!row || !(k in USE_KEY)) return undefined;
   const uk = USE_KEY[k as CombatKey];
+  const { use } = row;
   return [
-    { label: row.w.name, amount: row.use.weaponVals[uk] },
-    { label: `${row.use.skillLabel} ${row.use.fok}. fok`, amount: row.use.masteryVals[uk] },
+    { label: row.w.name, amount: use.weaponVals[uk] },
+    { label: `${use.skillLabel} ${use.fok}. fok`, amount: use.masteryVals[uk] },
+    ...use.extras.map((e) => ({ label: e.label, amount: e.vals[uk] })),
   ];
 }
 
@@ -128,8 +128,17 @@ const untrainedDmg = (dmg: string): string => {
   return `${m[1]}k${m[2]}${mod > 0 ? `+${mod}` : mod < 0 ? `−${-mod}` : ""}`;
 };
 
-export function resolveWeaponUse(weapon: WeaponInfo, skills: SkillView[]): WeaponUse {
-  const isFist = weapon.subType === FIST_GROUP;
+// The training a skill can provide for one weapon (or for the bare hands): the fok, plus the label and
+// (for Harcművészet) the style whose values stand in for the "weapon" when fighting unarmed.
+interface Training {
+  fok: number;
+  label: string;
+  style?: MartialStyle;
+}
+const NO_TRAINING: Training = { fok: 0, label: "" };
+
+// Fegyverhasználat (or Pusztakezes harc for the fists) — the ordinary governing skill.
+function baseTraining(weapon: WeaponInfo, skills: SkillView[], isFist: boolean): Training {
   const govern = isFist ? "Pusztakezes harc" : "Fegyverhasználat";
   const base = baseName(weapon.name);
   // The weapon's category = the Fegyverhasználat branch option listing it as a child.
@@ -146,29 +155,91 @@ export function resolveWeaponUse(weapon: WeaponInfo, skills: SkillView[]): Weapo
     else if (sub === base) specFok = Math.max(specFok, s.fok);
     else if (category && sub === category) catFok = Math.max(catFok, s.fok);
   }
-  const fok = Math.max(specFok, Math.min(catFok, 2));
+  return { fok: Math.max(specFok, Math.min(catFok, 2)), label: govern };
+}
+
+// Harcművészet — governs the harcművész weapons AND the unarmed art (ch.16). A style-level instance
+// ("Harcművészet (Avad-ka-kinito)") covers everything the style teaches but counts only up to fok 2;
+// naming the weapon — or the unarmed art — is the fok-3 commitment that unlocks the higher bonuses.
+function martialTraining(weapon: WeaponInfo, skills: SkillView[], isFist: boolean): Training {
+  const base = baseName(weapon.name);
+  let best = NO_TRAINING;
+  for (const s of skills) {
+    if (s.skill !== "Harcművészet") continue;
+    const sub = parseMartialSubtype(s.subtype);
+    if (sub.technique) continue; // Shien-su isn't a weapon or the unarmed art — it stacks on top, below
+    // The fok-3 choice is "a weapon of the style, OR the unarmed art" (ch.16), and the subtype says
+    // which: Harcművészet (weapon) IS that weapon's instance, Harcművészet (anything else — a style,
+    // a school, "fegyvertelen") is the unarmed one. Either way the instance's full fok counts here.
+    const committed = isFist ? sub.weapons.length === 0 : sub.weapons.includes(base);
+    // Style level (or a subtype we can't read): covers everything the style teaches, but only up to fok 2.
+    const styleLevel = (sub.styles.length > 0 || sub.bare) && (isFist || styleTeachesWeapon(sub, base));
+    const fok = committed ? s.fok : styleLevel ? Math.min(s.fok, 2) : 0;
+    const style = unarmedStyle(sub);
+    // Higher fok wins; on a TIE keep whichever names a style — unarmed, its values beat a styleless one.
+    if (fok === 0 || fok < best.fok || (fok === best.fok && best.style && !style)) continue;
+    best = { fok, label: style ? `Harcművészet (${style.name})` : "Harcművészet", style };
+  }
+  return best;
+}
+
+export function resolveWeaponUse(weapon: WeaponInfo, skills: SkillView[]): WeaponUse {
+  const isFist = weapon.subType === FIST_GROUP;
+  const martialWeapon =
+    weapon.subType === MARTIAL_GROUP ||
+    [...SWORDMASTER_WEAPONS, ...TRADITIONAL_WEAPONS].some((w) => baseName(w) === baseName(weapon.name));
+
+  // Two skills can govern the same weapon (a harcművész may also have Fegyverhasználat for it) — the
+  // better training wins. On a tie the weapon's natural governor does: Harcművészet for the harcművész
+  // arms and the bare hands (its style values beat the plain fist), Fegyverhasználat for the rest.
+  const base = baseTraining(weapon, skills, isFist);
+  const martial = martialTraining(weapon, skills, isFist);
+  const preferMartial = isFist || martialWeapon;
+  const t = martial.fok > base.fok || (martial.fok === base.fok && martial.fok > 0 && preferMartial) ? martial : base;
+  const fok = t.fok;
 
   const bonus = fok >= 4 ? TIER4 : fok === 3 ? TIER3 : NO_BONUS;
   const values = fok >= 2; // the weapon's own combat values only apply from fok 2
-  const weaponVals: CombatMod = values
-    ? { ke: wnum(weapon.KÉ), te: wnum(weapon.TÉ), ve: wnum(weapon.VÉ), ce: wnum(weapon.CÉ) }
-    : NO_BONUS;
-  // Fist damage scales with the Pusztakezes fok (book ch.16: fok 1 → 1k3, fok 2 → 1k6, fok 5 → 1k10).
+  // Fighting unarmed in a style, the STYLE's values are the "weapon" values (ch.16, fok 2).
+  const styleVals: CombatMod | undefined =
+    isFist && t.style ? { ke: t.style.ke, te: t.style.te, ve: t.style.ve, ce: 0 } : undefined;
+  const weaponVals: CombatMod = !values
+    ? NO_BONUS
+    : styleVals ?? { ke: wnum(weapon.KÉ), te: wnum(weapon.TÉ), ve: wnum(weapon.VÉ), ce: wnum(weapon.CÉ) };
+  // Fist damage scales with the Pusztakezes fok (book ch.16: fok 1 → 1k3, fok 2 → 1k6, fok 5 → 1k10),
+  // unless a Harcművészet style governs the bare hands — then the style's own damage applies from fok 2.
   // Untrained (any weapon): −1 damage per die, min 1 Sp (ch.17) — folded into the dice expression.
-  const fistDmg = fok >= 5 ? "1k10" : fok >= 2 ? "1k6" : "1k3";
+  const fistDmg = t.style && fok >= 2 ? t.style.damage : fok >= 5 ? "1k10" : fok >= 2 ? "1k6" : "1k3";
   const rawDmg = isFist ? fistDmg : weapon.damage;
+  const isMartial = t === martial;
+  // The kardművész techniques stack their OWN mastery tier on top of the blade's (ch.9: "a bónuszok
+  // összeadódnak, s a választott fegyver harcértékéhez számítódnak"), each on the combat values it
+  // governs — Shien-su on all of them, Dhala-saa on KÉ and VÉ only. Combat values only: no second +1 Sp.
+  const extras = techniquesFor(weapon.name, skills).map(({ tech, fok: tf }) => {
+    const tier = tf >= 4 ? TIER4 : tf === 3 ? TIER3 : NO_BONUS;
+    const vals = { ...NO_BONUS };
+    for (const k of tech.keys) vals[k] = tier[k];
+    return { label: `${tech.name} ${tf}. fok`, vals };
+  });
+  const extraVals = extras.reduce(
+    (a, e) => ({ ke: a.ke + e.vals.ke, te: a.te + e.vals.te, ve: a.ve + e.vals.ve, ce: a.ce + e.vals.ce }),
+    { ...NO_BONUS }
+  );
   return {
     weapon,
     kind: weapon.type === "ranged" ? "ranged" : "melee",
     fok,
-    skillLabel: govern,
+    skillLabel: t.label || (isFist ? "Pusztakezes harc" : "Fegyverhasználat"),
     weaponVals,
     masteryVals: bonus,
-    ke: weaponVals.ke + bonus.ke,
-    te: weaponVals.te + bonus.te,
-    ve: weaponVals.ve + bonus.ve,
-    ce: weaponVals.ce + bonus.ce,
+    extras,
+    ke: weaponVals.ke + bonus.ke + extraVals.ke,
+    te: weaponVals.te + bonus.te + extraVals.te,
+    ve: weaponVals.ve + bonus.ve + extraVals.ve,
+    ce: weaponVals.ce + bonus.ce + extraVals.ce,
     baseDmg: fok === 0 ? untrainedDmg(rawDmg) : rawDmg,
-    dmgBonus: !isFist && fok >= 5 ? 1 : 0,
+    // fok 5 mastery: +1 Sp. Under Harcművészet that holds unarmed too (ch.16 fok 5); plain Pusztakezes
+    // harc has no such bonus — its fists get the 1k10 die instead.
+    dmgBonus: fok >= 5 && (isMartial || !isFist) ? 1 : 0,
   };
 }

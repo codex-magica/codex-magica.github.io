@@ -3,6 +3,7 @@
 import { Stat, Stats } from "../model/attributes";
 import { SkillCategory } from "../model/common";
 import { PERCENT_KP_RATE, SkillDef } from "../model/skills";
+import { martialCostFactor } from "../model/martialArts";
 
 // A scope selecting skills: one skill (optionally one branch), a whole category, or everything.
 // Teaching discounts, school cost multipliers, bans and fok caps all select skills this way.
@@ -72,8 +73,9 @@ export function skillKpCost(
   return { kp: kp + penalty, note: penalty > 0 ? `${def.name}: tulajdonság-hiány miatt +${penalty} Kp.` : undefined };
 }
 
-// The FINAL Kp/KAP charged for raising from→to: skillKpCost × the school multiplier, rounded up.
-// This is the single pricing authority — the engine charges it and the UI displays it.
+// The FINAL Kp/KAP charged for raising from→to: skillKpCost × the school multiplier × any per-instance
+// factor the rules attach to the SUBTYPE (Harcművészet (Dhala-saa) is taught for half price, ch.9),
+// rounded up. This is the single pricing authority — the engine charges it and the UI displays it.
 export function skillStepCost(
   def: SkillDef,
   from: number,
@@ -81,9 +83,10 @@ export function skillStepCost(
   teachingUpto: number,
   stats: Stats,
   attrs: Stat[] | undefined,
-  multipliers: (SkillScope & { factor: number })[]
+  multipliers: (SkillScope & { factor: number })[],
+  subtype?: string
 ): { kp: number; note?: string } {
   const cost = skillKpCost(def, from, to, teachingUpto, stats, attrs);
-  const mult = costMultiplierFor(multipliers, def);
+  const mult = costMultiplierFor(multipliers, def) * (def.name === "Harcművészet" ? martialCostFactor(subtype) : 1);
   return mult === 1 ? cost : { ...cost, kp: Math.ceil(cost.kp * mult) };
 }
