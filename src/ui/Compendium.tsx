@@ -9,7 +9,8 @@ import { TABS, tabBlocks, TableBlock, TableRow, skillModalBody } from "./compend
 import { stripTitleHeading } from "../data/magicRules";
 import { SearchPalette, SearchButton, SearchEntry, prewarmSearchIndex } from "./CompendiumSearch";
 import { OpenBookIcon } from "./icons";
-import { SKILLS } from "../model/skills";
+import { SKILLS, SkillDef } from "../model/skills";
+import { rulesHomebrew } from "../model/rulesVariants";
 import { SKILL_CATEGORIES } from "../model/common";
 import introMd from "../book/01-bevezeto.md";
 import charMd from "../book/02-karakteralkotas.md";
@@ -29,6 +30,11 @@ interface Props {
   // on phones the parent hides its own bar and the compendium hosts everything in one row
   mobileLeading?: React.ReactNode;
   mobileTrailing?: React.ReactNode;
+  // which rules variant to render (skills tab, skill modals, search). Standalone: the app-level
+  // preference, with `onSetHomebrew` showing the nav-footer switch. In-character: the character's
+  // own flag, no setter — the footer then shows a read-only note instead of the switch.
+  homebrew?: boolean;
+  onSetHomebrew?: (on: boolean) => void;
 }
 
 // sidebar section order — the tabs themselves come from the TABS registry (standalone items first)
@@ -84,14 +90,25 @@ const RulesChip: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   </Box>
 );
 
-// skill catalog from the new model (book-original)
-const skillGroups = SKILL_CATEGORIES.map((cat) => ({
-  group: cat,
-  rows: SKILLS.filter((s) => s.category === cat).slice().sort((a, b) => a.name.localeCompare(b.name, "hu"))
-    .map((s) => ({ name: s.name, diff: s.cost === "percentage" ? "%" : s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(", ") || "–" })),
-})).filter((g) => g.rows.length > 0);
+// skill catalog for the Képzettségek tab — built per rules variant (base or homebrew), cached
+const buildSkillGroups = (defs: SkillDef[]) =>
+  SKILL_CATEGORIES.map((cat) => ({
+    group: cat,
+    rows: defs.filter((s) => s.category === cat).slice().sort((a, b) => a.name.localeCompare(b.name, "hu"))
+      .map((s) => ({ name: s.name, diff: s.cost === "percentage" ? "%" : s.difficulty, strong: s.hardReq.map((r) => r.skill).join(", ") || "–", weak: s.softReq.map((r) => r.skill).join(", ") || "–", attr: s.attrs.join(s.attrsAny ? " vagy " : ", ") || "–" })),
+  })).filter((g) => g.rows.length > 0);
+type SkillGroups = ReturnType<typeof buildSkillGroups>;
+const skillGroupsCache: { base?: SkillGroups; hb?: SkillGroups } = {};
+const skillGroupsFor = (homebrew: boolean): SkillGroups => {
+  const key = homebrew ? "hb" : "base";
+  if (!skillGroupsCache[key]) {
+    const defs = homebrew ? Object.keys(rulesHomebrew().skills).map((n) => rulesHomebrew().skills[n]) : SKILLS;
+    skillGroupsCache[key] = buildSkillGroups(defs);
+  }
+  return skillGroupsCache[key]!;
+};
 
-export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal, mobileLeading, mobileTrailing }) => {
+export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal, mobileLeading, mobileTrailing, homebrew = false, onSetHomebrew }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   // mobile (< md): the sidebar becomes a slide-in drawer behind a header menu button
   const [navOpen, setNavOpen] = useState(false);
@@ -104,8 +121,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   const pendingRef = useRef<{ tab: number; block: string; name: string } | null>(null);
   const [pendingTick, setPendingTick] = useState(0);
 
-  // build the search index while idle so the first palette open is instant
-  useEffect(() => prewarmSearchIndex(), []);
+  // build the search index while idle so the first palette open is instant (per rules variant)
+  useEffect(() => prewarmSearchIndex(homebrew), [homebrew]);
 
   // a fresh page starts at its top (the scroll container survives tab switches); the search-pick
   // effect below runs after this and wins when there is a row to scroll to
@@ -254,6 +271,34 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
           {TABS.map((t, i) => (t.group === g ? <NavItem key={t.name} active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem> : null))}
         </React.Fragment>
       ))}
+      {/* Rules-variant footer — shared by the sidebar and the mobile drawer. Standalone compendium:
+          a segmented switch bound to the app preference; in-character: a read-only note (the shown
+          variant is the character's, fixed at creation). */}
+      <NavSection>Szabályváltozat</NavSection>
+      {onSetHomebrew ? (
+        <Flex mt="4px" borderRadius="9px" border="1px solid" borderColor="fieldBd" bg="fieldBg" p="3px" gap="3px">
+          {([["Alap", false], ["Házi", true]] as const).map(([label, val]) => {
+            const active = homebrew === val;
+            return (
+              <Box key={label} as="button" type="button" onClick={() => onSetHomebrew(val)} flex="1 1 0" py={{ base: "8px", md: "5px" }} borderRadius="7px"
+                bg={active ? "accentSoft" : "transparent"} border="1px solid" borderColor={active ? "accentBd" : "transparent"}
+                color={active ? "accentTx" : "muted"} fontFamily="system-ui" fontSize="12.5px" fontWeight={700}
+                transition="background .12s, color .12s" _hover={active ? undefined : { color: "fg" }}>
+                {label}
+              </Box>
+            );
+          })}
+        </Flex>
+      ) : (
+        <Text mt="4px" fontFamily="system-ui" fontSize="11.5px" color="fgFaint" lineHeight="1.5">
+          {homebrew ? "Házi szabályok — a megnyitott karakter szerint." : "Alapszabályok — a megnyitott karakter szerint."}
+        </Text>
+      )}
+      {onSetHomebrew && homebrew && (
+        <Text mt="6px" fontFamily="system-ui" fontSize="10.5px" color="fgFaint" lineHeight="1.5">
+          Képzettség-átdolgozás: százalékos képzettségek fokban, Éberség összevonás. Új karakterek alapból ezt kapják.
+        </Text>
+      )}
     </>
   );
 
@@ -317,7 +362,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
 
         {isSkills ? (
           <Box display="flex" flexDirection="column" gap="22px" maxW="760px" mx="auto">
-            {skillGroups.map((g) => (
+            {skillGroupsFor(homebrew).map((g) => (
               <Box key={g.group} data-block={g.group}>
                 <GroupHead>{g.group}</GroupHead>
                 <ParchPanel p={0} overflow="hidden">
@@ -326,7 +371,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
                       <Th>Képzettség</Th><Th align="center">Nehéz.</Th><Th>Erős</Th><Th>Gyenge</Th><Th align="right">Tulajdonság</Th>
                     </Box>
                     {g.rows.map((r, i) => (
-                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py={{ base: "11px", md: "8px" }} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
+                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name, homebrew) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py={{ base: "11px", md: "8px" }} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
                         <Text fontSize="13.5px" fontWeight={600} color="fg">{r.name}</Text>
                         <Text textAlign="center" color="muted" fontSize="13px" sx={{ fontVariantNumeric: "tabular-nums" }}>{r.diff}</Text>
                         <Text color="muted" fontSize="12.5px">{r.strong}</Text>
@@ -363,6 +408,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
           onQueryChange={(q) => { searchQueryRef.current = q; }}
           onClose={dismissSearch}
           onPick={pickResult}
+          homebrew={homebrew}
         />
       )}
     </Flex>

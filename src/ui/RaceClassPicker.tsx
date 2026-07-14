@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { RACES, RACE_NAMES } from "../model/races";
-import { CLASSES, CLASS_NAMES } from "../model/classes";
+import { CLASSES, CLASS_NAMES, ClassDef } from "../model/classes";
 import { ChoiceDef, OptionDef } from "../model/choices";
 import { GrantEntry } from "../model/effects";
 import { STAT_KEYS, STAT_SHORT } from "../model/attributes";
@@ -250,8 +250,9 @@ export const SpecPicker: React.FC<{
   selected: string;
   onPick: (optionName: string) => void;
   onClose: () => void;
-}> = ({ choice, className, selected, onPick, onClose }) => {
-  const classTeaches = summarize(CLASSES[className]?.grants ?? []).teaches;
+  classDef?: ClassDef; // the record's rules-variant class (house rules); defaults to the base catalog
+}> = ({ choice, className, selected, onPick, onClose, classDef }) => {
+  const classTeaches = summarize((classDef ?? CLASSES[className])?.grants ?? []).teaches;
   return (
     <BrowserModal
       title={`${choice.label} választása`}

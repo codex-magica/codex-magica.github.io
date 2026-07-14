@@ -4,6 +4,7 @@ import { SearchIcon } from "@chakra-ui/icons";
 import { ModalState } from "./DetailModal";
 import { TABS, tabBlocks, skillModalBody, skillModalSub } from "./compendiumData";
 import { SKILLS } from "../model/skills";
+import { rulesHomebrew } from "../model/rulesVariants";
 
 // ── Spotlight-style compendium search ──────────────────────────────────────────────────────────
 // A centred palette (⌘K) over the compendium. Typing ≥3 characters live-searches every named
@@ -20,23 +21,26 @@ export interface SearchEntry {
 }
 
 // ── index ──
-// Built lazily on first open, then cached for the session (the data is static).
-let INDEX: SearchEntry[] | null = null;
+// Built lazily on first open, then cached for the session, per rules variant — only the skill
+// entries differ between base and homebrew (the other tabs are variant-independent).
+const INDEX: { base?: SearchEntry[]; hb?: SearchEntry[] } = {};
 
 // build the index while the browser is idle so the first palette open doesn't pay for it
-export function prewarmSearchIndex(): void {
+export function prewarmSearchIndex(homebrew = false): void {
   const idle = (window as any).requestIdleCallback as undefined | ((cb: () => void) => void);
-  if (idle) idle(() => searchIndex());
-  else setTimeout(() => searchIndex(), 300);
+  if (idle) idle(() => searchIndex(homebrew));
+  else setTimeout(() => searchIndex(homebrew), 300);
 }
 
-export function searchIndex(): SearchEntry[] {
-  if (INDEX) return INDEX;
+export function searchIndex(homebrew = false): SearchEntry[] {
+  const key = homebrew ? "hb" : "base";
+  if (INDEX[key]) return INDEX[key]!;
   const out: SearchEntry[] = [];
-  for (const s of SKILLS) {
+  const skillDefs = homebrew ? Object.keys(rulesHomebrew().skills).map((n) => rulesHomebrew().skills[n]) : SKILLS;
+  for (const s of skillDefs) {
     out.push({
       name: s.name, tab: 0, page: TABS[0].name, block: s.category,
-      modal: { kind: "skill", name: s.name, sub: skillModalSub(s.name), body: skillModalBody(s.name) },
+      modal: { kind: "skill", name: s.name, sub: skillModalSub(s.name, homebrew), body: skillModalBody(s.name, homebrew) },
     });
   }
   for (let tab = 1; tab < TABS.length; tab++) {
@@ -54,7 +58,7 @@ export function searchIndex(): SearchEntry[] {
       }
     }
   }
-  INDEX = out;
+  INDEX[key] = out;
   return out;
 }
 
@@ -85,11 +89,11 @@ const isLetter = (c: string) => c.toLowerCase() !== c.toUpperCase();
 // relevance: exact prefix < word start < anywhere inside
 const rankOf = (h: Hit) => (h.pos === 0 ? 0 : !isLetter(h.entry.name[h.pos - 1]) ? 1 : 2);
 
-export function runSearch(query: string, limit = 60): Hit[] {
+export function runSearch(query: string, homebrew = false, limit = 60): Hit[] {
   const q = query.trim();
   if (!q) return [];
   const hits: Hit[] = [];
-  for (const entry of searchIndex()) {
+  for (const entry of searchIndex(homebrew)) {
     const pos = matchAt(entry.name, q);
     if (pos >= 0) hits.push({ entry, pos });
   }
@@ -175,12 +179,13 @@ export const SearchPalette: React.FC<{
   onQueryChange: (q: string) => void;
   onClose: () => void;
   onPick: (e: SearchEntry) => void;
-}> = ({ initialQuery, onQueryChange, onClose, onPick }) => {
+  homebrew?: boolean; // which rules variant the skill entries reflect
+}> = ({ initialQuery, onQueryChange, onClose, onPick, homebrew = false }) => {
   const [query, setQuery] = useState(initialQuery);
   const [sel, setSel] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const hits = useMemo(() => runSearch(query), [query]);
+  const hits = useMemo(() => runSearch(query, homebrew), [query, homebrew]);
   const short = query.trim().length < 1;
 
   useEffect(() => setSel(0), [query]);

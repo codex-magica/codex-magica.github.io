@@ -8,8 +8,7 @@ import { RulesDB } from "./rulesDb";
 import { Effect, GrantEntry } from "./effects";
 import { ChoiceDef } from "./choices";
 import { ABILITIES } from "./abilities";
-import { SKILLS } from "./skills";
-import { SkillValues } from "../data/skillsText";
+import { SkillInfo, SkillValues } from "../data/skillsText";
 
 const skillRefsOf = (e: Effect): string[] => {
   switch (e.kind) {
@@ -29,9 +28,12 @@ const skillRefsOf = (e: Effect): string[] => {
   }
 };
 
-export function validateRules(db: RulesDB): string[] {
+// `prose` is the prose catalog joined to db.skills by name — the base SkillValues by default, the
+// homebrew overlay for the variant (rulesVariants.homebrewProse()).
+export function validateRules(db: RulesDB, prose: SkillInfo[] = SkillValues): string[] {
   const problems: string[] = [];
   const raceNames = new Set(Object.keys(db.races));
+  const dbSkills = Object.keys(db.skills).map((name) => db.skills[name]);
 
   const checkGrants = (grants: GrantEntry[] | undefined, where: string) => {
     for (const g of grants ?? []) {
@@ -77,7 +79,7 @@ export function validateRules(db: RulesDB): string[] {
       }
     }
   }
-  for (const s of SKILLS) {
+  for (const s of dbSkills) {
     for (const r of [...s.hardReq, ...s.softReq])
       if (!db.skills[r.skill]) problems.push(`Képzettség ${s.name}: ismeretlen előfeltétel «${r.skill}»`);
   }
@@ -88,9 +90,9 @@ export function validateRules(db: RulesDB): string[] {
 
   // The mechanics catalog (model/skills.ts) and the prose catalog (data/skillsText.ts) are joined by
   // raw name equality — a drifted name silently shows "leírás hamarosan" in the modal.
-  const proseNames = new Set(SkillValues.map((s) => s.name as string));
-  for (const s of SKILLS) if (!proseNames.has(s.name)) problems.push(`Képzettség ${s.name}: nincs leírás a skillsText.ts-ben`);
-  const mechNames = new Set(SKILLS.map((s) => s.name));
+  const proseNames = new Set(prose.map((s) => s.name as string));
+  for (const s of dbSkills) if (!proseNames.has(s.name)) problems.push(`Képzettség ${s.name}: nincs leírás a skillsText.ts-ben`);
+  const mechNames = new Set(dbSkills.map((s) => s.name));
   for (const n of Array.from(proseNames)) if (!mechNames.has(n)) problems.push(`skillsText ${n}: nincs ilyen képzettség a katalógusban`);
 
   return problems;

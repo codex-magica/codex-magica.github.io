@@ -7,6 +7,7 @@ import { makeStats } from "../model/attributes";
 import { CLASSES, CLASS_NAMES } from "../model/classes";
 import { RACE_NAMES } from "../model/races";
 import { defaultSelections } from "../model/choices";
+import { getRulesPreference } from "./rulesPreference";
 
 const KEY = "magus.roster.v1";
 const TOMB_KEY = "magus.tombstones.v1";
@@ -126,11 +127,13 @@ export const clearTombstone = (id: string): void => {
   }
 };
 
-// A fresh, valid level-1 character to start a "create" flow from.
+// A fresh, valid level-1 character to start a "create" flow from. The house-rules flag is seeded
+// from the app-level preference (the creator's toggle can still change it before saving).
 export const createBlankRecord = (id = genId(), name = "Új karakter"): CharacterRecord => {
   const cls = CLASS_NAMES.indexOf("Harcos") >= 0 ? "Harcos" : CLASS_NAMES[0];
   const allowed = CLASSES[cls]?.allowedRaces ?? [];
   const race = allowed.indexOf("Ember") >= 0 ? "Ember" : allowed[0] ?? RACE_NAMES[0];
+  const pref = getRulesPreference();
   return {
     schemaVersion: SCHEMA_VERSION,
     id,
@@ -138,6 +141,7 @@ export const createBlankRecord = (id = genId(), name = "Új karakter"): Characte
     identity: { ageCategory: "Ifjúkor", sex: "male" },
     race,
     class: cls,
+    houseRules: pref.skillRework ? { skillRework: true } : undefined,
     selections: defaultSelections(CLASSES[cls].choices),
     backgrounds: [],
     pointBuy: makeStats(13),

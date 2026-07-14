@@ -94,31 +94,36 @@ export const PathBadge: React.FC<{
 // Attribute-requirement badge, shown on EVERY instance that has governing attributes. Lists the attrs
 // as short names; any UNMET one (engine-computed) is yellow. For an open chooseAttrs skill (Művészetek)
 // it's an editable multi-toggle picker (red until chosen); otherwise a read-only info pill.
+// `anyMode` (attrsAny skills, homebrew Mászás): the attrs are ALTERNATIVES — separator becomes "/"
+// and the tooltip says one qualifying attribute is enough.
 export const AttrsBadge: React.FC<{
   skill: string;
   current: Stat[];
   unmetAttrs: Stat[];
   onToggle: (attrs: Stat[]) => void;
-}> = ({ skill, current, unmetAttrs, onToggle }) => {
+  anyMode?: boolean;
+}> = ({ skill, current, unmetAttrs, onToggle, anyMode }) => {
   const [open, setOpen] = useState(false);
   const chooseAttrs = SKILL_BY_NAME[skill]?.branch?.some((b) => b.chooseAttrs) ?? false;
   if (!chooseAttrs && current.length === 0) return null; // fixed skill with no attribute requirements
   const unmet = (a: Stat) => unmetAttrs.includes(a);
   const empty = chooseAttrs && current.length === 0;
   const sx = chipSx(empty ? "pending" : chooseAttrs ? "chosen" : "info");
+  const attrTitle = (a: Stat) =>
+    unmet(a) ? `${a}: nem elég magas (a képzés drágább)` : anyMode ? `${a} — elég, ha az egyik tulajdonság megfelel` : a;
   const inner = current.length ? (
     <Box as="span" display="inline-flex" alignItems="center">
       {current.map((a, i) => (
         <React.Fragment key={a}>
-          {i > 0 && <Box as="span" opacity={0.5} mx="1px">·</Box>}
-          <Box as="span" color={unmet(a) ? "warn" : undefined} title={unmet(a) ? `${a}: nem elég magas (a képzés drágább)` : a}>{STAT_SHORT[a]}</Box>
+          {i > 0 && <Box as="span" opacity={0.5} mx="1px">{anyMode ? "/" : "·"}</Box>}
+          <Box as="span" color={unmet(a) ? "warn" : undefined} title={attrTitle(a)}>{STAT_SHORT[a]}</Box>
         </React.Fragment>
       ))}
     </Box>
   ) : "tul.?";
 
   if (!chooseAttrs)
-    return <Box {...sx} flexShrink={0} title="Tulajdonság-igény">{inner}</Box>;
+    return <Box {...sx} flexShrink={0} title={anyMode ? "Tulajdonság-igény — a kettő közül az egyik elegendő" : "Tulajdonság-igény"}>{inner}</Box>;
 
   const toggle = (a: Stat) => onToggle(current.includes(a) ? current.filter((x) => x !== a) : current.concat([a]));
   return (

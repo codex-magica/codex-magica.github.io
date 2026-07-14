@@ -2,7 +2,8 @@
 // (record, derived, level), no JSX and no component state. Extracted from SkillLevelPanel.
 import { CharacterRecord, SkillPurchase } from "../../model/character";
 import { DerivedCharacter, OwnedSkill } from "../../engine/types";
-import { SKILLS, SKILL_BY_NAME, SkillDef } from "../../model/skills";
+import { SkillDef } from "../../model/skills";
+import { rulesFor } from "../../model/rulesVariants";
 import { skillStepCost, teachingUptoFor } from "../../engine/skillCost";
 import { SkillCategory, skillKey } from "../../model/common";
 import { Stat } from "../../model/attributes";
@@ -34,9 +35,12 @@ export interface SkillPanelData {
   entriesInCat: (cat: SkillCategory, view: View) => Entry[];
 }
 
-export const isOptionalBranch = (skill: string) => SKILL_BY_NAME[skill]?.branch?.[0]?.optional === true;
+const isOptionalBranchDef = (def: SkillDef | undefined) => def?.branch?.[0]?.optional === true;
 
 export function buildSkillPanelData(record: CharacterRecord, derived: DerivedCharacter, level: number): SkillPanelData {
+  // The record's rules variant — the catalog the whole panel reads (base or homebrew skill rework).
+  const { skills: SKILL_BY_NAME } = rulesFor(record);
+  const SKILLS = Object.keys(SKILL_BY_NAME).map((n) => SKILL_BY_NAME[n]);
   const kap = derived.pools.kapBalanceByLevel[level - 1] ?? 0;
   // A variant added at an earlier level is still owned here, so gather variant purchases from EVERY
   // level up to the active one — else the row would vanish when switching levels. Edits route by id.
@@ -89,7 +93,7 @@ export function buildSkillPanelData(record: CharacterRecord, derived: DerivedCha
   // Optional-branch skills (Futás, Taktika, …) with an unspecialized base instance — offered in the
   // Specializálás picker (minus the ones already being specialized this session).
   const specializable = (specializing: Set<string>) =>
-    SKILLS.filter((d) => isOptionalBranch(d.name) && !specializing.has(d.name) && ownedInstances.some((s) => s.skill === d.name && !s.subtype));
+    SKILLS.filter((d) => isOptionalBranchDef(d) && !specializing.has(d.name) && ownedInstances.some((s) => s.skill === d.name && !s.subtype));
 
   const entriesInCat = (cat: SkillCategory, view: View): Entry[] => {
     const defs = SKILLS.filter((d) => d.category === cat);

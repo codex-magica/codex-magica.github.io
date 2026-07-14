@@ -5,7 +5,7 @@ import { BACKGROUNDS } from "../model/backgrounds";
 import { CombatChannel, Resource } from "../model/effects";
 import { Stat } from "../model/attributes";
 import { instanceKey, sameInstance } from "../model/common";
-import { RULES } from "../model/rulesDb";
+import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { DerivedCharacter } from "../engine/types";
 
@@ -16,7 +16,7 @@ const deriveCache = new WeakMap<CharacterRecord, DerivedCharacter>();
 const deriveCached = (rec: CharacterRecord): DerivedCharacter => {
   let d = deriveCache.get(rec);
   if (!d) {
-    d = derive(RULES, rec);
+    d = derive(rulesFor(rec), rec); // the record's house-rules flag selects the RulesDB variant
     deriveCache.set(rec, d);
   }
   return d;
@@ -36,7 +36,7 @@ const pruneStaleInstanceChoices = (rec: CharacterRecord, derived: DerivedCharact
     const key = instanceKey({ skill: s.skill, subtype: s.origSubtype ?? s.subtype, variantId: s.variantId });
     existValid.add(key);
     if (s.percent == null && s.fok >= 4) fok4Valid.add(key);
-    const trig = RULES.skills[s.skill]?.fokTriggers?.find((t) => t.kind === "path");
+    const trig = rulesFor(rec).skills[s.skill]?.fokTriggers?.find((t) => t.kind === "path");
     if (trig && trig.kind === "path" && s.fok >= trig.atFok) pathValid.add(key);
   }
   const out = { ...rec };

@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Box, Heading, HStack, Input, Text, VStack } from "@chakra-ui/react";
+import { Box, Heading, HStack, Input, Switch, Text, VStack } from "@chakra-ui/react";
 import { ConfirmModal } from "./ConfirmModal";
 import { CharacterBuilderApi } from "../state/useCharacterBuilder";
 import { derive } from "../engine/derive";
-import { RULES } from "../model/rulesDb";
+import { isHomebrew, rulesFor } from "../model/rulesVariants";
 import { RACES } from "../model/races";
 import { CLASSES } from "../model/classes";
 import { activeChoices, defaultSelections, ChoiceDef } from "../model/choices";
@@ -90,9 +90,20 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const onClassChange = (cls: string) => (hasProgress ? setPendingClass(cls) : applyClassChange(cls));
   const onRaceChange = (race: string) => (hasProgress ? setPendingRace(race) : applyRaceChange(race));
 
-  const klass = CLASSES[record.class];
+  // The record's rules variant: option grants shown in the spec-picker reflect the house rules.
+  // (Choice STRUCTURE — ids, labels, option names — is identical across variants.)
+  const klass = rulesFor(record).classes[record.class];
   const choiceList = klass ? activeChoices(klass.choices, record.selections) : [];
   const raceAllowed = klass ? klass.allowedRaces.indexOf(record.race) >= 0 : true;
+
+  // House rule (skill rework): set at creation only. Flipping mid-creation prunes purchases that name
+  // skills absent from the target catalog (e.g. Veszélyérzék ↔ Éberség) so no orphan entries linger.
+  const setSkillRework = (on: boolean) => {
+    const target = rulesFor({ houseRules: { skillRework: on } });
+    const levels = record.levels.map((l) => ({ ...l, skillPurchases: l.skillPurchases.filter((p) => target.skills[p.skill]) }));
+    update({ houseRules: { ...record.houseRules, skillRework: on }, levels });
+  };
+  const showHomebrewToggle = mode === "create";
 
   // Header balance anchor. (The base point-buy budget lives on the Tulajdonságok panel itself.)
   // Level-up edits the freshly-added last level and hides the level-1-only panels (race/class, attribute
@@ -104,14 +115,14 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const levelHasConflict = (L: number) =>
     (derived.pools.kapBalanceByLevel[L - 1] ?? 0) < 0 || derived.diagnostics.some((d) => d.atLevel === L && d.severity !== "info");
   const kap = derived.pools.kapBalanceByLevel[activeLevel - 1] ?? 0;
-  const subLine = `${record.race} ${record.class} · ${record.levels.length}. szint`;
+  const subLine = `${record.race} ${record.class} · ${record.levels.length}. szint${isHomebrew(record) ? " · házi szabály" : ""}`;
 
   // The per-level panels must show skills/pools AS OF the level being edited (not the final state) — else
   // raising a skill at an earlier level would start from its level-N value. Re-derive the record truncated
   // to the active level; for the last level (and level-up) that's the full derived already.
   const isLastLevel = activeLevel >= record.levels.length;
   const truncDerived = useMemo(
-    () => (isLastLevel ? null : derive(RULES, { ...record, levels: record.levels.slice(0, activeLevel) })),
+    () => (isLastLevel ? null : derive(rulesFor(record), { ...record, levels: record.levels.slice(0, activeLevel) })),
     [isLastLevel, record, activeLevel]
   );
   const editDerived = truncDerived ?? derived;
@@ -175,13 +186,32 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           <Box>
             {fieldRow("Név", <Input {...selectProps} value={record.name} onChange={(e) => update({ name: e.target.value })} />)}
             {fieldRow("Faj", pickerButton(record.race, () => setPicker("race")))}
-            {fieldRow("Kaszt", pickerButton(record.class, () => setPicker("class")), choiceList.length === 0)}
+            {fieldRow("Kaszt", pickerButton(record.class, () => setPicker("class")), choiceList.length === 0 && !showHomebrewToggle)}
             {choiceList.map((ch, i) =>
               fieldRow(
                 ch.label,
                 pickerButton(record.selections[ch.id] || "— válassz —", () => setSpecChoice(ch)),
-                i === choiceList.length - 1
+                i === choiceList.length - 1 && !showHomebrewToggle
               )
+            )}
+            {showHomebrewToggle &&
+              fieldRow(
+                "Házi szabály",
+                <HStack spacing={3} align="center" minW={0}>
+                  <Switch isChecked={isHomebrew(record)} onChange={(e) => setSkillRework(e.target.checked)} colorScheme="orange" />
+                  <Box minW={0}>
+                    <Text fontSize="14px" color="fg">Képzettség-átdolgozás</Text>
+                    <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" lineHeight="1.4">
+                      Százalékos képzettségek fokossá alakítva · Rejtekhelykutatás + Csapdakeresés + Veszélyérzék → Éberség
+                    </Text>
+                  </Box>
+                </HStack>,
+                true
+              )}
+            {!showHomebrewToggle && isHomebrew(record) && (
+              <Text fontFamily="system-ui" fontSize="11.5px" color="accentTx" mt={2}>
+                Házi szabály aktív: képzettség-átdolgozás (karakteralkotáskor rögzítve)
+              </Text>
             )}
             {!raceAllowed && (
               <Text fontSize="sm" color="bad" mt={2}>
@@ -257,6 +287,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           key={specChoice.id}
           choice={specChoice}
           className={record.class}
+          classDef={klass}
           selected={record.selections[specChoice.id] || ""}
           onPick={(name) => setSelection(specChoice.id, name)}
           onClose={() => setSpecChoice(null)}

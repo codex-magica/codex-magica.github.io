@@ -80,8 +80,10 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
     const rAttrs = o.attrs ?? instAttrs(ctx, o.skill, o.subtype, o.parent, attrChoiceFor(ctx, o.skill, o.origSubtype ?? o.subtype, o.variantId));
     // Unmet governing attributes for the NEXT fok: a governing attr below 10 + (fok+1) means raising the
     // skill one more level is penalised. (No next level at fok 5.) Surfaced yellow in the UI.
+    // attrsAny (alternative attrs, homebrew Mászás): one qualifying attribute clears the warning.
     const need = 11 + o.fok;
-    const unmetAttrs = !def || isPct || o.fok >= 5 ? [] : rAttrs.filter((a) => effective[a] < need);
+    const below = !def || isPct || o.fok >= 5 ? [] : rAttrs.filter((a) => effective[a] < need);
+    const unmetAttrs = def?.attrsAny && below.length < rAttrs.length ? [] : below;
     // Percentage skills: untrained base % = the governing attribute; trained % adds on top, total capped
     // at attribute + 100 (book ch.16). `percent` stays the trained part; `checkMod` is the usable total.
     const pctBase = isPct && rAttrs.length ? effective[rAttrs[0]] : 0;

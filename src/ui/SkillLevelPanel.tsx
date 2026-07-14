@@ -5,7 +5,7 @@ import { DerivedCharacter, OwnedSkill } from "../engine/types";
 import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT } from "../model/skills";
 import { Stat } from "../model/attributes";
 import { SkillCategory, SKILL_CATEGORIES, findInstanceChoice, sameInstance, skillKey } from "../model/common";
-import { SKILL_BY_NAME } from "../model/skills";
+import { isHomebrew, rulesFor } from "../model/rulesVariants";
 import { Stepper } from "./Stepper";
 import { DetailModal, ModalState } from "./DetailModal";
 import { skillModalContent } from "./compendiumData";
@@ -57,7 +57,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const isPct = owned.some((s) => s.percent != null);
     const percent = isPct ? Math.max(0, ...owned.map((s) => s.percent ?? 0)) : null;
     const fok = isPct ? 0 : Math.max(0, ...owned.map((s) => s.fok));
-    setSkillModal(skillModalContent(name, { fok, percent }));
+    setSkillModal(skillModalContent(name, { fok, percent }, isHomebrew(record)));
   };
 
   const data = buildSkillPanelData(record, derived, level);
@@ -119,7 +119,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const showFok4 = !isPct && cur >= 4;
     // Real branches always show the subtype control; an OPTIONAL branch (Futás …) shows it only once
     // specialized — it already has a subtype, or the user picked it in the Specializálás menu.
-    const branchDef = SKILL_BY_NAME[inst.skill]?.branch;
+    const branchDef = rulesFor(record).skills[inst.skill]?.branch;
     const showSubtype = branchDef != null && (branchDef[0]?.optional !== true || !!inst.subtype || specializing.has(inst.skill));
     return rowShell(
       skillKey(inst.skill, inst.origSubtype) + ":g",
@@ -127,6 +127,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
       showSubtype ? (
         <SubtypeControl
           skill={inst.skill}
+          def={rulesFor(record).skills[inst.skill]}
           value={inst.subtype || ""}
           onChange={(v) =>
             inst.origSubtype != null
@@ -143,7 +144,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
         <PathBadge skill={inst.skill} fok={cur} chosenFor={pathChoiceFor(inst.skill, idSub)} onPick={(trigger, value) => onSetPathChoice(inst.skill, idSub, undefined, trigger, value)} />
       </>,
       <HStack spacing="7px" flexShrink={0} w={{ base: "100%", md: "auto" }}>
-        <AttrsBadge skill={inst.skill} current={inst.attrs ?? []} unmetAttrs={inst.unmetAttrs ?? []} onToggle={(attrs) => onSetChosenAttrs(level, inst.skill, idSub, undefined, attrs)} />
+        <AttrsBadge skill={inst.skill} current={inst.attrs ?? []} unmetAttrs={inst.unmetAttrs ?? []} anyMode={rulesFor(record).skills[inst.skill]?.attrsAny} onToggle={(attrs) => onSetChosenAttrs(level, inst.skill, idSub, undefined, attrs)} />
         <Box flex="1 1 auto" display={{ base: "block", md: "none" }} />
         <Stepper
           fixed
@@ -173,14 +174,14 @@ export const SkillLevelPanel: React.FC<Props> = ({
     return rowShell(
       p.id!,
       nameGroup(p.skill, teacherOf(p.skill, p.subtype)),
-      <SubtypeControl skill={p.skill} value={p.subtype || ""} onChange={(v) => onPatchVariant(level, p.id!, { subtype: v })} fok={p.to} suggestions={data.subtypeSuggestions(p.skill)} />,
+      <SubtypeControl skill={p.skill} def={rulesFor(record).skills[p.skill]} value={p.subtype || ""} onChange={(v) => onPatchVariant(level, p.id!, { subtype: v })} fok={p.to} suggestions={data.subtypeSuggestions(p.skill)} />,
       <>
         {(p.from ?? 1) > 1 && <KapottBadge text={`${p.from}. foktól`} />}
         {showFok4 && <Fok4Badge attrs={vAttrs ?? []} chosen={fok4Stat(p.skill, p.subtype, p.id)} onPick={(a) => onSetFok4Stat(p.skill, p.subtype, p.id, a)} />}
         <PathBadge skill={p.skill} fok={p.to} chosenFor={pathChoiceFor(p.skill, p.subtype, p.id)} onPick={(trigger, value) => onSetPathChoice(p.skill, p.subtype, p.id, trigger, value)} />
       </>,
       <HStack spacing="7px" flexShrink={0} w={{ base: "100%", md: "auto" }}>
-        <AttrsBadge skill={p.skill} current={vAttrs ?? []} unmetAttrs={vUnmet} onToggle={(attrs) => onSetChosenAttrs(level, p.skill, p.subtype, p.id, attrs)} />
+        <AttrsBadge skill={p.skill} current={vAttrs ?? []} unmetAttrs={vUnmet} anyMode={rulesFor(record).skills[p.skill]?.attrsAny} onToggle={(attrs) => onSetChosenAttrs(level, p.skill, p.subtype, p.id, attrs)} />
         <Box flex="1 1 auto" display={{ base: "block", md: "none" }} />
         <Stepper
           fixed

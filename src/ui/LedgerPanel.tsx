@@ -11,7 +11,7 @@ import {
 } from "../model/character";
 import { STAT_KEYS, STAT_SHORT, Stat } from "../model/attributes";
 import { findInstanceChoice, sameInstance } from "../model/common";
-import { SKILL_BY_NAME } from "../model/skills";
+import { rulesFor } from "../model/rulesVariants";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { DerivedCharacter, LedgerEntry } from "../engine/types";
 
@@ -59,7 +59,7 @@ const Empty: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 // Every item of a level as ONE flat, ordered list (no type grouping). The fok-4 +1 attribute is shown
 // inline on the very skill purchase that reached fok 4. (Bonuses on GRANTED fok-4 instances — which have
 // no purchase to inline onto, e.g. the wizard's Pszi — are listed in their own top-level section instead.)
-const LevelBlock: React.FC<{ lvl: LevelRecord; ledger: LedgerEntry[]; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[] }> = ({ lvl, ledger, fok4, grants }) => {
+const LevelBlock: React.FC<{ lvl: LevelRecord; ledger: LedgerEntry[]; fok4: Fok4Bonus[]; grants: { source: string; resource: string; amount: number }[]; isPct: (skill: string) => boolean }> = ({ lvl, ledger, fok4, grants, isPct }) => {
   const L = lvl.level;
   const fmtDelta = (en: LedgerEntry | undefined, pct = false): string | undefined => {
     if (!en) return undefined;
@@ -72,7 +72,7 @@ const LevelBlock: React.FC<{ lvl: LevelRecord; ledger: LedgerEntry[]; fok4: Fok4
   const skillItems = lvl.skillPurchases.map((p, i) => {
     const en = ledger.find((e) => e.level === L && e.kind === "skill" && e.idx === i);
     const bonus = p.to >= 4 ? (findInstanceChoice(fok4, { skill: p.skill, subtype: p.subtype, variantId: p.id })?.stat as Stat | undefined) : undefined;
-    const pct = SKILL_BY_NAME[p.skill]?.cost === "percentage";
+    const pct = isPct(p.skill);
     return { tag: "képz", text: fmtPurchase(p) + (bonus ? `  ·  +1 ${STAT_SHORT[bonus]} (4. fok)` : ""), cost: en?.cost ?? 0, delta: fmtDelta(en, pct) };
   });
 
@@ -165,7 +165,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
             </>
           )}
 
-          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} ledger={derived.ledger} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} />)}
+          {record.levels.map((lvl) => <LevelBlock key={lvl.level} lvl={lvl} ledger={derived.ledger} fok4={fok4} grants={derived.resourceGrantsByLevel[lvl.level - 1] ?? []} isPct={(skill) => rulesFor(record).skills[skill]?.cost === "percentage"} />)}
 
           {record.kmAdjustments.length > 0 && (
             <Box mt="14px">

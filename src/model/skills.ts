@@ -40,6 +40,7 @@ export interface SkillDef {
   difficulty: SkillDifficulty;
   cost: SkillCost;
   attrs: Stat[]; // default required/governing attributes (a branch may override via BranchOption/chooseAttrs)
+  attrsAny?: boolean; // attrs are alternatives: the BEST one alone must meet the requirement (homebrew Mászás)
   hardReq: SkillRef[]; // strong prereq — must be owned at >= target fok
   softReq: SkillRef[]; // weak prereq   — must be owned at >= target fok − 1
   perFokEffects?: Partial<Record<SkillFok, Effect[]>>;
@@ -63,11 +64,12 @@ export const TIER_COST: Record<SkillDifficulty, number[]> = {
 export const PERCENT_KP_RATE = 3; // 1 Kp = 3%
 export const PERCENT_KP_RATE_TAUGHT = 5; // 1 Kp = 5% with oktatás
 
-type Raw = {
+export type Raw = {
   name: string;
   cat: SkillCategory;
   diff: SkillDifficulty;
   attrs?: (keyof typeof STAT_BY_SHORT)[];
+  attrsAny?: boolean; // attrs are alternatives (see SkillDef.attrsAny)
   pct?: boolean; // percentage skill
   cost?: number[]; // explicit cost override (book deviation)
   hard?: string[];
@@ -80,12 +82,13 @@ type Raw = {
 
 const ref = (s: string): SkillRef => ({ skill: s });
 
-const build = (r: Raw): SkillDef => ({
+export const build = (r: Raw): SkillDef => ({
   name: r.name,
   category: r.cat,
   difficulty: r.diff,
   cost: r.pct ? "percentage" : r.cost ?? TIER_COST[r.diff],
   attrs: (r.attrs ?? []).map((a) => STAT_BY_SHORT[a]),
+  attrsAny: r.attrsAny,
   hardReq: (r.hard ?? []).map(ref),
   softReq: (r.soft ?? []).map(ref),
   perFokEffects: r.perFok,

@@ -10,7 +10,7 @@ import { WarlockMagicValues } from "../data/warlockMagic";
 import { FireMagicValues } from "../data/fireMagic";
 import { WeaponValues } from "../data/weapons";
 import { ArmorValues, ShieldValues } from "../data/armor";
-import { SkillValues } from "../data/skillsText";
+import { SkillInfo, SkillValues } from "../data/skillsText";
 import { MagasMagiaValues } from "../data/magasMagia";
 import { CombatSituations } from "../data/combatSituations";
 import { MundaneItems } from "../data/mundaneItems";
@@ -26,7 +26,8 @@ import { magicRules4 } from "../data/magicRules4";
 import { magicRules5 } from "../data/magicRules5";
 import { magicRules6 } from "../data/magicRules6";
 import { magicRules7 } from "../data/magicRules7";
-import { SKILLS } from "../model/skills";
+import { SKILLS, SkillDef } from "../model/skills";
+import { homebrewProse, rulesHomebrew } from "../model/rulesVariants";
 
 export interface TableCol { label: string; align?: "center" | "right" }
 export interface TableRow {
@@ -371,16 +372,31 @@ function buildTabBlocks(tab: number): TableBlock[] {
 }
 
 // ── full skill descriptions (with per-fok text) for the skill modal ──
-const PCT_SKILLS = new Set(SKILLS.filter((s) => s.cost === "percentage").map((s) => s.name));
-const skillByName = new Map(SkillValues.map((s) => [s.name as string, s]));
+// Two (model, prose) table sets: the base catalog (eager — the compendium always shows it) and the
+// homebrew skill-rework variant (lazy — only characters created with the house rule open it).
+type SkillTables = { model: Map<string, SkillDef>; prose: Map<string, SkillInfo>; pct: Set<string> };
+const mkTables = (defs: SkillDef[], prose: SkillInfo[]): SkillTables => ({
+  model: new Map(defs.map((s) => [s.name as string, s])),
+  prose: new Map(prose.map((s) => [s.name as string, s])),
+  pct: new Set(defs.filter((s) => s.cost === "percentage").map((s) => s.name)),
+});
+const baseTables = mkTables(SKILLS, SkillValues);
+let hbTables: SkillTables | null = null;
+const tablesFor = (homebrew: boolean | undefined): SkillTables => {
+  if (!homebrew) return baseTables;
+  if (!hbTables) {
+    const db = rulesHomebrew();
+    hbTables = mkTables(Object.keys(db.skills).map((n) => db.skills[n]), homebrewProse());
+  }
+  return hbTables;
+};
 
-const skillModel = new Map(SKILLS.map((s) => [s.name as string, s]));
 // the compendium skill modal's sub-line — "(difficulty – attrs)" — reused by the character sheet
-export function skillModalSub(name: string): string {
-  const s = skillModel.get(name);
+export function skillModalSub(name: string, homebrew?: boolean): string {
+  const s = tablesFor(homebrew).model.get(name);
   if (!s) return "";
   const diff = s.cost === "percentage" ? "%" : s.difficulty;
-  return `(${diff} – ${s.attrs.join(", ") || "–"})`;
+  return `(${diff} – ${s.attrs.join(s.attrsAny ? " vagy " : ", ") || "–"})`;
 }
 
 // Every spell row (tabs 1–7) indexed by name → the SAME modalSub + body the compendium renders, so
@@ -401,27 +417,27 @@ export function spellModalByName(name: string): { sub: string; body: string[] } 
 
 // The full skill-modal content, identical everywhere it opens (compendium, creator panel, sheet).
 // With `own`, adds the character-aware strip ("A te fokod…") and the current-fok gating.
-export function skillModalContent(name: string, own?: { fok: number; percent?: number | null }) {
+export function skillModalContent(name: string, own?: { fok: number; percent?: number | null }, homebrew?: boolean) {
   const percent = own?.percent;
   const fok = own?.fok ?? 0;
   return {
     kind: "skill" as const,
     name,
-    sub: skillModalSub(name),
-    body: skillModalBody(name),
+    sub: skillModalSub(name, homebrew),
+    body: skillModalBody(name, homebrew),
     levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
     currentFok: percent == null && fok > 0 ? fok : undefined,
   };
 }
 
-export function skillModalBody(name: string): string[] {
-  const s = skillByName.get(name);
+export function skillModalBody(name: string, homebrew?: boolean): string[] {
+  const s = tablesFor(homebrew).prose.get(name);
   if (!s) return ["A képzettség részletes leírása a kompendiumban hamarosan elérhető."];
   // keep `table:` entries verbatim — the modal renders them as real tables
   const desc = Array.isArray(s.description) ? s.description : [s.description];
   const foks: string[] = [];
   // Percentage skills have no discrete foks in the book — show only the general description.
-  if (!PCT_SKILLS.has(name)) {
+  if (!tablesFor(homebrew).pct.has(name)) {
     for (let i = 1; i <= 5; i++) {
       const t = s[`lvl_${i}` as "lvl_1" | "lvl_2" | "lvl_3" | "lvl_4" | "lvl_5"];
       if (t) foks.push(`${i}. fok — ${t}`);

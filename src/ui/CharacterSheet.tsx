@@ -5,7 +5,7 @@ import { WeaponModalState } from "./WeaponModal";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { STAT_KEYS, Stat } from "../model/attributes";
-import { SKILL_BY_NAME } from "../model/skills";
+import { rulesFor } from "../model/rulesVariants";
 import { SKILL_CATEGORIES } from "../model/common";
 import { VITALS, POOL_UNIT } from "../model/vitals";
 import { FIST, buildWeaponRows, weaponExtraFor } from "../model/weaponUse";
@@ -80,7 +80,7 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
   const skillGroups = SKILL_CATEGORIES.map((cat) => ({
     name: cat,
     items: derived.skills
-      .filter((s) => SKILL_BY_NAME[s.skill]?.category === cat)
+      .filter((s) => rulesFor(record).skills[s.skill]?.category === cat)
       // key by the STABLE identity (variant id / original subtype) — two instances may share the display text
       .map((s) => ({ key: s.skill + "|" + (s.variantId ?? s.origSubtype ?? s.subtype ?? ""), name: s.subtype ? `${s.skill} (${s.subtype})` : s.skill, val: s.percent != null ? `${s.percent}%` : `${s.fok}`, open: () => onOpenSkill(s.skill, s.fok, s.percent) })),
   })).filter((g) => g.items.length > 0);

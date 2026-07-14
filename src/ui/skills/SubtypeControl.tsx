@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Input, Select } from "@chakra-ui/react";
-import { SKILL_BY_NAME, fixedSubtypesOf } from "../../model/skills";
+import { SKILL_BY_NAME, SkillDef, fixedSubtypesOf } from "../../model/skills";
 
 // phones: the subtype control gets its own full-width line in the row; md+: a compact inline field
 export const SUBW = { base: "100%", md: "128px" };
@@ -40,8 +40,10 @@ export const SubtypeControl: React.FC<{
   onChange: (v: string) => void;
   fok?: number;
   suggestions: string[]; // datalist for the free-text branch (learned subtypes + taught branches)
-}> = ({ skill, value, onChange, fok, suggestions }) => {
-  const lvl0 = SKILL_BY_NAME[skill]?.branch?.[0];
+  def?: SkillDef; // the record's rules-variant def; defaults to the base catalog
+}> = ({ skill, value, onChange, fok, suggestions, def }) => {
+  const skillDef = def ?? SKILL_BY_NAME[skill];
+  const lvl0 = skillDef?.branch?.[0];
   if (lvl0?.branchAbove != null && fok != null && fok > lvl0.branchAbove) {
     const all = lvl0.options?.flatMap((o) => o.children ?? []) ?? [];
     const listId = `wl-all-${skill}`.replace(/[^a-zA-Z0-9]+/g, "-");
@@ -52,7 +54,7 @@ export const SubtypeControl: React.FC<{
       </Box>
     );
   }
-  const opts = fixedSubtypesOf(SKILL_BY_NAME[skill]);
+  const opts = fixedSubtypesOf(skillDef);
   if (opts && opts.length) {
     const invalid = !value;
     return (

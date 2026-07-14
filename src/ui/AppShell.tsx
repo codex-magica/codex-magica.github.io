@@ -7,7 +7,7 @@ import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
 import { skillModalContent, spellModalByName } from "./compendiumData";
 import { CharacterRecord, VitalKey } from "../model/character";
-import { RULES } from "../model/rulesDb";
+import { isHomebrew, rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { ZoneSwitch, DarkToggle } from "./controls";
 
@@ -38,8 +38,8 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   const [modal, setModal] = useState<ModalState | null>(null);
   const [weaponModal, setWeaponModal] = useState<WeaponModalState | null>(null);
 
-  const derived = useMemo(() => derive(RULES, record), [record]);
-  const subLine = `${record.name} · ${record.race} ${record.class} · ${record.levels.length}. szint`;
+  const derived = useMemo(() => derive(rulesFor(record), record), [record]);
+  const subLine = `${record.name} · ${record.race} ${record.class} · ${record.levels.length}. szint${isHomebrew(record) ? " · házi szabály" : ""}`;
   const setVital = (key: VitalKey, value: number) =>
     onPatchRecord({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
   const setInventoryText = (text: string) => onPatchRecord({ ...record, inventoryText: text });
@@ -54,7 +54,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   // Same modal content the compendium shows, plus a character-aware strip and (for fok skills) the
   // current fok so the modal greys out the levels the character hasn't reached yet.
   const openSkillModal = (name: string, fok: number, percent?: number | null) =>
-    setModal(skillModalContent(name, { fok, percent }));
+    setModal(skillModalContent(name, { fok, percent }, isHomebrew(record)));
   const openSpellModal = (name: string) => {
     const sp = spellModalByName(name);
     setModal({ kind: "spell", name, sub: sp?.sub, body: sp?.body || [] });
@@ -116,6 +116,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           onSelectTab={setCompTab}
           onOpenModal={setModal}
           mobileLeading={<>{backBtn}{zoneSwitch}</>}
+          homebrew={isHomebrew(record)}
         />
       )}
 

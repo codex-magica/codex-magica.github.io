@@ -59,10 +59,16 @@ export function skillKpCost(
     kp += Math.max(1, inc - disc);
   }
   let penalty = 0;
-  (attrs ?? def.attrs).forEach((a) => {
-    const need = 10 + to;
-    if (stats[a] < need) penalty += need - stats[a];
-  });
+  const reqAttrs = attrs ?? def.attrs;
+  const need = 10 + to;
+  if (def.attrsAny && reqAttrs.length) {
+    // Alternative attributes: only the best one must qualify.
+    penalty = Math.min(...reqAttrs.map((a) => Math.max(0, need - stats[a])));
+  } else {
+    reqAttrs.forEach((a) => {
+      if (stats[a] < need) penalty += need - stats[a];
+    });
+  }
   return { kp: kp + penalty, note: penalty > 0 ? `${def.name}: tulajdonság-hiány miatt +${penalty} Kp.` : undefined };
 }
 

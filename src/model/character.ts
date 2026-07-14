@@ -103,6 +103,12 @@ export interface Adjustment {
   reason: string;
 }
 
+// Optional house rules chosen at character creation. Absent field = base rules; the record is only
+// ever interpreted under the variant it was created with, so no value migration is ever needed.
+export interface HouseRules {
+  skillRework?: boolean; // percentage skills → fok-based + Éberség merge (homebrew/skillRework.ts)
+}
+
 export interface Identity {
   alignment?: string;
   secondaryAlignment?: string;
@@ -125,6 +131,7 @@ export interface CharacterRecord {
 
   race: string;
   class: string;
+  houseRules?: HouseRules; // fixed at creation — selects which RulesDB variant derives this record
   selections: Record<string, string>; // choiceId → option name (class specialization tree)
   backgrounds: ChosenBackground[];
   grantedBgLevels?: Record<string, number>; // player-chosen level for a class/race-GRANTED background (free, e.g. Barbár Mágiatagadás "tetszőleges mértékű")

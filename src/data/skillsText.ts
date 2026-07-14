@@ -1302,6 +1302,66 @@ export const SkillValues : SkillInfo[] = [
     },
   ];
 
+// Homebrew (képzettség-átdolgozás) prose — the skill-rework variant's catalog. Same-named entries
+// REPLACE the base entry; Éberség is new (merges Rejtekhelykutatás + Csapdakeresés + Veszélyérzék,
+// which the variant drops). Assembled into a full prose list by model/rulesVariants.ts.
+export const HomebrewSkillValues: SkillInfo[] = [
+    {
+      name: "Éberség",
+      skillType: "Világi",
+      skillDifficulty: "III",
+      softReq: [],
+      hardReq: [],
+      stats: ["Érzékelés", "Intelligencia"],
+      description: [
+        "Megmutatja, hogy egy karakter mennyire figyel fel a környezetében fellépő rendellenességekre, rá leselkedő veszélyekre. Segíthet felfigyelni a követőkre, a rejtőzködőkre, az álruhás rablókra, tolvajokra, a ruha alá rejtett fegyverre, a helyükről elmozdított tárgyakra, a tömegből elővillanó ismerős arcokra, rosszban sántikáló idegenekre, a háztetőn lapuló íjászra, a mérgezett bor szokatlan színére. Birtokában megtalálhat rejtett átjárókat, titkosajtókat, eldugott rekeszeket és egyéb rejtekhelyeket vagy különféle csapdákat.",
+        "A Képzettség használata nem igényel hosszabb időt, leszámítva, mikor a karakter csapdákat, vagy rejtekhelyeket keres. Ekkor a legtöbb esetben a hagyományos módszerekhez fordul: falakat, padlókat kopogtat döngő szakaszokat keresve, rések, repedések után vizsgálódik. Ekképp kénytelen türelemmel, aprólékosan átvizsgálni a gyanús területet.",
+        "A titkosajtó, vagy csapda felfedezése nem egyenlő annak kinyitásával, illetve hatástalanításával. Az ajtókat őrizheti egyszerű retesz, zár, netán ravasz mechanizmus, a csapdákat pedig bizonyos alkalmakkor nem elegendő egyszerűen elkerülni. Ezekben az esetekben a Zárnyitás és Csapdaállítás lehet a karakter segítségére.",
+        "Amennyiben Képzettség ellenében használja valaki az Éberséget (észreveszi-e, hogy követik, meglátja-e a rejtőzködőt, meghallja-e a lopakodót), a két próba egymás ellen irányul: az a fél nyer, aki nagyobb sikert ér el a Képzettség-ellenpróba során. Meglehetősen alkalmazzák az Álcázás/Álruha ellen, hisz rengeteg esetben próbálnak segítségével elrejteni helyeket, csapdákat, vagy rejtőznek el a merénylők egy ártatlan személy alakját magukra öltve.",
+      ],
+      lvl_1: "Fiatal utcagyerek. Környezetét csak felszínesen figyeli meg, és jó eséllyel téves következtetésre jut. Ezek az illetők gyakran kiáltanak farkast a legártatlanabb helyzetben is, és így könnyen céltáblájává válnak mások haragjának. „Megérzéseik” könnyedén megcsalhatják őket, s leggyakrabban még az egészen félreérthetetlen jelek mellett is gond nélkül elmennek.",
+      lvl_2: "E fok a képzett tolvajok, fejvadászok sajátja. A karakter már körültekintőbben vonja le következtetéseit, hiszen elegendő tapasztalata van, hogy milyen következményekkel jár, ha elsiklik bizonyos jelek mellett, vagy tévútra jut. Ők már könnyebben „olvasnak” a körülöttük állók mozdulataiból, egy-egy tárgy elhelyezkedéséből, esetleges hiányából.",
+      lvl_3: "Igazi kalandor, vagy alaposan megfizetett testőr. Néha már maga is elhiszi, hogy minden mögé belát, s a legsötétebb szándékról is könnyen lerántja a leplet. Ha nem elbizakodottsággal kezeli tudását, valóban hasznára válik, különösen, ha nem kudarcként éli meg egy téves döntéseik következményeit.",
+      lvl_4: "A karakter már nem csupán a környezet helyes elemzésére képes, de „ráérezhet” a leselkedő veszélyekre, s ha nem is képesek pontosan meghatározni annak jellegét vagy mértékét, intuícióik még gyakran hagyják cserben őket.\n\nTapasztalatait, hallomásból szerzett tudását felhasználva jó eséllyel felmérheti mindazon helyeket, ahol nagyobb valószínűséggel kereshetők rejtekhelyek és csapdák. Tudja, hogy az adott vidéken hol készítenek előszeretettel átjárókat, milyen típusú álcázásokat alkalmaznak a mesterek, milyenek a jellemző csapdák és hol szokták azokat elhelyezni. Ha rejtekhelyet, vagy csapdát keresett, és dobása sikertelen volt, akkor egy tíz perces kutakodás után újra dobhat, de csak egy alkalommal.",
+      lvl_5: "A karakter minden komoly veszélyt, fenyegetést jelentő esetben próbadobást tehet, még akkor is, ha azt a játékos nem jelenti be előre. Az ilyen szintű tudás szinte megmagyarázhatatlan, afféle hatodik érzék, a rengeteg tapasztalat eredménye.\n\nA rejtekhelyek terén már közvetett következtetéseket tehet a vizsgált szoba, tárgy kialakítása, elrendezése alapján, és megsejtheti, hogy a mesterek milyen szempontok alapján választják ki egy rejtekhely, vagy csapda végleges helyét. Amennyiben az első próbadobása sikertelen volt, ötpercnyi újabb tanakodás után ismét dobhat.",
+      special: "Az Éberség nem alkalmazható távoli fenyegetéssel kapcsolatban: nem fogja jelezni egy egyén hirtelen hangulatváltozásait, egy politikai lépés vagy bármilyen cselekedet következményeit.\n\nA kalandmester a próbadobást nehezítheti, avagy könnyítheti a próbát a feladat nehézségének ismeretében.",
+    },
+    {
+      // Override: the fok-based módosító table from the homebrew doc (the base entry's table is %-based).
+      name: "Lopódzás",
+      skillType: "Alvilági",
+      skillDifficulty: "I",
+      softReq: [],
+      hardReq: [],
+      stats: ["Ügyesség", "Érzékelés"],
+      description: [
+        "A képzettség megmutatja, hogy a karakter milyen halkan képes mozogni. Sikeres próba esetén léptei, sem egyéb mozdulatai nem vernek neszt. Nagy segítségére lehet ez az észrevétlen behatolásban, a meglepetésszerű támadásban.",
+        "table:\tMódosítók\n\nKőpadló\t+2\n\nVastag szőnyeg\t+4\n\nKavicságy\t-2\n\nSzáraz avar, vagy nyikorgó fapadló\t-4",
+      ],
+      lvl_1: "A Lopódzásban alig járatosak még elsősorban csupán arra figyelnek, hogy járásuk minél puhább, minél halkabb legyen. Saját bőrükön tapasztalhatják meg, hogy mivel jár az, ha elvétenek egy lépést, ha figyelmetlenek. Nagy esélyük van rá, hogy figyelmen kívül hagynak számos olyan buktatót (recsegő padló, száraz ág, csúszós út, cuppogó sár...) amelyek egy tapasztalt lopódzónak nem jelentenek különösebb akadályt.",
+      lvl_2: "Egy éjszakai légyottokról gyakorta hazasettenkedő ifjú feleség bír ezzel a fokkal. Léptei már meglehetősen halkak, és ismerős helyen ritkán üt zajt.",
+      lvl_3: "Képzett fejvadász, vagy tolvaj, aki már arra is képes, hogy néhány pillantással felmérjék az előttük álló útszakaszt és jó eséllyel kihasználják azokat a részeket, amelyeken a legkevesebb zajt ütik.",
+      lvl_4: "A lopódzás igazi mestere, aki léptei csak nagyon ritkán ütnek zajt, s akkor is leginkább csak akkor, ha ő úgy akarja. Megannyi trükköt ismer, hogy ruháján hogyan kösse le, csendesítse el az apróbb részeket, melyek hangot okozhatnának.",
+      lvl_5: "Léptei csendesek, akár a nagyvadaké. Szinte koncentrálnia sem kell, a csendes mozgás már a vérébe ivódott, akár a lélegzetvétel.",
+    },
+    {
+      // Override: drop the base entry's %-módosítós felület-table (the homebrew doc has no such table).
+      name: "Mászás",
+      skillType: "Világi",
+      skillDifficulty: "I",
+      softReq: [],
+      hardReq: [],
+      stats: ["Erő", "Ügyesség"],
+      description: [
+        "A Képzettség a fák, falak, sziklaormok megmászásához szükséges jártasságot fedi. Az igazán gyakorlott falmászók hihetetlenül sima felületeken is képesek kapaszkodót, támaszt találni, így fürgén és biztosan kúsznak fel az átlagember számára megmászhatatlannak ítélt meredélyeken is.","Nem jelentenek számukra akadályt a várak, lakóházak falai, a függőleges, vagy akár kifelé dőlő sziklák sem.\n\nA Mászás leginkább a tolvajok és fejvadászok sajátja, de sokan űzik még magas szinten.","A felszerelés 20 fontonként 1-gyel csökkenti a Képzettség aktuális fokát.\n\nA módosítók nélküli Mászás dobás olyan fára, falra, meredélyre vonatkozik, mellyel egy képzett átlagember is megbirkózik. Átlagos nehézségűnek minősül a függőleges, egymásra rakott dinnyényi kövekből halmozott várfal, ahol a kiálló kövek, és a repedések sűrű és könnyű kapaszkodót kínálnak. A karakter minden megtett 25 láb, vagy 3 perc tétlen kapaszkodás után próbát kell tegyen, így egy 50 láb magas várfal leküzdése két sikeres próbát igényel. Sikertelen próbálkozás esetén, feltéve, hogy a karakter nem volt valamilyen módon biztosítva, számolhat a zuhanásból származó sérülésekkel. Folyamatosan annyi percen át képes mászni a karakter, amennyi az Állóképessége. Aki mászik, kiszolgáltatott helyzetbe kerül. Ekkor a Harc helyhez kötve szabályai vonatkoznak rá.",
+      ],
+      lvl_1: "A szántóvető fia, aki képes felmászni a fára a meggyért.",
+      lvl_2: "Frissen képzett tolvaj, aki már megbirkózik egy mászható nyolc-tíz lábnyi fallal.",
+      lvl_3: "Jól képzett fejvadász, aki gyakran kihasználja a magaslatok nyújtotta előnyöket, így egy nehezen mászható fal sem jelent neki akadályt.",
+      lvl_4: "Mesterkém, aki az éjszaka sötétjében hág fel szédítő várfalakra.",
+      lvl_5: "A karakter kezei akár az acélsatuk, lábával bármilyen apró rést megtalál: bármilyen feladattal megbirkózik, ami fizikailag lehetséges.",
+    },
+  ];
 
 export type Skill =
   // harci

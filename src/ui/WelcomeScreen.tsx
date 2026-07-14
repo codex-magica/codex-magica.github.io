@@ -6,7 +6,7 @@ import { ModalShell } from "./Modal";
 import { ZoneBar } from "./ZoneBar";
 import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
-import { RULES } from "../model/rulesDb";
+import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { SyncApi } from "../state/useRoster";
 import { signOutCloud } from "../state/cloudSync";
@@ -90,7 +90,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
   const views: CardView[] = useMemo(
     () =>
       records.map((r) => {
-        const d = derive(RULES, r);
+        const d = derive(rulesFor(r), r);
         const specs = Object.values(r.selections).filter(Boolean).join(" · ");
         const pips = PIP_META.filter(([, key]) => d.vitals[key].max > 0)
           .map(([k, key, kind]) => ({ k, cur: d.vitals[key].current, max: d.vitals[key].max, kind }))
