@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import { WeaponModalState } from "./WeaponModal";
-import { CharacterRecord, VitalKey } from "../model/character";
+import { CharacterCondition, CharacterRecord, VitalKey } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { rulesFor } from "../model/rulesVariants";
@@ -22,6 +22,7 @@ interface Props {
   derived: DerivedCharacter;
   onSetVital: (key: VitalKey, value: number) => void;
   onSetInventory: (text: string) => void;
+  onSetConditions: (conditions: CharacterCondition[]) => void;
   onSetWeapons: (weapons: string[]) => void;
   onSetActiveWeapon: (name: string | null) => void;
   onOpenSkill: (name: string, fok: number, percent?: number | null) => void;
@@ -56,7 +57,7 @@ const shortTime = (raw: string): string => {
   return c.length > 7 ? "…" : c;
 };
 
-export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, onSetInventory, onSetWeapons, onSetActiveWeapon, onOpenSkill, onOpenSpell, onOpenWeapon }) => {
+export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, onSetInventory, onSetConditions, onSetWeapons, onSetActiveWeapon, onOpenSkill, onOpenSpell, onOpenWeapon }) => {
   const id = record.identity;
   const specs = Object.values(record.selections).filter(Boolean).join(" · ");
   const idFields: { k: string; v: string }[] = [
@@ -131,7 +132,7 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
           ))}
         </Card>
 
-        <VitalsCard rows={vitalRows} onSetVital={onSetVital} />
+        <VitalsCard rows={vitalRows} onSetVital={onSetVital} conditions={record.conditions ?? []} onSetConditions={onSetConditions} />
 
         {derived.tags.length > 0 && (
           <Card>

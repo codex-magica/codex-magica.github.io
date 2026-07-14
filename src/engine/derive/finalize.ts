@@ -32,9 +32,21 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
   // Re-base alloc/HM deltas onto the actual affected number (base + buys), not the bought-only running
   // total — so the ledger shows e.g. Fp 26 → 29 and KÉ 64 → 68, not 0 → N. (Exact for the single-level
   // creator; for multi-level it pins to the final total.)
+  // The ledger is the BUILD record, so it re-bases onto pre-condition totals: being dazed right now
+  // must not rewrite the KÉ you bought three levels ago.
+  const pre = ctx.preConditions;
+  const ledgerCombat: Record<CombatChannel, number> = pre
+    ? {
+        KÉ: COMBAT_INFO.KÉ.stats.reduce((a, s) => a + pre.effective[s], 0) + (COMBAT_INFO.KÉ.base?.value ?? 0) + pre.combatAcc.KÉ,
+        TÉ: COMBAT_INFO.TÉ.stats.reduce((a, s) => a + pre.effective[s], 0) + (COMBAT_INFO.TÉ.base?.value ?? 0) + pre.combatAcc.TÉ,
+        VÉ: COMBAT_INFO.VÉ.stats.reduce((a, s) => a + pre.effective[s], 0) + (COMBAT_INFO.VÉ.base?.value ?? 0) + pre.combatAcc.VÉ,
+        CÉ: COMBAT_INFO.CÉ.stats.reduce((a, s) => a + pre.effective[s], 0) + (COMBAT_INFO.CÉ.base?.value ?? 0) + pre.combatAcc.CÉ,
+      }
+    : combat;
+  const ledgerFp = pre ? pre.effective.Állóképesség + pre.effective.Akaraterő + ctx.fpGains + pre.derivedBonus.Fp : fpMax;
   for (const en of ledger) {
     if (en.kind !== "alloc" && en.kind !== "hm") continue;
-    const finalVal = en.kind === "hm" ? combat[en.id as CombatChannel] : en.id === "Fp" ? fpMax : poolMax[en.id as Pool];
+    const finalVal = en.kind === "hm" ? ledgerCombat[en.id as CombatChannel] : en.id === "Fp" ? ledgerFp : poolMax[en.id as Pool];
     if (finalVal == null) continue;
     const step = en.after - en.before;
     en.before = finalVal - step;

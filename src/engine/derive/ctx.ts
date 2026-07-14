@@ -43,6 +43,10 @@ export interface DeriveCtx {
   effective: Stats;
   combatAcc: Record<CombatChannel, number>;
   derivedBonus: Record<string, number>;
+  // Snapshot of the three accumulators as they stood BEFORE the play-state conditions were folded in
+  // (set only when the character has any). finalize re-bases the build ledger onto these, so a
+  // temporary condition never rewrites what the character actually bought.
+  preConditions?: { effective: Stats; combatAcc: Record<CombatChannel, number>; derivedBonus: Record<string, number> };
   fpGains: number;
   poolMax: Record<Pool, number>;
   poolExists: Record<Pool, boolean>;

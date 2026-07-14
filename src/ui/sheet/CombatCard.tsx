@@ -4,6 +4,7 @@ import { DerivedCharacter } from "../../engine/types";
 import { CombatKey, FIST, WeaponRowView, masteryLabel, weaponUseKey } from "../../model/weaponUse";
 import { Card, FS, FS_SUB, ROWPY, SecHead, ValNum, rowProps } from "./primitives";
 import { AddWeaponModal } from "./AddWeaponModal";
+import { ConfirmModal } from "../ConfirmModal";
 
 // Calculator-tile icons — crossed swords (közelharc) / crosshair (célzás, távolsági).
 const SwordsIcon = (
@@ -46,6 +47,7 @@ export const CombatCard: React.FC<{
   onCombatInfo: (key: string) => void;
 }> = ({ derived, weaponRows, activeRow, pinnedWeapons, onSetWeapons, onSetActiveWeapon, onOpenWeapon, onCombatInfo }) => {
   const [addWeaponOpen, setAddWeaponOpen] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null); // unpinning is a click away from "take in hand" — confirm it
 
   const combatTile = (k: CombatKey): Tile => ({
     label: k,
@@ -146,7 +148,7 @@ export const CombatCard: React.FC<{
                 <Text color="accentTx" fontSize={FS} fontWeight={600} maxW="110px" isTruncated title={dmg} sx={{ fontVariantNumeric: "tabular-nums" }}>{dmg}</Text>
                 {!fixed && (
                   <Box as="button" type="button" aria-label={`${w.name} eltávolítása`} title="Eltávolítás"
-                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); onSetWeapons(pinnedWeapons.filter((n) => n !== w.name)); }}
+                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); setRemoving(w.name); }}
                     color="fgFaint" fontSize="13px" lineHeight="1" px="3px" _hover={{ color: "bad" }}>✕</Box>
                 )}
               </HStack>
@@ -164,6 +166,13 @@ export const CombatCard: React.FC<{
           onAdd={(name) => { onSetWeapons([...pinnedWeapons, name]); setAddWeaponOpen(false); }}
           onClose={() => setAddWeaponOpen(false)}
         />
+      )}
+      {removing && (
+        <ConfirmModal title="Fegyver eltávolítása" confirmLabel="Eltávolítás"
+          onConfirm={() => { onSetWeapons(pinnedWeapons.filter((n) => n !== removing)); setRemoving(null); }}
+          onClose={() => setRemoving(null)}>
+          Biztosan leveszed a(z) <b>{removing}</b> fegyvert a lapról? Bármikor visszaveheted a „+” gombbal.
+        </ConfirmModal>
       )}
     </Card>
   );

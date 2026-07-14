@@ -31,5 +31,20 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     adj.effects.forEach((e) => applyEffect(ctx, e, `KM: ${adj.reason}`, adj.atLevel || N, true));
   });
 
+  // ── 6. Állapotok (play-state) ──────────────────────────────────────────────
+  // Last, so a condition sees the finished character — and BEFORE finalize, so a condition that moves
+  // an attribute cascades into the combat values, MME/AME, Ép/Fp max and Mozgás the same way any other
+  // stat bonus does. The snapshot lets finalize re-base the BUILD ledger onto pre-condition totals:
+  // "KÉ 64 → 68" is what you bought, and must not shift because you're currently dazed.
+  // A condition can be parked (active === false): it stays on the sheet — a psi shield you re-raise
+  // every fight is worth keeping around — but contributes nothing until it's switched back on.
+  const conditions = (rec.conditions ?? []).filter((c) => c.active !== false && c.effects?.length);
+  if (conditions.length > 0) {
+    ctx.preConditions = { effective: { ...ctx.effective }, combatAcc: { ...ctx.combatAcc }, derivedBonus: { ...ctx.derivedBonus } };
+    conditions.forEach((c) => {
+      c.effects!.forEach((e) => applyEffect(ctx, e, `Állapot: ${c.name}`, N, true));
+    });
+  }
+
   return finalize(ctx);
 }

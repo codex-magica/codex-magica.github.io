@@ -16,13 +16,19 @@ export interface InventoryItem {
   equipped?: boolean;
 }
 
-// A transient status effect during play (Mérgezett, Szédült, Bénult …). Play-state, NOT part of the
-// build ledger — it changes at the table, not when you spend points.
+// A transient status effect during play (Mérgezett, Kábult, Pszi pajzs …). Play-state, NOT part of the
+// build ledger — it changes at the table, not when you spend points. `effects` is the same vocabulary
+// the ledger and the KM adjustments use, so the engine folds a condition in exactly like any other
+// modifier (see model/conditions for the book presets and the custom builder).
 export interface CharacterCondition {
   id: string;
   name: string;
   note?: string;
   appliedAtLevel?: number;
+  active?: boolean; // false = kept on the sheet but NOT applied (undefined = active, so old records still count)
+  effects?: Effect[];
+  preset?: string; // the ConditionPreset key it came from (undefined = custom)
+  magnitude?: number; // the strength the player picked, for presets that take one (a shield's E)
 }
 
 export interface ChosenBackground {
