@@ -15,8 +15,8 @@ import { SearchPalette, SearchButton, SearchEntry, prewarmSearchIndex } from "./
 import { skillsRules } from "../data/skillsRules";
 import { SKILLS } from "../model/skills";
 import { SKILL_CATEGORIES } from "../model/common";
-import introMd from "../../book/01-bevezeto.md";
-import charMd from "../../book/02-karakteralkotas.md";
+import introMd from "../book/01-bevezeto.md";
+import charMd from "../book/02-karakteralkotas.md";
 
 // rulebook chapters shown via the Markdown renderer; tab indices start at CHAPTER_BASE (after the data tabs)
 const CHAPTER_BASE = 13;

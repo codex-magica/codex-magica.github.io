@@ -36,7 +36,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 0,
     isMagical: false,
-    description: "Ököl: Egy régi mondás szerint mindig kéznél van. Ha más fegyver nincs, ez ís megteszi. Igazán mesteri használói a harcművészek.",
+    description: "Ököl: Egy régi mondás szerint mindig kéznél van. Ha más fegyver nincs, ez is megteszi. Igazán mesteri használói a harcművészek.",
   },
   {
     name: "vasököl",
@@ -66,7 +66,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 10,
     isMagical: false,
-    description: "Garott: Más néven fojtóhurok — tipikusan orgyilkos fegyver, csak az orvtámadás képzettséggel alkalmazható, fegyverhasználat képzettség nem szükséges hozzá. Nem más, mint egy kb. 60-80 ynevi hüvelykes acélhuzal, mindkét végén fogantyúval. A támadó áldozata mögé osonva hurkot vet a nyakába, és addig szorítja, míg az illető megfullad, vagy át nem vágja a torkát a vékony huzal. Az áldozat körönként elszenved 1k10 Sp-t, amíg meg nem hal vagy ki nem szabadul. A szabadulásra igen kicsi az esélye, hiszen szorongatott helyzete miatt nem sok mindent tehet, csak az alábbi levonásokkal támadhat, sikeres Akaraterőpróba után: Gyorsaság -5, Ügyesség -5, ezáltal elveszíti azon képzettségeit, melyeknek Tulajdonságkövetelményét nem tudja teljesíteni, Emellett a Tulajdonságcsökkenés miatt harcértékei a következő módon változnak: KÉ: -5, TÉ: -10, VÉ: -10, dobó-, vagy célzófegyvert pedig nem használhat. Persze a támadó is némileg kiszolgáltatott helyzetben van, őt a Harc helyhez kötve módosítói sújtják. Ha az áldozat sikeres támadást hajt végre támadóján, akkor annak kell Akaraterőpróbát tennie, vajon sikerül-e továbbra is fogva tartania áldozatát.\nTermészetesen ez a fegyver csak és kizárólag hátulról és meglepetésszerűen alkalmazható, nyílt közelharcban semmi haszna nincs. Sebzése figyelemreméltó 2k6. Túlütésnél az első körben — és csakis ekkor — a garott ÉP-t is sebezhet, a hirtelen rántás következtében.",
+    description: "Garott: Más néven fojtóhurok — tipikusan orgyilkos fegyver, csak az orvtámadás képzettséggel alkalmazható, fegyverhasználat képzettség nem szükséges hozzá. Nem más, mint egy kb. 60-80 ynevi hüvelykes acélhuzal, mindkét végén fogantyúval. A támadó áldozata mögé osonva hurkot vet a nyakába, és addig szorítja, míg az illető megfullad, vagy át nem vágja a torkát a vékony huzal. Az áldozat körönként elszenved 1k10 Sp-t, amíg meg nem hal vagy ki nem szabadul. A szabadulásra igen kicsi az esélye, hiszen szorongatott helyzete miatt nem sok mindent tehet, csak az alábbi levonásokkal támadhat, sikeres Akaraterőpróba után: Gyorsaság -5, Ügyesség -5, ezáltal elveszíti azon képzettségeit, melyeknek Tulajdonságkövetelményét nem tudja teljesíteni. Emellett a Tulajdonságcsökkenés miatt harcértékei a következő módon változnak: KÉ: -5, TÉ: -10, VÉ: -10, dobó- vagy célzófegyvert pedig nem használhat. Persze a támadó is némileg kiszolgáltatott helyzetben van, őt a Harc helyhez kötve módosítói sújtják. Ha az áldozat sikeres támadást hajt végre támadóján, akkor annak kell Akaraterőpróbát tennie, vajon sikerül-e továbbra is fogva tartania áldozatát.\nTermészetesen ez a fegyver csak és kizárólag hátulról és meglepetésszerűen alkalmazható, nyílt közelharcban semmi haszna nincs. Sebzése figyelemreméltó 2k6. Túlütésnél az első körben — és csakis ekkor — a garott Ép-t is sebezhet, a hirtelen rántás következtében.",
   },
   {
     name: "tűgyűrű",
@@ -81,7 +81,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 0,
     isMagical: false,
-    description: "Különleges, dzsad találmány. A lényege egy mérgezett tű, melyet valamilyen módon az ujján visel az ember. Két legelterjedtebb verziója a gyűszűs és a pecsétgyűrűs. A gyűszűs, egy enyhén görbülő tű és egy gyűszű egyesítése, mintegy az ujj meghosszabbítása. Közelharcban igen veszélyes lehet. Külön tokben hordják és általában gyorsan ölő szárított méreg borítja. A pecsétgyűrűben elrejtett mérgezett tű már sokkal bonyolultabb és meglepőbb eszköz. Képzeljünk el egy lapos pecsétgyűrűt, a pecsét közepén apró lyukkal. A gyűrű egész lapja benyomható egy rugó ellenében, miáltal a lyukban elhelyezkedő tű előbukkan. Ha a gyűrűt az áldozat bőréhez szorítjuk, a tű beléhatol, a méreg a szervezetébe kerül. Közelharcban ez egyetlen jól irányzott ökölcsapással kivitelezhető, de ha a gyűrűt befelé fordítjuk, egy gyanútlan áldozatot tenyérrel megérintve is elérhetjük a kellő hatást. A gyűrű elkészítése igen aprólékos — és költséges — ötvösmunka, csak az igazán gazdagok engedhetik meg maguknak.",
+    description: "Különleges, dzsad találmány. A lényege egy mérgezett tű, melyet valamilyen módon az ujján visel az ember. Két legelterjedtebb verziója a gyűszűs és a pecsétgyűrűs. A gyűszűs egy enyhén görbülő tű és egy gyűszű egyesítése, mintegy az ujj meghosszabbítása. Közelharcban igen veszélyes lehet. Külön tokban hordják és általában gyorsan ölő szárított méreg borítja. A pecsétgyűrűben elrejtett mérgezett tű már sokkal bonyolultabb és meglepőbb eszköz. Képzeljünk el egy lapos pecsétgyűrűt, a pecsét közepén apró lyukkal. A gyűrű egész lapja benyomható egy rugó ellenében, miáltal a lyukban elhelyezkedő tű előbukkan. Ha a gyűrűt az áldozat bőréhez szorítjuk, a tű beléhatol, a méreg a szervezetébe kerül. Közelharcban ez egyetlen jól irányzott ökölcsapással kivitelezhető, de ha a gyűrűt befelé fordítjuk, egy gyanútlan áldozatot tenyérrel megérintve is elérhetjük a kellő hatást. A gyűrű elkészítése igen aprólékos — és költséges — ötvösmunka, csak az igazán gazdagok engedhetik meg maguknak.",
   },
 
   {
@@ -120,7 +120,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 10,
     isMagical: false,
-    description: "Elsősorban a dzsadok kedvelt fegyvere, de elvétve találni más vidéken is. A vágóél görbülete jól illeszkedik a harcos mozdulatának ívéhez, a kisebb találati felület pedig megkönnyíti a penge behatolását. A kétélű penge az alulról való vágást teszi lehetővé. Egykezes fegyver, a dzsadok előszeretettel viselik övükbe tűzve. Népükre jellemző módon tőreiket, dzsambiájikat is díszítik, gyakran túlzott mértékben.",
+    description: "Elsősorban a dzsadok kedvelt fegyvere, de elvétve találni más vidéken is. A vágóél görbülete jól illeszkedik a harcos mozdulatának ívéhez, a kisebb találati felület pedig megkönnyíti a penge behatolását. A kétélű penge az alulról való vágást teszi lehetővé. Egykezes fegyver, a dzsadok előszeretettel viselik övükbe tűzve. Népükre jellemző módon tőreiket, dzsambiáikat is díszítik, gyakran túlzott mértékben.",
   },
   {
     name: "kés",
@@ -139,7 +139,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 15,
     isMagical: false,
-    description: "A kés, bár nem fegyvernek készült, szükség estén azzá válhat. A legfontosabb részletek, amelyek a tőrtől megkülönböztetik: nincs keresztvasa, és általában egyélű.",
+    description: "A kés, bár nem fegyvernek készült, szükség esetén azzá válhat. A legfontosabb részletek, amelyek a tőrtől megkülönböztetik: nincs keresztvasa, és általában egyélű.",
   },
   {
     name: "levéltőr",
@@ -177,7 +177,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "A toroni orgyilkosok által kifejlesztett fegyver, egy különlegesen kiképzett tőr, markolatában méregtartállyal. Úgy van kialakítva, hogy egy gomb lenyomásával a rejtett mérget a pengére vagy az áldozatba juttatja. Több változatban létezik, a legegyszerűbb, amikor a markolat üreges, a vége levehető, és ott betölthető a méreg, a penge felőli részén pedig, a penge mellett közvetlenül egy vagy két kis. lyuk található — ezeken át folyik a méreg a pengére. Így, ha a méregnek nem szabad kiszáradnia — egyetlen mozdulattal a pengére lehet kenni döfés előtt. Ennek fejlettebb változata, ahol a méreg már nem csak magától folyik a tőr pengéjére, hanem egy kis rugós mechanizmus nyomja ki a lyukakon keresztül. Létezik azonban egy, még ennél is kifinomultabb eszköz: a valódi méregfog, ami a viperamaráshoz hasonlóan működik. Ennél a penge belsejében egy szűk kis csatorna fut végig, a markolattól egészen a méregfog hegyéig. A döfés pillanatában kioldva egy rugós szerkezetet, a méreg a csatornán keresztül egyenesen az áldozat szervezetébe jut (képzeljük csak el az orvosi fecskendő példáját). A méregfog, bármelyik változatáról legyen is szó, nagyon drága eszköz és persze nem szerezhető be akárhol. Orgyilkos és embervadász klánok fegyvermesterein kívül igen kevesen készítenek efféle holmit.",
+    description: "A toroni orgyilkosok által kifejlesztett fegyver, egy különlegesen kiképzett tőr, markolatában méregtartállyal. Úgy van kialakítva, hogy egy gomb lenyomásával a rejtett mérget a pengére vagy az áldozatba juttatja. Több változatban létezik, a legegyszerűbb, amikor a markolat üreges, a vége levehető, és ott betölthető a méreg, a penge felőli részén pedig, a penge mellett közvetlenül egy vagy két kis lyuk található — ezeken át folyik a méreg a pengére. Így, ha a méregnek nem szabad kiszáradnia — egyetlen mozdulattal a pengére lehet kenni döfés előtt. Ennek fejlettebb változata, ahol a méreg már nem csak magától folyik a tőr pengéjére, hanem egy kis rugós mechanizmus nyomja ki a lyukakon keresztül. Létezik azonban egy, még ennél is kifinomultabb eszköz: a valódi méregfog, ami a viperamaráshoz hasonlóan működik. Ennél a penge belsejében egy szűk kis csatorna fut végig, a markolattól egészen a méregfog hegyéig. A döfés pillanatában kioldva egy rugós szerkezetet, a méreg a csatornán keresztül egyenesen az áldozat szervezetébe jut (képzeljük csak el az orvosi fecskendő példáját). A méregfog, bármelyik változatáról legyen is szó, nagyon drága eszköz és persze nem szerezhető be akárhol. Orgyilkos és embervadász klánok fegyvermesterein kívül igen kevesen készítenek efféle holmit.",
   },
   {
     name: "pugoss",
@@ -273,7 +273,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "Az amazonok hagyományos, leginkább a predoci egyeneskardra emlékeztető, majd 1 ynevi láb hosszú pengéje, mely vágásra és szúrásra egyaránt alkalmas, s mely markolatkosárral is bír. A pengét gyakran díszítik az adott mesterre, klánra jellemző vésetekkel, gyakorlottabb szem, még a viselője családfájáról megtudhat egyet s minden.",
+    description: "Az amazonok hagyományos, leginkább a predoci egyeneskardra emlékeztető, majd 1 ynevi láb hosszú pengéje, mely vágásra és szúrásra egyaránt alkalmas, s mely markolatkosárral is bír. A pengét gyakran díszítik az adott mesterre, klánra jellemző vésetekkel. A gyakorlottabb szem még a viselője családfájáról megtudhat egyet s mást.",
   },
   {
     name: "fejvadászkard",
@@ -307,7 +307,7 @@ export const WeaponValues: WeaponInfo[] = [
     CÉ: 0,
     weight: "1",
     canDisarm: true,
-    canDestroyWeapons: true,
+    canDestroyWeapons: false,
     canPierce: false,
     STP: 20,
     isMagical: false,
@@ -363,8 +363,8 @@ export const WeaponValues: WeaponInfo[] = [
     VÉ: 8,
     CÉ: 0,
     weight: "0.9",
-    canDisarm: true,
-    canDestroyWeapons: true,
+    canDisarm: false,
+    canDestroyWeapons: false,
     canPierce: false,
     STP: 20,
     isMagical: false,
@@ -387,7 +387,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "Jobbára Sirenarban, illetve a határos területeken eltejedt rövidebb kard, mely alakját tekintve a levéltőrökhöz hasonlítható, bár keresztvasa általában nagyobb azoknál.",
+    description: "Jobbára Sirenarban, illetve a határos területeken elterjedt rövidebb kard, mely alakját tekintve a levéltőrökhöz hasonlítható, bár keresztvasa általában nagyobb azoknál.",
   },
   {
     name: "kígyókard",
@@ -406,7 +406,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "Tharr papjainak közkedvelt fegyvere. 4-5 arasz hosszúságú, mérgeskígyóként tekergő, egykezes, kétélű kard. Keresztvasa szinte soha nincs, vércsatornáját gyakran díszítik átokhozó káoszrúnákkal. Itt jegyzendő meg, hogy a komoly hitbéli ellentét dacára Sogron papjainak, tűzvarázslóinak lángkardjai is hasonló megjelenésűek — természetesen a káosz rúnái nélkül — leszámítva, a kígyónyelv hiányát a penge végén.",
+    description: "Tharr papjainak közkedvelt fegyvere. 4-5 arasz hosszúságú, mérgeskígyóként tekergő, egykezes, kétélű kard. Keresztvasa szinte soha nincs, vércsatornáját gyakran díszítik átokhozó káoszrúnákkal. Itt jegyzendő meg, hogy a komoly hitbéli ellentét dacára Sogron papjainak, tűzvarázslóinak lángkardjai is hasonló megjelenésűek — természetesen a káosz rúnái nélkül — leszámítva a kígyónyelv hiányát a penge végén.",
   }, {
     name: "lagoss",
     type: 3,
@@ -437,8 +437,8 @@ export const WeaponValues: WeaponInfo[] = [
     VÉ: 8,
     CÉ: 0,
     weight: "2.2",
-    canDisarm: true,
-    canDestroyWeapons: true,
+    canDisarm: false,
+    canDestroyWeapons: false,
     canPierce: false,
     STP: 25,
     isMagical: false,
@@ -499,7 +499,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "A legkönnyebb kard valamennyi között; pengéje keskeny, vékony és igen hajlékony. Mindkét élét kifenik, a hangsúly azonban a hegyén van, mivel ez elsősorban szúrófegyver. Főleg könnyűvértezetű vagy páncél nélküli ellenféllel szemben hatékony. Könnyű pengéjének megfelelően markolatgombja kicsi vagy hiányozhat is. Mivel kis súlya miatt könnyebb forgatni, esetében a védekezés jelentős szerepet kap. A markolatot különböző módon védik: kosárral, kézvédővel, hárítógyűrűvel. Ahány vidék Yneven, annyiféle a tőrkardok díszítése. A fegyverismeretben alacsonyabb fokon jártas karakter nagy eséllyel képes megállapítani a tőrkard származási helyét — országot és tartományt -—, míg a képzettség mesterei név szerint azonosíthatnak egy-egy híresebb fegyverkészítőt. Kiegészítésül gyakran forgatnak mellette hárítótőrt. Általában elfogadott, hogy a polgárok és közrendű szabadok fegyvere.",
+    description: "A legkönnyebb kard valamennyi között; pengéje keskeny, vékony és igen hajlékony. Mindkét élét kifenik, a hangsúly azonban a hegyén van, mivel ez elsősorban szúrófegyver. Főleg könnyűvértezetű vagy páncél nélküli ellenféllel szemben hatékony. Könnyű pengéjének megfelelően markolatgombja kicsi vagy hiányozhat is. Mivel kis súlya miatt könnyebb forgatni, esetében a védekezés jelentős szerepet kap. A markolatot különböző módon védik: kosárral, kézvédővel, hárítógyűrűvel. Ahány vidék Yneven, annyiféle a tőrkardok díszítése. A fegyverismeretben alacsonyabb fokon jártas karakter nagy eséllyel képes megállapítani a tőrkard származási helyét — országot és tartományt —, míg a képzettség mesterei név szerint azonosíthatnak egy-egy híresebb fegyverkészítőt. Kiegészítésül gyakran forgatnak mellette hárítótőrt. Általában elfogadott, hogy a polgárok és közrendű szabadok fegyvere.",
   },
   {
     name: "rövid kard",
@@ -537,7 +537,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 20,
     isMagical: false,
-    description: "Kizárólag Kránban és Yllinorban (lásd Anat-Akhan klán) használatos fejvadászfegyver. Bár különleges kialakításának egyik fő oka, hogy a belső él hátulról támadva az áldozat torkán a lehető leghosszabb és legmélyebb vágást ejtse, külső élét gyakran használják közelharcban, szemtől szembe. Kránon kívül csak a legritkább esetekben fordulhat elő, ekkor rövidkardként a lehet forgatni.",
+    description: "Kizárólag Kránban és Yllinorban (lásd Anat-Akhan klán) használatos fejvadászfegyver. Bár különleges kialakításának egyik fő oka, hogy a belső él hátulról támadva az áldozat torkán a lehető leghosszabb és legmélyebb vágást ejtse, külső élét gyakran használják közelharcban, szemtől szembe. Kránon kívül csak a legritkább esetekben fordulhat elő, ekkor rövidkardként lehet forgatni.",
   },
   {
     name: "Slan kard",
@@ -730,7 +730,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 20,
     isMagical: false,
-    description: "Ez a fegyver tulajdonképpen valahol a csatabárd és a tollas buzogány között helyezkedik el, egyesítve ezek előnyeit. Két, de ritkábban három acéllapot kovácsolnak ki, és ezeket csúsztatják egymásba, így a fegyvernek összesen négy, vagy hat vágóéle lesz. Mivel a nyél és a penge egy darabból — fémből - van, a súlya is tekintélyes. Különösen jó hasznát lehet venni bármiféle páncélzat ellen.",
+    description: "Ez a fegyver tulajdonképpen valahol a csatabárd és a tollas buzogány között helyezkedik el, egyesítve ezek előnyeit. Két, de ritkábban három acéllapot kovácsolnak ki, és ezeket csúsztatják egymásba, így a fegyvernek összesen négy, vagy hat vágóéle lesz. Mivel a nyél és a penge egy darabból — fémből — van, a súlya is tekintélyes. Különösen jó hasznát lehet venni bármiféle páncélzat ellen.",
   },
   {
     name: "csatacsillag",
@@ -769,12 +769,12 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 10,
     isMagical: false,
-    description: "A legegyszerűbb fegyverek egyike. Ilyenre kap a paraszt, ha tyúktolvajt ér tetten (esetleg vasvellára), de ilyet forgatnak mesterien az utak és erdők egyes vándorai is. Szépen faragott, gonddal kezelt útitársak vagy földről felkapott alkalmi fegyverek, mindenképpen elhatárolandók a harcművészek botjaitól. Bármennyire is veszélytelennek tűnhet azonban esetleg egy karddal szemben, — egy ügyesen megvasalt bot még a pengéket is megakaszthatja — az értő mester kezében pedig életveszélyes.",
+    description: "A legegyszerűbb fegyverek egyike. Ilyenre kap a paraszt, ha tyúktolvajt ér tetten (esetleg vasvellára), de ilyet forgatnak mesterien az utak és erdők egyes vándorai is. Szépen faragott, gonddal kezelt útitársak vagy földről felkapott alkalmi fegyverek, mindenképpen elhatárolandók a harcművészek botjaitól. Bármennyire is veszélytelennek tűnhet azonban esetleg egy karddal szemben — egy ügyesen megvasalt bot még a pengéket is megakaszthatja — az értő mester kezében pedig életveszélyes.",
   },
   {
     name: "rövid bot",
     type: 3,
-    subType: "Buzogányok",
+    subType: "Botok",
     damage: "1k6+2",
     attackDuration: "5",
     cost: "30r",
@@ -849,7 +849,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 25,
     isMagical: false,
-    description: "Mind hosszát, mind súlyát tekintve a legnagyobb kardnak mondható. Lovagok kedvelt fegyvere, mivel éle és hegye mellett súlya is komoly szerepet játszik sebzésében - így jól használható nehézvértezet ellen. Súlya általában 4 ynevi font, de mivel súlypontja távol esik a markolattól, forgatása nem könnyű feladat. A kardon megfigyelhető a messze kinyúló keresztvas és néha hárítógyűrű is. Igazi mesterei, ha akad elég helyük tudományuk kibontakoztatására, elképesztő dolgokra képesek, akár fél tucat ellenféllel szemben is, hiszen a fegyver puszta méreteivel képesek távol tartani amazokat. Forgatásához két kéz kell, mellette semmiféle pajzs vagy másodlagos fegyver nem használható. Előnye leginkább csatákban mutatkozik meg, sok kalandozó — helyigénye miatt — nem igazán kedveli.",
+    description: "Mind hosszát, mind súlyát tekintve a legnagyobb kardnak mondható. Lovagok kedvelt fegyvere, mivel éle és hegye mellett súlya is komoly szerepet játszik sebzésében — így jól használható nehézvértezet ellen. Súlya általában 4 ynevi font, de mivel súlypontja távol esik a markolattól, forgatása nem könnyű feladat. A kardon megfigyelhető a messze kinyúló keresztvas és néha hárítógyűrű is. Igazi mesterei, ha akad elég helyük tudományuk kibontakoztatására, elképesztő dolgokra képesek, akár fél tucat ellenféllel szemben is, hiszen a fegyver puszta méreteivel képesek távol tartani amazokat. Forgatásához két kéz kell, mellette semmiféle pajzs vagy másodlagos fegyver nem használható. Előnye leginkább csatákban mutatkozik meg, sok kalandozó — helyigénye miatt — nem igazán kedveli.",
   },
   {
     name: "mara-se-quor",
@@ -868,10 +868,10 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 25,
     isMagical: false,
-    description: "1 ynevi láb hosszú, hegyénél erősen felfelé hajló, külső-belső pengére fent vágókard. Hagyományos kráni fejvadászeszköz. Kránon kívül csak elvétve bukkanhat fel, nem kráni fejvadász karakterek, másfélkezes kardként forgathatják.",
+    description: "1 ynevi láb hosszú, hegyénél erősen felfelé hajló, külső-belső pengére fent vágókard. Hagyományos kráni fejvadászeszköz. Kránon kívül csak elvétve bukkanhat fel, nem kráni fejvadász karakterek másfélkezes kardként forgathatják.",
   },
   {
-    name: "slan csatakard",
+    name: "Slan csatakard",
     type: 4,
     subType: "Nehézkardok",
     damage: "3k6",
@@ -887,10 +887,10 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "A Slan kardművészek legnagyobb, nyílt ütközetekben hordozott kardja, melyet egyfajta szakrális jelentéssel is bír. Aki ilyesmit köt oldalára kijelenti: elfogadja ellenfelei halálát, de készen áll a sajátjára is. ",
+    description: "A Slan kardművészek legnagyobb, nyílt ütközetekben hordozott kardja, amely egyfajta szakrális jelentéssel is bír. Aki ilyesmit köt oldalára kijelenti: elfogadja ellenfelei halálát, de készen áll a sajátjára is. ",
   },
   {
-    name: "kétkezes csatabárd",
+    name: "nehéz csatabárd",
     type: 4,
     subType: "Nehéz csatabárdok",
     damage: "5k6",
@@ -995,7 +995,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 30,
     isMagical: false,
-    description: "",
+    description: "A legelterjedtebb és legváltozatosabb formában megjelenő fegyver. Nyele általában 2-4 ynevi láb hosszú. Ahány tája csak van Ynevnek, annyi féle és forma fejjel készítik. A több száz, esetenként több ezer éves kísérletezés eredményeképpen igen letisztult, célratörő formákat nyertek. Megfigyelhető azonban némi egyezés az alabárdok különböző típusai között is. Alapvető felépítésben mindegyik tartalmaz egy egyenes vagy enyhén görbülő pengerészt, egy hosszabb-rövidebb egyenes döfőhegyet, valamint egy ütőtüskét a bárdpenge hátoldalán. Hogy azután ezen elemek közül melyik kap nagyobb hangsúlyt, illetve melyiket hanyagolják el, s milyen alakban, variációkban jelenítik meg őket, az adja az egyes fegyverek eredetiségét. Ez a három alapelem látja el egyben az alabárd három alapvető funkcióját — a vágást, a szúrást illetve a zúzást. A harmadik megsegítésére az ütőtüskét gyakran tompára és súlyosra készítik. Előfordul az is, hogy az ütőtüske vagy a bárdlap csőre hosszabb és erősen hátrahajlik — ez különösen lovasok lerántásánál nagy előny. Mindezen előnyei mellett persze megvan a maga hátránya is, nevezetesen, hogy túlságosan nagy; ez pedig a kezelését, szállítását, forgatását meglehetősen nehézkessé teszi (főleg szűk helyen). Az aprólékosan kimunkált, gyakran díszítésekkel ellátott fej miatt meglehetősen drága fegyver.",
   },
   {
     name: "lándzsa",
@@ -1014,7 +1014,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Minden nyeles fegyver közül talán a legelterjedtebb. Szerte Yneven rengeteg féle és fajta heggyel készítik. Sokfelé dobják, másutt közelharcra használják. A Sheral déli lejtőinek tövében élő nomád nép lándzsája alig másfél lábnyi, azonban ennek majdnem fele az élesre fent hegy, amivel úgy is harcolhatnak, mint más a kardvágással. Említést érdemel még a dzsadok széles pengéjű, kétméteres lándzsája, ami már talán átmenet az alabárd felé, akár a keskeny, szögletes gorviki, és a hihetetlenül hosszú yllinori lándzsa. Egyes helyeken külön kultúrája alakult ki a lándzsavívásnak.\n\nA hajításra is kialakított kisebb méretű lándzsákat a karakterek a fegyver TÉ-jével megegyező CÉ módosítóval dobhatják.",
   },
   {
     name: "lovaskopja",
@@ -1033,7 +1033,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Kizárólag öklelésre szolgáló nyeles fegyver. Felépítésében egy túlméretezett, három-négy méter hosszú lándzsára emlékeztet. Általában könnyű vértezetű lovasság vagy gyalogosok ellen használják. Fejlettebb változatainál bőr vagy fa tárcsát húznak rá, ami a kopjás karját és testét védi. A leglényegesebb különbség a nehézlovas kopjához képest, hogy a lovas — ha jobb kezében tartja — a ló jobb oldalán döf vele. A nehézlovas kopját ezzel szemben a ló nyaka mögött keresztben tartják, és a ló bal oldalára döfnek vele.",
   },
   {
     name: "nehézlovas kopja",
@@ -1052,7 +1052,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 35,
     isMagical: false,
-    description: "",
+    description: "A könnyűlovas változat nagyobb, súlyosabb kivitele. Hossza az öt ynevi lábnyit is elérheti, a kézvédő tárcsa pedig szerves része a nyélnek. Jellegzetes lovagi fegyver, a lovas fémvérteken külön kopjatartó kampót — úgynevezett ordot — alakítanak ki a kopja tartásának megkönnyítésére.\n\nAz öklelőkopját a lovas jobbjával megmarkolja, s könyökével az oldalához szorítja. Támadáskor kiemelkedik a nyeregből, merev lábbal megtámasztja magát a kengyelben és a nyereg hátsó kápáján, így ér el megfelelően szilárd tartást. A könnyűlovas kopját még valamennyire lehet irányítani menet közben, a nehezet viszont alig. Efféle harcmodor a lovagok és paplovagok körében dívik igazán, különösen a Pyarroni Államközösségben és Shadonban.",
   },
   {
     name: "pika",
@@ -1071,7 +1071,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Északon — főleg Abasziszban és Toronban — kialakult fegyver, a lándzsának egy egészen különleges válfaja. Ez a két és fél ynevi láb hosszú döfőalkalmatosság félelmetes fegyver. A kétlábnyi nyél végére erősítik a fél lábnyi, szögletes keresztmetszetű, vékony szuronyt, amit ugyan nem éleznek ki, de annál hegyesebbre fennek. A nyárs tövében kis, kerek fémlap található, ami a védekezést, az ellenfél fegyverének megakasztását szolgálja. Elkészítése nagyon egyszerű és olcsó, mindazonáltal hihetetlenül hatékony lovasok ellen, ezért Abasziszban és Toronban a hadsereg nagy részét ilyen fegyverrel látják el. A pika az Északi Szövetség országaiban is ismert, ott azonban kevésbé használatos.",
   },
   {
     name: "szigony",
@@ -1090,7 +1090,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 40,
     isMagical: false,
-    description: "",
+    description: "Leginkább a halásznépek munkaeszköze, fegyverként csak akkor forgatják, ha rákényszerülnek. A visszafelé fogazott, hosszú, vékony hegy igen súlyos sebeket ejt, ha a döfés után hirtelen kirántják. A szigonyvetők fegyverük végéhez gyakran vékony, erős zsineget erősítenek, amivel azután vissza tudják rántani az eldobott eszközt. Ez lényegében a halászat során alakult így, de harc közben is szívesen alkalmazzák, hiszen segítségével egy kör leforgása alatt újra fegyverükhöz jutnak. A szigony másik változata a háromágú szigony, ami eredetileg szintén halászatra szolgált, ám jelenleg már sokkal inkább a gladiátorok cégére, semmint a halászoké. Leginkább Abasziszban elterjedt, ahol a viadalokon gyakran hálóval együtt használják. Alapvetően kétféle alakban készítik. Az elsőnél a három hegy egy síkban, egymás mellett helyezkedik el, a másiknál pedig körív mentén. Mindkét fegyver kiválóan alkalmas fegyvertörésre és lefegyverzésre. E képzettségek használatakor a szigonyt használó harcos +10-et kap TÉ-jére.",
   },
 
 
@@ -1141,7 +1141,7 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: false,
     STP: 10,
     isMagical: false,
-    description: "Az abasziszi gladiátorok egyik közkedvelt fegyvere. A hozzávetőleg egy-két négyzetméteres, nem túl sűrű szövésű hálót a baljukban tartják összefogva. A megfelelő pillanatban elhajítva a hálót, az a szélére erősített súlyok hatására kibomlik, az ellenfélre terül, aki minden heves mozdulatával csak jobban belegabalyodik. A háló közepén akad egy külön kötél, amelynek végét a gladiátor mindvégig a kezében tartja. Sikeres Támadásnál ezzel még jobban ráhurkolhatja a hálót ellenfelére, sikertelen támadásnál ezzel ránthatja viszsza fegyverét egy esetleges újabb próbálkozás reményében.\nA második és az összes többi támadáskor a használó TÉ-jéből 15 levonandó — mivel halója egyszer kibomlott már, és harc közben csak tessék-lássék lehet feltekerni. Ugyanezen okból hálóval legfeljebb minden harmadik körben kísérelhet meg támadást a használója. Ha a támadás sikeres, az ellenfél VÉ-je 40-nel csökken.",
+    description: "Az abasziszi gladiátorok egyik közkedvelt fegyvere. A hozzávetőleg egy-két négyzetméteres, nem túl sűrű szövésű hálót a baljukban tartják összefogva. A megfelelő pillanatban elhajítva a hálót, az a szélére erősített súlyok hatására kibomlik, az ellenfélre terül, aki minden heves mozdulatával csak jobban belegabalyodik. A háló közepén akad egy külön kötél, amelynek végét a gladiátor mindvégig a kezében tartja. Sikeres Támadásnál ezzel még jobban ráhurkolhatja a hálót ellenfelére, sikertelen támadásnál ezzel ránthatja vissza fegyverét egy esetleges újabb próbálkozás reményében.\nA második és az összes többi támadáskor a használó TÉ-jéből 15 levonandó — mivel hálója egyszer kibomlott már, és harc közben csak tessék-lássék lehet feltekerni. Ugyanezen okból hálóval legfeljebb minden harmadik körben kísérelhet meg támadást a használója. Ha a támadás sikeres, az ellenfél VÉ-je 40-nel csökken.",
   },
   {
     name: "dobótőr",
@@ -1152,8 +1152,8 @@ export const WeaponValues: WeaponInfo[] = [
     cost: "1e 50r",
     KÉ: 10,
     TÉ: 0,
-    VÉ: 5,
-    CÉ: 2,
+    VÉ: 2,
+    CÉ: 5,
     range: "20 láb",
     weight: "0.5",
     canDisarm: false,
@@ -1201,10 +1201,10 @@ export const WeaponValues: WeaponInfo[] = [
     canPierce: true,
     STP: 20,
     isMagical: false,
-    description: "Egészen más jellegű eszköz a hajítódárda. Hossza ritkán haladja meg a másfél métert, de rendszerint még ennél is rövidebb. Viszonylag könnyű fegyver, elsősorban dobásra kiegyensúlyozva. Hegye keskeny, hoszszúkás levél alakú. Nyele többnyire nem igazán kidolgozott, mindössze a közepén alakítanak ki egy bőrrel betekert markolatot. Ha netán közelharcra használnák, akkor is gyakran egy kézben forgatják, a hegyet lefelé, előre tartva. Az északi államokban viszonylag hosszú heggyel készítik, így két kézzel megfogva vívásra is alkalmas. Abasziszban különös változatát használják. Ennek hegye jó fél méteres, s nem köpüvel illeszkedik a nyélre, hanem annak hasítékába szorítják. A hegy egyébként a hosszú (kb. 40 ynevi hüvelyk), vékony, kör, négyszög vagy háromszög keresztmetszetű tőből és a rövid, szintén szögletes átmetszetű csúcsból áll. Mivel a csúcs és a hegy ilyen vékony, nem akad el a nyél vége, könnyen átüti a pajzsot és elér a mögötte rejtőző harcosig. Ez a fajta hajítódárda kifejezetten a falanx harcmodor ellen alakult ki. Közelharcra nem alkalmas, de egy gyalogos akár négy-öt dárdát is elbír.\nA keleti barbárok különösen jó dárdavetők hírében állnak. A titkuk egy egyszerű, mégis igen hatékony megoldásban rejlik. Ők nem a dárdát markolják meg és dobják, hanem egy úgynevezett dobófába illesztik, és úgy vetik ki. A dobófa rövid, egy-két arasznyi faragott fadarab, egyik végében kanálszerű mélyedéssel. Ebbe a mélyedésbe támasztja a harcos a dárdát, és a dobófát meglendítve hajítja el azt. Ez — a parittya elvéhez hasonlóan — jócskán megnöveli a dobás erejét és így hatékonyságát is. Ha a KM úgy határoz, egy dobófával bánni tudó harcosnak --1 Sebzésmódosítót adhat a hajítódárdára — a dobófa használata azonban külön dobófegyverhasználatot igényel. ",
+    description: "Egészen más jellegű eszköz a hajítódárda. Hossza ritkán haladja meg a másfél métert, de rendszerint még ennél is rövidebb. Viszonylag könnyű fegyver, elsősorban dobásra kiegyensúlyozva. Hegye keskeny, hosszúkás levél alakú. Nyele többnyire nem igazán kidolgozott, mindössze a közepén alakítanak ki egy bőrrel betekert markolatot. Ha netán közelharcra használnák, akkor is gyakran egy kézben forgatják, a hegyet lefelé, előre tartva. Az északi államokban viszonylag hosszú heggyel készítik, így két kézzel megfogva vívásra is alkalmas. Abasziszban különös változatát használják. Ennek hegye jó fél méteres, s nem köpüvel illeszkedik a nyélre, hanem annak hasítékába szorítják. A hegy egyébként a hosszú (kb. 40 ynevi hüvelyk), vékony, kör, négyszög vagy háromszög keresztmetszetű tőből és a rövid, szintén szögletes átmetszetű csúcsból áll. Mivel a csúcs és a hegy ilyen vékony, nem akad el a nyél vége, könnyen átüti a pajzsot és elér a mögötte rejtőző harcosig. Ez a fajta hajítódárda kifejezetten a falanx harcmodor ellen alakult ki. Közelharcra nem alkalmas, de egy gyalogos akár négy-öt dárdát is elbír.\nA keleti barbárok különösen jó dárdavetők hírében állnak. A titkuk egy egyszerű, mégis igen hatékony megoldásban rejlik. Ők nem a dárdát markolják meg és dobják, hanem egy úgynevezett dobófába illesztik, és úgy vetik ki. A dobófa rövid, egy-két arasznyi faragott fadarab, egyik végében kanálszerű mélyedéssel. Ebbe a mélyedésbe támasztja a harcos a dárdát, és a dobófát meglendítve hajítja el azt. Ez — a parittya elvéhez hasonlóan — jócskán megnöveli a dobás erejét és így hatékonyságát is. Ha a KM úgy határoz, egy dobófával bánni tudó harcosnak +1 Sebzésmódosítót adhat a hajítódárdára — a dobófa használata azonban külön dobófegyverhasználatot igényel. ",
   },
   {
-    name: "slan csillag",
+    name: "Slan csillag",
     type: "ranged",
     subType: "Hajítófegyverek",
     damage: "1k6/2",
@@ -1299,7 +1299,7 @@ export const WeaponValues: WeaponInfo[] = [
     isMagical: false,
     description: [
       "small:*Az íjak és számszeríjak sebzése minden egyes megtett 50 ynevi láb távolság után csökken 1k6-tal.",
-      "A nomádok találmánya, de használják ezt a fegyvert délen és északon egyaránt. Az első visszacsapó fjas nomádok Ilanor és Enysmon őslakói voltak. A visszacsapó íj lényege, hogy az általában összetett íjfát eredeti görbületével ellentétesen meghajlítják és így teszik rá az ideget. Ekkor az íj felhúzatlan állapotban is feszül, ezt felajzáskor tovább fokozva jóval nagyobb erővel röpíti ki a vesszőt, mint közönséges társai. Mivel ez az íjfa igen nagy igénybevételnek van kitéve, gyakran több réteg fából, illetve csontból, szaruból készítik, sőt néha egy fémréteget is rátesznek. Ettől sokkal szívósabb, keményebb lesz az íj — de a használatához is nagyobb erő kell. A közönséges íjak közül mindenképpen ez a leghatékonyabb, azonban kezelését elsajátítani nehéz, nagy Erőt igényel (legalább 13-as), és elkészítése is körülményes és hosszú munka. Az igazán mesteri példányok éveken át készülnek. Ezek a nehézségek magyarázzák, hogy jó teljesítménye ellenére kevéssé terjedt el.",
+      "A nomádok találmánya, de használják ezt a fegyvert délen és északon egyaránt. Az első visszacsapó íjas nomádok Ilanor és Enysmon őslakói voltak. A visszacsapó íj lényege, hogy az általában összetett íjfát eredeti görbületével ellentétesen meghajlítják és így teszik rá az ideget. Ekkor az íj felhúzatlan állapotban is feszül, ezt felajzáskor tovább fokozva jóval nagyobb erővel röpíti ki a vesszőt, mint közönséges társai. Mivel ez az íjfa igen nagy igénybevételnek van kitéve, gyakran több réteg fából, illetve csontból, szaruból készítik, sőt néha egy fémréteget is rátesznek. Ettől sokkal szívósabb, keményebb lesz az íj — de a használatához is nagyobb erő kell. A közönséges íjak közül mindenképpen ez a leghatékonyabb, azonban kezelését elsajátítani nehéz, nagy Erőt igényel (legalább 13-as), és elkészítése is körülményes és hosszú munka. Az igazán mesteri példányok éveken át készülnek. Ezek a nehézségek magyarázzák, hogy jó teljesítménye ellenére kevéssé terjedt el.",
       ]
   },
   {
@@ -1323,7 +1323,7 @@ export const WeaponValues: WeaponInfo[] = [
     description: [
       "small:*Az íjak és számszeríjak sebzése minden egyes megtett 50 ynevi láb távolság után csökken 1k6-tal.",
       "small:**A nyílpuskák és íjak Átütése számértékben megegyezik a sebzésükhöz használt kockák számával. Az esetlegesen alkalmazott páncéltörő lövedékek esetében pedig ez az érték növekszik újabb 1 ponttal.",
-      "Kizárólag az elfek használják és készítik ezeket a misztikus harci eszközöket, melyek alakjukat tekintve, leginkább a visszacsapó íjakra emlékeztetnek, noha első pillantásra nyilvánvaló, hogy nem azonosak azokkal, mivel ezek az íjak élnek.\nA szertartás során, mely alkalmával megszületnek az elf közösség megtartója az, aki a harcos számára annak álmai alapján, illetve a sorsjegyekből kikövetkeztetve megtalálja a fát, amely egy ágából majd az íj készül. Ez után az elfnek legalább egy esztendeig ismerkednie kell a fával, a területtel, ahonnét majd fegyvere vétetik. Ez idő alatt a megtartó segítségével szimpatikus viszony alakul ki a fa és az elf között; a fa lélekcsírája megmerítkezik az elf lelkének hullámaiban, míg az elf megnyugvást talál a növény létezésének egyszerűségében. Amikor eljön az idő, hogy a megfelelő ágat lemetsszék a fáról, addigra már az elf és a fa lelke majdnem egy, s nem történik más, mint a fa lelke a létezés egy magasabb stációjába lépve az íjon és hordozóján keresztül megismerheti a világot. Egyes elf bölcsek szerint ezen fa-lélekcsírák sokkal hamarabb, az állatok és más teremtmények szintjét kihagyva mindjárt értelmes teremtményként születnek majd újjá, ha eljön az idejük. Ezen személyek szerintük könnyen felismerhetőek lombzöld szemükről, s békés álmatag viselkedésükről, mellyel ősi alakjukat idézik.\nA szertartásnak azonban egyéb kihatásai is vannak: az elf lelke a fáéhoz kötődik az íjban, mellyel innentől kezdve személy-személy szimpátiában áll. Megérzi, hogy merre található az íj, ha nincs nála, illetve annak életerejét is ő adja... hiszen a fa ága nem halt meg, hanem új életre kelt az íjban csak immáron hordozója jóvoltából, s ez meg is látszik erezetén, apróbb hajtásain. Az íj és az elf szimbiózisa miatt, ha az íj megsérül, akkor ennek látható nyoma nincs, mivel az elf sérül helyette, méghozzá annyi Fp-t, amennyi sebzést (STP) az íj elszenvedett. Ha Fp-i elfogynának, akkor az elf elájul, s az íj innentől kezdve normál módon sebződik. A fegyver mivel saját lélekkel bír, nem lehet semmiféle természetes anyagok mágiájának, vagy destrukciónak, esetleg papi Szétzúzás fohásznak alanya, ennek minden előnyével és hátrányával együtt. Mivel a szertartás a hordozójához kapcsolta, ezért mágikus védelmük is összeadódik, tehát az elf bármiféle védelme, varázslat, varázstárgy, TME, pszi, vagy Hátterekből fakadó az íjra is érvényesül, illetve bármelyikükre is hat asztrál, vagy mentál alapú támadás, az kiteljesül a másikon is legyenek bár mérföld ezrek távolában.\nAz eltéphetetlen kötelék miatt az elf megérzi, ha a fa, honnan íja vétetett szenved, haldoklik vagy elpusztult, ilyenkor a fa lelke tovább él a fegyverben. Azonban, ha az elf pusztul el, akkor mindkét lélek hosszú útra indul a Kárpiton túlra, s a fa lassan alig egy év alatt kiszárad.\nAbban az esetben, ha az íj lelkét elpusztítják, vagy nem a társa használja, akkor a fent feltüntetett csökkentett értékek érvényesülnek. Fontos még megjegyezni, hogy ha bárki aki nem elf vagy elf származék és nem saját íját hordozza, illetve nem tudja hitelt érdemlően bebizonyítani bármely elfek uralta területre tévedve, hogy nem álnok módon jutott a fegyverhez, az igen kellemetlen utolsó pillanatoknak néz elébe."
+      "Kizárólag az elfek használják és készítik ezeket a misztikus harci eszközöket, melyek alakjukat tekintve, leginkább a visszacsapó íjakra emlékeztetnek, noha első pillantásra nyilvánvaló, hogy nem azonosak azokkal, mivel ezek az íjak élnek.\nA szertartás során, mely alkalmával megszületnek az elf közösség megtartója az, aki a harcos számára annak álmai alapján, illetve a sorsjegyekből kikövetkeztetve megtalálja a fát, amelynek egy ágából majd az íj készül. Ez után az elfnek legalább egy esztendeig ismerkednie kell a fával, a területtel, ahonnét majd fegyvere vétetik. Ez idő alatt a megtartó segítségével szimpatikus viszony alakul ki a fa és az elf között; a fa lélekcsírája megmerítkezik az elf lelkének hullámaiban, míg az elf megnyugvást talál a növény létezésének egyszerűségében. Amikor eljön az idő, hogy a megfelelő ágat lemetsszék a fáról, addigra már az elf és a fa lelke majdnem egy, s nem történik más, mint a fa lelke a létezés egy magasabb stációjába lépve az íjon és hordozóján keresztül megismerheti a világot. Egyes elf bölcsek szerint ezen fa-lélekcsírák sokkal hamarabb, az állatok és más teremtmények szintjét kihagyva mindjárt értelmes teremtményként születnek majd újjá, ha eljön az idejük. Ezen személyek szerintük könnyen felismerhetőek lombzöld szemükről, s békés álmatag viselkedésükről, mellyel ősi alakjukat idézik.\nA szertartásnak azonban egyéb kihatásai is vannak: az elf lelke a fáéhoz kötődik az íjban, mellyel innentől kezdve személy-személy szimpátiában áll. Megérzi, hogy merre található az íj, ha nincs nála, illetve annak életerejét is ő adja... hiszen a fa ága nem halt meg, hanem új életre kelt az íjban csak immáron hordozója jóvoltából, s ez meg is látszik erezetén, apróbb hajtásain. Az íj és az elf szimbiózisa miatt, ha az íj megsérül, akkor ennek látható nyoma nincs, mivel az elf sérül helyette, méghozzá annyi Fp-t, amennyi sebzést (STP) az íj elszenvedett. Ha Fp-i elfogynának, akkor az elf elájul, s az íj innentől kezdve normál módon sebződik. A fegyver mivel saját lélekkel bír, nem lehet semmiféle természetes anyagok mágiájának, vagy destrukciónak, esetleg papi Szétzúzás fohásznak alanya, ennek minden előnyével és hátrányával együtt. Mivel a szertartás a hordozójához kapcsolta, ezért mágikus védelmük is összeadódik, tehát az elf bármiféle védelme, varázslat, varázstárgy, TME, pszi, vagy Hátterekből fakadó az íjra is érvényesül, illetve bármelyikükre is hat asztrál, vagy mentál alapú támadás, az kiteljesül a másikon is legyenek bár mérföldezrek távolában.\nAz eltéphetetlen kötelék miatt az elf megérzi, ha a fa, honnan íja vétetett szenved, haldoklik vagy elpusztult, ilyenkor a fa lelke tovább él a fegyverben. Azonban, ha az elf pusztul el, akkor mindkét lélek hosszú útra indul a Kárpiton túlra, s a fa lassan alig egy év alatt kiszárad.\nAbban az esetben, ha az íj lelkét elpusztítják, vagy nem a társa használja, akkor a fent feltüntetett csökkentett értékek érvényesülnek. Fontos még megjegyezni, hogy ha bárki aki nem elf vagy elf származék és nem saját íját hordozza, illetve nem tudja hitelt érdemlően bebizonyítani bármely elfek uralta területre tévedve, hogy nem álnok módon jutott a fegyverhez, az igen kellemetlen utolsó pillanatoknak néz elébe."
       ]
   },
   {
@@ -1347,7 +1347,7 @@ export const WeaponValues: WeaponInfo[] = [
     description: [
       "small:*Az íjak és számszeríjak sebzése minden egyes megtett 50 ynevi láb távolság után csökken 1k6-tal.",
       "small:**A nyílpuskák és íjak Átütése számértékben megegyezik a sebzésükhöz használt kockák számával. Az esetlegesen alkalmazott páncéltörő lövedékek esetében pedig ez az érték növekszik újabb 1 ponttal.",
-      "Kizárólag az elfek használják és készítik ezeket a misztikus harci eszközöket, melyek alakjukat tekintve, leginkább a visszacsapó íjakra emlékeztetnek, noha első pillantásra nyilvánvaló, hogy nem azonosak azokkal, mivel ezek az íjak élnek.\nA szertartás során, mely alkalmával megszületnek az elf közösség megtartója az, aki a harcos számára annak álmai alapján, illetve a sorsjegyekből kikövetkeztetve megtalálja a fát, amely egy ágából majd az íj készül. Ez után az elfnek legalább egy esztendeig ismerkednie kell a fával, a területtel, ahonnét majd fegyvere vétetik. Ez idő alatt a megtartó segítségével szimpatikus viszony alakul ki a fa és az elf között; a fa lélekcsírája megmerítkezik az elf lelkének hullámaiban, míg az elf megnyugvást talál a növény létezésének egyszerűségében. Amikor eljön az idő, hogy a megfelelő ágat lemetsszék a fáról, addigra már az elf és a fa lelke majdnem egy, s nem történik más, mint a fa lelke a létezés egy magasabb stációjába lépve az íjon és hordozóján keresztül megismerheti a világot. Egyes elf bölcsek szerint ezen fa-lélekcsírák sokkal hamarabb, az állatok és más teremtmények szintjét kihagyva mindjárt értelmes teremtményként születnek majd újjá, ha eljön az idejük. Ezen személyek szerintük könnyen felismerhetőek lombzöld szemükről, s békés álmatag viselkedésükről, mellyel ősi alakjukat idézik.\nA szertartásnak azonban egyéb kihatásai is vannak: az elf lelke a fáéhoz kötődik az íjban, mellyel innentől kezdve személy-személy szimpátiában áll. Megérzi, hogy merre található az íj, ha nincs nála, illetve annak életerejét is ő adja... hiszen a fa ága nem halt meg, hanem új életre kelt az íjban csak immáron hordozója jóvoltából, s ez meg is látszik erezetén, apróbb hajtásain. Az íj és az elf szimbiózisa miatt, ha az íj megsérül, akkor ennek látható nyoma nincs, mivel az elf sérül helyette, méghozzá annyi Fp-t, amennyi sebzést (STP) az íj elszenvedett. Ha Fp-i elfogynának, akkor az elf elájul, s az íj innentől kezdve normál módon sebződik. A fegyver mivel saját lélekkel bír, nem lehet semmiféle természetes anyagok mágiájának, vagy destrukciónak, esetleg papi Szétzúzás fohásznak alanya, ennek minden előnyével és hátrányával együtt. Mivel a szertartás a hordozójához kapcsolta, ezért mágikus védelmük is összeadódik, tehát az elf bármiféle védelme, varázslat, varázstárgy, TME, pszi, vagy Hátterekből fakadó az íjra is érvényesül, illetve bármelyikükre is hat asztrál, vagy mentál alapú támadás, az kiteljesül a másikon is legyenek bár mérföld ezrek távolában.\nAz eltéphetetlen kötelék miatt az elf megérzi, ha a fa, honnan íja vétetett szenved, haldoklik vagy elpusztult, ilyenkor a fa lelke tovább él a fegyverben. Azonban, ha az elf pusztul el, akkor mindkét lélek hosszú útra indul a Kárpiton túlra, s a fa lassan alig egy év alatt kiszárad.\nAbban az esetben, ha az íj lelkét elpusztítják, vagy nem a társa használja, akkor a fent feltüntetett csökkentett értékek érvényesülnek. Fontos még megjegyezni, hogy ha bárki aki nem elf vagy elf származék és nem saját íját hordozza, illetve nem tudja hitelt érdemlően bebizonyítani bármely elfek uralta területre tévedve, hogy nem álnok módon jutott a fegyverhez, az igen kellemetlen utolsó pillanatoknak néz elébe."
+      "Kizárólag az elfek használják és készítik ezeket a misztikus harci eszközöket, melyek alakjukat tekintve, leginkább a visszacsapó íjakra emlékeztetnek, noha első pillantásra nyilvánvaló, hogy nem azonosak azokkal, mivel ezek az íjak élnek.\nA szertartás során, mely alkalmával megszületnek az elf közösség megtartója az, aki a harcos számára annak álmai alapján, illetve a sorsjegyekből kikövetkeztetve megtalálja a fát, amelynek egy ágából majd az íj készül. Ez után az elfnek legalább egy esztendeig ismerkednie kell a fával, a területtel, ahonnét majd fegyvere vétetik. Ez idő alatt a megtartó segítségével szimpatikus viszony alakul ki a fa és az elf között; a fa lélekcsírája megmerítkezik az elf lelkének hullámaiban, míg az elf megnyugvást talál a növény létezésének egyszerűségében. Amikor eljön az idő, hogy a megfelelő ágat lemetsszék a fáról, addigra már az elf és a fa lelke majdnem egy, s nem történik más, mint a fa lelke a létezés egy magasabb stációjába lépve az íjon és hordozóján keresztül megismerheti a világot. Egyes elf bölcsek szerint ezen fa-lélekcsírák sokkal hamarabb, az állatok és más teremtmények szintjét kihagyva mindjárt értelmes teremtményként születnek majd újjá, ha eljön az idejük. Ezen személyek szerintük könnyen felismerhetőek lombzöld szemükről, s békés álmatag viselkedésükről, mellyel ősi alakjukat idézik.\nA szertartásnak azonban egyéb kihatásai is vannak: az elf lelke a fáéhoz kötődik az íjban, mellyel innentől kezdve személy-személy szimpátiában áll. Megérzi, hogy merre található az íj, ha nincs nála, illetve annak életerejét is ő adja... hiszen a fa ága nem halt meg, hanem új életre kelt az íjban csak immáron hordozója jóvoltából, s ez meg is látszik erezetén, apróbb hajtásain. Az íj és az elf szimbiózisa miatt, ha az íj megsérül, akkor ennek látható nyoma nincs, mivel az elf sérül helyette, méghozzá annyi Fp-t, amennyi sebzést (STP) az íj elszenvedett. Ha Fp-i elfogynának, akkor az elf elájul, s az íj innentől kezdve normál módon sebződik. A fegyver mivel saját lélekkel bír, nem lehet semmiféle természetes anyagok mágiájának, vagy destrukciónak, esetleg papi Szétzúzás fohásznak alanya, ennek minden előnyével és hátrányával együtt. Mivel a szertartás a hordozójához kapcsolta, ezért mágikus védelmük is összeadódik, tehát az elf bármiféle védelme, varázslat, varázstárgy, TME, pszi, vagy Hátterekből fakadó az íjra is érvényesül, illetve bármelyikükre is hat asztrál, vagy mentál alapú támadás, az kiteljesül a másikon is legyenek bár mérföldezrek távolában.\nAz eltéphetetlen kötelék miatt az elf megérzi, ha a fa, honnan íja vétetett szenved, haldoklik vagy elpusztult, ilyenkor a fa lelke tovább él a fegyverben. Azonban, ha az elf pusztul el, akkor mindkét lélek hosszú útra indul a Kárpiton túlra, s a fa lassan alig egy év alatt kiszárad.\nAbban az esetben, ha az íj lelkét elpusztítják, vagy nem a társa használja, akkor a fent feltüntetett csökkentett értékek érvényesülnek. Fontos még megjegyezni, hogy ha bárki aki nem elf vagy elf származék és nem saját íját hordozza, illetve nem tudja hitelt érdemlően bebizonyítani bármely elfek uralta területre tévedve, hogy nem álnok módon jutott a fegyverhez, az igen kellemetlen utolsó pillanatoknak néz elébe."
     ]
   },
 
@@ -1403,7 +1403,7 @@ export const WeaponValues: WeaponInfo[] = [
     description: [
       "small:*Az íjak és számszeríjak sebzése minden egyes megtett 50 ynevi láb távolság után csökken 1k6-tal.",
       "small:**A nyílpuskák és íjak Átütése számértékben megegyezik a sebzésükhöz használt kockák számával. Az esetlegesen alkalmazott páncéltörő lövedékek esetében pedig ez az érték növekszik újabb 1 ponttal.",
-      "Rendkívül gyors és sokrétű fegyver, körönként akár három nyílvesszőt is ki lehet belőle lőni. Yneven sokfelé mágikusnak tartják ezeket a nyílpuskákat, pedig az esetek nagy többségében nem azok.  Az igazi egyedisége azonban abban rejlik, hogy nem csupán hihetetlenül gyorsan lehet utántölteni a készség alsó részén lévő felhúzókarral, hanem a szintén alul található mechanikus tárból külön utántöltés nélkül csúsznak a horonyzatba a lövedékek.  Emellett ezen fegyver feszítőszerkezete is egyedi. Az állítható feszítési távolság miatt szabályozható a lövés ereje, s ezáltal a hordtáv, illetve a nyílpuska felaljzására szánt idő is. Azaz, a fegyverrel egy körben egy, kettő vagy három lövés adható le; s ennek megfelelően sebzése is változik. Körönkénti egy lövés esetében 3k6 Sp-t okoz a kilőtt lövedék, körönkénti 2 lövés esetén 2k6 Sp-t; ezen esetekben a fegyver által kilőtt lövedék átütő képességgel is bír. Körönkénti 3 lövés esetén a fegyver csupán 1k6 Sp sebet okoz és nincs átütése.  A kharei nyílpuska nem csak ritka, de javítása és lőszerellátása is nehézségekbe ütközhet. A fegyverbe egyedi méretű acélhegyek szükségeltetnek, melyeket csakis egy legalább 4. fokon képzett fegyverkovács képes elkészíteni. A fegyverbe ugyan silányabb lövedékeket is adagolhatunk, azonban ez szinte mindig megbosszulja magát mivel az apró hornyok és peremek miatt könnyen elakadhat a fegyver adagoló szerkezete és ezzel használhatatlanná válik a nyílpuska.",
+      "Rendkívül gyors és sokrétű fegyver, körönként akár három nyílvesszőt is ki lehet belőle lőni. Yneven sokfelé mágikusnak tartják ezeket a nyílpuskákat, pedig az esetek nagy többségében nem azok.  Az igazi egyedisége azonban abban rejlik, hogy nem csupán hihetetlenül gyorsan lehet utántölteni a készség alsó részén lévő felhúzókarral, hanem a szintén alul található mechanikus tárból külön utántöltés nélkül csúsznak a horonyba a lövedékek.  Emellett ezen fegyver feszítőszerkezete is egyedi. Az állítható feszítési távolság miatt szabályozható a lövés ereje, s ezáltal a hordtáv, illetve a nyílpuska felajzására szánt idő is. Azaz, a fegyverrel egy körben egy, kettő vagy három lövés adható le; s ennek megfelelően sebzése is változik. Körönkénti egy lövés esetében 3k6 Sp-t okoz a kilőtt lövedék, körönkénti 2 lövés esetén 2k6 Sp-t; ezen esetekben a fegyver által kilőtt lövedék átütő képességgel is bír. Körönkénti 3 lövés esetén a fegyver csupán 1k6 Sp sebet okoz és nincs átütése.  A kahrei nyílpuska nem csak ritka, de javítása és lőszerellátása is nehézségekbe ütközhet. A fegyverbe egyedi méretű acélhegyek szükségeltetnek, melyeket csakis egy legalább 4. fokon képzett fegyverkovács képes elkészíteni. A fegyverbe ugyan silányabb lövedékeket is adagolhatunk, azonban ez szinte mindig megbosszulja magát mivel az apró hornyok és peremek miatt könnyen elakadhat a fegyver adagoló szerkezete és ezzel használhatatlanná válik a nyílpuska.",
       ]
   },
   {
@@ -1527,7 +1527,7 @@ export const WeaponValues: WeaponInfo[] = [
     isMagical: false,
     description: [
       "small:*Az íjászszabály nem érvényesül.",
-      "Jellemzően embervadász fegyver — és persze mindig mérgezett. Igen bonyolult és költséges szerkezet, a hivatásos fejvadászok közül ís csak kevesen engedhetik meg maguknak ezt a luxust. A tűvető egy rugós mechanizmus, amely egy zsinór megrántásával old, és a tűt az ellenfél felé lövi. Általában alkarra szíjjazva viselik — bár gyakorta páncélokba ís építik —, a zsinór pedig a tulajdonos egyik ujjára van hurkolva. Így egyetlen csuklómozdulattal a szerkezet elsüthető, s mérgezett tűt lő a köpeny ujjából az áldozatra. Rejtett mivolta miatt igen nehezen fedezhető fel, és az ellenfelet legtöbbször meglepetésszerűen éri a támadás. Az eszköz újratöltése nehézkes, 5-6 kört vesz igénybe.",
+      "Jellemzően embervadász fegyver — és persze mindig mérgezett. Igen bonyolult és költséges szerkezet, a hivatásos fejvadászok közül is csak kevesen engedhetik meg maguknak ezt a luxust. A tűvető egy rugós mechanizmus, amely egy zsinór megrántásával old, és a tűt az ellenfél felé lövi. Általában alkarra szíjazva viselik — bár gyakorta páncélokba is építik —, a zsinór pedig a tulajdonos egyik ujjára van hurkolva. Így egyetlen csuklómozdulattal a szerkezet elsüthető, s mérgezett tűt lő a köpeny ujjából az áldozatra. Rejtett mivolta miatt igen nehezen fedezhető fel, és az ellenfelet legtöbbször meglepetésszerűen éri a támadás. Az eszköz újratöltése nehézkes, 5-6 kört vesz igénybe.",
       ]
   },
   {

@@ -1,5 +1,5 @@
-// Shared style tokens for the UI layer. Kept inside new_app (the Chakra theme lives at src/theme.ts,
-// outside this app) so new_app stays self-contained. These were previously copy-pasted per file.
+// Shared style tokens for the UI layer (the Chakra theme lives at src/theme.ts).
+// These were previously copy-pasted per file.
 
 // Field/select chrome shared by every text input and dropdown. Spread onto a Chakra Input/Select.
 // (Selects additionally pass `size="sm"`: `{ ...FIELD_SX, size: "sm" }`.)

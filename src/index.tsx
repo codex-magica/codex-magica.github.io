@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
 import {ChakraProvider} from "@chakra-ui/react";
 import theme from "@/theme";
+import {RootApp} from "@/ui/RootApp";
 // import {registerServiceWorker} from "@/registerServiceWorker";
 
 const root = ReactDOM.createRoot(
@@ -13,7 +13,7 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ChakraProvider theme={theme}>
-      <App />
+      <RootApp />
     </ChakraProvider>
   </React.StrictMode>
 );
