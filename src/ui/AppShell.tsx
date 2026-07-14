@@ -55,8 +55,8 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   // current fok so the modal greys out the levels the character hasn't reached yet.
   const openSkillModal = (name: string, fok: number, percent?: number | null) =>
     setModal(skillModalContent(name, { fok, percent }, isHomebrew(record)));
-  const openSpellModal = (name: string) => {
-    const sp = spellModalByName(name);
+  const openSpellModal = (name: string, school?: string) => {
+    const sp = spellModalByName(name, school);
     setModal({ kind: "spell", name, sub: sp?.sub, body: sp?.body || [] });
   };
 
@@ -107,7 +107,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           onSetWeapons={setWeapons}
           onSetActiveWeapon={setActiveWeapon}
           onOpenSkill={(name, fok, percent) => openSkillModal(name, fok, percent)}
-          onOpenSpell={(name) => openSpellModal(name)}
+          onOpenSpell={(name, school) => openSpellModal(name, school)}
           onOpenWeapon={setWeaponModal}
         />
       ) : (

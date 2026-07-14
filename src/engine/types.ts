@@ -40,6 +40,7 @@ export interface SpellView {
   castingTime: string;
   known: boolean;
   castableNow: boolean;
+  domains?: string[]; // prayers only — the fohász's spheres, shown as initials on the sheet
 }
 
 export type DerivedKeyOut = "Ép" | "Fp" | "MME" | "AME" | "Sebzésbónusz" | "Mozgás";

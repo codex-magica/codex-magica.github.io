@@ -27,6 +27,7 @@ export interface SpellDef {
   cost: number;
   castingTime: string; // Időigény column
   requires: SpellReq[]; // ALL must be satisfied (AND), e.g. Magasmágia 3 AND the governing skill 3
+  domains?: string[]; // prayers only — the spheres (Élet/Halál/Lélek/Természet) the fohász belongs to
 }
 
 // cost may be "3", "3/E", "Lásd a leírást!", "12 + 10/szint" — take the leading integer, else 0 (variable).
@@ -41,7 +42,7 @@ const ct = (s: SpellLike): string => {
   return v || "—";
 };
 const build = (values: SpellLike[], school: string, pool: Pool, req: (s: SpellLike) => SpellReq[], cat: (s: SpellLike) => string = (s) => s.type || "—"): SpellDef[] =>
-  values.map((s) => ({ name: s.name, school, category: cat(s) || "—", pool, cost: num(s.cost), castingTime: ct(s), requires: req(s) }));
+  values.map((s) => ({ name: s.name, school, category: cat(s) || "—", pool, cost: num(s.cost), castingTime: ct(s), requires: req(s), ...(s.domains?.length ? { domains: s.domains } : {}) }));
 
 // ── A. Tapasztalati mágia — one subtype per tradition; the whole list casts at fok 3 ──
 const tap = (subtype: string): SpellReq[] => [{ skill: "Tapasztalati mágia", subtype, fok: 3 }];

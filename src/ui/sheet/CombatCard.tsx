@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Box, Flex, Heading, HStack, Text } from "@chakra-ui/react";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { DerivedCharacter } from "../../engine/types";
 import { CombatKey, FIST, WeaponRowView, masteryLabel, weaponUseKey } from "../../model/weaponUse";
-import { Card, FS, FS_SUB, ROWPY, ValNum, rowProps } from "./primitives";
+import { Card, FS, FS_SUB, ROWPY, SecHead, ValNum, rowProps } from "./primitives";
 import { AddWeaponModal } from "./AddWeaponModal";
 
-// Calculator-button icons — crossed swords (közelharc) / crosshair (célzás, távolsági).
+// Calculator-tile icons — crossed swords (közelharc) / crosshair (célzás, távolsági).
 const SwordsIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
     <line x1="13" y1="19" x2="19" y2="13" /><line x1="16" y1="16" x2="20" y2="20" /><line x1="19" y1="21" x2="21" y2="19" />
     <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 10" />
@@ -15,7 +15,7 @@ const SwordsIcon = (
   </svg>
 );
 const CrosshairIcon = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
     <circle cx="12" cy="12" r="9" />
     <line x1="12" y1="1.5" x2="12" y2="6" /><line x1="12" y1="18" x2="12" y2="22.5" />
     <line x1="1.5" y1="12" x2="6" y2="12" /><line x1="18" y1="12" x2="22.5" y2="12" />
@@ -31,7 +31,7 @@ export const INFO_UL = {
   textUnderlineOffset: "3px",
 } as const;
 
-type Tile = { label: string; value: React.ReactNode; small?: boolean; onClick?: () => void };
+type Tile = { label: string; value: React.ReactNode; small?: boolean; icon?: boolean; onClick?: () => void };
 
 // The Harcértékek card: the in-hand weapon's adjusted combat tiles, MME/AME, Sebzésbónusz, and the
 // pinned-weapon list (tap = take in hand). The weapon math itself lives in model/weaponUse.
@@ -52,42 +52,51 @@ export const CombatCard: React.FC<{
     value: derived.combat[k] + (activeRow ? activeRow.use[weaponUseKey(k)] : 0),
     onClick: () => onCombatInfo(k),
   });
-  const tiles: Tile[] = !activeRow
+  // With a weapon in hand the 4th tile is the calculator launcher (its icon = melee/ranged). Sebzés
+  // isn't tiled — it's already on every weapon row below, and the calculator wants the prime slot.
+  const calcTile: Tile | null = activeRow
+    ? {
+        label: "Kalkulátor",
+        value: activeRow.use.kind === "melee" ? SwordsIcon : CrosshairIcon,
+        icon: true,
+        onClick: () => onOpenWeapon(activeRow),
+      }
+    : null;
+  const tiles: Tile[] = !activeRow || !calcTile
     ? (["KÉ", "TÉ", "VÉ", "CÉ"] as CombatKey[]).map(combatTile)
     : activeRow.use.kind === "melee"
-      ? [combatTile("KÉ"), combatTile("TÉ"), combatTile("VÉ"), { label: "Sebzés", value: activeRow.dmg, small: true }]
+      ? [combatTile("KÉ"), combatTile("TÉ"), combatTile("VÉ"), calcTile]
       // ranged: CÉ replaces TÉ, but VÉ stays — being shot at doesn't stop you being attacked in melee
-      : [combatTile("KÉ"), combatTile("CÉ"), combatTile("VÉ"), { label: "Sebzés", value: activeRow.dmg, small: true }];
+      : [combatTile("KÉ"), combatTile("CÉ"), combatTile("VÉ"), calcTile];
   const tilesCaption = activeRow ? `${activeRow.w.name} · ${masteryLabel(activeRow)}` : "Alapértékek";
 
   return (
     <Card>
-      {/* section head + the calculator launcher for the in-hand weapon (icon = melee/ranged) */}
-      <Flex align="center" justify="space-between" gap="10px" pb="6px" mb="6px" borderBottom="1px solid" borderColor="rule">
-        <Heading as="h2" fontSize={{ base: "21px", md: "18px" }} fontWeight={700} color="fg">Harcértékek</Heading>
-        {activeRow && (
-          <Box as="button" type="button" onClick={() => onOpenWeapon(activeRow)}
-            title={activeRow.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági kalkulátor"}
-            aria-label={activeRow.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági kalkulátor"}
-            display="inline-flex" alignItems="center" justifyContent="center" w="36px" h="30px" flexShrink={0}
-            borderRadius="8px" border="1px solid" borderColor="fieldBd" color="accentTx"
-            _hover={{ borderColor: "accent", bg: "accentSoft" }}>
-            {activeRow.use.kind === "melee" ? SwordsIcon : CrosshairIcon}
-          </Box>
-        )}
-      </Flex>
-      {/* the four combat tiles: the in-hand weapon's ADJUSTED values — the caption names the mode */}
+      <SecHead>Harcértékek</SecHead>
+      {/* the four tiles: the in-hand weapon's ADJUSTED values (+ the calculator) — the caption names the mode */}
       <Text fontFamily="ui" fontSize="11px" color="fgFaint" mt="2px" mb="7px">{tilesCaption}</Text>
       <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap="8px">
         {tiles.map((t) => (
           <Box key={t.label}
-            {...(t.onClick ? { as: "button" as const, type: "button", onClick: t.onClick, title: "Hogyan számolódik?", _hover: { borderColor: "accent" } } : {})}
+            {...(t.onClick
+              ? {
+                  as: "button" as const,
+                  type: "button",
+                  onClick: t.onClick,
+                  title: t.icon ? (activeRow?.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági kalkulátor") : "Hogyan számolódik?",
+                  _hover: { borderColor: "accent" },
+                }
+              : {})}
             bg="accentSoft" borderRadius="9px" py="8px" px="6px" textAlign="center"
             border="1px solid" borderColor="transparent">
             <Text fontFamily="ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="accentTx" opacity={0.8}>{t.label}</Text>
-            <Text fontSize={t.small ? "16.5px" : "24px"} fontWeight={700} color="accentTx" lineHeight={t.small ? "1.8" : "1.25"} isTruncated
-              title={t.small && typeof t.value === "string" ? t.value : undefined}
-              sx={{ fontVariantNumeric: "tabular-nums", ...(t.onClick ? INFO_UL : {}) }}>{t.value}</Text>
+            {t.icon ? (
+              <Flex justify="center" align="center" h="30px" color="accentTx">{t.value}</Flex>
+            ) : (
+              <Text fontSize={t.small ? "16.5px" : "24px"} fontWeight={700} color="accentTx" lineHeight={t.small ? "1.8" : "1.25"} isTruncated
+                title={t.small && typeof t.value === "string" ? t.value : undefined}
+                sx={{ fontVariantNumeric: "tabular-nums", ...(t.onClick ? INFO_UL : {}) }}>{t.value}</Text>
+            )}
           </Box>
         ))}
       </Box>

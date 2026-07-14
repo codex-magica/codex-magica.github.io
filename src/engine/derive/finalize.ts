@@ -131,7 +131,7 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
     // ALL requirements must hold (e.g. Magasmágia 3 AND the category's governing skill 3).
     const known = hasPool && sp.requires.every((r) => reqMet(ctx, r));
     const cur = vitals[sp.pool].current;
-    return { name: sp.name, school: sp.school, category: sp.category, pool: sp.pool, cost: sp.cost, castingTime: sp.castingTime, known, castableNow: known && cur >= sp.cost };
+    return { name: sp.name, school: sp.school, category: sp.category, pool: sp.pool, cost: sp.cost, castingTime: sp.castingTime, known, castableNow: known && cur >= sp.cost, ...(sp.domains ? { domains: sp.domains } : {}) };
   });
 
   // Skills owned purely from grants (the level-up floor).

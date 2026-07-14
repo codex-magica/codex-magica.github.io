@@ -111,6 +111,7 @@ function spellBlocks(values: SpellLike[], groupKey: "type" | "source", nameLabel
       cellsAll: fields.map(([, acc]) => acc(s)),
       modalSub: `${school} · ${/^\d+$/.test(String(s.cost)) ? `${s.cost} ${unit}` : s.cost}`,
       body: statsBody(s.description, [
+        ["Szféra", s.domains?.length ? s.domains : undefined],
         ["Erősség", s.erosseg],
         ["Időigény", s.castingTime],
         ["Hatótáv", s.range],
@@ -399,20 +400,32 @@ export function skillModalSub(name: string, homebrew?: boolean): string {
   return `(${diff} – ${s.attrs.join(s.attrsAny ? " vagy " : ", ") || "–"})`;
 }
 
-// Every spell row (tabs 1–7) indexed by name → the SAME modalSub + body the compendium renders, so
-// the character sheet can open an identical modal just from a spell name. Built lazily on the first
+// Every spell row (tabs 1–7) indexed by school + name → the SAME modalSub + body the compendium
+// renders, so the character sheet can open an identical modal from a spell's school and name. The
+// school is part of the key because a dozen names are shared across schools (Transz is both a prayer
+// and a psi discipline; Láthatatlanság is both bard and witch magic). Built lazily on the first
 // lookup — the app shouldn't pay for all seven spell tabs at startup.
-let spellIndex: Map<string, { sub: string; body: string[] }> | null = null;
-export function spellModalByName(name: string): { sub: string; body: string[] } | null {
+type SpellModal = { sub: string; body: string[] };
+const SPELL_TAB_SCHOOL: Record<number, string> = {
+  1: "Bárdmágia", 2: "Szakrális", 3: "Boszorkánymágia", 4: "Boszorkánymesteri",
+  5: "Tűzmágia", 6: "Pszi", 7: "Magasmágia",
+}; // the school names SpellDef uses (model/spells.ts) — the sheet passes them straight through
+let spellIndex: Map<string, SpellModal> | null = null;
+export function spellModalByName(name: string, school?: string): SpellModal | null {
   if (!spellIndex) {
     spellIndex = new Map();
     for (const tab of [1, 2, 3, 4, 5, 6, 7]) {
       for (const block of tabBlocks(tab)) {
-        for (const r of block.rows) if (!spellIndex.has(r.name)) spellIndex.set(r.name, { sub: r.modalSub || "", body: r.body || [] });
+        for (const r of block.rows) {
+          const entry = { sub: r.modalSub || "", body: r.body || [] };
+          const key = `${SPELL_TAB_SCHOOL[tab]}|${r.name}`;
+          if (!spellIndex.has(key)) spellIndex.set(key, entry);
+          if (!spellIndex.has(r.name)) spellIndex.set(r.name, entry); // fallback for callers with no school
+        }
       }
     }
   }
-  return spellIndex.get(name) || null;
+  return (school ? spellIndex.get(`${school}|${name}`) : undefined) || spellIndex.get(name) || null;
 }
 
 // The full skill-modal content, identical everywhere it opens (compendium, creator panel, sheet).

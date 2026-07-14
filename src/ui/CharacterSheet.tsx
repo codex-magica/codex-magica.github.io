@@ -25,7 +25,7 @@ interface Props {
   onSetWeapons: (weapons: string[]) => void;
   onSetActiveWeapon: (name: string | null) => void;
   onOpenSkill: (name: string, fok: number, percent?: number | null) => void;
-  onOpenSpell: (name: string) => void;
+  onOpenSpell: (name: string, school: string) => void;
   onOpenWeapon: (w: WeaponModalState) => void;
 }
 
@@ -36,6 +36,12 @@ const SCHOOL_ORDER = ["Bárdmágia", "Tűzmágia", "Boszorkánymágia", "Boszork
 // narrow, fixed-width and tucked tightly together at the right, with their headers + values centred.
 const SPELL_COLS = "minmax(0,1fr) 32px 46px";
 const SPELL_GAP = "5px";
+// Prayers only: the spheres a fohász belongs to, as initials after its name (ÉHLT). A prayer open to
+// all four spheres is the unremarkable case — show nothing there, so the marks flag the restrictions.
+const SPHERE_INITIAL: Record<string, string> = { "Élet": "É", "Halál": "H", "Lélek": "L", "Természet": "T" };
+const spheres = (domains?: string[]): string | undefined =>
+  domains && domains.length > 0 && domains.length < 4 ? domains.map((d) => SPHERE_INITIAL[d] ?? d[0].toUpperCase()).join("") : undefined;
+
 // Compact the Időigény for the narrow clock column: szegmens → sz, perc → p, and collapse anything
 // still long (e.g. "Lásd a leírást!", ranges) to "…" — full text stays in the modal.
 const shortTime = (raw: string): string => {
@@ -195,8 +201,13 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
                     <TimeIcon justifySelf="center" boxSize="11px" color="fgFaint" />
                   </Box>
                   {g.items.filter((s) => s.category === cat).map((sp, i) => (
-                    <Box as="button" type="button" key={sp.name + i} onClick={() => onOpenSpell(sp.name)} display="grid" gridTemplateColumns={SPELL_COLS} gap={SPELL_GAP} w="100%" textAlign="left" alignItems="baseline" py={ROWPY} borderRadius="5px" _hover={{ bg: "accentSoft" }}>
-                      <Text color="fg" fontSize={FS} lineHeight="1.2" noOfLines={2}>{sp.name}</Text>
+                    <Box as="button" type="button" key={sp.name + i} onClick={() => onOpenSpell(sp.name, g.school)} display="grid" gridTemplateColumns={SPELL_COLS} gap={SPELL_GAP} w="100%" textAlign="left" alignItems="baseline" py={ROWPY} borderRadius="5px" _hover={{ bg: "accentSoft" }}>
+                      <Text color="fg" fontSize={FS} lineHeight="1.2" noOfLines={2}>
+                        {sp.name}
+                        {spheres(sp.domains) && (
+                          <Box as="span" ml="5px" fontFamily="ui" fontSize="9px" fontWeight={700} color="fgFaint" letterSpacing=".08em" verticalAlign="1px" title={sp.domains!.join(", ")}>{spheres(sp.domains)}</Box>
+                        )}
+                      </Text>
                       <Text textAlign="center" fontWeight={600} color="accentTx" fontSize={FS} sx={{ fontVariantNumeric: "tabular-nums" }}>{sp.cost > 0 ? sp.cost : "—"}</Text>
                       <Text textAlign="center" color="muted" fontSize="12px" isTruncated title={sp.castingTime} sx={{ fontVariantNumeric: "tabular-nums" }}>{shortTime(sp.castingTime)}</Text>
                     </Box>
