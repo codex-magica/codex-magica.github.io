@@ -34,45 +34,9 @@ variable "frontend_dir" {
 }
 
 
-# Cognito social IdPs
-variable "google_client_id" {
-  type = string
-  default = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-}
-
-# Apple Sign-in (use Services ID flow)
-variable "apple_services_id" {
-  type = string
-  default = null
-} # e.g. com.example.signin
-variable "apple_team_id" {
-  type = string
-  default = null
-}
-variable "apple_key_id" {
-  type = string
-  default = null
-}
-variable "apple_private_key" {
-  type = string
-  default = null
-  sensitive = true
-}
-
-
-# Whitelisted emails allowed to authenticate
+# Whitelisted emails allowed past the CloudFront edge gate (baked into the edge function;
+# changing this list requires a terraform apply).
 variable "allowed_emails" {
   type = list(string)
   default = ["owner@example.com","player1@example.com","player2@example.com","player3@example.com","player4@example.com"]
-}
-
-
-# Callback / logout URLs for Cognito Hosted UI
-variable "cognito_callback_urls" {
-  type = list(string)
-  default = ["https://dexample000002.cloudfront.net/callback.html"]
-}
-variable "cognito_logout_urls" {
-  type = list(string)
-  default = []
 }

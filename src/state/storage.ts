@@ -10,6 +10,8 @@ import { defaultSelections } from "../model/choices";
 import { defaultRecord } from "./defaultRecord";
 
 const KEY = "magus.roster.v1";
+const TOMB_KEY = "magus.tombstones.v1";
+const TOMB_MAX_AGE_MS = 180 * 24 * 3600 * 1000; // prune half-year-old tombstones on load
 
 // Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
 export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
@@ -19,7 +21,7 @@ const seedRoster = (): CharacterRecord[] => [JSON.parse(JSON.stringify(defaultRe
 
 // Legacy migrations applied on load. Path choices are matched by the trigger LABEL, so a renamed
 // trigger ("Pszi út" → "Pszi fa") must be remapped or old records lose their committed choice.
-const migrateRecord = (r: CharacterRecord): CharacterRecord =>
+export const migrateRecord = (r: CharacterRecord): CharacterRecord =>
   r.pathChoices?.some((c) => c.trigger === "Pszi út")
     ? { ...r, pathChoices: r.pathChoices.map((c) => (c.trigger === "Pszi út" ? { ...c, trigger: "Pszi fa" } : c)) }
     : r;
@@ -45,6 +47,49 @@ export const saveRoster = (records: CharacterRecord[]): void => {
 };
 
 export const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
+
+// ── deletion tombstones (id → deletion timestamp) ─────────────────────────────────────────────────
+// Kept so Google sync can tell "deleted here" apart from "never seen here": without them a character
+// deleted on this device would be resurrected by the cloud copy on the next merge.
+
+export type Tombstones = Record<string, number>;
+
+export const loadTombstones = (): Tombstones => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TOMB_KEY) ?? "{}");
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+    const now = Date.now();
+    const fresh: Tombstones = {};
+    for (const [id, ts] of Object.entries(parsed)) {
+      if (typeof ts === "number" && now - ts < TOMB_MAX_AGE_MS) fresh[id] = ts;
+    }
+    return fresh;
+  } catch {
+    return {};
+  }
+};
+
+export const saveTombstones = (t: Tombstones): void => {
+  try {
+    localStorage.setItem(TOMB_KEY, JSON.stringify(t));
+  } catch {
+    /* storage full / unavailable — ignore, same policy as saveRoster */
+  }
+};
+
+export const addTombstone = (id: string): void => {
+  const t = loadTombstones();
+  t[id] = Date.now();
+  saveTombstones(t);
+};
+
+export const clearTombstone = (id: string): void => {
+  const t = loadTombstones();
+  if (id in t) {
+    delete t[id];
+    saveTombstones(t);
+  }
+};
 
 // A fresh, valid level-1 character to start a "create" flow from.
 export const createBlankRecord = (id = genId(), name = "Új karakter"): CharacterRecord => {

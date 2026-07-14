@@ -59,8 +59,14 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 }
 
+# The edge function is a template: Lambda@Edge has no environment variables, so the email
+# allowlist (var.allowed_emails) is rendered into the source at plan time. Changing the list
+# therefore means a terraform apply (new function version + CloudFront propagation, ~5 min).
 locals {
-  edge_hash = filesha256("${path.module}/cloudfront_edge.js")
+  edge_src = templatefile("${path.module}/cloudfront_edge.js", {
+    allowed_emails_json = jsonencode([for e in var.allowed_emails : lower(e)])
+  })
+  edge_hash = sha256(local.edge_src)
 }
 
 data "archive_file" "edge_zip" {
@@ -68,7 +74,7 @@ data "archive_file" "edge_zip" {
   output_path = "${path.module}/build/cloudfront_edge-${local.edge_hash}.zip"
 
   source {
-    content  = file("${path.module}/cloudfront_edge.js")
+    content  = local.edge_src
     filename = "index.mjs"
   }
 }
@@ -81,14 +87,9 @@ resource "aws_lambda_function" "viewer_auth" {
   handler          = "index.handler"
   runtime          = "nodejs20.x"
   publish          = true
+  # Viewer-request cap is 5s; the only slow path is the (cached) Google cert fetch.
+  timeout          = 5
 }
-# environment {
-#   variables = {
-#     COGNITO_JWKS_URL   = "https://cognito-idp.eu-central-1.amazonaws.com/${aws_cognito_user_pool.main.id}/.well-known/jwks.json"
-#     COGNITO_CLIENT_ID  = aws_cognito_user_pool_client.web.id
-#     COGNITO_DOMAIN     = "${aws_cognito_user_pool.main.domain}.auth.eu-central-1.amazoncognito.com"
-#   }
-# }
 
 resource "aws_iam_role" "lambda_edge" {
   name = "${local.name_prefix}-edge-role"

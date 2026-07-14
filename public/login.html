@@ -163,9 +163,9 @@
 
       <div class="content">
         <div class="eyebrow">M · A · G · U · S</div>
-        <h1 class="title">Codex Magica</h1>
+        <h1 class="title" id="title">Codex Magica</h1>
         <div class="rule"></div>
-        <p class="lead">Lépj be a krónikáid közé. Karaktereid, varázslataid és kompendiumod egyetlen fiókban, bárhol elérhetők.</p>
+        <p class="lead" id="lead">Lépj be a krónikáid közé. Karaktereid, varázslataid és kompendiumod egyetlen fiókban, bárhol elérhetők.</p>
 
         <button class="google-btn" id="signInBtn" type="button">
           <span class="google-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg></span>
@@ -207,41 +207,83 @@
         try { localStorage.setItem(COLOR_MODE_KEY, next); } catch (e) {}
       });
 
-      // ---- auth ----
-      // Already signed in? (edge only checks presence of an id_token cookie.)
-      if (/(?:^|;\s*)id_token=/.test(document.cookie)) {
-        window.location.replace(window.location.origin + "/");
-        return;
-      }
-
-      // Cognito domain + client id are supplied by the edge function (single source of truth):
-      //   /login.html?cd=<hosted-ui-domain>&ci=<client-id>
-      var q = new URLSearchParams(window.location.search);
-      var cd = q.get("cd") || "";
-      var ci = q.get("ci") || "";
-
-      // Guard against an open-redirect via a crafted ?cd=. Only accept a real Cognito domain.
-      var validDomain = /\.amazoncognito\.com$/.test(cd);
-      if (!validDomain || !ci) {
-        // Bounce to root; the edge will re-issue the redirect with the correct params.
-        window.location.replace(window.location.origin + "/");
-        return;
-      }
-
-      var btn = document.getElementById("signInBtn");
-      btn.addEventListener("click", function () {
-        if (btn.getAttribute("aria-busy") === "true") return;
-        btn.setAttribute("aria-busy", "true");
-        var redirectUri = window.location.origin + "/callback.html";
-        var authorize = "https://" + cd + "/oauth2/authorize"
-          + "?identity_provider=Google"
-          + "&client_id=" + encodeURIComponent(ci)
-          + "&response_type=token"
-          + "&scope=" + encodeURIComponent("email openid")
-          + "&redirect_uri=" + encodeURIComponent(redirectUri);
-        window.location.href = authorize;
-      });
     })();
+  </script>
+
+  <script type="module">
+    // ---- auth (Firebase) ----
+    // The edge gate verifies a Firebase ID token in the `id_token` cookie. This page:
+    //  1. ?denied=1 → the token was valid but the email isn't allowlisted: sign out, explain,
+    //     and let the user retry with a different account (never auto-redirects → no loop).
+    //  2. Existing Firebase session → silently mint a fresh ID token, set the cookie, bounce
+    //     back to the app. This is the invisible hourly renewal path — no popup.
+    //  3. Otherwise → the button opens the Google popup once; afterwards path 2 takes over.
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+      from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "your-project-id.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project-id.firebasestorage.app",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID",
+    };
+    const auth = getAuth(initializeApp(firebaseConfig));
+
+    const btn = document.getElementById("signInBtn");
+    const setLead = (text) => { document.getElementById("lead").textContent = text; };
+
+    const setCookie = async (user) => {
+      const token = await user.getIdToken();
+      document.cookie = "id_token=" + token + "; Path=/; Secure; SameSite=Lax";
+    };
+    const clearCookie = () => { document.cookie = "id_token=; Path=/; Secure; SameSite=Lax; Max-Age=0"; };
+    // Cache-buster: without it the browser can serve "/" from its own cache and skip the edge check.
+    const goApp = () => window.location.replace(window.location.origin + "/?signedin=" + Date.now());
+
+    // Damping for the silent path: if we auto-redirected 3× in 30s something is wrong upstream
+    // (e.g. the edge can't reach Google's certs) — stop looping and show the button instead.
+    const AUTO_KEY = "cm-auto-redirects";
+    const recentAutoRedirects = () => {
+      try { return JSON.parse(sessionStorage.getItem(AUTO_KEY) || "[]").filter((t) => Date.now() - t < 30000); }
+      catch { return []; }
+    };
+
+    const denied = new URLSearchParams(window.location.search).get("denied") === "1";
+    if (denied) {
+      clearCookie();
+      signOut(auth).catch(() => {});
+      document.getElementById("title").textContent = "Nincs jogosultság";
+      setLead("Ezzel a Google-fiókkal nem léphetsz be a Codex Magicába. Ha szerinted ez tévedés, szólj az adminnak — vagy próbáld újra egy másik fiókkal.");
+    } else {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        unsubscribe();
+        const recent = recentAutoRedirects();
+        if (!user || recent.length >= 3) return; // no session (or looping) → wait for the button
+        recent.push(Date.now());
+        try { sessionStorage.setItem(AUTO_KEY, JSON.stringify(recent)); } catch {}
+        setCookie(user).then(goApp).catch(() => {});
+      });
+    }
+
+    btn.addEventListener("click", async () => {
+      if (btn.getAttribute("aria-busy") === "true") return;
+      btn.setAttribute("aria-busy", "true");
+      try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: "select_account" });
+        const cred = await signInWithPopup(auth, provider);
+        await setCookie(cred.user);
+        goApp();
+      } catch (e) {
+        btn.removeAttribute("aria-busy");
+        if (e && (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request")) return;
+        console.error("Sign-in failed", e);
+        setLead("A bejelentkezés nem sikerült. Ellenőrizd, hogy a böngésző nem blokkolja-e a felugró ablakot, majd próbáld újra.");
+      }
+    });
   </script>
 </body>
 </html>
