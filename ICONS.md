@@ -17,6 +17,11 @@ hygiene.
 - License: **MIT** — <https://github.com/tabler/tabler-icons/blob/main/LICENSE>
 - Icons used: `horse`, `deer`, `pig`, `bat`, `canary`, `spider`, `butterfly`, `horseshoe`, `feather`
 
+## Custom
+
+- `bear` — a derivative of Lucide's `panda` (ISC): identical head/ears/snout, with the two angled
+  eye-patches replaced by plain round eyes so it reads as a general bear rather than a panda.
+
 ## Notes
 
 - The exact path data was copied verbatim from each library's source SVGs and normalised to a shared

@@ -5,12 +5,16 @@
 // szolgálnak"), so every field stays editable and a fully custom animal can be entered from scratch.
 
 // The full animal stat block. Numeric where the game treats it as a number (combat values, Ép/Fp
-// max, resistances); free text where the book is textual (Sebesség "120 (SZ)", Sebzés "1k10+2",
-// Időigény "3 (harapás, karmolás)", Intelligencia "Állati").
+// max, resistances, the three movement speeds); free text where the book is textual (Sebzés "1k10+2",
+// Időigény "3 (harapás, karmolás)").
+// Movement is split by medium (the book gives some creatures more than one): szárazföld/víz/levegő.
+// 0 means "can't move that way" and is hidden in the read-only view.
 export interface CompanionStats {
   termet: string; // size class letter (K/E/N…)
   meret: string; // Méretkategória
-  sebesseg: string; // Sebesség
+  sebSzaraz: number; // szárazföldi sebesség (SZ)
+  sebViz: number; // vízi sebesség (V)
+  sebLevego: number; // légi sebesség (L)
   idoigeny: string; // Időigény
   ke: number; // Kezdeményező érték
   te: number; // Támadó érték
@@ -21,7 +25,6 @@ export interface CompanionStats {
   asztralME: number;
   mentalME: number;
   meregEllenallas: number;
-  intelligencia: string;
   tp: string; // Tapasztalati pont (string — some blocks give a range)
 }
 
@@ -56,38 +59,40 @@ export interface CompanionPreset {
 }
 
 const S = (o: Partial<CompanionStats>): CompanionStats => ({
-  termet: "", meret: "", sebesseg: "", idoigeny: "", ke: 0, te: 0, ve: 0, sebzes: "",
-  epMax: 0, fpMax: 0, asztralME: 0, mentalME: 0, meregEllenallas: 0, intelligencia: "Állati", tp: "", ...o,
+  termet: "", meret: "", sebSzaraz: 0, sebViz: 0, sebLevego: 0, idoigeny: "", ke: 0, te: 0, ve: 0, sebzes: "",
+  epMax: 0, fpMax: 0, asztralME: 0, mentalME: 0, meregEllenallas: 0, tp: "", ...o,
 });
 
+// Movement speeds are per-medium (SZ szárazföld / V víz / L levegő). The book gives only the media a
+// creature actually uses; víz here is filled with a sensible default (~⅓ of the land pace, more for
+// strong swimmers like wolves and bears) since almost any land animal can swim — the falcon, a pure
+// flyer, is the exception and keeps víz 0. Horses' szárazföld is the Vágta (gallop) from the gait table.
 export const COMPANION_PRESETS: CompanionPreset[] = [
   // ── Kutyák (ch.33) — base table ─────────────────────────────────────────────
   { key: "kutya-kozonseges", name: "Közönséges", group: "Kutya",
-    stats: S({ termet: "K", meret: "1", sebesseg: "120 (SZ)", idoigeny: "5", ke: 40, te: 50, ve: 70, sebzes: "1k10", epMax: 8, fpMax: 20, mentalME: 4, meregEllenallas: 3, tp: "3" }) },
+    stats: S({ termet: "K", meret: "1", sebSzaraz: 120, sebViz: 30, idoigeny: "5", ke: 40, te: 50, ve: 70, sebzes: "1k10", epMax: 8, fpMax: 20, mentalME: 4, meregEllenallas: 3, tp: "3" }) },
   { key: "kutya-harci", name: "Harci", group: "Kutya",
-    stats: S({ termet: "E", meret: "2", sebesseg: "120 (SZ)", idoigeny: "3", ke: 45, te: 65, ve: 100, sebzes: "1k10+2", epMax: 10, fpMax: 32, mentalME: 4, meregEllenallas: 3, tp: "8" }) },
+    stats: S({ termet: "E", meret: "2", sebSzaraz: 120, sebViz: 30, idoigeny: "3", ke: 45, te: 65, ve: 100, sebzes: "1k10+2", epMax: 10, fpMax: 32, mentalME: 4, meregEllenallas: 3, tp: "8" }) },
   { key: "kutya-vad", name: "Vad", group: "Kutya",
-    stats: S({ termet: "E", meret: "2", sebesseg: "130 (SZ)", idoigeny: "3", ke: 40, te: 60, ve: 80, sebzes: "1k10", epMax: 10, fpMax: 28, mentalME: 0, meregEllenallas: 3, tp: "6" }) },
+    stats: S({ termet: "E", meret: "2", sebSzaraz: 130, sebViz: 35, idoigeny: "3", ke: 40, te: 60, ve: 80, sebzes: "1k10", epMax: 10, fpMax: 28, mentalME: 0, meregEllenallas: 3, tp: "6" }) },
 
   // ── Lovak (ch.33) ───────────────────────────────────────────────────────────
-  // Sebesség = the type's Vágta from the horse speed table (the book gives a full gait sub-table; the
-  // gallop is the useful single figure). Editable if a different gait matters.
   { key: "lo-konnyu-harci", name: "Könnyű harci", group: "Ló",
-    stats: S({ termet: "N", meret: "3", sebesseg: "54 (vágta)", idoigeny: "5", ke: 20, te: 45, ve: 80, sebzes: "2k6", epMax: 20, fpMax: 40, meregEllenallas: 4, tp: "" }) },
+    stats: S({ termet: "N", meret: "3", sebSzaraz: 54, sebViz: 20, idoigeny: "5", ke: 20, te: 45, ve: 80, sebzes: "2k6", epMax: 20, fpMax: 40, meregEllenallas: 4, tp: "" }) },
   { key: "lo-nehez-harci", name: "Nehéz harci", group: "Ló",
-    stats: S({ termet: "N", meret: "3", sebesseg: "32 (vágta)", idoigeny: "5", ke: 18, te: 55, ve: 75, sebzes: "2k6+1", epMax: 25, fpMax: 50, meregEllenallas: 5, tp: "" }) },
+    stats: S({ termet: "N", meret: "3", sebSzaraz: 32, sebViz: 18, idoigeny: "5", ke: 18, te: 55, ve: 75, sebzes: "2k6+1", epMax: 25, fpMax: 50, meregEllenallas: 5, tp: "" }) },
   { key: "lo-utazo", name: "Utazó / egyéb", group: "Ló",
-    stats: S({ termet: "N", meret: "3", sebesseg: "60 (vágta)", idoigeny: "4", ke: 16, te: 25, ve: 50, sebzes: "1k10", epMax: 25, fpMax: 35, meregEllenallas: 3, tp: "" }) },
+    stats: S({ termet: "N", meret: "3", sebSzaraz: 60, sebViz: 20, idoigeny: "4", ke: 16, te: 25, ve: 50, sebzes: "1k10", epMax: 25, fpMax: 35, meregEllenallas: 3, tp: "" }) },
 
   // ── Egyéb állatok (ch.33) ───────────────────────────────────────────────────
   { key: "farkas", name: "Farkas", group: "Vad állat",
-    stats: S({ termet: "E", meret: "2", sebesseg: "120 (SZ)", idoigeny: "3 (harapás, karmolás, karmolás)", ke: 35, te: 50, ve: 80, sebzes: "1k6+2, 1k6, 1k6", epMax: 10, fpMax: 30, meregEllenallas: 4, tp: "5" }) },
+    stats: S({ termet: "E", meret: "2", sebSzaraz: 120, sebViz: 40, idoigeny: "3 (harapás, karmolás, karmolás)", ke: 35, te: 50, ve: 80, sebzes: "1k6+2, 1k6, 1k6", epMax: 10, fpMax: 30, meregEllenallas: 4, tp: "5" }) },
   { key: "medve", name: "Medve", group: "Vad állat",
-    stats: S({ termet: "N", meret: "3", sebesseg: "50 (SZ)", idoigeny: "3 (harapás, mancs, mancs)", ke: 30, te: 80, ve: 75, sebzes: "2k6", epMax: 28, fpMax: 50, meregEllenallas: 8, tp: "18" }) },
+    stats: S({ termet: "N", meret: "3", sebSzaraz: 50, sebViz: 40, idoigeny: "3 (harapás, mancs, mancs)", ke: 30, te: 80, ve: 75, sebzes: "2k6", epMax: 28, fpMax: 50, meregEllenallas: 8, tp: "18" }) },
   { key: "solyom", name: "Sólyom", group: "Vad állat",
-    stats: S({ termet: "K", meret: "1", sebesseg: "5 (SZ) 180 (L)", idoigeny: "1 kör (csőr)", ke: 50, te: 40, ve: 90, sebzes: "1k10", epMax: 5, fpMax: 12, meregEllenallas: 3, tp: "2" }) },
+    stats: S({ termet: "K", meret: "1", sebSzaraz: 5, sebLevego: 180, idoigeny: "1 kör (csőr)", ke: 50, te: 40, ve: 90, sebzes: "1k10", epMax: 5, fpMax: 12, meregEllenallas: 3, tp: "2" }) },
   { key: "patkany", name: "Patkány", group: "Vad állat",
-    stats: S({ termet: "K", meret: "0", sebesseg: "60 (SZ) 12 (V)", idoigeny: "3", ke: 10, te: 30, ve: 50, sebzes: "1k2", epMax: 2, fpMax: 8, meregEllenallas: 2, tp: "1" }) },
+    stats: S({ termet: "K", meret: "0", sebSzaraz: 60, sebViz: 12, idoigeny: "3", ke: 10, te: 30, ve: 50, sebzes: "1k2", epMax: 2, fpMax: 8, meregEllenallas: 2, tp: "1" }) },
 ];
 
 // Dog breeds (ch.33) — each refines its base column. Vad has no breeds; horses/other animals none.
@@ -128,17 +133,17 @@ export const speciesLabel = (preset: CompanionPreset, breed?: CompanionBreed): s
   `${preset.group} — ${preset.name}${breed ? ` (${breed.name})` : ""}`;
 
 // Blank stats for a custom animal.
-export const blankStats = (): CompanionStats => S({ intelligencia: "" });
+export const blankStats = (): CompanionStats => S({});
 
 export const COMPANION_GROUPS = ["Kutya", "Ló", "Vad állat"];
 
 // ── SVG icons (the active system) ────────────────────────────────────────────
 // The icon shown on the card/modal — the player's chosen icon key wins; else keyed off the preset, then
 // the group, else a generic paw. Keys match ui/sheet/animalIcons.
-// Wolf/bear have no free library glyph, so they fall back to the nearest one (dog for the canine wolf,
-// a paw for the bear) — the player can pick any icon from the palette.
+// Wolf has no free library glyph, so it falls back to the nearest one (dog, the closest canine); the
+// player can pick any icon from the palette. `bear` is a custom edit of Lucide's panda (see animalIcons).
 const SPECIES_ICON: Record<string, string> = {
-  farkas: "dog", medve: "paw", solyom: "bird", patkany: "rat",
+  farkas: "dog", medve: "bear", solyom: "bird", patkany: "rat",
 };
 const GROUP_ICON: Record<string, string> = { "Kutya": "dog", "Ló": "horse", "Vad állat": "paw" };
 export const companionIconKey = (c: { icon?: string; preset?: string; species: string }): string => {
@@ -151,7 +156,7 @@ export const companionIconKey = (c: { icon?: string; preset?: string; species: s
 // The icon palette, in picker order — every one is a real Lucide/Tabler animal, found by searching each
 // library's Animals category + tag metadata (see ui/sheet/animalIcons).
 export const COMPANION_ICON_KEYS = [
-  "paw", "horseshoe", "dog", "cat", "horse", "rabbit", "rat", "squirrel", "deer", "pig", "panda", "bat",
+  "paw", "horseshoe", "dog", "cat", "horse", "rabbit", "rat", "squirrel", "deer", "pig", "panda", "bear", "bat",
   "bird", "canary", "fish", "turtle", "snail", "shell", "shrimp", "spider", "butterfly", "bug", "worm",
   "feather", "leaf", "sprout",
 ];
@@ -180,16 +185,17 @@ export const ANIMAL_EMOJI = [
 // land in the field.
 export const cleanEmoji = (v: string): string => Array.from(v).slice(0, 4).join("");
 
-// The stat-block fields shown/edited in the detail modal, grouped. `kind` drives the input (number vs
-// free text); Ép/Fp maxes are handled separately (they pair with the live current values).
+// The editable fields of the custom-animal builder (AddCompanionModal), grouped. `kind` drives the
+// input (number vs free text); Ép/Fp maxes are handled separately (they pair with the live current
+// values). Termet and Tp are intentionally not surfaced.
 export interface CompanionField { key: keyof CompanionStats; label: string; kind: "num" | "text" }
-// Two groups: who the creature IS (Ép/Fp live separately in the editor) and how it ATTACKS. Ép/Fp are
-// added by the editors themselves; Termet and Tp are intentionally not surfaced.
 export const COMPANION_FIELDS: { group: string; fields: CompanionField[] }[] = [
-  { group: "Alapadatok", fields: [
-    { key: "sebesseg", label: "Sebesség", kind: "text" }, { key: "intelligencia", label: "Intelligencia", kind: "text" },
-    { key: "meregEllenallas", label: "Méregellenállás", kind: "num" },
+  { group: "Sebesség", fields: [
+    { key: "sebSzaraz", label: "Szárazföld", kind: "num" }, { key: "sebViz", label: "Víz", kind: "num" }, { key: "sebLevego", label: "Levegő", kind: "num" },
+  ] },
+  { group: "Ellenállások", fields: [
     { key: "mentalME", label: "Mentál ME", kind: "num" }, { key: "asztralME", label: "Asztrál ME", kind: "num" },
+    { key: "meregEllenallas", label: "Méreg", kind: "num" },
   ] },
   { group: "Támadás", fields: [
     { key: "idoigeny", label: "Időigény", kind: "text" },

@@ -35,6 +35,10 @@ const ICON_MARKUP: Record<string, string> = {
   butterfly: `<path d="M12 18.176a3 3 0 1 1 -4.953 -2.449l-.025 .023a4.502 4.502 0 0 1 1.483 -8.75c1.414 0 2.675 .652 3.5 1.671a4.5 4.5 0 1 1 4.983 7.079a3 3 0 1 1 -4.983 2.25l-.005 .176" /> <path d="M12 19v-10" /> <path d="M9 3l3 2l3 -2" />`,
   horseshoe: `<path d="M19 17c.5 -1.242 2 -2 2 -5s-1 -9 -9 -9s-9 6 -9 9s1.495 3.749 2 5l-2 1l2 3l2.406 -1.147c1.25 -.714 1.778 -2.08 1.203 -3.363c-1.078 -2.407 -1.609 -8.49 3.391 -8.49s4.469 6.083 3.39 8.49c-.574 1.284 -.045 2.649 1.204 3.363l2.406 1.147l2 -3l-2 -1" />`,
   feather: `<path d="M4 20l10 -10m0 -5v5h5m-9 -1v5h5m-9 -1v5h5m-5 -5l4 -4l4 -4" /> <path d="M19 10c.638 -.636 1 -1.515 1 -2.486a3.515 3.515 0 0 0 -3.517 -3.514c-.97 0 -1.847 .367 -2.483 1m-3 13l4 -4l4 -4" />`,
+  // ── Custom ────────────────────────────────────────────────────────────────
+  // Bear = Lucide "panda" (ISC) with its two angled eye-patches replaced by plain round eyes, so it
+  // reads as a general bear rather than a panda. Everything else (head, ears, snout) is unchanged.
+  bear: `<path d="M11.25 17.25h1.5L12 18z" /> <path d="M18 6.5a.5.5 0 0 0-.5-.5" /> <path d="M20.69 9.67a4.5 4.5 0 1 0-7.04-5.5 8.35 8.35 0 0 0-3.3 0 4.5 4.5 0 1 0-7.04 5.5C2.49 11.2 2 12.88 2 14.5 2 19.47 6.48 22 12 22s10-2.53 10-7.5c0-1.62-.48-3.3-1.3-4.83" /> <path d="M6 6.5a.495.495 0 0 1 .5-.5" /> <path d="M8 13h.01" /> <path d="M16 13h.01" />`,
 };
 
 // Render a companion icon by key (falls back to the paw). `size` is the box side in px.
