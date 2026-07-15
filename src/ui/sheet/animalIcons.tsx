@@ -3,9 +3,8 @@ import React from "react";
 // Companion animal icons — a single 24×24 / 2px-stroke outline family (currentColor, round caps), so
 // they theme with light/dark and take the accent color like every other icon. Every glyph is a real
 // icon from Lucide (lucide.dev, ISC) or Tabler (tabler.io, MIT) — both attribution-free — found by
-// searching each library’s Animals category + tag metadata. The emoji set is kept in
-// model/companions for an easy switch-back. Static, app-authored markup, so dangerouslySetInnerHTML
-// is safe and the exact path data lives verbatim.
+// searching each library’s Animals category + tag metadata. Static, app-authored markup, so
+// dangerouslySetInnerHTML is safe and the exact path data lives verbatim.
 const ICON_MARKUP: Record<string, string> = {
   // ── Lucide (ISC) ──────────────────────────────────────────────────────────
   paw: `<circle cx="11" cy="4" r="2" /> <circle cx="18" cy="8" r="2" /> <circle cx="20" cy="16" r="2" /> <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />`,

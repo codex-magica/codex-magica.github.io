@@ -35,7 +35,6 @@ export interface Companion {
   preset?: string; // the CompanionPreset key it came from (undefined = custom)
   breed?: string; // the chosen breed key, if any
   icon?: string; // player-chosen icon key (see ui/sheet/animalIcons); falls back to the species default
-  emoji?: string; // legacy emoji override — kept for the emoji fallback path (see companionEmoji)
   stats: CompanionStats;
   ep: number; // current Ép
   fp: number; // current Fp
@@ -54,7 +53,7 @@ export interface CompanionBreed {
 export interface CompanionPreset {
   key: string;
   name: string; // variant label ("Harci", "Könnyű harci") — the group is the species
-  group: string; // "Kutya" | "Ló" | "Vad állat"
+  group: string; // "Kutya" | "Ló" | "Vadállat"
   stats: CompanionStats;
 }
 
@@ -85,13 +84,21 @@ export const COMPANION_PRESETS: CompanionPreset[] = [
     stats: S({ termet: "N", meret: "3", sebSzaraz: 60, sebViz: 20, idoigeny: "4", ke: 16, te: 25, ve: 50, sebzes: "1k10", epMax: 25, fpMax: 35, meregEllenallas: 3, tp: "" }) },
 
   // ── Egyéb állatok (ch.33) ───────────────────────────────────────────────────
-  { key: "farkas", name: "Farkas", group: "Vad állat",
+  { key: "farkas", name: "Farkas", group: "Vadállat",
     stats: S({ termet: "E", meret: "2", sebSzaraz: 120, sebViz: 40, idoigeny: "3 (harapás, karmolás, karmolás)", ke: 35, te: 50, ve: 80, sebzes: "1k6+2, 1k6, 1k6", epMax: 10, fpMax: 30, meregEllenallas: 4, tp: "5" }) },
-  { key: "medve", name: "Medve", group: "Vad állat",
+  { key: "medve", name: "Medve", group: "Vadállat",
     stats: S({ termet: "N", meret: "3", sebSzaraz: 50, sebViz: 40, idoigeny: "3 (harapás, mancs, mancs)", ke: 30, te: 80, ve: 75, sebzes: "2k6", epMax: 28, fpMax: 50, meregEllenallas: 8, tp: "18" }) },
-  { key: "solyom", name: "Sólyom", group: "Vad állat",
+  { key: "vaddiszno", name: "Vaddisznó", group: "Vadállat",
+    stats: S({ termet: "E", meret: "2", sebSzaraz: 95, sebViz: 25, idoigeny: "3 (agyar)", ke: 25, te: 55, ve: 65, sebzes: "2k6", epMax: 18, fpMax: 35, meregEllenallas: 4, tp: "6" }) },
+  { key: "szarvas", name: "Szarvas", group: "Vadállat",
+    stats: S({ termet: "N", meret: "3", sebSzaraz: 140, sebViz: 40, idoigeny: "4 (agancs)", ke: 30, te: 35, ve: 72, sebzes: "1k10", epMax: 15, fpMax: 30, meregEllenallas: 4, tp: "5" }) },
+  { key: "macska", name: "Macska", group: "Vadállat",
+    stats: S({ termet: "K", meret: "0", sebSzaraz: 90, sebViz: 8, idoigeny: "2 (karom)", ke: 50, te: 25, ve: 75, sebzes: "1k2", epMax: 3, fpMax: 10, meregEllenallas: 2, tp: "1" }) },
+  { key: "solyom", name: "Sólyom", group: "Vadállat",
     stats: S({ termet: "K", meret: "1", sebSzaraz: 5, sebLevego: 180, idoigeny: "1 kör (csőr)", ke: 50, te: 40, ve: 90, sebzes: "1k10", epMax: 5, fpMax: 12, meregEllenallas: 3, tp: "2" }) },
-  { key: "patkany", name: "Patkány", group: "Vad állat",
+  { key: "hollo", name: "Holló", group: "Vadállat",
+    stats: S({ termet: "K", meret: "0", sebSzaraz: 5, sebLevego: 100, idoigeny: "2 (csőr)", ke: 40, te: 15, ve: 80, sebzes: "1k3", epMax: 3, fpMax: 8, meregEllenallas: 2, tp: "1" }) },
+  { key: "patkany", name: "Patkány", group: "Vadállat",
     stats: S({ termet: "K", meret: "0", sebSzaraz: 60, sebViz: 12, idoigeny: "3", ke: 10, te: 30, ve: 50, sebzes: "1k2", epMax: 2, fpMax: 8, meregEllenallas: 2, tp: "1" }) },
 ];
 
@@ -135,7 +142,7 @@ export const speciesLabel = (preset: CompanionPreset, breed?: CompanionBreed): s
 // Blank stats for a custom animal.
 export const blankStats = (): CompanionStats => S({});
 
-export const COMPANION_GROUPS = ["Kutya", "Ló", "Vad állat"];
+export const COMPANION_GROUPS = ["Kutya", "Ló", "Vadállat"];
 
 // ── SVG icons (the active system) ────────────────────────────────────────────
 // The icon shown on the card/modal — the player's chosen icon key wins; else keyed off the preset, then
@@ -143,9 +150,10 @@ export const COMPANION_GROUPS = ["Kutya", "Ló", "Vad állat"];
 // Wolf has no free library glyph, so it falls back to the nearest one (dog, the closest canine); the
 // player can pick any icon from the palette. `bear` is a custom edit of Lucide's panda (see animalIcons).
 const SPECIES_ICON: Record<string, string> = {
-  farkas: "dog", medve: "bear", solyom: "bird", patkany: "rat",
+  farkas: "dog", medve: "bear", vaddiszno: "pig", szarvas: "deer", macska: "cat",
+  solyom: "bird", hollo: "bird", patkany: "rat",
 };
-const GROUP_ICON: Record<string, string> = { "Kutya": "dog", "Ló": "horse", "Vad állat": "paw" };
+const GROUP_ICON: Record<string, string> = { "Kutya": "dog", "Ló": "horse", "Vadállat": "paw" };
 export const companionIconKey = (c: { icon?: string; preset?: string; species: string }): string => {
   if (c.icon) return c.icon;
   if (c.preset && SPECIES_ICON[c.preset]) return SPECIES_ICON[c.preset];
@@ -160,30 +168,6 @@ export const COMPANION_ICON_KEYS = [
   "bird", "canary", "fish", "turtle", "snail", "shell", "shrimp", "spider", "butterfly", "bug", "worm",
   "feather", "leaf", "sprout",
 ];
-
-// ── Emoji fallback (kept for an easy switch-back to the emoji look) ───────────
-// A species glyph for the card/modal — the player's chosen emoji wins; else keyed off the preset, then
-// the group, else a generic paw.
-const SPECIES_EMOJI: Record<string, string> = {
-  farkas: "🐺", medve: "🐻", solyom: "🦅", patkany: "🐀",
-};
-const GROUP_EMOJI: Record<string, string> = { "Kutya": "🐕", "Ló": "🐎", "Vad állat": "🐾" };
-export const companionEmoji = (c: { emoji?: string; preset?: string; species: string }): string => {
-  if (c.emoji) return c.emoji;
-  if (c.preset && SPECIES_EMOJI[c.preset]) return SPECIES_EMOJI[c.preset];
-  const group = COMPANION_GROUPS.find((g) => c.species.startsWith(g));
-  return (group && GROUP_EMOJI[group]) || "🐾";
-};
-
-// Quick-pick palette for the icon editor. Free text is still allowed for anything not here.
-export const ANIMAL_EMOJI = [
-  "🐎", "🐕", "🐺", "🐈", "🐻", "🦁", "🐅", "🐆", "🦊", "🐗", "🦌", "🐐", "🐏", "🐇",
-  "🐀", "🦇", "🐒", "🦅", "🦉", "🐦", "🦜", "🐍", "🦎", "🐉", "🦂", "🕷️", "🐢", "🦄",
-];
-
-// Normalise a typed icon to a short emoji-sized string (a couple of code points), so a stray word can't
-// land in the field.
-export const cleanEmoji = (v: string): string => Array.from(v).slice(0, 4).join("");
 
 // The editable fields of the custom-animal builder (AddCompanionModal), grouped. `kind` drives the
 // input (number vs free text); Ép/Fp maxes are handled separately (they pair with the live current
