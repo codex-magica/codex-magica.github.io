@@ -8,15 +8,16 @@ export const QuietPopover: React.FC<{
   onClose: () => void;
   title?: string;
   hint?: string; // small explainer line under the title
+  align?: "left" | "right"; // which edge of the trigger the card hangs from (default right)
   minW?: any;
   maxW?: any;
   maxH?: string;
   p?: string;
   children: React.ReactNode;
-}> = ({ onClose, title, hint, minW = "max-content", maxW, maxH, p = "13px", children }) => (
+}> = ({ onClose, title, hint, align = "right", minW = "max-content", maxW, maxH, p = "13px", children }) => (
   <>
     <Box position="fixed" inset={0} zIndex={29} onClick={onClose} />
-    <Box position="absolute" top="calc(100% + 6px)" right={0} zIndex={30} bg="band" border="1px solid" borderColor="hair"
+    <Box position="absolute" top="calc(100% + 6px)" {...(align === "left" ? { left: 0 } : { right: 0 })} zIndex={30} bg="band" border="1px solid" borderColor="hair"
       borderRadius="12px" p={p} minW={minW} maxW={maxW} maxH={maxH} overflowY={maxH ? "auto" : undefined} boxShadow="popover">
       {title && (
         <Text textStyle="overline" color="muted" mb={hint ? "0" : "9px"} px={p === "8px" ? "8px" : undefined} py={p === "8px" ? "6px" : undefined} whiteSpace="nowrap">

@@ -3,6 +3,7 @@ import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import { WeaponModalState } from "./WeaponModal";
 import { CharacterCondition, CharacterRecord, VitalKey } from "../model/character";
+import { Companion } from "../model/companions";
 import { DerivedCharacter } from "../engine/types";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { rulesFor } from "../model/rulesVariants";
@@ -12,6 +13,7 @@ import { FIST, buildWeaponRows, weaponExtraFor } from "../model/weaponUse";
 import { FS, FS_SUB, ROWPY, GAP, Card, SecHead, SubHead, ValNum, Col, Empty, rowProps } from "./sheet/primitives";
 import { VitalsCard, VitalRow } from "./sheet/VitalsCard";
 import { EquipmentCard } from "./sheet/EquipmentCard";
+import { CompanionsCard } from "./sheet/CompanionsCard";
 import { CombatCard, INFO_UL } from "./sheet/CombatCard";
 import { usePager } from "./sheet/usePager";
 import { AbilityRows } from "./AbilityRows";
@@ -23,6 +25,7 @@ interface Props {
   onSetVital: (key: VitalKey, value: number) => void;
   onSetInventory: (text: string) => void;
   onSetConditions: (conditions: CharacterCondition[]) => void;
+  onSetCompanions: (companions: Companion[]) => void;
   onSetWeapons: (weapons: string[]) => void;
   onSetActiveWeapon: (name: string | null) => void;
   onOpenSkill: (name: string, fok: number, percent?: number | null) => void;
@@ -57,7 +60,7 @@ const shortTime = (raw: string): string => {
   return c.length > 7 ? "…" : c;
 };
 
-export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, onSetInventory, onSetConditions, onSetWeapons, onSetActiveWeapon, onOpenSkill, onOpenSpell, onOpenWeapon }) => {
+export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, onSetInventory, onSetConditions, onSetCompanions, onSetWeapons, onSetActiveWeapon, onOpenSkill, onOpenSpell, onOpenWeapon }) => {
   const id = record.identity;
   const specs = Object.values(record.selections).filter(Boolean).join(" · ");
   const idFields: { k: string; v: string }[] = [
@@ -220,9 +223,11 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         );
       })}
 
-      {/* Inventory — free-text, editable; numbered lines open a quantity calculator */}
+      {/* Inventory — free-text, editable; numbered lines open a quantity calculator. Társak (companion
+          animals) share the column, right after the equipment. */}
       <Col>
         <EquipmentCard text={invText} onSet={onSetInventory} />
+        <CompanionsCard companions={record.companions ?? []} onSet={onSetCompanions} />
       </Col>
 
     </Box>

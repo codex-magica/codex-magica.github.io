@@ -7,6 +7,7 @@ import { DetailModal, ModalState } from "./DetailModal";
 import { WeaponModal, WeaponModalState } from "./WeaponModal";
 import { skillModalContent, spellModalByName } from "./compendiumData";
 import { CharacterCondition, CharacterRecord, VitalKey } from "../model/character";
+import { Companion } from "../model/companions";
 import { isHomebrew, rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { ZoneSwitch, DarkToggle } from "./controls";
@@ -44,6 +45,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
     onPatchRecord({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
   const setInventoryText = (text: string) => onPatchRecord({ ...record, inventoryText: text });
   const setConditions = (conditions: CharacterCondition[]) => onPatchRecord({ ...record, conditions });
+  const setCompanions = (companions: Companion[]) => onPatchRecord({ ...record, companions });
   // Unpinning the in-hand weapon also clears the selection (one atomic patch — two patches would race).
   const setWeapons = (weapons: string[]) =>
     onPatchRecord({ ...record, weapons, activeWeapon: record.activeWeapon && weapons.includes(record.activeWeapon) ? record.activeWeapon : undefined });
@@ -106,6 +108,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           onSetVital={setVital}
           onSetInventory={setInventoryText}
           onSetConditions={setConditions}
+          onSetCompanions={setCompanions}
           onSetWeapons={setWeapons}
           onSetActiveWeapon={setActiveWeapon}
           onOpenSkill={(name, fok, percent) => openSkillModal(name, fok, percent)}

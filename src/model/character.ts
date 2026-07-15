@@ -4,6 +4,7 @@
 import { Stats } from "./attributes";
 import { CombatChannel, Effect, Resource } from "./effects";
 import { SkillFok, SkillInstanceRef } from "./common";
+import { Companion } from "./companions";
 
 export const SCHEMA_VERSION = 1;
 
@@ -159,6 +160,7 @@ export interface CharacterRecord {
   inventoryText?: string; // free-text equipment list (one item per line; lines starting with a number = qty)
   vitalsState: Partial<Record<VitalKey, number>>; // current Ép/Fp/Mana/Psi/Kegy
   conditions?: CharacterCondition[]; // active status effects
+  companions?: Companion[]; // társ állatok (horses, dogs…) — independent creatures, not part of the build
 }
 
 export const emptyLevel = (level: number): LevelRecord => ({
