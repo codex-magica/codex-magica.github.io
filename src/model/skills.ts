@@ -283,7 +283,7 @@ const RAW: Raw[] = [
   },
   { name: "Rúnamágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"], hard: ["Ősi nyelv"] },
   {
-    name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr"],
+    name: "Tapasztalati mágia", cat: "Misztikus", diff: "IV", attrs: ["Int", "Akr", "Aszt"],
     // Empirical magic — one skill, one tradition per subtype. Each (at fok 3) unlocks its whole list.
     subtypes: ["bárd", "tűzmágia", "boszorkány", "boszorkánymester"],
     // The empirical-magic skill grants Mana per level from fok 3 (the casting threshold).

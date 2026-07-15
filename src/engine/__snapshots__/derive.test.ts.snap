@@ -31459,6 +31459,7 @@ Object {
       "attrs": Array [
         "Intelligencia",
         "Akaraterő",
+        "Asztrál",
       ],
       "checkMod": 1,
       "difficulty": "IV",
@@ -31471,6 +31472,7 @@ Object {
       "subtype": "bárd",
       "unmetAttrs": Array [
         "Akaraterő",
+        "Asztrál",
       ],
       "variantId": undefined,
     },
