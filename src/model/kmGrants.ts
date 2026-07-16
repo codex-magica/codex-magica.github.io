@@ -15,7 +15,7 @@ export const KM_GRANT_KINDS: { key: KmGrantKind; label: string }[] = [
   { key: "pszi", label: "Pszi" },
   { key: "skill", label: "Képzettség" },
   { key: "teacher", label: "Oktató" },
-  { key: "tag", label: "Képesség (szöveg)" },
+  { key: "tag", label: "Képesség" },
 ];
 
 const POOL_OF: Record<"kegy" | "mana" | "pszi", Pool> = { kegy: "Kegy", mana: "Mana", pszi: "Psi" };
@@ -23,7 +23,8 @@ const POOL_LABEL: Record<Pool, string> = { Kegy: "Kegy", Mana: "Mana", Psi: "Psz
 const signed = (n: number): string => (n >= 0 ? `+${n}` : String(n));
 
 // The editable state of one KM row. A single shared `amount` covers KAP and the pools; `skill`/`fok`
-// serve the skill grant; `skill`/`uptoLevel` serve the teacher; `text` serves the textual (tag) grant.
+// serve the skill grant; `skill`/`uptoLevel` serve the teacher; `text` (the name) and `rulesText`
+// (optional player-readable description — makes the ability clickable on the sheet) serve the tag grant.
 export interface KmRow {
   kind: KmGrantKind;
   amount: number;
@@ -31,9 +32,10 @@ export interface KmRow {
   fok: SkillFok;
   uptoLevel: SkillFok;
   text: string;
+  rulesText: string;
 }
 
-export const blankKmRow = (): KmRow => ({ kind: "kap", amount: 0, skill: "", fok: 1, uptoLevel: 4, text: "" });
+export const blankKmRow = (): KmRow => ({ kind: "kap", amount: 0, skill: "", fok: 1, uptoLevel: 4, text: "", rulesText: "" });
 
 // Row → the single Effect stored on the Adjustment. Incomplete rows stay benign: an empty-skill grant
 // and a 0-amount pool/KAP grant are no-ops in the derive interpreter, so a half-filled row is harmless.
@@ -47,7 +49,9 @@ export const buildKmEffect = (row: KmRow): Effect => {
     case "teacher": return { kind: "teachingDiscount", skill: row.skill, uptoLevel: row.uptoLevel };
     // Store the raw text (NOT trimmed): the input is controlled off this round-trip, so trimming here on
     // every keystroke would eat spaces and block multi-word names. Trimming happens in the derive guard.
-    case "tag": return { kind: "tag", tag: row.text };
+    // The rules-text key is spread in only when present — a persisted `text: undefined` would make the
+    // in-memory record structurally differ from its JSON round-trip (serialization strips undefined).
+    case "tag": return { kind: "tag", tag: row.text, ...(row.rulesText ? { text: row.rulesText } : {}) };
   }
 };
 
@@ -60,7 +64,7 @@ export const readKmRow = (e: Effect): KmRow => {
       return { ...base, kind: e.pool === "Kegy" ? "kegy" : e.pool === "Mana" ? "mana" : "pszi", amount: e.amount };
     case "grantSkill": return { ...base, kind: "skill", skill: e.skill, fok: e.level };
     case "teachingDiscount": return { ...base, kind: "teacher", skill: e.skill ?? "", uptoLevel: e.uptoLevel };
-    case "tag": return { ...base, kind: "tag", text: e.tag };
+    case "tag": return { ...base, kind: "tag", text: e.tag, rulesText: e.text ?? "" };
     default: return base;
   }
 };

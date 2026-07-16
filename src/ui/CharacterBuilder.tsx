@@ -66,7 +66,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
     setKmAdjustments,
   } = api;
 
-  const [selectedLevel, setSelectedLevel] = useState(1); // which level the editor targets (edit mode)
+  const [selectedLevel, setSelectedLevel] = useState(() => record.levels.length); // which level the editor targets (edit mode) — default to the character's current level
   const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
   const [pendingCustomClass, setPendingCustomClass] = useState<ClassDef | null>(null); // custom-class switch awaiting confirm
   const [pendingRace, setPendingRace] = useState<string | null>(null); // race change awaiting hard confirm

@@ -8,7 +8,7 @@ import { Stat, Stats } from "../../model/attributes";
 import { CombatChannel, Effect, Pool, Resource } from "../../model/effects";
 import { RaceDef } from "../../model/races";
 import { Discount, SkillScope } from "../skillCost";
-import { Contribution, Diagnostic, LedgerEntry, Severity } from "../types";
+import { AbilityTag, Contribution, Diagnostic, LedgerEntry, Severity } from "../types";
 
 export type OwnedMap = Record<string, { skill: string; subtype?: string; parent?: string; attrs?: Stat[]; placeholder?: boolean; fok: number; percent: number; origSubtype?: string; variantId?: string }>;
 
@@ -52,7 +52,7 @@ export interface DeriveCtx {
   poolExists: Record<Pool, boolean>;
   owned: OwnedMap;
   grantedFokOf: Record<string, number>; // key → highest GRANTED fok (grants don't need prereqs)
-  tags: { name: string; source: string; atLevel?: number }[]; // special abilities, with their origin/level
+  tags: AbilityTag[]; // special abilities, with their origin/level (and custom rules text on KM grants)
   money: number;
   inventory: InventoryItem[];
   discounts: Discount[];

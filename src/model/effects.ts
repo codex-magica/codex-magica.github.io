@@ -42,7 +42,7 @@ export type Effect =
   | { kind: "statBonus"; stat: Stat; amount: number }
   | { kind: "combatBonus"; channel: CombatChannel; amount: number }
   | { kind: "derivedBonus"; target: DerivedKey; amount: number }
-  | { kind: "tag"; tag: string }
+  | { kind: "tag"; tag: string; text?: string } // text = custom (KM-authored) rules text; built-in tags look their text up in ABILITIES instead
   | { kind: "grantEquipment"; item: string; qty?: number }
   | { kind: "grantMoney"; amount: number }
   | { kind: "restriction"; text: string }

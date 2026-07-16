@@ -179,6 +179,36 @@ test("KM overrides: textual (tag) grant surfaces on the abilities panel, level-g
   expect(tag!.atLevel).toBe(2);
 });
 
+test("KM overrides: tag grant carries custom rules text; built-ins stay bare; regrant rewords", () => {
+  const rec = base({
+    race: "Elf", // has built-in tag grants (Elf látás, …), so the bare-shape assertion is non-vacuous
+    kmAdjustments: [
+      { id: "t", reason: "", effects: [{ kind: "tag", tag: "Lát a sötétben", text: " Vaksötétben is lát, 10 láb távolságig. " }] },
+      { id: "r", reason: "", effects: [{ kind: "tag", tag: "Elf látás", text: "Házi szabály: +15 CÉ." }] }, // reword a built-in
+    ],
+  });
+  const d = derive(RULES, rec);
+  const tag = d.tags.find((t) => t.name === "Lát a sötétben");
+  expect(tag!.text).toBe("Vaksötétben is lát, 10 láb távolságig."); // trimmed
+  expect(tag!.source).toBe("Egyéb"); // no reason → tag grouped under Egyéb, not "KM"
+  const reworded = d.tags.find((t) => t.name === "Elf látás")!;
+  expect(reworded.source).toBe("Faj: Elf"); // dedup keeps the original grant…
+  expect(reworded.text).toBe("Házi szabály: +15 CÉ."); // …but the KM's custom text still lands
+  const builtIn = d.tags.find((t) => t.name === "Elf hallás");
+  expect(builtIn).toBeDefined();
+  expect("text" in builtIn!).toBe(false); // absent key, not undefined — golden snapshots stay byte-identical
+});
+
+test("KM overrides: missing reason doesn't throw; numeric grants keep the KM provenance label", () => {
+  const rec = base({
+    kmAdjustments: [
+      { effects: [{ kind: "statBonus", stat: "Erő", amount: 1 }] } as never, // legacy/imported: no reason field
+    ],
+  });
+  const d = derive(RULES, rec); // must not throw (derive's no-throw contract)
+  expect(d.provenance["Erő"].some((c) => c.source === "KM" && c.amount === 1)).toBe(true); // not "Egyéb"
+});
+
 test("custom class: record-embedded ClassDef grants skills and teachers", () => {
   const def = buildCustomClass("Kósza", 5, [
     { id: "1", kind: "skill", skill: "Vadonjárás", fok: 3, atLevel: 1 },

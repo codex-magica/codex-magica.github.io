@@ -1,18 +1,23 @@
 import React, { useState } from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { abilityText } from "../model/abilities";
+import { AbilityTag } from "../engine/types";
 import { ModalShell } from "./Modal";
 import { FS, FS_SUB, ROWPY } from "./sheet/primitives";
 
 // Special-ability rows for the character sheet's Képességek panel. Abilities are grouped by their
 // source (Faj, Kaszt, Háttér, …) and rendered as full-width rows — matching the Képzettségek panel.
-// A row is clickable when the ability has rules text (model/abilities.ts): tapping opens a reader modal.
+// A row is clickable when the ability has rules text — either built-in (model/abilities.ts) or carried
+// on the tag itself (KM-authored custom abilities): tapping opens a reader modal.
 // Level-gated abilities show their activation level on the right. (The picker panes still use AbilityChips.)
-export type AbilityTag = { name: string; source: string; atLevel?: number };
+export type { AbilityTag } from "../engine/types";
+
+// Custom text on the tag wins over the built-in table — a KM override may reword a known ability.
+const defOf = (t: AbilityTag) => (t.text ? { name: t.name, text: t.text, level: t.atLevel } : abilityText(t.name));
 
 export const AbilityRows: React.FC<{ tags: AbilityTag[] }> = ({ tags }) => {
-  const [open, setOpen] = useState<string | null>(null);
-  const def = open ? abilityText(open) : undefined;
+  const [open, setOpen] = useState<AbilityTag | null>(null);
+  const def = open ? defOf(open) : undefined;
 
   // Group by source, preserving first-seen order (Faj → Kaszt → Háttér, as folded in the engine).
   const groups: { source: string; items: AbilityTag[] }[] = [];
@@ -30,7 +35,7 @@ export const AbilityRows: React.FC<{ tags: AbilityTag[] }> = ({ tags }) => {
             {g.source}
           </Box>
           {g.items.map((t) => {
-            const has = !!abilityText(t.name);
+            const has = !!(t.text || abilityText(t.name)); // clickable iff some rules text exists — custom or built-in
             const note = t.atLevel ? `${t.atLevel}. szinttől` : undefined;
             const row = (
               <>
@@ -39,7 +44,7 @@ export const AbilityRows: React.FC<{ tags: AbilityTag[] }> = ({ tags }) => {
               </>
             );
             return has ? (
-              <Box as="button" type="button" key={t.name} onClick={() => setOpen(t.name)}
+              <Box as="button" type="button" key={t.name} onClick={() => setOpen(t)}
                 display="flex" alignItems="baseline" justifyContent="space-between" w="100%" textAlign="left"
                 gap="14px" py={ROWPY} px="5px" mx="-5px" borderRadius="5px" _hover={{ bg: "accentSoft" }}>
                 {row}

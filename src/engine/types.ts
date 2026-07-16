@@ -10,6 +10,18 @@ export interface Contribution {
 
 export type Severity = "error" | "warn" | "info";
 
+// A special ability (tag grant), as surfaced on the sheet's Képességek panel. `source` is the
+// human-readable origin ("Faj: Elf", "Kaszt: Harcos", "Háttér: …") the sheet groups by; `atLevel` (>1)
+// is the level the ability activates at; `text` is custom (KM-authored) rules text — built-ins look
+// theirs up in ABILITIES. The single shared shape: DeriveCtx.tags flows into DerivedCharacter.tags
+// unchanged, and AbilityRows renders it.
+export interface AbilityTag {
+  name: string;
+  source: string;
+  atLevel?: number;
+  text?: string;
+}
+
 export interface Diagnostic {
   severity: Severity;
   message: string;
@@ -84,9 +96,8 @@ export interface DerivedCharacter {
   teachingDiscounts: Discount[]; // raw active teacher discounts (subtype-aware) — for per-branch teacher/cost
   costMultipliers: (SkillScope & { factor: number })[]; // school Kp-cost penalties (Barbár ×1.5) — the UI must show the multiplied cost
   spells: SpellView[];
-  // Special abilities (tag grants). `source` is the human-readable origin ("Faj: Elf", "Kaszt: Harcos",
-  // "Háttér: …") the sheet groups by; `atLevel` (>1) is the level the ability activates at.
-  tags: { name: string; source: string; atLevel?: number }[];
+  // Special abilities (tag grants). See AbilityTag.
+  tags: AbilityTag[];
   grantedBackgrounds: string[]; // backgrounds conferred free by race/class (locked in the UI)
   money: number;
   inventory: InventoryItem[];

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Button, HStack, Input, Select, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Input, Select, Text, Textarea } from "@chakra-ui/react";
 import { Adjustment, CharacterRecord, getLevelRecord } from "../model/character";
 import { DerivedCharacter } from "../engine/types";
 import { CombatChannel, Resource } from "../model/effects";
@@ -56,9 +56,16 @@ const SkillSelect: React.FC<{ value: string; onChange: (v: string) => void }> = 
 
 // One editable KM-override row: kind + kind-specific control(s) + a reason + delete. Each edit rebuilds
 // the adjustment's single effect and pushes it up; the record stays canonical (live-persist).
+// The full row lives in LOCAL state (seeded from the stored effect): the effect only carries the active
+// kind's fields, so a round-trip through a kind switch would otherwise wipe the inactive ones — an
+// accidental kind flip must not destroy a typed multi-line rules text (or a picked skill).
 const KmRowEditor: React.FC<{ adj: Adjustment; onChange: (patch: Partial<Adjustment>) => void; onRemove: () => void }> = ({ adj, onChange, onRemove }) => {
-  const row = readKmRow(adj.effects[0] ?? buildKmEffect(blankKmRow()));
-  const setRow = (patch: Partial<KmRow>) => onChange({ effects: [buildKmEffect({ ...row, ...patch })] });
+  const [row, setRowState] = useState<KmRow>(() => readKmRow(adj.effects[0] ?? buildKmEffect(blankKmRow())));
+  const setRow = (patch: Partial<KmRow>) => {
+    const next = { ...row, ...patch };
+    setRowState(next);
+    onChange({ effects: [buildKmEffect(next)] });
+  };
   const isAmount = row.kind === "kap" || row.kind === "kegy" || row.kind === "mana" || row.kind === "pszi";
 
   // Each override is a bordered card so a row that wraps onto several lines on a phone still reads as one
@@ -92,13 +99,17 @@ const KmRowEditor: React.FC<{ adj: Adjustment; onChange: (patch: Partial<Adjustm
           )}
 
           {row.kind === "tag" && (
-            <Input {...field} flex="2 1 200px" minW="140px" value={row.text} placeholder="képesség szövege…" onChange={(e) => setRow({ text: e.target.value })} />
+            <Input {...field} flex="2 1 200px" minW="140px" value={row.text} placeholder="képesség neve…" onChange={(e) => setRow({ text: e.target.value })} />
           )}
 
           <Input {...field} flex="1 1 110px" minW="90px" value={adj.reason} placeholder={row.kind === "tag" ? "forrás…" : "indok…"} onChange={(e) => onChange({ reason: e.target.value })} />
         </HStack>
         <DeleteButton onClick={onRemove} />
       </HStack>
+      {row.kind === "tag" && (
+        <Textarea {...field} mt="7px" rows={3} resize="vertical" value={row.rulesText} placeholder="leírás / szabályszöveg… (ettől lesz megnyitható a lapon)"
+          onChange={(e) => setRow({ rulesText: e.target.value })} />
+      )}
     </Box>
   );
 };

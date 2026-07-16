@@ -28,9 +28,15 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   // ── 5. KM adjustments ──────────────────────────────────────────────────────
   const N = Math.max(rec.levels.length, 1);
   rec.kmAdjustments.forEach((adj) => {
-    const source = adj.reason ? `KM: ${adj.reason}` : "KM"; // groups textual (tag) grants on the abilities panel
+    const reason = adj.reason?.trim(); // optional-chained: an imported/legacy adjustment may lack the field
+    // Provenance label for stat/pool grants and diagnostics — keeps the KM attribution visible in the
+    // breakdown modals (and distinct from StatInfoModal's "Egyéb" residual row).
+    const source = reason ? `KM: ${reason}` : "KM";
+    // Tag grants instead group under this heading on the abilities panel, where a missing or
+    // self-referential reason ("KM") would render a clumsy "KM" / "KM: KM" heading — those go under "Egyéb".
+    const tagSource = reason && reason.toUpperCase() !== "KM" ? `KM: ${reason}` : "Egyéb";
     const at = adj.atLevel ?? 1; // default level 1 — consistent with the panel filter and kmKapAtLevel
-    adj.effects.forEach((e) => applyEffect(ctx, e, source, at, true));
+    adj.effects.forEach((e) => applyEffect(ctx, e, e.kind === "tag" ? tagSource : source, at, true));
   });
 
   // ── 6. Állapotok (play-state) ──────────────────────────────────────────────

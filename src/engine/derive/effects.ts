@@ -66,8 +66,14 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
     case "tag": {
       const name = e.tag.trim();
       if (!name) break; // half-filled KM textual grant (no text yet) — stay a no-op
+      const text = e.text?.trim();
       // First grant wins (levels fold in order 1→N, so the earliest activation is recorded).
-      if (!ctx.tags.some((t) => t.name === name)) ctx.tags.push({ name, source, atLevel: level > 1 ? level : undefined });
+      // Custom rules text (KM grants) rides along only when present — keeps built-in tags' shape (and golden snapshots) untouched.
+      const existing = ctx.tags.find((t) => t.name === name);
+      if (!existing) ctx.tags.push({ name, source, atLevel: level > 1 ? level : undefined, ...(text ? { text } : {}) });
+      // A KM regrant of an ability the character already has may reword it: the custom text still lands
+      // (and wins on the sheet over the ABILITIES table), even though the tag itself deduped.
+      else if (text) existing.text = text;
       break;
     }
     case "grantEquipment":
