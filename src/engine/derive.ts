@@ -28,7 +28,9 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
   // ── 5. KM adjustments ──────────────────────────────────────────────────────
   const N = Math.max(rec.levels.length, 1);
   rec.kmAdjustments.forEach((adj) => {
-    adj.effects.forEach((e) => applyEffect(ctx, e, `KM: ${adj.reason}`, adj.atLevel || N, true));
+    const source = adj.reason ? `KM: ${adj.reason}` : "KM"; // groups textual (tag) grants on the abilities panel
+    const at = adj.atLevel ?? 1; // default level 1 — consistent with the panel filter and kmKapAtLevel
+    adj.effects.forEach((e) => applyEffect(ctx, e, source, at, true));
   });
 
   // ── 6. Állapotok (play-state) ──────────────────────────────────────────────

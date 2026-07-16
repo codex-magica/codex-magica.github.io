@@ -13,6 +13,7 @@ import { STAT_KEYS, STAT_SHORT, Stat } from "../model/attributes";
 import { findInstanceChoice, sameInstance } from "../model/common";
 import { rulesFor } from "../model/rulesVariants";
 import { BACKGROUNDS } from "../model/backgrounds";
+import { kmGrantSummary } from "../model/kmGrants";
 import { DerivedCharacter, LedgerEntry } from "../engine/types";
 
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
@@ -33,8 +34,11 @@ const fmtStat = (s: StatIncrease): string => `${STAT_SHORT[s.stat as Stat]}  · 
 const bgCost = (b: ChosenBackground): number => (b.level != null ? b.level : BACKGROUNDS[b.background]?.cost ?? 0);
 const fmtBg = (b: ChosenBackground): string =>
   `${b.background}  ·  ${b.source}${b.level != null ? `, ${b.level}` : ""}${b.option ? `, ${b.option}` : ""}  ·  @${b.acquiredAtLevel}. szint`;
-const fmtAdj = (a: Adjustment): string =>
-  `${a.reason || "(km)"}${a.atLevel != null ? ` @${a.atLevel}. szint` : ""}  ·  ${a.effects.length} effekt`;
+const fmtAdj = (a: Adjustment): string => {
+  const grants = a.effects.map(kmGrantSummary).join(", ") || "—";
+  const lvl = a.atLevel != null ? ` @${a.atLevel}. szint` : "";
+  return `${grants}${lvl}${a.reason ? `  ·  ${a.reason}` : ""}`;
+};
 
 const Cat: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="catTx" mt="11px" mb="3px">

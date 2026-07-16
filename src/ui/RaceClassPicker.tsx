@@ -123,18 +123,21 @@ const RaceDetail: React.FC<{ name: string }> = ({ name }) => {
   );
 };
 
-const ClassDetail: React.FC<{ name: string }> = ({ name }) => {
-  const c = CLASSES[name];
+const ClassDetail: React.FC<{ def?: ClassDef; custom?: boolean }> = ({ def: c, custom }) => {
   if (!c) return null;
   const g = summarize([...(c.grants || []), ...(c.baseSkills || [])]);
   return (
     <Box>
-      <Heading fontSize="17px" fontWeight={700} color="fg" mb="1px">{c.name} <Text as="span" fontSize="13px" fontWeight={500} color="fgFaint">· {c.cost} KAP</Text></Heading>
-      <Text fontSize="11.5px" color="fgFaint" mb="11px">Engedett fajok: {c.allowedRaces.join(", ")}</Text>
+      <Heading fontSize="17px" fontWeight={700} color="fg" mb="1px">
+        {c.name} <Text as="span" fontSize="13px" fontWeight={500} color="fgFaint">· {c.cost} KAP</Text>
+        {custom && <Text as="span" fontSize="11px" fontWeight={700} color="accentTx" ml="8px" px="7px" py="1px" borderRadius="6px" bg="accentSoft">EGYEDI</Text>}
+      </Heading>
+      <Text fontSize="11.5px" color="fgFaint" mb="11px">{custom ? "Minden faj választhatja" : `Engedett fajok: ${c.allowedRaces.join(", ")}`}</Text>
       {g.tags.length > 0 && <Section label="Különleges képességek"><AbilityChips tags={g.tags} /></Section>}
       {g.backgrounds.length > 0 && <Section label="Kapott hátterek"><Chips items={g.backgrounds} /></Section>}
       {g.skills.length > 0 && <Section label="Kapott képzettségek"><Chips items={g.skills} /></Section>}
       {g.teaches.length > 0 && <Section label={`Tanított képzettségek · ${g.teaches.length}`}><TeachGroups teaches={g.teaches} /></Section>}
+      {g.specials.length > 0 && <Section label="Szinthez kötött / speciális"><Chips items={g.specials} /></Section>}
       {g.forbidden.length > 0 && <Section label="Tiltott képzettségek"><Chips items={g.forbidden} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {c.choices.length > 0 && <Section label="Specializációk"><ChoiceTree choices={c.choices} /></Section>}
@@ -180,7 +183,9 @@ const BrowserModal: React.FC<{
   renderDetail: (name: string) => React.ReactNode;
   onPick: (name: string) => void;
   onClose: () => void;
-}> = ({ title, options, selected, renderDetail, onPick, onClose }) => {
+  onCustom?: () => void; // optional "build your own" entry prepended to the list
+  customLabel?: string;
+}> = ({ title, options, selected, renderDetail, onPick, onClose, onCustom, customLabel }) => {
   const [view, setView] = useState(selected || options[0]);
   return (
     <ModalShell onClose={onClose} width="min(680px, 100%)" maxH="88vh">
@@ -202,6 +207,11 @@ const BrowserModal: React.FC<{
               {n}{n === selected ? <Text as="span" color="accentTx">●</Text> : null}
             </Box>
           ))}
+          {onCustom && (
+            <Box as="button" type="button" onClick={onCustom} flexShrink={0} px="13px" h="38px" borderRadius="999px"
+              border="1px dashed" borderColor="accent" bg="accentSoft" color="accentTx" fontWeight={700} fontSize="14px"
+              fontFamily="system-ui" whiteSpace="nowrap">{customLabel ?? "＋ Egyedi…"}</Box>
+          )}
         </Box>
         <VStack display={{ base: "none", md: "flex" }} align="stretch" spacing={0} w="148px" flexShrink={0} borderRight="1px solid" borderColor="hair" overflowY="auto">
           {options.map((n) => (
@@ -212,6 +222,11 @@ const BrowserModal: React.FC<{
               {n}{n === selected ? <Text as="span" color="accentTx" ml="5px">●</Text> : null}
             </Box>
           ))}
+          {onCustom && (
+            <Box as="button" type="button" onClick={onCustom} textAlign="left" px="13px" py="9px"
+              borderBottom="1px solid" borderColor="hairSoft" bg="transparent" color="accentTx" fontWeight={700}
+              fontSize="13.5px" fontFamily="system-ui" _hover={{ bg: "accentSoft" }}>{customLabel ?? "＋ Egyedi…"}</Box>
+          )}
         </VStack>
         <Box flex="1 1 auto" minW={0} minH={0} overflowY="auto" p="16px">{renderDetail(view)}</Box>
       </Box>
@@ -231,16 +246,30 @@ export const RaceClassPicker: React.FC<{
   selected: string;
   onPick: (name: string) => void;
   onClose: () => void;
-}> = ({ kind, selected, onPick, onClose }) => (
-  <BrowserModal
-    title={kind === "race" ? "Faj választása" : "Kaszt választása"}
-    options={kind === "race" ? RACE_NAMES : CLASS_NAMES}
-    selected={selected}
-    renderDetail={(n) => (kind === "race" ? <RaceDetail name={n} /> : <ClassDetail name={n} />)}
-    onPick={onPick}
-    onClose={onClose}
-  />
-);
+  onCustom?: () => void; // class kind only: open the custom-class builder
+  customLabel?: string;
+  customClass?: ClassDef; // the record's custom class (if any) — shown as a browsable entry
+}> = ({ kind, selected, onPick, onClose, onCustom, customLabel, customClass }) => {
+  // Append the custom class as its own entry — unless it shadows a built-in name (avoid a duplicate key).
+  const classOptions = customClass && !CLASS_NAMES.includes(customClass.name) ? [...CLASS_NAMES, customClass.name] : CLASS_NAMES;
+  return (
+    <BrowserModal
+      title={kind === "race" ? "Faj választása" : "Kaszt választása"}
+      options={kind === "race" ? RACE_NAMES : classOptions}
+      selected={selected}
+      renderDetail={(n) =>
+        kind === "race"
+          ? <RaceDetail name={n} />
+          : n === customClass?.name
+            ? <ClassDetail def={customClass} custom />
+            : <ClassDetail def={CLASSES[n]} />}
+      onPick={onPick}
+      onClose={onClose}
+      onCustom={kind === "class" ? onCustom : undefined}
+      customLabel={customLabel}
+    />
+  );
+};
 
 // Browser for picking a class specialization (iskola / rend / klán / …) — the options of one ChoiceDef.
 // `className` supplies the class's taught skills (teaching is class-wide, not per-option).

@@ -5,6 +5,7 @@ import { Stats } from "./attributes";
 import { CombatChannel, Effect, Resource } from "./effects";
 import { SkillFok, SkillInstanceRef } from "./common";
 import { Companion } from "./companions";
+import type { ClassDef } from "./classes/def";
 
 export const SCHEMA_VERSION = 1;
 
@@ -105,6 +106,7 @@ export interface LevelRecord {
 
 // KM grants, outside the KAP economy (roleplay rewards, story events).
 export interface Adjustment {
+  id?: string; // stable key for the builder's per-row editing (ignored by derive)
   atLevel?: number;
   effects: Effect[];
   reason: string;
@@ -138,6 +140,7 @@ export interface CharacterRecord {
 
   race: string;
   class: string;
+  customClass?: ClassDef; // a KM-authored class carried on the record; used by derive when class === customClass.name
   houseRules?: HouseRules; // fixed at creation — selects which RulesDB variant derives this record
   selections: Record<string, string>; // choiceId → option name (class specialization tree)
   backgrounds: ChosenBackground[];

@@ -12,6 +12,7 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
   const { diag, addProv } = ctx;
   switch (e.kind) {
     case "grantSkill": {
+      if (!e.skill) break; // half-filled KM row (no skill chosen yet) — stay a no-op
       const key = skillKey(e.skill, e.subtype);
       const cur = ctx.owned[key];
       if (!cur || cur.fok < e.level) ctx.owned[key] = { skill: e.skill, subtype: effSubtype(ctx, e.skill, e.subtype), fok: e.level, percent: 0, origSubtype: e.subtype };
@@ -40,6 +41,7 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
       ctx.poolExists[e.pool] = true;
       break;
     case "grantPoolPoints":
+      if (e.amount === 0) break; // half-filled KM row — don't open an empty pool on the sheet
       ctx.poolExists[e.pool] = true;
       ctx.poolMax[e.pool] += e.amount;
       addProv(e.pool, source, e.amount);
@@ -61,10 +63,13 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
       ctx.derivedBonus[e.target] += e.amount;
       addProv(e.target, source, e.amount);
       break;
-    case "tag":
+    case "tag": {
+      const name = e.tag.trim();
+      if (!name) break; // half-filled KM textual grant (no text yet) — stay a no-op
       // First grant wins (levels fold in order 1→N, so the earliest activation is recorded).
-      if (!ctx.tags.some((t) => t.name === e.tag)) ctx.tags.push({ name: e.tag, source, atLevel: level > 1 ? level : undefined });
+      if (!ctx.tags.some((t) => t.name === name)) ctx.tags.push({ name, source, atLevel: level > 1 ? level : undefined });
       break;
+    }
     case "grantEquipment":
       ctx.inventory.push({ name: e.item, qty: e.qty });
       break;
@@ -110,6 +115,10 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
       diag("warn", `${source}: a(z) ${e.kind} hatás itt nem alkalmazható.`, level);
       break;
     case "classCostDelta": // consumed at class-activation time (adjusts the class KAP cost)
+      break;
+    case "grantKap":
+      // Folded into per-level KAP income in levelFold (KAP is spent during the fold, so a late add
+      // here would be unspendable). No-op in the generic interpreter — the case keeps `never` happy.
       break;
     default: {
       // Compile-time exhaustiveness: adding a new Effect kind without a case here is a type error.

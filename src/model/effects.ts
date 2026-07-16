@@ -38,6 +38,7 @@ export type Effect =
   | { kind: "poolAccess"; pool: Pool }
   | { kind: "grantPoolPoints"; pool: Pool; amount: number } // KM grant, e.g. +Kegy for roleplay
   | { kind: "grantPoolFromStat"; pool: Pool; stat: Stat } // e.g. Pszi érzékenység → Psi = Int (one-time)
+  | { kind: "grantKap"; amount: number } // KM grant of raw KAP (build points) — folded into level income, so it stays spendable
   | { kind: "statBonus"; stat: Stat; amount: number }
   | { kind: "combatBonus"; channel: CombatChannel; amount: number }
   | { kind: "derivedBonus"; target: DerivedKey; amount: number }

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CharacterRecord, LevelRecord, getLevelRecord } from "../model/character";
+import { Adjustment, CharacterRecord, LevelRecord, getLevelRecord } from "../model/character";
 import { genId } from "./storage";
 import { BACKGROUNDS } from "../model/backgrounds";
 import { CombatChannel, Resource } from "../model/effects";
@@ -108,6 +108,7 @@ export interface CharacterBuilderApi {
   setSkillFok4Stat: (skill: string, subtype: string | undefined, variantId: string | undefined, stat: Stat | null) => void;
   setSkillPathChoice: (skill: string, subtype: string | undefined, variantId: string | undefined, trigger: string, value: string | null) => void;
   setSkillChosenAttrs: (level: number, skill: string, subtype: string | undefined, variantId: string | undefined, attrs: Stat[]) => void;
+  setKmAdjustments: (adjustments: Adjustment[]) => void;
 }
 
 // Controlled: the caller owns the record (so each character edits its own, persisted via the roster).
@@ -314,6 +315,10 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     setRecord({ ...record, skillAttrChoices: list });
   };
 
+  // KM custom overrides (bonus KAP/pools, granted skills, teachers). Stored on record.kmAdjustments and
+  // applied by the derive engine outside the KAP economy; the whole list is replaced on each edit.
+  const setKmAdjustments = (adjustments: Adjustment[]) => update({ kmAdjustments: adjustments });
+
   return {
     record,
     derived,
@@ -339,5 +344,6 @@ export function useCharacterBuilder(record: CharacterRecord, rawSetRecord: (r: C
     setSkillFok4Stat,
     setSkillPathChoice,
     setSkillChosenAttrs,
+    setKmAdjustments,
   };
 }

@@ -16,6 +16,9 @@ import { LevelGainsPanel } from "./LevelGainsPanel";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import { LedgerPanel } from "./LedgerPanel";
 import { RaceClassPicker, SpecPicker } from "./RaceClassPicker";
+import { CustomClassModal } from "./CustomClassModal";
+import { customClassActive } from "../model/customClass";
+import { ClassDef } from "../model/classes/def";
 import { ParchPanel } from "./ParchPanel";
 import { FIELD_SX } from "./tokens";
 
@@ -60,13 +63,16 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
     setSkillPathChoice,
     setSkillChosenAttrs,
     setGrantedHmChannel,
+    setKmAdjustments,
   } = api;
 
   const [selectedLevel, setSelectedLevel] = useState(1); // which level the editor targets (edit mode)
   const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
+  const [pendingCustomClass, setPendingCustomClass] = useState<ClassDef | null>(null); // custom-class switch awaiting confirm
   const [pendingRace, setPendingRace] = useState<string | null>(null); // race change awaiting hard confirm
   const [picker, setPicker] = useState<"race" | "class" | null>(null); // open race/class browser modal
   const [specChoice, setSpecChoice] = useState<ChoiceDef | null>(null); // open specialization browser modal
+  const [customClassOpen, setCustomClassOpen] = useState(false); // open the custom-class builder modal
 
   const applyRaceChange = (race: string) => {
     const caps = RACES[race].statLimits;
@@ -81,18 +87,36 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   // specialization selections, the granted-subtype renames (they key off old grant labels) and the granted
   // background levels. Purchases made redundant by the new class's grants are auto-pruned = DELETED.
   const applyClassChange = (cls: string) =>
-    update({ class: cls, selections: defaultSelections(CLASSES[cls].choices), subtypeOverrides: {}, grantedBgLevels: {} });
+    update({ class: cls, customClass: undefined, selections: defaultSelections(CLASSES[cls].choices), subtypeOverrides: {}, grantedBgLevels: {} });
   // Changing race/class on a character with progress can invalidate (and via auto-prune, delete) later
   // work — gate both behind a hard confirm. A fresh level-1 character has nothing to lose, so skip it.
   const hasProgress =
     record.levels.length > 1 ||
     record.levels.some((l) => l.skillPurchases.length || l.allocations.length || l.hmAssignments.length || l.statIncreases.length || (l.grantedHmAssignments?.length ?? 0));
-  const onClassChange = (cls: string) => (hasProgress ? setPendingClass(cls) : applyClassChange(cls));
+  const onClassChange = (cls: string) => {
+    if (customClassActive(record)?.name === cls) return; // re-picking the active custom class — no change
+    return hasProgress ? setPendingClass(cls) : applyClassChange(cls);
+  };
   const onRaceChange = (race: string) => (hasProgress ? setPendingRace(race) : applyRaceChange(race));
 
+  // Commit a KM custom class: carry the whole ClassDef on the record and point `class` at its name, so
+  // derive resolves it (see customClassActive). Clears the old class's specialization-linked state.
+  const commitCustomClass = (def: ClassDef) =>
+    update({ class: def.name, customClass: def, selections: {}, subtypeOverrides: {}, grantedBgLevels: {} });
+  // Saving from the builder: refining the ACTIVE custom class in place is safe (no class switch), but
+  // switching TO a custom class (from a built-in or a renamed one) can auto-prune purchases like any class
+  // change — so gate that behind the same hard confirm on a character with progress.
+  const onSaveCustomClass = (def: ClassDef) => {
+    setCustomClassOpen(false);
+    const switching = customClassActive(record)?.name !== def.name;
+    if (hasProgress && switching) setPendingCustomClass(def);
+    else commitCustomClass(def);
+  };
+
   // The record's rules variant: option grants shown in the spec-picker reflect the house rules.
-  // (Choice STRUCTURE — ids, labels, option names — is identical across variants.)
-  const klass = rulesFor(record).classes[record.class];
+  // (Choice STRUCTURE — ids, labels, option names — is identical across variants.) A custom class on the
+  // record wins over the catalog lookup.
+  const klass = customClassActive(record) ?? rulesFor(record).classes[record.class];
   const choiceList = klass ? activeChoices(klass.choices, record.selections) : [];
   const raceAllowed = klass ? klass.allowedRaces.indexOf(record.race) >= 0 : true;
 
@@ -256,7 +280,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
         </ParchPanel>
 
         <ParchPanel>
-          <LevelGainsPanel level={activeLevel} record={record} derived={editDerived} onGrantedHm={setGrantedHmChannel} />
+          <LevelGainsPanel level={activeLevel} record={record} derived={editDerived} onGrantedHm={setGrantedHmChannel} onKmChange={setKmAdjustments} />
         </ParchPanel>
 
         <ParchPanel>
@@ -279,7 +303,14 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           selected={picker === "race" ? record.race : record.class}
           onPick={picker === "race" ? onRaceChange : onClassChange}
           onClose={() => setPicker(null)}
+          onCustom={() => { setPicker(null); setCustomClassOpen(true); }}
+          customLabel={customClassActive(record) ? "✎ Egyedi kaszt szerkesztése" : "＋ Egyedi kaszt…"}
+          customClass={customClassActive(record)}
         />
+      )}
+
+      {customClassOpen && (
+        <CustomClassModal initial={customClassActive(record)} onSave={onSaveCustomClass} onClose={() => setCustomClassOpen(false)} />
       )}
 
       {specChoice && (
@@ -301,6 +332,15 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           képzettségeket, hátteret és a kaszthoz kötött választásokat. A magasabb szinteken elköltött
           pontok érvénytelenné válhatnak: a fölöslegessé vált képzettségvásárlások automatikusan
           törlődnek, a túlköltött szinteket pedig jelöljük. Folytatod?
+        </ConfirmModal>
+      )}
+
+      {pendingCustomClass && (
+        <ConfirmModal title="Egyedi kaszt beállítása" confirmLabel="Beállítás"
+          onConfirm={() => { commitCustomClass(pendingCustomClass); setPendingCustomClass(null); }} onClose={() => setPendingCustomClass(null)}>
+          A kaszt <b>{record.class}</b> → <b>{pendingCustomClass.name}</b> módosítása megváltoztatja a kapott
+          képzettségeket és a kaszthoz kötött választásokat. A fölöslegessé vált képzettségvásárlások
+          automatikusan törlődnek. Folytatod?
         </ConfirmModal>
       )}
 

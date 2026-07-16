@@ -6,6 +6,7 @@ import { RULES } from "../model/rulesDb";
 import { validateRules } from "../model/validateRules";
 import { defaultRecord } from "../state/defaultRecord";
 import { CharacterRecord, SCHEMA_VERSION } from "../model/character";
+import { buildCustomClass } from "../model/customClass";
 import { Stats } from "../model/attributes";
 
 const pb = (v: Partial<Stats>): Stats => ({
@@ -129,6 +130,66 @@ test("golden: Varázsló (Mana + Pszi pools, granted Pszi 4 fok-4 bonus, path ch
     pathChoices: [{ skill: "Pszi", subtype: "kyr", trigger: "Pszi fa", value: "tudat" }],
   });
   expect(derive(RULES, rec)).toMatchSnapshot();
+});
+
+test("KM overrides: grantKap adds spendable KAP; pool/skill/teacher grants surface", () => {
+  const baseline = derive(RULES, base({}));
+  const rec = base({
+    kmAdjustments: [
+      { id: "a", atLevel: 1, reason: "bónusz", effects: [{ kind: "grantKap", amount: 30 }] },
+      { id: "b", atLevel: 1, reason: "kegy", effects: [{ kind: "grantPoolPoints", pool: "Kegy", amount: 12 }] },
+      { id: "c", atLevel: 1, reason: "skill", effects: [{ kind: "grantSkill", skill: "Úszás", level: 2 }] },
+      { id: "d", atLevel: 1, reason: "teacher", effects: [{ kind: "teachingDiscount", skill: "Alkímia", uptoLevel: 4 }] },
+    ],
+  });
+  const d = derive(RULES, rec);
+  expect(d.pools.kapBalanceByLevel[0]).toBe(baseline.pools.kapBalanceByLevel[0] + 30); // spendable
+  expect(d.pools.magic.Kegy?.max).toBe(12);
+  expect(d.skills.some((s) => s.skill === "Úszás" && s.fok >= 2)).toBe(true);
+  expect(d.teachingDiscounts.some((t) => t.skill === "Alkímia")).toBe(true);
+});
+
+test("KM overrides: half-filled rows stay benign (no phantom skill / empty pool / empty tag)", () => {
+  const d = derive(RULES, base({
+    kmAdjustments: [
+      { id: "e", atLevel: 1, reason: "", effects: [{ kind: "grantSkill", skill: "", level: 1 }] },
+      { id: "f", atLevel: 1, reason: "", effects: [{ kind: "grantPoolPoints", pool: "Kegy", amount: 0 }] },
+      { id: "g", atLevel: 1, reason: "", effects: [{ kind: "tag", tag: "" }] },
+    ],
+  }));
+  expect(d.skills.some((s) => s.skill === "")).toBe(false);
+  expect(d.pools.magic.Kegy).toBeUndefined();
+  expect(d.tags.some((t) => t.name === "")).toBe(false);
+});
+
+test("KM overrides: textual (tag) grant surfaces on the abilities panel, level-gated", () => {
+  const rec = base({
+    levels: [
+      { level: 1, allocations: [], skillPurchases: [], hmAssignments: [], statIncreases: [] },
+      { level: 2, allocations: [], skillPurchases: [], hmAssignments: [], statIncreases: [] },
+    ],
+    kmAdjustments: [
+      { id: "t", atLevel: 2, reason: "Sárkányvér", effects: [{ kind: "tag", tag: "Lát a sötétben" }] },
+    ],
+  });
+  const d = derive(RULES, rec);
+  const tag = d.tags.find((t) => t.name === "Lát a sötétben");
+  expect(tag).toBeDefined();
+  expect(tag!.source).toBe("KM: Sárkányvér");
+  expect(tag!.atLevel).toBe(2);
+});
+
+test("custom class: record-embedded ClassDef grants skills and teachers", () => {
+  const def = buildCustomClass("Kósza", 5, [
+    { id: "1", kind: "skill", skill: "Vadonjárás", fok: 3, atLevel: 1 },
+    { id: "2", kind: "teacher", skill: "Fájdalomtűrés", fok: 4, atLevel: 1 },
+    { id: "3", kind: "skill", skill: "Úszás", fok: 2, atLevel: 2 }, // level-gated: not at level 1
+  ]);
+  const d = derive(RULES, base({ class: "Kósza", customClass: def }));
+  expect(d.skills.some((s) => s.skill === "Vadonjárás" && s.fok >= 3)).toBe(true);
+  expect(d.teachingDiscounts.some((t) => t.skill === "Fájdalomtűrés")).toBe(true);
+  expect(d.grantedSkills.some((s) => s.skill === "Úszás")).toBe(false); // atLevel 2, character is level 1
+  expect(d.diagnostics.some((x) => x.severity === "error" && /Ismeretlen kaszt/.test(x.message))).toBe(false);
 });
 
 test("golden: KM adjustments (statBonus applies; per-level kind + note surface as diagnostics)", () => {

@@ -223,6 +223,17 @@ function applyHm(ctx: DeriveCtx, L: number, lvlRec: LevelRecord | undefined, hmF
     diag("info", `${L}. szint: ${hmFromSkills - grantedAssigned} kapott HM még nincs elosztva (KÉ/TÉ/VÉ/CÉ).`, L);
 }
 
+// Sum the KM-granted raw KAP targeted at level L. A KM adjustment with no atLevel defaults to level 1,
+// so the grant is spendable from character creation; a set level makes it available from that level on.
+function kmKapAtLevel(ctx: DeriveCtx, L: number): number {
+  let sum = 0;
+  for (const adj of ctx.rec.kmAdjustments) {
+    if ((adj.atLevel ?? 1) !== L) continue;
+    for (const e of adj.effects) if (e.kind === "grantKap") sum += e.amount;
+  }
+  return sum;
+}
+
 export function runLevelFold(ctx: DeriveCtx): void {
   const { rec, diag } = ctx;
   const N = Math.max(rec.levels.length, 1);
@@ -235,7 +246,8 @@ export function runLevelFold(ctx: DeriveCtx): void {
     ctx.cumulativeBgCost += ctx.bgCostAtLevel[L] || 0;
     // Level 1 only folds the starting Kp (= Intelligencia) into the shared KAP pool; later level-ups
     // get the flat 50 − backgrounds. The Int pool funds skills or HM/Mana/Pszi/Kegy/Tulajdonság.
-    const income = BASE_KAP_PER_LEVEL + (L === 1 ? ctx.effective.Intelligencia : 0) - ctx.cumulativeBgCost; // effective Int (grants count)
+    // KM grantKap adjustments add spendable build points at their target level (default 1).
+    const income = BASE_KAP_PER_LEVEL + (L === 1 ? ctx.effective.Intelligencia : 0) - ctx.cumulativeBgCost + kmKapAtLevel(ctx, L); // effective Int (grants count)
     ctx.kapBalance += income;
     ctx.kapIncomeByLevel.push(income);
 

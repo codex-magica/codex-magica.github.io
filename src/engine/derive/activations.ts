@@ -2,6 +2,7 @@
 
 import { Effect } from "../../model/effects";
 import { resolveChoiceGrants } from "../../model/choices";
+import { customClassActive } from "../../model/customClass";
 import { DeriveCtx } from "./ctx";
 
 export function runActivations(ctx: DeriveCtx): void {
@@ -48,7 +49,7 @@ export function runActivations(ctx: DeriveCtx): void {
   ], "Alapképzettségek");
 
   if (race) pushActivation(null, 1, race.cost, race.grants, `Faj: ${rec.race}`);
-  const klass = db.classes[rec.class];
+  const klass = customClassActive(rec) ?? db.classes[rec.class];
   if (klass) {
     // Resolve the class's specialization choice tree (override/additive + nested) into grants.
     const classGrants = resolveChoiceGrants(klass.grants, klass.baseSkills, klass.choices, rec.selections);
