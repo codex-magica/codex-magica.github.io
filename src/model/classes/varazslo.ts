@@ -29,7 +29,7 @@ export const Varázsló: ClassDef = {
     choice("iskola", "Iskola", "additive", [
       opt("Lar-Dor", [...capSkill(2, "Nekromancia", "Démonológia"), gs("Pszi", 3, "Godoni Örökség"), remove("Pszi", "kyr"), restrict("Belsőszigeti/Északi: Pszi (kyr) helyett Pszi (Godoni Örökség) 3; Nekromancia/Démonológia max 2. fok.")]),
       opt("Pyarroni Varázslórend", [grant({ kind: "tag", tag: "Pyarroni varázslóbot" }, 3), restrict("3. Tsz+ rend; varázslóbot (E = Tsz/3); tiszta asztráltest.")]),
-      opt("Doran", [tag("Dorani varázslóbot"), equip("Élő varázslóbot (1. Tsz)"), restrict("Nekromancia/Démonidézés engedett; bot saját Pszi/Mp-vel.")]),
+      opt("Doran", [tag("Dorani varázslóbot"), equip("Élő varázslóbot (1. Tsz)"), restrict("Nekromancia/Démonológia megengedett; a bot saját Pszivel/Mp-vel bír.")]),
     ]),
   ],
   suggestedAllocation: { HM: 0, Fp: 0, Kp: 15, Mana: 10 },

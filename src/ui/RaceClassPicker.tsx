@@ -132,7 +132,7 @@ const ClassDetail: React.FC<{ def?: ClassDef; custom?: boolean }> = ({ def: c, c
         {c.name} <Text as="span" fontSize="13px" fontWeight={500} color="fgFaint">· {c.cost} KAP</Text>
         {custom && <Text as="span" fontSize="11px" fontWeight={700} color="accentTx" ml="8px" px="7px" py="1px" borderRadius="6px" bg="accentSoft">EGYEDI</Text>}
       </Heading>
-      <Text fontSize="11.5px" color="fgFaint" mb="11px">{custom ? "Minden faj választhatja" : `Engedett fajok: ${c.allowedRaces.join(", ")}`}</Text>
+      <Text fontSize="11.5px" color="fgFaint" mb="11px">{custom ? "Minden faj választhatja" : `Választható fajok: ${c.allowedRaces.join(", ")}`}</Text>
       {g.tags.length > 0 && <Section label="Különleges képességek"><AbilityChips tags={g.tags} /></Section>}
       {g.backgrounds.length > 0 && <Section label="Kapott hátterek"><Chips items={g.backgrounds} /></Section>}
       {g.skills.length > 0 && <Section label="Kapott képzettségek"><Chips items={g.skills} /></Section>}
@@ -169,7 +169,7 @@ const OptionDetail: React.FC<{ option: OptionDef; classTeaches?: { skill: string
       {teaches.length > 0 && <Section label={`Tanított képzettségek${overrides ? " · saját lista" : ""} · ${teaches.length}`}><TeachGroups teaches={teaches} /></Section>}
       {g.allows.length > 0 && <Section label="Tanulható — KM engedélyével"><Chips items={g.allows} /></Section>}
       {option.choices && option.choices.length > 0 && <Section label="További választások"><ChoiceTree choices={option.choices} /></Section>}
-      {empty && <Text fontSize="13px" color="fgFaint">Nincs külön nyereség ehhez a választáshoz.</Text>}
+      {empty && <Text fontSize="13px" color="fgFaint">Ez a választás nem ad külön képességet vagy bónuszt.</Text>}
     </Box>
   );
 };

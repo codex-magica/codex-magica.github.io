@@ -12,11 +12,11 @@ const InventoryQtyModal: React.FC<{ name: string; qty: number; onApply: (n: numb
       title={name || "Mennyiség"}
       readout={<Text as="span" color="accentTx">{qty} db</Text>}
       width="min(340px, 100%)"
-      upLabel="+ Hozzáad"
-      downLabel="− Elvesz"
+      upLabel="+ Hozzáadás"
+      downLabel="− Elvétel"
       onUp={(amt) => apply(qty + amt)}
       onDown={(amt) => apply(qty - amt)}
-      tertiaryLabel={(amount) => `Beállít: ${amount || "0"} db`}
+      tertiaryLabel={(amount) => `Beállítás: ${amount || "0"} db`}
       tertiaryEnabled={(amount) => !!amount}
       onTertiary={(amt) => apply(amt)}
       onClose={onClose}
@@ -52,7 +52,7 @@ export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void 
         </HStack>
         {editing ? (
           <Textarea value={draft ?? ""} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft != null && onSet(draft)} autoFocus rows={Math.max(MIN_LINES, lines.length + 1)}
-            placeholder={"Egy tárgy soronként.\nSzám az elején = mennyiség, pl. „5 fáklya”."}
+            placeholder={"Soronként egy tárgy.\nSzám az elején = mennyiség, pl. „5 fáklya”."}
             bg="fieldBg" borderColor="fieldBd" color="fg" fontSize={FS} lineHeight="1.55" focusBorderColor="accent" resize="vertical" />
         ) : (
           // pad to at least MIN_LINES so the panel keeps a notebook-page height even when near-empty

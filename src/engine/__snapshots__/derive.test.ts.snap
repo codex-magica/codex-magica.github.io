@@ -113,10 +113,10 @@ Object {
       },
       Object {
         "fok": 3,
-        "origSubtype": "fő fegyver",
+        "origSubtype": "főfegyver",
         "percent": undefined,
         "skill": "Fegyverhasználat",
-        "subtype": "fő fegyver",
+        "subtype": "főfegyver",
       },
       Object {
         "fok": 2,
@@ -234,10 +234,10 @@ Object {
       },
       Object {
         "fok": 3,
-        "origSubtype": "fő fegyver",
+        "origSubtype": "főfegyver",
         "percent": undefined,
         "skill": "Fegyverhasználat",
-        "subtype": "fő fegyver",
+        "subtype": "főfegyver",
       },
       Object {
         "fok": 2,
@@ -369,10 +369,10 @@ Object {
       },
       Object {
         "fok": 3,
-        "origSubtype": "fő fegyver",
+        "origSubtype": "főfegyver",
         "percent": undefined,
         "skill": "Fegyverhasználat",
-        "subtype": "fő fegyver",
+        "subtype": "főfegyver",
       },
       Object {
         "fok": 2,
@@ -515,10 +515,10 @@ Object {
     },
     Object {
       "fok": 3,
-      "origSubtype": "fő fegyver",
+      "origSubtype": "főfegyver",
       "percent": undefined,
       "skill": "Fegyverhasználat",
-      "subtype": "fő fegyver",
+      "subtype": "főfegyver",
     },
     Object {
       "fok": 2,
@@ -918,12 +918,12 @@ Object {
       "checkMod": 1,
       "difficulty": "III",
       "fok": 3,
-      "origSubtype": "fő fegyver",
+      "origSubtype": "főfegyver",
       "parent": undefined,
       "percent": undefined,
       "placeholder": true,
       "skill": "Fegyverhasználat",
-      "subtype": "fő fegyver",
+      "subtype": "főfegyver",
       "unmetAttrs": Array [
         "Gyorsaság",
         "Ügyesség",
@@ -8174,7 +8174,7 @@ Object {
     },
     Object {
       "atLevel": 1,
-      "message": "Vallásismeret: 4. fok elérve — válassz +1 tulajdonságot (Intelligencia, Asztrál).",
+      "message": "Vallásismeret: 4. fok elérve — válaszd ki, melyik tulajdonság kapjon +1-et (Intelligencia, Asztrál).",
       "severity": "info",
     },
     Object {
@@ -23220,7 +23220,7 @@ Object {
       "allSkills": undefined,
       "category": undefined,
       "skill": "Művészetek",
-      "subtype": "Rajz",
+      "subtype": "rajz",
       "uptoLevel": 4,
     },
   ],
@@ -23287,7 +23287,7 @@ Object {
     },
     Object {
       "atLevel": 1,
-      "message": "Megkötés: Nekromancia/Démonidézés engedett; bot saját Pszi/Mp-vel.",
+      "message": "Megkötés: Nekromancia/Démonológia megengedett; a bot saját Pszivel/Mp-vel bír.",
       "severity": "info",
     },
     Object {

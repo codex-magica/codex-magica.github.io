@@ -44,7 +44,7 @@ export const SyncConflictModal: React.FC<{
 }> = ({ conflict, remaining, onResolve, onClose }) => (
   <ModalShell onClose={onClose} width="min(440px, 100%)" zIndex={60}>
     <Box p="22px">
-      <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>Szinkron-ütközés</Heading>
+      <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>Szinkronütközés</Heading>
       <Text fontSize="14px" color="muted" lineHeight="1.55" mb={4}>
         <Text as="span" fontWeight={700} color="fg">{conflict.local.name}</Text> ezen az eszközön és egy másik eszközön is
         módosult azóta, hogy utoljára szinkronizálva volt. Melyik változat maradjon?

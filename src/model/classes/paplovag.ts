@@ -15,7 +15,7 @@ export const Paplovag: ClassDef = {
   ],
   baseSkills: [
     gs("Vallásismeret", 3),
-    weaponChoice("fő fegyver", 3),
+    weaponChoice("főfegyver", 3),
     weaponChoice("másodfegyver", 2), // book: "Fegyverhasználat vagy Pajzshasználat" — set to Fegyverhasználat (TODO)
     gs("Fájdalomtűrés", 2),
     gs("Hadvezetés", 2),
@@ -36,7 +36,7 @@ export const Paplovag: ClassDef = {
       opt("Dreina-paplovag (Oroszlánszív)", [...teach("Értékbecslés", "Jog/törvénykezés", "Politika/diplomácia"), teachSub("Szakma", "birtokigazgatás"), teachSub("Szakma", "pénzügyek"), gs("Számtan/Mértan", 2), gs("Szakma", 2, "birtokigazgatás vagy pénzügyek"), gs("Jog/törvénykezés", 2), gs("Politika/diplomácia", 2), gs("Kultúra", 2, "saját"), gs("Nyelvtudás", 2, "második nyelv"), equip("Acél teljesvértezet, sisak, acélpajzs, lovagkard")]),
       opt("Krad-paplovag (Aranykör lovag)", [...teach("Jog/törvénykezés", "Térképészet"), gs("Írás/olvasás", 3), gs("Történelem", 3), gs("Térképészet", 2), gs("Legendaismeret", 2), gs("Számtan/Mértan", 2), gs("Kultúra", 2, "saját"), gs("Nyelvtudás", 2, "második nyelv"), equip("Acél félvértezet, sisak, acélpajzs, hosszúkard")]),
       opt("Ranagol-paplovag", [...teach("Méregkeverés/semlegesítés", "Alkímia", "Orvtámadás", "Kínzás"), gs("Fegyverhasználat", 2, "nyeles fegyverek"), gs("Élettan", 2), gs("Kínzás", 2), gs("Orvtámadás", 2), gs("Méregkeverés/semlegesítés", 2), gs("Herbalizmus", 1), gs("Alkímia", 1), equip("Acél félvértezet, acélpajzs, lovagkard, nehézlovas kopja")]),
-      opt("Sogron-paplovag", [tag("Tűzmágia Kegy-pontból"), ...teach("Hajózás", "Térképészet", "Tapasztalati mágia", "Csomózás", "Ősi nyelv", "Taktika"), gs("Tapasztalati mágia", 2, "tűzvarázsló"), gs("Taktika", 2), gs("Hadvezetés", 2), equip("Lángkard + acél pikkelyvértezet + kobra sisak"), restrict("Tűzmágia Kegy pontból; 3. fok fegyver: lángkard.")]),
+      opt("Sogron-paplovag", [tag("Tűzmágia Kegy-pontból"), ...teach("Hajózás", "Térképészet", "Tapasztalati mágia", "Csomózás", "Ősi nyelv", "Taktika"), gs("Tapasztalati mágia", 2, "tűzvarázsló"), gs("Taktika", 2), gs("Hadvezetés", 2), equip("Lángkard + acél pikkelyvértezet + kobra sisak"), restrict("Tűzmágia Kegy-pontból; Fegyverhasználat 3. fokon: lángkard.")]),
       opt("Uwel-paplovag", [...teach("Pusztítás", "Jog/törvénykezés"), gs("Térképészet", 2), gs("Jog/törvénykezés", 2), gs("Pusztítás", 2), gs("Számtan/Mértan", 2), gs("Élettan", 2), equip("Acél félvértezet + sisak")]),
     ]),
   ],

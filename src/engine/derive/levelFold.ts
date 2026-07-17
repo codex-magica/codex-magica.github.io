@@ -84,7 +84,7 @@ function applySkillPurchases(ctx: DeriveCtx, L: number, lvlRec: LevelRecord): vo
     // to a concrete weapon for higher foks.
     const lvl0 = def.branch?.[0];
     if (lvl0?.branchAbove != null && sp.parent == null && lvl0.options?.some((o) => o.name === effSub) && sp.to > lvl0.branchAbove)
-      diag("warn", `${sp.skill} (${effSub}): a kategória legfeljebb ${lvl0.branchAbove}. fok — a magasabb fokhoz konkrét fegyverre kell ágazni.`, L);
+      diag("warn", `${sp.skill} (${effSub}): a kategória legfeljebb ${lvl0.branchAbove}. fok — a magasabb fokhoz konkrét fegyvert kell választani.`, L);
     // A non-variant purchase that doesn't raise the fok is a phantom (e.g. an earlier level now reaches
     // it) — flag it for pruning and SKIP it: applying it would wrongly LOWER the skill to its stale
     // target (raise L1 to 5 while L2 still says "to 4" → fok must stay 5 until the prune removes it).
@@ -136,7 +136,7 @@ function applyFok4AndPaths(ctx: DeriveCtx, L: number): void {
       effective[choice] += 1;
       ctx.addProv(choice as string, `skillFok4 (${o.skill}) L${L}`, 1);
     } else {
-      diag("info", `${o.skill}: 4. fok elérve — válassz +1 tulajdonságot (${rAttrs.join(", ")}).`, L);
+      diag("info", `${o.skill}: 4. fok elérve — válaszd ki, melyik tulajdonság kapjon +1-et (${rAttrs.join(", ")}).`, L);
     }
   }
 
@@ -218,7 +218,7 @@ function applyHm(ctx: DeriveCtx, L: number, lvlRec: LevelRecord | undefined, hmF
   }
   ctx.hmGrantedByLevel.push(hmFromSkills);
   if (grantedAssigned > hmFromSkills)
-    diag("warn", `${L}. szint: ${grantedAssigned - hmFromSkills} HM túl van osztva (csak ${hmFromSkills} kapott HM jár).`, L);
+    diag("warn", `${L}. szint: ${grantedAssigned - hmFromSkills} HM-mel több van elosztva, mint amennyi jár (${hmFromSkills} kapott HM).`, L);
   else if (grantedAssigned < hmFromSkills)
     diag("info", `${L}. szint: ${hmFromSkills - grantedAssigned} kapott HM még nincs elosztva (KÉ/TÉ/VÉ/CÉ).`, L);
 }

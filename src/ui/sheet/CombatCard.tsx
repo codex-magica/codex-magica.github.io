@@ -85,7 +85,7 @@ export const CombatCard: React.FC<{
                   as: "button" as const,
                   type: "button",
                   onClick: t.onClick,
-                  title: t.icon ? (activeRow?.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági kalkulátor") : "Hogyan számolódik?",
+                  title: t.icon ? (activeRow?.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági harc kalkulátor") : "Hogyan számolódik?",
                   _hover: { borderColor: "accent" },
                 }
               : {})}

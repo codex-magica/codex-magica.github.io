@@ -10,11 +10,11 @@ export const Harcos: ClassDef = {
   name: "Harcos",
   cost: 5,
   allowedRaces: ALL,
-  grants: [...teach("Fegyverhasználat", "Fegyverismeret", "Fájdalomtűrés", "Harctéri gyakorlat", "Hadvezetés", "Harci láz", "Pajzshasználat", "Pusztakezes harc", "Taktika", "Vértviselet", "Lélektan", "Lovaglás", "Állatismeret", "Futás", "Úszás", "Számtan/Mértan", "Térképészet", "Mászás", "Esés", "Akrobatika"), teachSub("Művészetek", "Rajz")],
+  grants: [...teach("Fegyverhasználat", "Fegyverismeret", "Fájdalomtűrés", "Harctéri gyakorlat", "Hadvezetés", "Harci láz", "Pajzshasználat", "Pusztakezes harc", "Taktika", "Vértviselet", "Lélektan", "Lovaglás", "Állatismeret", "Futás", "Úszás", "Számtan/Mértan", "Térképészet", "Mászás", "Esés", "Akrobatika"), teachSub("Művészetek", "rajz")],
   choices: [
     choice("iskola", "Iskola", "override", [
-      opt("Általános (iskolázatlan)", [
-        weaponChoice("fő fegyver", 3),
+      opt("Általános", [
+        weaponChoice("főfegyver", 3),
         weaponChoice("másodfegyver", 2),
         weaponChoice("harmadik fegyver", 2),
         weaponChoice("negyedik fegyver", 2),
@@ -34,7 +34,7 @@ export const Harcos: ClassDef = {
         grant({ kind: "tag", tag: "A Földanya Szolgálója" }, 6),
         grant({ kind: "resetTeaching" }),
         ...teachCat(4, "Harci", "Alvilági", "Világi", "Szociális"),
-        restrict("Bármely nem Misztikus/Tudományos képzettség 4. fokú oktatóval, KM döntése és törzsi tudás szerint. 5. Tsz feletti próba után: Vallásismeret tanulható + Kegyelt háttér."),
+        restrict("Bármely nem Misztikus/Tudományos képzettség 4. fokú oktatóval, KM döntése és törzsi tudás szerint. 5. Tsz+: sikeres próba után Vallásismeret tanulható + Kegyelt háttér."),
         gs("Fegyverhasználat", 3, "emrelin kard"),
         gs("Fegyverhasználat", 2, "hajítófegyverek"),
         gs("Fegyverhasználat", 2, "íjak"),
@@ -61,7 +61,7 @@ export const Harcos: ClassDef = {
         ...teachCat(4, "Harci", "Alvilági", "Világi", "Szociális", "Tudományos"),
         ...costMult(1.5, "Szociális", "Alvilági", "Tudományos"),
         ...forbidCat("Misztikus"),
-        weaponChoice("fő fegyver", 3),
+        weaponChoice("főfegyver", 3),
         weaponChoice("másodfegyver", 2),
         weaponChoice("harmadik fegyver", 2),
         gs("Fájdalomtűrés", 3),
@@ -80,7 +80,7 @@ export const Harcos: ClassDef = {
       ]),
       opt("Erigowi számszeríjász", [
         ...teachOnly("Akrobatika", "Csapdaállítás", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Futás", "Hadvezetés", "Harctéri gyakorlat", "Jelbeszéd", "Lélektan", "Mászás", "Mechanika", "Nyomolvasás", "Számtan/Mértan", "Taktika", "Térképészet", "Úszás", "Vadonjárás"),
-        teachSub("Művészetek", "Rajz"),
+        teachSub("Művészetek", "rajz"),
         gs("Fegyverhasználat", 3, "vadász számszeríj"),
         gs("Fegyverhasználat", 2, "egykezes kardok"),
         gs("Fegyverismeret", 2),
@@ -115,8 +115,8 @@ export const Harcos: ClassDef = {
       ]),
       opt("Predoci vértes", [
         ...teachOnly("Állatismeret", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Idomítás", "Írás/olvasás", "Kultúra", "Lélektan", "Lovaglás", "Mászás", "Párbaj", "Számtan/Mértan", "Taktika", "Térképészet", "Udvari etikett/intrika", "Úszás", "Vértviselet"),
-        teachSub("Művészetek", "Rajz"),
-        teachSub("Művészetek", "Irodalom"),
+        teachSub("Művészetek", "rajz"),
+        teachSub("Művészetek", "irodalom"),
         gs("Fegyverhasználat", 3, "nehézlovas kopja"),
         gs("Fegyverhasználat", 2, "egykezes kardok"),
         gs("Fegyverhasználat", 2, "tőr jellegű fegyverek"),
@@ -131,7 +131,7 @@ export const Harcos: ClassDef = {
         gs("Állatismeret", 2, "hátas állatok"),
         bg("Nemesi vér"),
         equip("Predoci rákozott vért + nehézlovas kopja + egyeneskard + telivér mén"),
-        restrict("Nincs kezdő CÉ; sosem fejleszthet Célzóértéket."),
+        restrict("Nincs kezdő CÉ; a CÉ sosem fejleszthető."),
       ]),
     ]),
   ],

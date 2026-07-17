@@ -257,7 +257,7 @@ Object {
   ],
   "inventory": Array [
     Object {
-      "name": "Iskola hagyományos fegyvere(rei)",
+      "name": "Az iskola hagyományos fegyvere(i)",
       "qty": undefined,
     },
     Object {
@@ -7644,7 +7644,7 @@ Object {
       "allSkills": undefined,
       "category": undefined,
       "skill": "Művészetek",
-      "subtype": "Rajz",
+      "subtype": "rajz",
       "uptoLevel": 4,
     },
     Object {

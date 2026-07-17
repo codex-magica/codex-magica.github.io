@@ -151,7 +151,7 @@ export const WeaponModal: React.FC<{ weapon: WeaponModalState; onClose: () => vo
       <ModalHeader onClose={onClose} closeSize="md" px="26px" pt="20px" pb="14px">
         <Heading as="h3" fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg">{weapon.name}</Heading>
         <Text mt="3px" fontFamily="system-ui" fontSize="12px" color="fgFaint">
-          {isMelee ? "Közelharci kalkulátor" : "Távolsági kalkulátor"}
+          {isMelee ? "Közelharci kalkulátor" : "Távolsági harc kalkulátor"}
           {weapon.dmg ? ` · Sebzés: ${weapon.dmg}` : ""}
           {weapon.range ? ` · Lőtáv: ${weapon.range}` : ""}
         </Text>

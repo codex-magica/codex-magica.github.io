@@ -136,7 +136,7 @@ export const CompanionModal: React.FC<{ companion: Companion; onSave: (c: Compan
             {/* live vitals */}
             <HStack gap="16px" align="flex-end" mb="16px">
               <Box flex="1 1 0"><VitalBar label="Életerő" cur={epCur} max={epMaxN} token={VIT_TOKEN.hp} onOpen={() => setPad("ep")} /></Box>
-              <Box flex="1 1 0"><VitalBar label="Fájdalom" cur={fpCur} max={fpMaxN} token={VIT_TOKEN.fp} onOpen={() => setPad("fp")} /></Box>
+              <Box flex="1 1 0"><VitalBar label="Fájdalomtűrés" cur={fpCur} max={fpMaxN} token={VIT_TOKEN.fp} onOpen={() => setPad("fp")} /></Box>
             </HStack>
 
             {/* the combat trio */}

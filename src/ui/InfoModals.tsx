@@ -23,7 +23,7 @@ function combatBreakdown(
     if (c.source.startsWith("HM ")) hm += c.amount; // "HM (vett) L2" / "HM (kapott) L3" → one grouped line
     else parts.push({ label: c.source, value: c.amount });
   }
-  if (hm !== 0) parts.push({ label: "HM elosztás", value: hm });
+  if (hm !== 0) parts.push({ label: "HM-elosztás", value: hm });
   const residual = total - parts.reduce((a, p) => a + p.value, 0);
   if (residual !== 0 || parts.length === 0) parts.push({ label: info.residualLabel, value: residual });
   return parts;
@@ -85,7 +85,7 @@ export const CombatInfoModal: React.FC<{ statKey: string; derived: DerivedCharac
 const statSourceLabel = (source: string): string =>
   source === "alap" ? "Alap (pontelosztás)"
   : source.replace(/^kap L(\d+)$/, "KAP-vásárlás ($1. szint)")
-      .replace(/^km L(\d+)$/, "KM módosítás ($1. szint)")
+      .replace(/^km L(\d+)$/, "KM-kiigazítás ($1. szint)")
       .replace(/^age L(\d+)$/, "Életkor ($1. szint)")
       .replace(/^race L(\d+)$/, "Faji módosító ($1. szint)")
       .replace(/^skillFok4 \((.+)\) L(\d+)$/, "$1 4. fok (+1)");

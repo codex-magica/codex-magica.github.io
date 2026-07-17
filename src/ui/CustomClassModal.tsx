@@ -85,24 +85,24 @@ export const CustomClassModal: React.FC<{ initial?: ClassDef; onSave: (def: Clas
             {nameCollision && <Text fontSize="11px" color="bad" mt="4px">Ez egy alapkaszt neve — válassz másikat.</Text>}
           </Box>
           <Box w="120px">
-            <Text fontFamily="ui" fontSize="12px" color="muted" mb="4px">KAP költség</Text>
+            <Text fontFamily="ui" fontSize="12px" color="muted" mb="4px">KAP-költség</Text>
             <Input {...field} value={cost} onChange={(e) => setCost(e.target.value)} inputMode="numeric" w="100%" textAlign="right" sx={{ fontVariantNumeric: "tabular-nums" }} />
           </Box>
         </HStack>
 
         <Box fontSize={FS_SUB} fontWeight={700} color="muted" pb="3px" mb="9px" borderBottom="1px solid" borderColor="hair">
-          Juttatások — kapott képzettségek, oktatás, szinthez kötött bónuszok
+          Kapott képzettségek és bónuszok — oktatók, szinthez kötött sorok
         </Box>
         {rows.map((r) => (
           <RowEditor key={r.id} row={r} onChange={(p) => patch(r.id, p)} onRemove={() => remove(r.id)} />
         ))}
         <Button variant="outline" size="sm" w="100%" borderColor="fieldBd" color="accentTx" mt="2px"
           _hover={{ borderColor: "accent", bg: "accentSoft" }} onClick={add}>
-          + Új juttatás
+          + Új sor
         </Button>
 
         <HStack justify="space-between" align="center" mt="18px" gap="10px">
-          <Text fontFamily="ui" fontSize="12px" color="fgFaint">{grantCount} juttatás · {parseInt(cost, 10) || 0} KAP</Text>
+          <Text fontFamily="ui" fontSize="12px" color="fgFaint">{grantCount} tétel · {parseInt(cost, 10) || 0} KAP</Text>
           <HStack gap="8px">
             <Button variant="outline" size="sm" borderColor="hair" color="muted" onClick={onClose}>Mégse</Button>
             <Button size="sm" bg="accent" color="onAccent" isDisabled={!canSave} _hover={{ opacity: 0.9 }} onClick={save}>Mentés</Button>

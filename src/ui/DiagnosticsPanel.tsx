@@ -6,7 +6,7 @@ const SeverityBadge: React.FC<{ severity: string }> = ({ severity }) => {
   const warnBg = useColorModeValue("orange.100", "orange.900");
   const warnTx = useColorModeValue("orange.700", "orange.200");
   const styles: Record<string, { bg: string; color: string; label: string }> = {
-    info: { bg: "infoBg", color: "infoTx", label: "Info" },
+    info: { bg: "infoBg", color: "infoTx", label: "Infó" },
     warn: { bg: warnBg, color: warnTx, label: "Figyelem" },
     error: { bg: "bad", color: "accentFg", label: "Hiba" },
   };

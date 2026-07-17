@@ -180,7 +180,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
               <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" letterSpacing=".04em" noOfLines={1}>{subLine}</Text>
             </Box>
             <HStack gap="8px">
-              <BalanceChip caption="KAP maradék" value={kap} numColor={kap < 0 ? "bad" : "accentTx"} bg="chipBg" borderColor="chipBd" />
+              <BalanceChip caption="KAP-maradék" value={kap} numColor={kap < 0 ? "bad" : "accentTx"} bg="chipBg" borderColor="chipBd" />
             </HStack>
           </HStack>
           {showSwitcher && (
@@ -329,7 +329,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
         <ConfirmModal title="Kaszt módosítása" confirmLabel="Kaszt módosítása"
           onConfirm={() => { applyClassChange(pendingClass); setPendingClass(null); }} onClose={() => setPendingClass(null)}>
           A kaszt <b>{record.class}</b> → <b>{pendingClass}</b> módosítása megváltoztatja a kapott
-          képzettségeket, hátteret és a kaszthoz kötött választásokat. A magasabb szinteken elköltött
+          képzettségeket, háttereket és a kaszthoz kötött választásokat. A magasabb szinteken elköltött
           pontok érvénytelenné válhatnak: a fölöslegessé vált képzettségvásárlások automatikusan
           törlődnek, a túlköltött szinteket pedig jelöljük. Folytatod?
         </ConfirmModal>

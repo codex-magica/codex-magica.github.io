@@ -156,7 +156,7 @@ export const LevelGainsPanel: React.FC<Props> = ({ level, record, derived, onGra
       {nothing && <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" py="6px">Nincsenek szintlépési bónuszok ezen a szinten.</Text>}
 
       {/* Pool/Fp grants — informational; already counted in the pool totals on the Pontvásárlás panel. */}
-      {(nonHmGrants.length > 0 || hmGrants.length > 0) && <SubHeader>Képzettségbónuszok (/ szint)</SubHeader>}
+      {(nonHmGrants.length > 0 || hmGrants.length > 0) && <SubHeader>Képzettségbónuszok (szintenként)</SubHeader>}
       {[...nonHmGrants, ...hmGrants].map((g, i) => (
         <HStack key={i} py={ROW_PY} borderBottom="1px solid" borderColor="hairSoft" align="center" spacing="9px">
           <Text fontSize={FS_NAME} color="fg" noOfLines={1}>{g.source}</Text>

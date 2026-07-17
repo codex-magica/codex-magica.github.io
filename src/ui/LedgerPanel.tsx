@@ -135,7 +135,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
         </Box>
       </HStack>
       <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mb={2} lineHeight="1.5">
-        A teljes nyilvántartás (build ledger), tárolási sorrendben — a sorrend számít.
+        A teljes építésnapló, tárolási sorrendben — a sorrend számít.
       </Text>
 
       {raw ? (
@@ -147,7 +147,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
           <Cat>Alap</Cat>
           <Line>Faj: {record.race}  ·  Kaszt: {record.class}</Line>
           {selections.length > 0 && <Line>Választások: {selections.map(([k, v]) => `${k}=${v}`).join("  ·  ")}</Line>}
-          <Cat>Alappont (pointBuy)</Cat>
+          <Cat>Alappontok</Cat>
           <Line>{pointBuy}</Line>
           {adottsag.length > 0 && <><Cat>Adottság</Cat><Line cost={adottsagCost}>{adottsag.join("  ·  ")}</Line></>}
           {overrides.length > 0 && <><Cat>Altípus-átnevezések</Cat>{overrides.map(([k, v], i) => <Line key={i}>{k} → {v}</Line>)}</>}
@@ -160,7 +160,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
               the other starting/grant info; omitted entirely when there are none. */}
           {grantedFok4.length > 0 && (
             <>
-              <Cat>Fok-4 bónuszok (kapott)</Cat>
+              <Cat>4. fok bónuszai (kapott)</Cat>
               {grantedFok4.map((b, i) => (
                 <Line key={i} n={i + 1} tag={STAT_SHORT[b.stat as Stat]}>
                   {b.skill}{b.subtype ? ` (${b.subtype})` : ""}  ·  +1 {STAT_SHORT[b.stat as Stat]}

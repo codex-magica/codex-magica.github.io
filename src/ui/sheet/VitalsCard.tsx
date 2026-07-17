@@ -63,7 +63,7 @@ export const VitalsCard: React.FC<{
             </Box>
           );
         })}
-        {rows.length === 0 && <Empty>Nincs életerő-tároló.</Empty>}
+        {rows.length === 0 && <Empty>Nincsenek életerő-pontok.</Empty>}
 
         {/* Állapotok — most of the time there are none, so this collapses to a single "+" line and the
             card keeps its size. Each active condition is already folded into the derived values. */}

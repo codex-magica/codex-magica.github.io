@@ -1,7 +1,7 @@
 import { GrantEntry, grant } from "../effects";
 import { choice, opt } from "../choices";
 import {
-  bg, gs, restrict, tag, teach, teachCat, teachOnly, teachSub, weaponChoice,
+  bg, equip, gs, restrict, tag, teach, teachCat, teachOnly, teachSub, weaponChoice,
 } from "../grantDsl";
 import { ClassDef } from "./def";
 
@@ -13,12 +13,15 @@ export const Lovag: ClassDef = {
   grants: [
     bg("Nemesi vér"),
     ...teach("Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Lovaglás", "Párbaj", "Pajzshasználat", "Taktika", "Vértviselet", "Udvari etikett/intrika", "Történelem", "Lélektan", "Állatismeret", "Írás/olvasás", "Kultúra", "Nyelvtudás", "Számtan/Mértan", "Térképészet", "Élettan", "Esés", "Fájdalomtűrés"),
-    teachSub("Művészetek", "Rajz"),
+    teachSub("Művészetek", "rajz"),
+    // Előny II: every knight owns their armor and knightly weaponry, free (Marico's lighter
+    // pikkelyvért cap is carried on that option's restrict).
+    equip("Saját vértezet (max. félvértezet) + lovagi fegyverzet (mibenléte a KM döntése)"),
     restrict("Célzófegyvert és nemtelen hajítófegyvert elutasít."),
   ],
   choices: [
     choice("rend", "Lovagrend", "override", [
-      opt("Általános lovag", [...lovagBase(), gs("Vértviselet", 3), gs("Párbaj", 2), gs("Állatismeret", 2, "hátas állatok"), weaponChoice("harmadik fegyver", 2)]),
+      opt("Általános", [...lovagBase(), gs("Vértviselet", 3), gs("Párbaj", 2), gs("Állatismeret", 2, "hátas állatok"), weaponChoice("harmadik fegyver", 2)]),
       opt("Feketerendek", [
         grant({ kind: "tag", tag: "Ranagol beavatottja" }, 6),
         ...teachOnly("Állatismeret", "Élettan", "Esés", "Fájdalomtűrés", "Fegyverhasználat", "Fegyverismeret", "Hadvezetés", "Harctéri gyakorlat", "Heraldika", "Írás/olvasás", "Kultúra", "Lélektan", "Lovaglás", "Művészetek", "Nyelvtudás", "Ősi nyelv", "Pajzshasználat", "Párbaj", "Pszi", "Pusztítás", "Számtan/Mértan", "Taktika", "Térképészet", "Történelem", "Udvari etikett/intrika", "Vértviselet"),
@@ -87,7 +90,7 @@ export const Lovag: ClassDef = {
 // The shared base for Lovag schools (override class — each school is base + signature deltas).
 function lovagBase(): GrantEntry[] {
   return [
-    weaponChoice("fő fegyver", 3),
+    weaponChoice("főfegyver", 3),
     weaponChoice("másodfegyver", 2),
     gs("Harctéri gyakorlat", 2),
     gs("Fegyverismeret", 2),

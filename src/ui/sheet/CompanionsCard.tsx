@@ -34,7 +34,7 @@ export const CompanionsCard: React.FC<{ companions: Companion[]; onSet: (compani
         </Flex>
 
         {companions.length === 0 ? (
-          <Text fontFamily="ui" fontSize="11.5px" color="fgFaint" py="3px">Nincs társ állat.</Text>
+          <Text fontFamily="ui" fontSize="11.5px" color="fgFaint" py="3px">Nincs társállat.</Text>
         ) : (
           companions.map((c) => (
             <Box key={c.id} role="button" tabIndex={0} cursor="pointer" onClick={() => setEditing(c)}

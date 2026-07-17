@@ -438,7 +438,7 @@ export function skillModalContent(name: string, own?: { fok: number; percent?: n
     name,
     sub: skillModalSub(name, homebrew),
     body: skillModalBody(name, homebrew),
-    levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}. fok` : undefined,
+    levelStrip: percent != null ? `A te értéked: ${percent}%` : fok > 0 ? `A te fokod: ${fok}.` : undefined,
     currentFok: percent == null && fok > 0 ? fok : undefined,
   };
 }

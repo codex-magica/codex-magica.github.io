@@ -15,7 +15,7 @@ const BackArrow = (
 const headerFor = (mode: CreatorMode, r: CharacterRecord) => {
   const lvl = r.levels.length;
   if (mode === "create") return { title: "Új karakter", sub: "Karakteralkotó · 1. szint", primary: "Karakter létrehozása", primaryShort: "Létrehozás" };
-  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szint megerősítése", primaryShort: "Megerősítés" };
+  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szintlépés véglegesítése", primaryShort: "Véglegesítés" };
   return { title: "Karakter szerkesztése", sub: `${r.name} · ${r.race} ${r.class} · ${lvl}. szint`, primary: "Mentés", primaryShort: "Mentés" };
 };
 

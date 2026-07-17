@@ -296,7 +296,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       )}
       {onSetHomebrew && homebrew && (
         <Text mt="6px" fontFamily="system-ui" fontSize="10.5px" color="fgFaint" lineHeight="1.5">
-          Képzettség-átdolgozás: százalékos képzettségek fokban, Éberség összevonás. Új karakterek alapból ezt kapják.
+          Képzettség-átdolgozás: százalékos képzettségek fokban, összevonás Éberséggé. Új karakterek alapból ezt kapják.
         </Text>
       )}
     </>

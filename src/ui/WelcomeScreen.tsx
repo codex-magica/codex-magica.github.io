@@ -210,13 +210,13 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
               : sync.status === "connecting"
               ? "Szinkronizálás…"
               : sync.status === "error"
-              ? "Szinkron hiba – újracsatlakozás"
+              ? "Szinkronhiba — koppints az újracsatlakozáshoz"
               : "Google-szinkron bekapcsolása"}
           </Box>
           <Text as="span" opacity={0.5}>·</Text>
           <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
           <Text as="span" opacity={0.5}>·</Text>
-          <Text as="span">{records.length} / 12 hely felhasználva</Text>
+          <Text as="span">{records.length} / 12 hely foglalt</Text>
         </HStack>
         <input
           ref={fileInputRef}

@@ -72,7 +72,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
     <Box>
       <PanelHeading title="Pontvásárlás" level={level} trailing={<KapReadout kap={kap} />} />
       <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={suggested ? 1 : 2} maxW="62ch">
-        Közös KAP-ból (Int + 50 − hátterek) a Képzettségek panellel.
+        A KAP-keret közös a Képzettségek panellel (Int + 50 − hátterek).
       </Text>
       {suggested && (
         <Text fontFamily="system-ui" fontSize="12px" lineHeight="1.5" color="fgFaint" mb={2} maxW="62ch">
@@ -174,7 +174,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
         <HStack py={ROW_PY} borderBottom="1px solid" borderColor="hair" align="center" spacing="9px">
           <Select
             {...selectStyle}
-            placeholder="válassz tulajdonságot…"
+            placeholder="Válassz tulajdonságot…"
             value=""
             onChange={(e) => {
               if (e.target.value) {

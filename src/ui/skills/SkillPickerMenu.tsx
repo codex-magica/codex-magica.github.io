@@ -57,7 +57,7 @@ export const TanulButton: React.FC<{
         onClick={() => (relearn ? setOpen((o) => !o) : onLearn())}
       >
         <OpenBookIcon />
-        Tanul
+        Tanulás
       </Box>
       {open && (
         <QuietPopover onClose={() => setOpen(false)} p="8px" title="Hányadik fokról indul?"
@@ -125,7 +125,7 @@ export const RelearnMenu: React.FC<{ options: SkillDef[]; onPick: (skill: string
       {open && (
         <QuietPopover onClose={close} p="8px" minW="220px" maxH="320px"
           title={skill == null ? "Melyiket tanulod újra?" : `${skill} — hányadik fokról indul?`}
-          hint={skill == null ? undefined : "1 fölött a korábbi fokokat máshol már megtanulta — azok ingyenesek, és az új ág nem csökkenthető alájuk."}>
+          hint={skill == null ? undefined : "1 fölött a korábbi fokokat máshol már megtanultad — azok ingyenesek, és az új ág nem csökkenthető alájuk."}>
           {skill == null
             ? options.map((d) => <MenuOption key={d.name} onClick={() => setSkill(d.name)}>{d.name}</MenuOption>)
             : <StartFokButtons onPick={(n) => { onPick(skill, n); close(); }} />}

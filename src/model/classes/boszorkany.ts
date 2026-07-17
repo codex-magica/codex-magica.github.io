@@ -30,10 +30,10 @@ export const Boszorkány: ClassDef = {
   ],
   choices: [
     choice("rend", "Szekta", "additive", [
-      opt("Liviniai Gyülekezet", [grant({ kind: "tag", tag: "Morgena beavatás" }, 10), tag("Mágia elleplezése"), ...teachAt(2, "Politika/diplomácia", "Jog/törvénykezés", "Színészet", "Szakma", "Rúnamágia", "Drágakőmágia"), teachSub("Ősi nyelv", "kyr", 2), restrict("10. Tsz+: Morgena → Kegyelt; egyedi 'Mágia elleplezése'.")]),
+      opt("Liviniai Gyülekezet", [grant({ kind: "tag", tag: "Morgena beavatás" }, 10), tag("Mágia elleplezése"), ...teachAt(2, "Politika/diplomácia", "Jog/törvénykezés", "Színészet", "Szakma", "Rúnamágia", "Drágakőmágia"), teachSub("Ősi nyelv", "kyr", 2), restrict("10. Tsz+: Morgena → Kegyelt; egyedi „Mágia elleplezése”.")]),
       opt("Maida Saluguas", [...teachAt(2, "Politika/diplomácia", "Jog/törvénykezés", "Színészet", "Rúnamágia"), teachSub("Ősi nyelv", "aquir", 2), teachSub("Ősi nyelv", "godoni", 2), tag("Bármely Alvilági képzettség oktató nélkül tanulható"), restrict("Kráni kötődés.")]),
       opt("Stella Prosylens", [grant({ kind: "tag", tag: "Noir beavatás" }, 5), bg("Sugallat"), restrict("5. Tsz+: Noir → Kegyelt.")]),
-      opt("Alidaxi Boszorkányrend", [...teachFrom(4, 3, "Rúnamágia", "Drágakőmágia"), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "kyr", uptoLevel: 3 }, 4), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "crantai", uptoLevel: 3 }, 4), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "óelf", uptoLevel: 3 }, 4), restrict("3. Tsz+ a fenti kedvezmény; mágikus tárgy ajándék.")]),
+      opt("Alidaxi Boszorkányrend", [...teachFrom(4, 3, "Rúnamágia", "Drágakőmágia"), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "kyr", uptoLevel: 3 }, 4), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "crantai", uptoLevel: 3 }, 4), grant({ kind: "teachingDiscount", skill: "Ősi nyelv", subtype: "óelf", uptoLevel: 3 }, 4), restrict("3. Tsz+ a fenti kedvezmény; mágikus tárgyat kap ajándékba.")]),
       opt("Ezer Fátyol Nővérei", [tag("Ezer fátyol tánca"), tag("Táncmágia erősítése"), tag("Varázstárolás fátylakban"), remove("Szexuális kultúra"), restrict("Nincs kezdő Szexuális kultúra; Táncmágia, fátyol-tárolás.")]),
     ]),
   ],

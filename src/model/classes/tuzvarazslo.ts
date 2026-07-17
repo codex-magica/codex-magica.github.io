@@ -30,11 +30,15 @@ export const Tűzvarázsló: ClassDef = {
     gs("Pszi", 3, "pyarroni"),
   ],
   choices: [
-    choice("rend", "Ordani ág", "additive", [
+    // Renegátok sits on this (school) axis, NOT among the irányzatok: per the book renegades are the
+    // students of renegade teachers outside Ordan — an alternative to the Ordani branches, so filing it
+    // here rules out book-illegal combos like "Tűz Harcosai + Renegátok".
+    choice("rend", "Rend / iskola", "additive", [
       opt("Tűz Hordozói", [restrict("Alapértelmezett ág 5. Tsz alatt; Tűzmágia tudósai.")]),
       opt("Tűz Táplálói", [restrict("Vallási/oktató ág; Sogron Útja (5+ Tsz).")]),
       opt("Tűz Harcosai", [restrict("Harci/védelmi ág; Lángőrök — belépéskor Tapasztalati mágia / Ősi nyelv / Pszi kiképzés.")]),
-      opt("Aschaon Tűzmesterei", [tag("Hatalom Itala"), grant({ kind: "tag", tag: "Lángtetoválás" }, 3), teachSub("Tapasztalati mágia", "Boszorkánymesteri", 3), restrict("Nincs Magasiskola; Mana csak Hatalom Italából; Tapasztalati mágia (Boszorkánymesteri) 3. fokú oktatóval; nőket is felvesz.")]),
+      opt("Aschaon Tűzmesterei", [tag("Hatalom Itala"), grant({ kind: "tag", tag: "Lángtetoválás" }, 3), teachSub("Tapasztalati mágia", "boszorkánymester", 3), restrict("Nincs Magasiskola; Mana csak Hatalom Italából; Tapasztalati mágia (boszorkánymester) 3. fokú oktatóval; nőket is felvesz.")]),
+      opt("Renegátok", [grant({ kind: "classCostDelta", amount: -1 }), restrict("−1 KAP iskolaköltség; nincs fegyver-/vértkorlát; nem tanulhat Godoni Örökséget vagy Tűzmágia magasiskolát; nem lehet szerafista, és irányzatot sem választhat.")]),
     ]),
     choice("iranyzat", "Sogron misztériumának irányzata", "additive", [
       opt("Nincs külön irányzat", [restrict("Az irányzatok jellemzően 5. Tapasztalati szinttől választhatók.")]),
@@ -42,7 +46,6 @@ export const Tűzvarázsló: ClassDef = {
       opt("Sogron Útja", [grant({ kind: "tag", tag: "Sogron pappá szentelés" }, 5), restrict("5. Tsz+: Sogron-pappá válhat (Kegyelt háttér, Vallásismeret 3. fok); nem-isteni mana-módszereit elveszti.")]),
       opt("A Fény Ösvénye", [grant({ kind: "teachingDiscount", skill: "Pszi", subtype: "Godoni Ösvény", uptoLevel: 3 }, 5), restrict("5. Tsz+: Pszi (Godoni Ösvény) 3. fokú oktatói kedvezménnyel.")]),
       opt("Sogronita szerafisták", [grant({ kind: "tag", tag: "Szeráfi alku" }, 10), ...teachFrom(6, 4, "Démonológia"), restrict("6.–10. Tsz közti képzés alatt Démonológia sajátítható el; 10. Tsz-re legalább 3. fok kell.")]),
-      opt("Renegátok", [grant({ kind: "classCostDelta", amount: -1 }), restrict("−1 KAP iskolaköltség; nincs fegyver-/vértkorlát; nem tanulhat Godoni Örökséget vagy Tűzmágia magasiskolát; nem lehet szerafista.")]),
     ]),
   ],
   suggestedAllocation: { HM: 7, Fp: 5, Kp: 10, Mana: 6 },
