@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Flex, Heading, Text, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "./ParchPanel";
@@ -8,6 +8,8 @@ import { Markdown } from "./Markdown";
 import { TABS, tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
 import { stripTitleHeading } from "../data/magicRules";
 import { SearchPalette, SearchButton, SearchEntry, prewarmSearchIndex } from "./CompendiumSearch";
+import { useIsDesktop } from "./useIsDesktop";
+import { ScrollX } from "./ScrollX";
 import { OpenBookIcon } from "./icons";
 import { SKILLS, SkillDef } from "../model/skills";
 import { rulesHomebrew } from "../model/rulesVariants";
@@ -112,7 +114,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   const [searchOpen, setSearchOpen] = useState(false);
   // mobile (< md): the sidebar becomes a slide-in drawer behind a header menu button
   const [navOpen, setNavOpen] = useState(false);
-  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
+  const isMobile = !useIsDesktop();
   const contentRef = useRef<HTMLDivElement>(null);
   // the query outlives a pick (reopening resumes the search) but a dismissal clears it; held in a
   // ref so typing in the palette never re-renders the compendium behind it
@@ -240,7 +242,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         </Box>
         )}
         <ParchPanel p={0} overflow="hidden">
-          {dense ? inner : <Box overflowX="auto">{inner}</Box>}
+          {dense ? inner : <ScrollX>{inner}</ScrollX>}
         </ParchPanel>
         {block.footer && (
           <Text mt="7px" fontSize="12px" lineHeight="1.5" color="fgFaint">{block.footer}</Text>
@@ -254,9 +256,10 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
     onSelectTab(tab);
     setNavOpen(false);
   };
+  // (no search field here — the mobile drawer relies on the header's dedicated search button;
+  // the desktop sidebar prepends its own SearchButton below)
   const navContent = (
     <>
-      <SearchButton onClick={() => { setNavOpen(false); setSearchOpen(true); }} />
       <Box mt="18px" mb="12px">
         <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".16em" textTransform="uppercase" color="fgFaint">Kompendium</Text>
         <Heading as="p" fontSize="21px" fontStyle="italic" fontWeight={600} color="fg" lineHeight="1.1">Tartalom</Heading>
@@ -311,19 +314,20 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       <Flex display={{ base: "flex", md: "none" }} align="center" gap="9px" px="12px" h="55px" flexShrink={0} borderBottom="1px solid" borderColor="hair" bg="page">
         {mobileLeading}
         <Box flex="1 1 auto" />
+        <HeaderIconBtn label="Keresés" onClick={() => setSearchOpen(true)}>
+          <SearchIcon boxSize="15px" />
+        </HeaderIconBtn>
         <HeaderIconBtn label="Tartalomjegyzék" onClick={() => setNavOpen(true)}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <line x1="4" y1="6.5" x2="20" y2="6.5" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17.5" x2="20" y2="17.5" />
           </svg>
-        </HeaderIconBtn>
-        <HeaderIconBtn label="Keresés" onClick={() => setSearchOpen(true)}>
-          <SearchIcon boxSize="15px" />
         </HeaderIconBtn>
         {mobileTrailing}
       </Flex>
 
       {/* Left sidebar navigation (md+) — grouped (Képzettségek · Harc · Mágia · Felszerelés) */}
       <Box as="nav" display={{ base: "none", md: "block" }} w="248px" flexShrink={0} h="100%" overflowY="auto" borderRight="1px solid" borderColor="hair" px="14px" py="20px">
+        <SearchButton onClick={() => setSearchOpen(true)} />
         {navContent}
       </Box>
 
@@ -347,11 +351,12 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         <Box maxW="780px" mx="auto"><Markdown source={chapter.md} /></Box>
         ) : (
         <>
-        <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb={{ base: "18px", md: "4px" }}>
+        <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb="4px">
           <Heading as="h2" fontSize="19px" fontWeight={700} color="fg" textAlign="center">{title}</Heading>
           {headingRules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", headingRules)} />}
         </Box>
-        <Text display={{ base: "none", md: "block" }} fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px">
+        {/* also on phones — where hover cues don't exist, this line is the only hint that rows open */}
+        <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px" px="10px">
           Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
         </Text>
         {tab?.intro && (
@@ -366,7 +371,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
               <Box key={g.group} data-block={g.group}>
                 <GroupHead>{g.group}</GroupHead>
                 <ParchPanel p={0} overflow="hidden">
-                  <Box overflowX="auto"><Box minW="560px">
+                  <ScrollX><Box minW="560px">
                     <Box display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" px={PAD} py="11px" borderBottom="1px solid" borderColor="rule">
                       <Th>Képzettség</Th><Th align="center">Nehéz.</Th><Th>Erős</Th><Th>Gyenge</Th><Th align="right">Tulajdonság</Th>
                     </Box>
@@ -379,7 +384,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
                         <Text textAlign="right" color="accentTx" fontSize="12.5px">{r.attr}</Text>
                       </Box>
                     ))}
-                  </Box></Box>
+                  </Box></ScrollX>
                 </ParchPanel>
               </Box>
             ))}

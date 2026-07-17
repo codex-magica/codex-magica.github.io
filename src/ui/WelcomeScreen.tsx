@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Box, Flex, Heading, HStack, IconButton, Input, Text, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Flex, Heading, HStack, IconButton, Input, Text } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
 import { ConfirmModal } from "./ConfirmModal";
 import { ModalShell } from "./Modal";
 import { QuietPopover } from "./QuietPopover";
+import { useIsDesktop } from "./useIsDesktop";
 import { ZoneBar } from "./ZoneBar";
 import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
@@ -103,7 +104,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
   const menuView = views.find((v) => v.id === menuId);
   const deleteView = views.find((v) => v.id === confirmDeleteId);
   // Desktop: the card menu is a quiet popover anchored at the kebab; phones keep the centred sheet.
-  const menuAsPopover = useBreakpointValue({ base: false, md: true }) ?? false;
+  const menuAsPopover = useIsDesktop();
 
   const menuActions = (v: CardView) => (
     <>
