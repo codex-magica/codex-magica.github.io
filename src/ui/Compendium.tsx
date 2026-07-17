@@ -59,11 +59,11 @@ const NavItem: React.FC<{ active: boolean; prominent?: boolean; onClick: () => v
   </Box>
 );
 // reader-mode sub-item: a block heading nested under the open school, indented, with a rail
-const NavSubItem: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+const NavSubItem: React.FC<{ onClick: () => void; active?: boolean; children: React.ReactNode }> = ({ onClick, active, children }) => (
   <Box as="button" type="button" onClick={onClick} display="block" w="calc(100% + 28px)" textAlign="left" mx="-14px" pl="28px" pr="14px"
-    py={{ base: "8px", md: "5px" }} position="relative" color="muted" fontWeight={500} fontSize={{ base: "14.5px", md: "13.5px" }}
+    py={{ base: "8px", md: "5px" }} position="relative" color={active ? "fg" : "muted"} fontWeight={active ? 700 : 500} fontSize={{ base: "14.5px", md: "13.5px" }}
     transition="background .12s, color .12s" _hover={{ bg: "band", color: "fg" }}>
-    <Box position="absolute" left="16px" top="0" bottom="0" w="1px" bg="hair" />
+    <Box position="absolute" left="16px" top="0" bottom="0" w="1px" bg={active ? "accent" : "hair"} />
     {children}
   </Box>
 );
@@ -206,6 +206,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   // and shows its tables; returning to a spell/skill tab resumes reader view).
   const readerable = tab?.glyph === "spark" || isSkills;
   const [reader, setReader] = useState(false);
+  // scroll-spy: which block heading is currently at the top of the reader — highlights its sub-TOC entry
+  const [activeBlock, setActiveBlock] = useState("");
   const toggleReader = () => {
     setReader((r) => !r);
     contentRef.current?.scrollTo({ top: 0 });
@@ -217,6 +219,30 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
     pendingRef.current = { tab: compTab, block: blockTitle, name };
     setPendingTick((t) => t + 1);
   };
+
+  // Track the block heading currently under the reader's top edge, so the sub-TOC follows the scroll.
+  useEffect(() => {
+    const scroller = contentRef.current;
+    if (!reader || !readerable || !scroller) { setActiveBlock(""); return; }
+    const update = () => {
+      const els = Array.from(scroller.querySelectorAll<HTMLElement>("[data-block]"));
+      if (!els.length) return;
+      const line = scroller.getBoundingClientRect().top + 96; // a touch below the top edge
+      let current = els[0].dataset.block || "";
+      for (const el of els) {
+        if (el.getBoundingClientRect().top - line <= 0) current = el.dataset.block || "";
+        else break;
+      }
+      setActiveBlock((c) => (c === current ? c : current));
+    };
+    update();
+    scroller.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      scroller.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [reader, readerable, compTab, isSkills, homebrew]);
 
   // The tab's clickable rows in book order — the modal's ‹ › steps walk this list across blocks.
   const navRows = blocks.flatMap((b) => b.rows.filter((r) => !!r.body?.length).map((row) => ({ block: b, row })));
@@ -326,7 +352,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
     <React.Fragment key={t.name}>
       <NavItem active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem>
       {compTab === i && readerBlockTitles.map((title) => (
-        <NavSubItem key={title} onClick={() => goBlock(title)}>{title}</NavSubItem>
+        <NavSubItem key={title} active={activeBlock === title} onClick={() => goBlock(title)}>{title}</NavSubItem>
       ))}
     </React.Fragment>
   );
