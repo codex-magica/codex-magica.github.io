@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Box, Heading, HStack, Input, Switch, Text, VStack } from "@chakra-ui/react";
 import { ConfirmModal } from "./ConfirmModal";
 import { CharacterBuilderApi } from "../state/useCharacterBuilder";
+import { emptyLevel } from "../model/character";
 import { derive } from "../engine/derive";
 import { isHomebrew, rulesFor } from "../model/rulesVariants";
 import { RACES } from "../model/races";
@@ -67,6 +68,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   } = api;
 
   const [selectedLevel, setSelectedLevel] = useState(() => record.levels.length); // which level the editor targets (edit mode) — default to the character's current level
+  const [pendingLevelRemove, setPendingLevelRemove] = useState(false); // reverting the last level-up awaits a hard confirm
   const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
   const [pendingCustomClass, setPendingCustomClass] = useState<ClassDef | null>(null); // custom-class switch awaiting confirm
   const [pendingRace, setPendingRace] = useState<string | null>(null); // race change awaiting hard confirm
@@ -135,7 +137,9 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const isLevelup = mode === "levelup";
   const activeLevel = isLevelup ? record.levels.length : Math.min(selectedLevel, record.levels.length);
   const showBase = activeLevel === 1; // creation panels (race/class/attrs/backgrounds) live on level 1 only
-  const showSwitcher = !isLevelup && record.levels.length > 1; // pick which level to edit
+  // Edit mode always shows the level row: pick which level to edit, add a level (szintlépés from the
+  // editor), or revert the last one. Level-up mode pins the fresh level; create is level-1 only.
+  const showSwitcher = mode === "edit";
   const levelHasConflict = (L: number) =>
     (derived.pools.kapBalanceByLevel[L - 1] ?? 0) < 0 || derived.diagnostics.some((d) => d.atLevel === L && d.severity !== "info");
   const kap = derived.pools.kapBalanceByLevel[activeLevel - 1] ?? 0;
@@ -144,6 +148,19 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   // The per-level panels must show skills/pools AS OF the level being edited (not the final state) — else
   // raising a skill at an earlier level would start from its level-N value. Re-derive the record truncated
   // to the active level; for the last level (and level-up) that's the full derived already.
+  // Reverting a level-up: only the LAST level can go (level-ups unwind in order) — dropping the
+  // record's tail level discards everything spent on it; the engine re-derives from what remains.
+  const removeLastLevel = () => {
+    update({ levels: record.levels.slice(0, -1) });
+    setSelectedLevel(Math.max(1, record.levels.length - 1));
+  };
+  // Level-up from the editor: same as the standalone Szintlépés flow — append a fresh empty level
+  // to spend its KAP into, and jump the editor to it. Reversible with the trash chip until saved.
+  const addLevel = () => {
+    update({ levels: [...record.levels, emptyLevel(record.levels.length + 1)] });
+    setSelectedLevel(record.levels.length + 1);
+  };
+
   const isLastLevel = activeLevel >= record.levels.length;
   const truncDerived = useMemo(
     () => (isLastLevel ? null : derive(rulesFor(record), { ...record, levels: record.levels.slice(0, activeLevel) })),
@@ -205,6 +222,26 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
                   </Box>
                 );
               })}
+              {/* szintlépés from the editor: append a fresh level, the chip row extends by one */}
+              <Box as="button" type="button" onClick={addLevel}
+                title="Szintlépés — új szint hozzáadása" aria-label="Új szint hozzáadása"
+                minW="32px" h="29px" px="9px" borderRadius="8px" border="1px solid" borderColor="fieldBd" bg="fieldBg"
+                color="accentTx" fontWeight={700} fontSize="15px" fontFamily="system-ui"
+                display="inline-flex" alignItems="center" justifyContent="center"
+                _hover={{ borderColor: "accent", bg: "accentSoft" }}>
+                +
+              </Box>
+              {/* revert the most recent level-up — the last chip's destructive counterpart */}
+              {record.levels.length > 1 && (
+                <Box as="button" type="button" onClick={() => setPendingLevelRemove(true)}
+                  title={`A legutóbbi szintlépés (${record.levels.length}. szint) visszavonása`}
+                  aria-label="Utolsó szint törlése"
+                  h="29px" px="8px" borderRadius="8px" border="1px solid" borderColor="fieldBd" bg="fieldBg"
+                  color="bad" display="inline-flex" alignItems="center" justifyContent="center"
+                  _hover={{ borderColor: "bad", bg: "badSoft" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>
+                </Box>
+              )}
             </HStack>
           )}
         </ParchPanel>
@@ -328,6 +365,15 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           onPick={(name) => setSelection(specChoice.id, name)}
           onClose={() => setSpecChoice(null)}
         />
+      )}
+
+      {pendingLevelRemove && (
+        <ConfirmModal title="Szintlépés visszavonása" confirmLabel="Szint törlése"
+          onConfirm={() => { removeLastLevel(); setPendingLevelRemove(false); }} onClose={() => setPendingLevelRemove(false)}>
+          A(z) <b>{record.levels.length}. szint</b> törlése elveti az ezen a szinten elköltött KAP-ot:
+          a képzettségvásárlásokat, a HM- és erőforrás-elosztást és a szintlépési bónuszokat. A karakter{" "}
+          <b>{record.levels.length - 1}. szintű</b> lesz. A módosítás a mentéskor válik véglegessé. Folytatod?
+        </ConfirmModal>
       )}
 
       {pendingClass && (
