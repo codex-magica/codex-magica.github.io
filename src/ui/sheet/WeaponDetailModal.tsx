@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Button, Flex, Heading, HStack, Text } from "@chakra-ui/react";
 import { ModalShell, ModalCloseButton } from "../Modal";
 import { ConfirmModal } from "../ConfirmModal";
+import { BodyPart } from "../DetailModal";
 import { FIST, WeaponRowView, masteryLabel } from "../../model/weaponUse";
 import { FS_SUB } from "./primitives";
 
@@ -84,8 +85,9 @@ export const WeaponDetailModal: React.FC<{
         {desc.length > 0 && (
           <>
             <SubHead>Leírás</SubHead>
+            {/* same dispatch as the compendium's weapon modal — tables, fine print, prose markup */}
             {desc.map((p, i) => (
-              <Text key={i} fontSize="13px" color="fg" lineHeight="1.6" mb="8px">{p}</Text>
+              <BodyPart key={i} text={p} />
             ))}
           </>
         )}

@@ -5,6 +5,7 @@ import { DerivedCharacter } from "../engine/types";
 import { COMBAT_INFO, CombatValueInfo } from "../model/combatInfo";
 import { ATTRIBUTE_INFO } from "../model/attributeInfo";
 import { ModalShell } from "./Modal";
+import { Prose } from "./richText";
 
 // The formula parts with substituted values: attribute terms, optional fixed base, then the tracked
 // bonus sources from the engine's provenance — HM allocations grouped into one line, every other source
@@ -28,17 +29,6 @@ function combatBreakdown(
   if (residual !== 0 || parts.length === 0) parts.push({ label: info.residualLabel, value: residual });
   return parts;
 }
-
-// Minimal inline-markdown: renders **bold** spans (the value-ladder range labels), leaves the rest as text.
-const RichText: React.FC<{ text: string }> = ({ text }) => (
-  <>
-    {text.split(/(\*\*[^*]+\*\*)/g).map((seg, i) =>
-      seg.startsWith("**") && seg.endsWith("**")
-        ? <Text as="span" key={i} fontWeight={700} color="accentTx">{seg.slice(2, -2)}</Text>
-        : <React.Fragment key={i}>{seg}</React.Fragment>
-    )}
-  </>
-);
 
 // A small "how it was calculated" card: named parts summing to the total.
 const CalcCard: React.FC<{ parts: { label: string; value: number }[]; totalLabel: string; total: number }> = ({ parts, totalLabel, total }) => (
@@ -108,7 +98,7 @@ export const StatInfoModal: React.FC<{ stat: Stat; derived?: DerivedCharacter; o
       <Box p="20px 22px" overflowY="auto">
         <Text fontSize="17px" fontWeight={700} color="fg">{stat}</Text>
         {derived != null && total != null && <CalcCard parts={parts} totalLabel={stat} total={total} />}
-        <Text fontSize="13.5px" color="fg" lineHeight="1.65" mt={derived ? 0 : "10px"} whiteSpace="pre-wrap"><RichText text={text} /></Text>
+        <Box mt={derived ? 0 : "10px"}><Prose text={text} /></Box>
       </Box>
     </ModalShell>
   );

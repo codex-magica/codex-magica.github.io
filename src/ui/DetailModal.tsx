@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { ModalShell, ModalHeader } from "./Modal";
 import { Markdown } from "./Markdown";
+import { InlineMd, Prose } from "./richText";
 
 export interface ModalState {
   kind: "skill" | "spell" | "rules";
@@ -99,10 +100,12 @@ const StatBlock: React.FC<{ raw: string }> = ({ raw }) => {
 
 // One description block — dispatches on the leading kind-token (stats / table / small) or renders prose.
 // `currentFok`: when set, "N. fok" paragraphs above it are greyed (the character hasn't reached them).
-const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text, currentFok }) => {
+// Exported: the sheet's weapon card renders its description through the same dispatch.
+export const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text, currentFok }) => {
   if (/^stats:/i.test(text)) return <StatBlock raw={text} />;
   if (isTable(text)) return <TableBlock raw={text} />;
   if (/^small:/i.test(text)) {
+    // literal — the asterisks here are footnote markers, not markup
     return (
       <Text mb="11px" fontSize="12.5px" lineHeight="1.5" color="fgFaint" whiteSpace="pre-line">
         {text.replace(/^small:\s*/i, "")}
@@ -116,15 +119,11 @@ const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text, curre
     return (
       <Text mb="13px" fontSize="13.5px" lineHeight="1.65" color={reached ? "fg" : "fgFaint"} opacity={reached ? 1 : 0.55} textAlign="justify">
         <Box as="span" fontWeight={700}>{fok[1]}. fok</Box>
-        {fok[2]}
+        <InlineMd text={fok[2]} />
       </Text>
     );
   }
-  return (
-    <Text mb="13px" fontSize="13.5px" lineHeight="1.65" color="fg" textAlign="justify">
-      {text}
-    </Text>
-  );
+  return <Prose text={text} parProps={{ textAlign: "justify" }} />;
 };
 
 // A single reusable overlay that opens OVER the current screen and closes back to it — it never navigates.

@@ -89,7 +89,8 @@ export const VitalsCard: React.FC<{
             // Tap the row for the condition card; the switch (its own control, outside the tap area)
             // flips it in force / suspended. In force = accent modifiers, a faint rule down the left
             // edge; suspended = greyed and struck through.
-            <Flex key={c.id} align="stretch" gap="4px" ml="-5px" mr="-5px">
+            // ml only: the tap-highlight may bleed left, but the switch must end at the content edge
+            <Flex key={c.id} align="stretch" gap="4px" ml="-5px">
               <Box role="button" tabIndex={0} cursor="pointer" title="Részletek" flex="1 1 auto" minW={0}
                 onClick={() => setViewingId(c.id)}
                 py={ROWPY} pl="8px" pr="3px" borderRadius="6px"

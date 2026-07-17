@@ -85,7 +85,8 @@ export const CombatCard: React.FC<{
     const fixed = w.name === FIST; // the built-in default — not removable, selecting it = bare hands
     const selected = activeRow?.w.name === w.name;
     return (
-      <Flex key={w.name} align="stretch" gap="2px" mx="-5px">
+      // ml only: the tap-highlight may bleed left, but the chevron must end at the content edge
+      <Flex key={w.name} align="stretch" gap="2px" ml="-5px">
         <Box onClick={() => onSetActiveWeapon(fixed || selected ? null : w.name)} role="button" tabIndex={0} cursor="pointer" flex="1 1 auto" minW={0}
           title={fixed ? "Puszta kéz — alapértelmezett" : selected ? "Letétel (puszta kéz)" : "Kézbevétel — a fenti értékek erre váltanak"}
           py={ROWPY} px="5px" borderRadius="7px" bg={selected ? "accentSoft" : undefined}
