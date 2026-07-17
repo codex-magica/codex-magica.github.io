@@ -3,7 +3,7 @@ import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "./ParchPanel";
-import { ModalState } from "./DetailModal";
+import { BodyPart, ModalState } from "./DetailModal";
 import { Markdown } from "./Markdown";
 import { TABS, tabBlocks, TableBlock, TableRow, skillModalBody } from "./compendiumData";
 import { stripTitleHeading } from "../data/magicRules";
@@ -58,6 +58,15 @@ const NavItem: React.FC<{ active: boolean; prominent?: boolean; onClick: () => v
     {children}
   </Box>
 );
+// reader-mode sub-item: a block heading nested under the open school, indented, with a rail
+const NavSubItem: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <Box as="button" type="button" onClick={onClick} display="block" w="calc(100% + 28px)" textAlign="left" mx="-14px" pl="28px" pr="14px"
+    py={{ base: "8px", md: "5px" }} position="relative" color="muted" fontWeight={500} fontSize={{ base: "14.5px", md: "13.5px" }}
+    transition="background .12s, color .12s" _hover={{ bg: "band", color: "fg" }}>
+    <Box position="absolute" left="16px" top="0" bottom="0" w="1px" bg="hair" />
+    {children}
+  </Box>
+);
 
 // slide-in animation for the mobile nav drawer
 const drawerIn = keyframes`from { transform: translateX(-100%); } to { transform: translateX(0); }`;
@@ -90,6 +99,12 @@ const RulesChip: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     <OpenBookIcon size={11} />
     Szabályok
   </Box>
+);
+// the reader-view toggle icon: text lines, like a page of prose
+const ReaderIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+    <line x1="4" y1="5" x2="20" y2="5" /><line x1="4" y1="10" x2="20" y2="10" /><line x1="4" y1="15" x2="20" y2="15" /><line x1="4" y1="20" x2="13" y2="20" />
+  </svg>
 );
 
 // skill catalog for the Képzettségek tab — built per rules variant (base or homebrew), cached
@@ -185,7 +200,45 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   const isSkills = tab?.special === "skills";
   const blocks: TableBlock[] = isSkills || !tab ? [] : tabBlocks(compTab);
 
-  const openRow = (r: TableRow) => onOpenModal({ kind: "spell", name: r.name, sub: r.modalSub, body: r.body || [] });
+  // Reader view ("Olvasó nézet") — the magic-school tabs can swap their tables for a continuous,
+  // book-order document (rules prose + every spell in full). Off by default; resets per tab.
+  // reader mode is GLOBAL — it persists across tab switches (a non-readerable tab just ignores it
+  // and shows its tables; returning to a spell/skill tab resumes reader view).
+  const readerable = tab?.glyph === "spark" || isSkills;
+  const [reader, setReader] = useState(false);
+  const toggleReader = () => {
+    setReader((r) => !r);
+    contentRef.current?.scrollTo({ top: 0 });
+  };
+  // From the modal: switch to the reader scrolled to (and flashing) the entry the modal showed —
+  // rides the same pending-target mechanism the search palette uses.
+  const readInChapter = (blockTitle: string, name: string) => {
+    setReader(true);
+    pendingRef.current = { tab: compTab, block: blockTitle, name };
+    setPendingTick((t) => t + 1);
+  };
+
+  // The tab's clickable rows in book order — the modal's ‹ › steps walk this list across blocks.
+  const navRows = blocks.flatMap((b) => b.rows.filter((r) => !!r.body?.length).map((row) => ({ block: b, row })));
+  const openRowAt = (i: number) => {
+    const { block, row } = navRows[i];
+    const inBlock = block.rows.filter((r) => !!r.body?.length);
+    const bi = inBlock.indexOf(row);
+    onOpenModal({
+      kind: "spell", name: row.name, sub: row.modalSub, body: row.body || [],
+      nav: {
+        pos: `${block.title} · ${bi + 1}/${inBlock.length}`,
+        onPrev: i > 0 ? () => openRowAt(i - 1) : undefined,
+        onNext: i < navRows.length - 1 ? () => openRowAt(i + 1) : undefined,
+      },
+      onReader: readerable ? () => readInChapter(block.title, row.name) : undefined,
+    });
+  };
+  const openRow = (r: TableRow) => {
+    const i = navRows.findIndex((x) => x.row === r);
+    if (i >= 0) openRowAt(i);
+    else onOpenModal({ kind: "spell", name: r.name, sub: r.modalSub, body: r.body || [] });
+  };
 
   // rules prose for the current tab, plus a helper to open it in the markdown modal
   const schoolRules = tab?.rules;
@@ -256,6 +309,27 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
     onSelectTab(tab);
     setNavOpen(false);
   };
+  // reader mode: the open school's block headings become a sub-TOC — jump to one and flash it
+  const readerBlockTitles = !reader || !readerable ? []
+    : isSkills ? skillGroupsFor(homebrew).map((g) => g.group)
+    : blocks.filter((b) => b.rows.some((r) => r.body?.length)).map((b) => b.title);
+  const goBlock = (title: string) => {
+    setNavOpen(false);
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-block="${CSS.escape(title)}"]`) as HTMLElement | null;
+      if (!el) return;
+      el.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  };
+  // one tab in the nav: its item, plus the reader sub-TOC when it's the open, readerable school
+  const navTab = (t: (typeof TABS)[number], i: number) => (
+    <React.Fragment key={t.name}>
+      <NavItem active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem>
+      {compTab === i && readerBlockTitles.map((title) => (
+        <NavSubItem key={title} onClick={() => goBlock(title)}>{title}</NavSubItem>
+      ))}
+    </React.Fragment>
+  );
   // (no search field here — the mobile drawer relies on the header's dedicated search button;
   // the desktop sidebar prepends its own SearchButton below)
   const navContent = (
@@ -267,11 +341,11 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       {CHAPTERS.map((c, i) => (
         <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => go(CHAPTER_BASE + i)}>{c.name}</NavItem>
       ))}
-      {TABS.map((t, i) => (t.group == null ? <NavItem key={t.name} active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem> : null))}
+      {TABS.map((t, i) => (t.group == null ? navTab(t, i) : null))}
       {NAV_GROUPS.map((g) => (
         <React.Fragment key={g}>
           <NavSection>{g}</NavSection>
-          {TABS.map((t, i) => (t.group === g ? <NavItem key={t.name} active={compTab === i} onClick={() => go(i)}>{t.name}</NavItem> : null))}
+          {TABS.map((t, i) => (t.group === g ? navTab(t, i) : null))}
         </React.Fragment>
       ))}
       {/* Rules-variant footer — shared by the sidebar and the mobile drawer. Standalone compendium:
@@ -351,21 +425,61 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         <Box maxW="780px" mx="auto"><Markdown source={chapter.md} /></Box>
         ) : (
         <>
-        <Box display="flex" alignItems="center" justifyContent="center" gap="12px" mb="4px">
+        {/* reader/table toggle lives in the floating button (always reachable); this row keeps only
+            the title + the rules launcher */}
+        <Box display="flex" alignItems="center" justifyContent="center" gap="8px" mb="4px" flexWrap="wrap">
           <Heading as="h2" fontSize="19px" fontWeight={700} color="fg" textAlign="center">{title}</Heading>
-          {headingRules && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", headingRules)} />}
+          {headingRules && !reader && <RulesChip onClick={() => openRules(title, "A fejezet szabályai", headingRules)} />}
         </Box>
         {/* also on phones — where hover cues don't exist, this line is the only hint that rows open */}
         <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px" px="10px">
-          Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért
+          {reader && readerable
+            ? "Olvasó nézet — a fejezet folyamatosan, a könyv sorrendjében"
+            : "Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért"}
         </Text>
-        {tab?.intro && (
+        {tab?.intro && !(reader && readerable) && (
           <Text fontSize="13.5px" lineHeight="1.65" color="muted" textAlign="center" maxW="680px" mx="auto" mb="24px">
             {tab.intro}
           </Text>
         )}
 
-        {isSkills ? (
+        {reader && readerable ? (
+          // ── reader view: the school's chapter as one continuous document ──
+          <Box maxW="780px" mx="auto">
+            {headingRules && (
+              <Box mb="10px"><Markdown source={stripTitleHeading(headingRules, title)} /></Box>
+            )}
+            {isSkills && skillGroupsFor(homebrew).map((g) => (
+              <Box key={g.group} data-block={g.group} mt="36px">
+                <Heading as="h3" fontSize="17px" fontWeight={700} color="fg" textAlign="center" pb="8px" mb="4px" borderBottom="1px solid" borderColor="rule">{g.group}</Heading>
+                {g.rows.map((r) => (
+                  <Box key={r.name} data-row={r.name} pt="16px" mt="16px" borderTop="1px solid" borderColor="hairSoft" sx={{ ":first-of-type": { borderTop: "none" } }}>
+                    <Heading as="h4" fontSize="15.5px" fontWeight={700} color="fg">{r.name}</Heading>
+                    <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" mt="1px" mb="9px">{r.diff} · {r.attr}</Text>
+                    {skillModalBody(r.name, homebrew).map((p, i) => <BodyPart key={i} text={p} />)}
+                  </Box>
+                ))}
+              </Box>
+            ))}
+            {!isSkills && blocks.map((b) => {
+              const rows = b.rows.filter((r) => !!r.body?.length);
+              const subRules = schoolRules?.sub?.[b.title];
+              return (
+                <Box key={b.title} data-block={b.title} mt="36px">
+                  <Heading as="h3" fontSize="17px" fontWeight={700} color="fg" textAlign="center" pb="8px" mb="4px" borderBottom="1px solid" borderColor="rule">{b.title}</Heading>
+                  {subRules && <Box mt="10px"><Markdown source={stripTitleHeading(subRules, b.title)} /></Box>}
+                  {rows.map((r) => (
+                    <Box key={r.name} data-row={r.name} pt="16px" mt="16px" borderTop="1px solid" borderColor="hairSoft" sx={{ ":first-of-type": { borderTop: "none" } }}>
+                      <Heading as="h4" fontSize="15.5px" fontWeight={700} color="fg">{r.name}</Heading>
+                      {r.modalSub && <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" mt="1px" mb="9px">{r.modalSub}</Text>}
+                      {(r.body || []).map((p, i) => <BodyPart key={i} text={p} />)}
+                    </Box>
+                  ))}
+                </Box>
+              );
+            })}
+          </Box>
+        ) : isSkills ? (
           <Box display="flex" flexDirection="column" gap="22px" maxW="760px" mx="auto">
             {skillGroupsFor(homebrew).map((g) => (
               <Box key={g.group} data-block={g.group}>
@@ -376,7 +490,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
                       <Th>Képzettség</Th><Th align="center">Nehéz.</Th><Th>Erős</Th><Th>Gyenge</Th><Th align="right">Tulajdonság</Th>
                     </Box>
                     {g.rows.map((r, i) => (
-                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name, homebrew) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py={{ base: "11px", md: "8px" }} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
+                      <Box as="button" type="button" key={r.name} data-row={r.name} onClick={() => onOpenModal({ kind: "skill", name: r.name, sub: `(${r.diff} – ${r.attr})`, body: skillModalBody(r.name, homebrew), onReader: () => readInChapter(g.group, r.name) })} display="grid" gridTemplateColumns={SKILL_GRID} alignItems="center" gap="10px" w="100%" textAlign="left" px={PAD} py={{ base: "11px", md: "8px" }} borderTop={i === 0 ? undefined : "1px solid"} borderColor="hairSoft" _hover={{ bg: "accentSoft" }}>
                         <Text fontSize="13.5px" fontWeight={600} color="fg">{r.name}</Text>
                         <Text textAlign="center" color="muted" fontSize="13px" sx={{ fontVariantNumeric: "tabular-nums" }}>{r.diff}</Text>
                         <Text color="muted" fontSize="12.5px">{r.strong}</Text>
@@ -406,6 +520,21 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         </>
         )}
       </Box>
+      {/* Floating reader/table toggle — pinned to the content's bottom-right so the mode is always
+          switchable, no scroll back to the heading chip. Only on the schools (readerable) tabs. */}
+      {readerable && (
+        <Box as="button" type="button" onClick={toggleReader}
+          title={reader ? "Vissza a táblázathoz" : "Olvasó nézet — folyamatos olvasás"}
+          aria-label={reader ? "Táblázat nézet" : "Olvasó nézet"}
+          position="fixed" zIndex={20}
+          right={{ base: "16px", md: "24px" }} bottom="max(20px, env(safe-area-inset-bottom))"
+          display="inline-flex" alignItems="center" gap="7px" h="42px" px="15px" borderRadius="999px"
+          bg="accent" color="white" border="1px solid" borderColor="accent" boxShadow="0 6px 20px rgba(0,0,0,.28)"
+          fontFamily="system-ui" fontSize="13px" fontWeight={700} _hover={{ opacity: 0.92 }} _active={{ transform: "translateY(1px)" }}>
+          {reader ? <OpenBookIcon size={14} /> : ReaderIcon}
+          {reader ? "Táblázat" : "Olvasó nézet"}
+        </Box>
+      )}
       </Box>
       {searchOpen && (
         <SearchPalette

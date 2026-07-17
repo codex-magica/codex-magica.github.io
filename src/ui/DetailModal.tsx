@@ -1,8 +1,17 @@
-import React from "react";
-import { Box, Heading, Text } from "@chakra-ui/react";
+import React, { useEffect } from "react";
+import { Box, Flex, Heading, Text } from "@chakra-ui/react";
 import { ModalShell, ModalHeader } from "./Modal";
 import { Markdown } from "./Markdown";
 import { InlineMd, Prose } from "./richText";
+import { OpenBookIcon } from "./icons";
+
+// Stepping through a table block's entries in book order — the caller (the compendium) embeds
+// closures that reopen the modal on the neighbor.
+export interface ModalNav {
+  pos: string; // "Dalmágia · 7/14"
+  onPrev?: () => void;
+  onNext?: () => void;
+}
 
 export interface ModalState {
   kind: "skill" | "spell" | "rules";
@@ -12,6 +21,8 @@ export interface ModalState {
   currentFok?: number; // character's current fok — foks above it are greyed out
   body: string[];
   markdown?: string; // when set, the body is a Markdown document (rules text) rendered as-is
+  nav?: ModalNav; // ‹ › stepping through the block (compendium table rows)
+  onReader?: () => void; // "continue in reader view" — the caller scrolls the chapter to this entry
 }
 
 interface Props {
@@ -126,8 +137,34 @@ export const BodyPart: React.FC<{ text: string; currentFok?: number }> = ({ text
   return <Prose text={text} parProps={{ textAlign: "justify" }} />;
 };
 
+// a footer step button (‹ ›) — greyed placeholder keeps the layout stable at the block's ends
+const StepBtn: React.FC<{ dir: "prev" | "next"; onClick?: () => void }> = ({ dir, onClick }) => (
+  <Box as="button" type="button" onClick={onClick} disabled={!onClick}
+    aria-label={dir === "prev" ? "Előző" : "Következő"} title={dir === "prev" ? "Előző (←)" : "Következő (→)"}
+    w="34px" h="30px" flexShrink={0} borderRadius="8px" border="1px solid" borderColor={onClick ? "fieldBd" : "transparent"}
+    bg={onClick ? "fieldBg" : "transparent"} color={onClick ? "accentTx" : "fgFaint"} opacity={onClick ? 1 : 0.35}
+    display="inline-flex" alignItems="center" justifyContent="center" _hover={onClick ? { borderColor: "accent", bg: "accentSoft" } : undefined}>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      {dir === "prev" ? <polyline points="15 6 9 12 15 18" /> : <polyline points="9 6 15 12 9 18" />}
+    </svg>
+  </Box>
+);
+
 // A single reusable overlay that opens OVER the current screen and closes back to it — it never navigates.
 export const DetailModal: React.FC<Props> = ({ modal, onClose }) => {
+  // ← / → step through the block while the modal is open (skipped while typing in a field)
+  useEffect(() => {
+    const nav = modal?.nav;
+    if (!nav) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+      if (e.key === "ArrowLeft" && nav.onPrev) { e.preventDefault(); nav.onPrev(); }
+      else if (e.key === "ArrowRight" && nav.onNext) { e.preventDefault(); nav.onNext(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [modal]);
+
   if (!modal) return null;
   return (
     <ModalShell onClose={onClose} width="min(660px, 100%)" maxH="86vh" zIndex={40} overlayPad="28px">
@@ -147,6 +184,25 @@ export const DetailModal: React.FC<Props> = ({ modal, onClose }) => {
           modal.body.map((p, i) => <BodyPart key={i} text={p} currentFok={modal.currentFok} />)
         )}
       </Box>
+      {(modal.nav || modal.onReader) && (
+        <Flex align="center" gap="9px" px="16px" py="9px" borderTop="1px solid" borderColor="rule" flexShrink={0}>
+          {modal.nav && <StepBtn dir="prev" onClick={modal.nav.onPrev} />}
+          <Text flex="1 1 auto" textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="fgFaint" noOfLines={1}>
+            {modal.nav?.pos}
+          </Text>
+          {modal.onReader && (
+            <Box as="button" type="button" onClick={() => { modal.onReader!(); onClose(); }}
+              title="Olvasó nézet — folyamatos olvasás a fejezetben" aria-label="Olvasó nézet"
+              h="30px" px="10px" flexShrink={0} borderRadius="8px" border="1px solid" borderColor="fieldBd" bg="fieldBg"
+              color="accentTx" display="inline-flex" alignItems="center" gap="6px" fontFamily="system-ui" fontSize="12px" fontWeight={700}
+              _hover={{ borderColor: "accent", bg: "accentSoft" }}>
+              <OpenBookIcon size={12} />
+              <Box as="span" display={{ base: "none", md: "inline" }}>Olvasó nézet</Box>
+            </Box>
+          )}
+          {modal.nav && <StepBtn dir="next" onClick={modal.nav.onNext} />}
+        </Flex>
+      )}
     </ModalShell>
   );
 };
