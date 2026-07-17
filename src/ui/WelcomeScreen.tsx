@@ -1,8 +1,9 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Box, Flex, Heading, HStack, IconButton, Input, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, HStack, IconButton, Input, Text, useBreakpointValue } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
 import { ConfirmModal } from "./ConfirmModal";
 import { ModalShell } from "./Modal";
+import { QuietPopover } from "./QuietPopover";
 import { ZoneBar } from "./ZoneBar";
 import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
@@ -101,6 +102,19 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
   );
   const menuView = views.find((v) => v.id === menuId);
   const deleteView = views.find((v) => v.id === confirmDeleteId);
+  // Desktop: the card menu is a quiet popover anchored at the kebab; phones keep the centred sheet.
+  const menuAsPopover = useBreakpointValue({ base: false, md: true }) ?? false;
+
+  const menuActions = (v: CardView) => (
+    <>
+      <MenuItem icon={PencilIcon} onClick={() => { setMenuId(null); onEdit(v.id); }}>Szerkesztés</MenuItem>
+      <MenuItem icon={RenameIcon} onClick={() => { setMenuId(null); setRenameValue(v.name); setRenameId(v.id); }}>Átnevezés</MenuItem>
+      <MenuItem icon={CopyIcon} onClick={() => { setMenuId(null); onDuplicate(v.id); }}>Másolat készítése</MenuItem>
+      <MenuItem icon={ExportIcon} onClick={() => { const r = records.find((x) => x.id === v.id); setMenuId(null); if (r) exportRecordFile(r); }}>Exportálás fájlba</MenuItem>
+      <Box h="1px" bg="rule" mx="10px" my="6px" />
+      <MenuItem icon={TrashIcon} onClick={() => { setMenuId(null); setConfirmDeleteId(v.id); }} danger>Törlés</MenuItem>
+    </>
+  );
 
   return (
     <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
@@ -144,7 +158,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
 
         <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", md: "repeat(auto-fill, minmax(300px, 1fr))" }} gap={{ base: "14px", sm: "20px", md: "16px" }}>
           {views.map((c) => (
-            <ParchPanel key={c.id} as="button" onClick={() => onOpenCharacter(c.id)} display="flex" flexDirection="column" textAlign="left" cursor="pointer" w="100%" transition="box-shadow .16s, border-color .16s" _hover={{ borderColor: "accentBd", boxShadow: hoverShadow }}>
+            <Box key={c.id} position="relative">
+            <ParchPanel as="button" onClick={() => onOpenCharacter(c.id)} display="flex" flexDirection="column" textAlign="left" cursor="pointer" w="100%" h="100%" transition="box-shadow .16s, border-color .16s" _hover={{ borderColor: "accentBd", boxShadow: hoverShadow }}>
               <HStack align="flex-start" justify="space-between" gap="10px">
                 <Box minW={0} textAlign="left">
                   <Text fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg" lineHeight="1.12" noOfLines={2}>{c.name}</Text>
@@ -179,6 +194,12 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
                 </Box>
               </HStack>
             </ParchPanel>
+            {menuAsPopover && menuId === c.id && (
+              <QuietPopover onClose={() => setMenuId(null)} minW="228px" p="8px">
+                {menuActions(c)}
+              </QuietPopover>
+            )}
+            </Box>
           ))}
         </Box>
 
@@ -237,23 +258,16 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
       </Box>
       </Box>
 
-      {menuView && (
-        <Flex position="fixed" inset={0} zIndex={40} bg="overlayBg" align="center" justify="center" p="28px" onClick={() => setMenuId(null)}>
-          <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w="min(340px, 100%)" overflow="hidden" boxShadow="modal">
-            <Box px="22px" pt="18px" pb="14px" borderBottom="1px solid" borderColor="rule" textAlign="center">
-              <Text fontSize="20px" fontWeight={700} color="fg">{menuView.name}</Text>
-              <Text fontFamily="system-ui" fontSize="12px" color="muted" mt="2px">{menuView.line} · {menuView.level}. szint</Text>
-            </Box>
-            <Box p="8px">
-              <MenuItem icon={PencilIcon} onClick={() => { const i = menuView.id; setMenuId(null); onEdit(i); }}>Szerkesztés</MenuItem>
-              <MenuItem icon={RenameIcon} onClick={() => { const i = menuView.id; setMenuId(null); setRenameValue(menuView.name); setRenameId(i); }}>Átnevezés</MenuItem>
-              <MenuItem icon={CopyIcon} onClick={() => { const i = menuView.id; setMenuId(null); onDuplicate(i); }}>Másolat készítése</MenuItem>
-              <MenuItem icon={ExportIcon} onClick={() => { const r = records.find((x) => x.id === menuView.id); setMenuId(null); if (r) exportRecordFile(r); }}>Exportálás fájlba</MenuItem>
-              <Box h="1px" bg="rule" mx="10px" my="6px" />
-              <MenuItem icon={TrashIcon} onClick={() => { const i = menuView.id; setMenuId(null); setConfirmDeleteId(i); }} danger>Törlés</MenuItem>
-            </Box>
-          </ParchPanel>
-        </Flex>
+      {menuView && !menuAsPopover && (
+        <ModalShell onClose={() => setMenuId(null)} width="min(340px, 100%)" zIndex={40} overlayPad="28px">
+          <Box px="22px" pt="18px" pb="14px" borderBottom="1px solid" borderColor="rule" textAlign="center">
+            <Text fontSize="20px" fontWeight={700} color="fg">{menuView.name}</Text>
+            <Text fontFamily="system-ui" fontSize="12px" color="muted" mt="2px">{menuView.line} · {menuView.level}. szint</Text>
+          </Box>
+          <Box p="8px" overflowY="auto">
+            {menuActions(menuView)}
+          </Box>
+        </ModalShell>
       )}
 
       {deleteView && (

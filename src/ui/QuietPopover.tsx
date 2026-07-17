@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
+import { useEscClose } from "./Modal";
 
 // The app's quiet popover: a full-screen click-away backdrop plus a small card anchored under the
 // trigger. The CALLER provides the `position="relative"` wrapper around the trigger and renders this
@@ -14,7 +15,9 @@ export const QuietPopover: React.FC<{
   maxH?: string;
   p?: string;
   children: React.ReactNode;
-}> = ({ onClose, title, hint, align = "right", minW = "max-content", maxW, maxH, p = "13px", children }) => (
+}> = ({ onClose, title, hint, align = "right", minW = "max-content", maxW, maxH, p = "13px", children }) => {
+  useEscClose(onClose);
+  return (
   <>
     <Box position="fixed" inset={0} zIndex={29} onClick={onClose} />
     <Box position="absolute" top="calc(100% + 6px)" {...(align === "left" ? { left: 0 } : { right: 0 })} zIndex={30} bg="band" border="1px solid" borderColor="hair"
@@ -32,7 +35,8 @@ export const QuietPopover: React.FC<{
       {children}
     </Box>
   </>
-);
+  );
+};
 
 // A row of option buttons for a QuietPopover (fok-4 attribute, Pszi path, attribute toggles…).
 // `selected` may be a single value or a set (multi-toggle pickers like Művészetek attributes).

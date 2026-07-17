@@ -183,6 +183,11 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
               <BalanceChip caption="KAP-maradék" value={kap} numColor={kap < 0 ? "bad" : "accentTx"} bg="chipBg" borderColor="chipBd" />
             </HStack>
           </HStack>
+          {kap > 0 && (
+            <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" textAlign="right" mt="6px">
+              A megmaradt KAP nem vész el — a következő szintlépéskor is elkölthető.
+            </Text>
+          )}
           {showSwitcher && (
             <HStack gap="6px" mt="11px" flexWrap="wrap">
               <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".09em" textTransform="uppercase" color="fgFaint" mr="2px">Szint</Text>

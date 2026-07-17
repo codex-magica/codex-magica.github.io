@@ -1,10 +1,33 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Box, BoxProps } from "@chakra-ui/react";
 import { ParchPanel } from "./ParchPanel";
 
 // Shared modal scaffolding. Every dialog in the app is a fixed dimmed overlay holding a centred
 // ParchPanel; clicking the backdrop closes it, clicking the panel doesn't. Previously copy-pasted
 // into DetailModal, WeaponModal, VitalModal and InventoryQtyModal.
+
+// Escape closes the TOPMOST open layer only. Every dismissable layer (modal, popover, the creator
+// screen) registers here on mount; the last one mounted is the one Esc acts on.
+const escStack: React.MutableRefObject<() => void>[] = [];
+export const useEscClose = (onClose: () => void) => {
+  const ref = useRef(onClose);
+  ref.current = onClose;
+  useEffect(() => {
+    escStack.push(ref);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && escStack[escStack.length - 1] === ref) {
+        e.preventDefault();
+        ref.current();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      const i = escStack.indexOf(ref);
+      if (i >= 0) escStack.splice(i, 1);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+};
 
 export const ModalShell: React.FC<{
   onClose: () => void;
@@ -13,15 +36,18 @@ export const ModalShell: React.FC<{
   zIndex?: number;
   overlayPad?: string;
   children: React.ReactNode;
-}> = ({ onClose, width, maxH = "92vh", zIndex = 45, overlayPad = "20px", children }) => (
-  <Box position="fixed" inset={0} zIndex={zIndex} bg="overlayBg" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}>
-    {/* vh resolves against the REAL viewport, but #root's desktop scaling (--app-zoom, index.css)
-        multiplies rendered lengths — divide so "92vh" still means 92% of the screen when scaled. */}
-    <ParchPanel onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={`calc((${maxH}) / var(--app-zoom, 1))`} display="flex" flexDirection="column" overflow="hidden" boxShadow="modal">
-      {children}
-    </ParchPanel>
-  </Box>
-);
+}> = ({ onClose, width, maxH = "92vh", zIndex = 45, overlayPad = "20px", children }) => {
+  useEscClose(onClose);
+  return (
+    <Box position="fixed" inset={0} zIndex={zIndex} bg="overlayBg" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}>
+      {/* vh resolves against the REAL viewport, but #root's desktop scaling (--app-zoom, index.css)
+          multiplies rendered lengths — divide so "92vh" still means 92% of the screen when scaled. */}
+      <ParchPanel role="dialog" aria-modal="true" onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={`calc((${maxH}) / var(--app-zoom, 1))`} display="flex" flexDirection="column" overflow="hidden" boxShadow="modal">
+        {children}
+      </ParchPanel>
+    </Box>
+  );
+};
 
 const CLOSE = {
   sm: { box: "30px", top: "13px", right: "14px", fs: "14px" },

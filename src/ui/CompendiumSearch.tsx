@@ -206,7 +206,9 @@ export const SearchPalette: React.FC<{
   }, [sel]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") { e.preventDefault(); onClose(); }
+    // stopPropagation: keep the Esc from also reaching the window-level esc-stack listener
+    // (Modal.tsx), which would close the layer underneath in the same keypress.
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onClose(); }
     else if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, hits.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)); }
     else if (e.key === "Enter" && hits[sel]) { e.preventDefault(); onPick(hits[sel].entry); }
