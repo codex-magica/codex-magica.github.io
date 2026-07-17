@@ -5,8 +5,10 @@ import { VIT_TOKEN } from "../../model/vitals";
 import { conditionSummary } from "../../model/conditions";
 import { NumPadDialog } from "./NumPadDialog";
 import { AddConditionModal } from "./AddConditionModal";
+import { ConditionModal } from "./ConditionModal";
+import { ReorderList } from "./ReorderList";
 import { ConfirmModal } from "../ConfirmModal";
-import { Card, SecHead, Empty, FS, FS_SUB, ROWPY } from "./primitives";
+import { Card, SecHead, Empty, EditRow, PanelAddButton, PanelEditButton, QuietSwitch, FS, FS_SUB, ROWPY } from "./primitives";
 
 export interface VitalRow { key: VitalKey; label: string; kind: string; cur: number; max: number }
 
@@ -44,8 +46,13 @@ export const VitalsCard: React.FC<{
 }> = ({ rows, onSetVital, conditions, onSetConditions }) => {
   const [editing, setEditing] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
-  // Deleting is destructive (a custom condition's modifiers are gone for good) — confirm it. Switching
-  // one OFF is the reversible way to stop it applying, so the dialog says so.
+  // Tapping a row opens the condition card (view / edit / toggle / delete live there); keyed by id
+  // so the modal follows live edits to the same condition.
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const viewing = conditions.find((c) => c.id === viewingId);
+  // The header pencil flips the list into edit mode: add / delete / drag-reorder appear only there,
+  // so the resting rows stay clean.
+  const [editMode, setEditMode] = useState(false);
   const [removing, setRemoving] = useState<CharacterCondition | null>(null);
   return (
     <>
@@ -65,39 +72,30 @@ export const VitalsCard: React.FC<{
         })}
         {rows.length === 0 && <Empty>Nincsenek életerő-pontok.</Empty>}
 
-        {/* Állapotok — most of the time there are none, so this collapses to a single "+" line and the
-            card keeps its size. Each active condition is already folded into the derived values. */}
+        {/* Állapotok — most of the time there are none, so this collapses to a single line and the
+            card keeps its size. Each active condition is already folded into the derived values.
+            Resting rows are clean (tap = the condition card); the pencil opens edit mode with
+            add / delete / drag-reorder. */}
         <Flex align="center" justify="space-between" gap="10px" mt="13px" mb="3px" pb="3px" borderBottom="1px solid" borderColor="hair">
           <Box fontSize={FS_SUB} fontWeight={700} color="muted" letterSpacing=".02em">Állapotok</Box>
-          <Box as="button" type="button" onClick={() => setAdding(true)}
-            title="Állapot hozzáadása" aria-label="Állapot hozzáadása"
-            display="inline-flex" alignItems="center" justifyContent="center" w="26px" h="22px" flexShrink={0}
-            borderRadius="6px" border="1px solid" borderColor="fieldBd" color="accentTx"
-            _hover={{ borderColor: "accent", bg: "accentSoft" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-          </Box>
+          <PanelEditButton editing={editMode} onToggle={() => setEditMode(!editMode)} label="Állapotok szerkesztése" />
         </Flex>
-        {conditions.length === 0 ? (
+        {conditions.length === 0 && !editMode && (
           <Text fontFamily="ui" fontSize="11.5px" color="fgFaint" py="3px">Nincs aktív állapot.</Text>
-        ) : (
-          conditions.map((c) => {
-            const on = c.active !== false;
-            return (
-              // No control of its own: the whole badge IS the toggle. In force = normal weight, accent
-              // modifiers, a faint rule down its left edge; switched off = greyed and struck through.
-              // Tap anywhere on the row to flip it; the ✕ (stops propagation) removes it for good.
-              <Box key={c.id} role="button" tabIndex={0} cursor="pointer"
-                title={on ? "Kikapcsolás" : "Bekapcsolás"} aria-pressed={on}
-                onClick={() => onSetConditions(conditions.map((x) => (x.id === c.id ? { ...x, active: !on } : x)))}
-                py={ROWPY} pl="8px" pr="5px" ml="-5px" mr="-5px" borderRadius="6px"
+        )}
+        {!editMode && conditions.map((c) => {
+          const on = c.active !== false;
+          return (
+            // Tap the row for the condition card; the switch (its own control, outside the tap area)
+            // flips it in force / suspended. In force = accent modifiers, a faint rule down the left
+            // edge; suspended = greyed and struck through.
+            <Flex key={c.id} align="stretch" gap="4px" ml="-5px" mr="-5px">
+              <Box role="button" tabIndex={0} cursor="pointer" title="Részletek" flex="1 1 auto" minW={0}
+                onClick={() => setViewingId(c.id)}
+                py={ROWPY} pl="8px" pr="3px" borderRadius="6px"
                 borderLeft="1px solid" borderColor={on ? "hair" : "transparent"} _hover={{ bg: "accentSoft" }}>
-                <HStack justify="space-between" align="center" gap="8px">
-                  <Text color={on ? "fg" : "fgFaint"} fontSize={FS} noOfLines={1} title={c.note} minW={0}
-                    sx={{ textDecoration: on ? undefined : "line-through" }}>{c.name}</Text>
-                  <Box as="button" type="button" aria-label={`${c.name} eltávolítása`} title="Eltávolítás"
-                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); setRemoving(c); }}
-                    color="fgFaint" fontSize="13px" lineHeight="1" px="3px" flexShrink={0} _hover={{ color: "bad" }}>✕</Box>
-                </HStack>
+                <Text color={on ? "fg" : "fgFaint"} fontSize={FS} noOfLines={1} minW={0}
+                  sx={{ textDecoration: on ? undefined : "line-through" }}>{c.name}</Text>
                 {conditionSummary(c.effects ?? []) && (
                   <Text fontFamily="ui" fontSize="11.5px" mt="1px" color={on ? "accentTx" : "fgFaint"} noOfLines={2}
                     title={conditionSummary(c.effects ?? [])}
@@ -106,8 +104,32 @@ export const VitalsCard: React.FC<{
                   </Text>
                 )}
               </Box>
-            );
-          })
+              <Flex align="center" flexShrink={0}>
+                <QuietSwitch checked={on}
+                  label={on ? `${c.name} kikapcsolása` : `${c.name} bekapcsolása`}
+                  onToggle={() => onSetConditions(conditions.map((x) => (x.id === c.id ? { ...x, active: !on } : x)))} />
+              </Flex>
+            </Flex>
+          );
+        })}
+        {editMode && (
+          <>
+            <ReorderList
+              items={conditions}
+              keyOf={(c) => c.id}
+              onReorder={onSetConditions}
+              row={(c, grip) => {
+                const on = c.active !== false;
+                return (
+                  <EditRow onDelete={() => setRemoving(c)} deleteLabel={`${c.name} eltávolítása`} grip={grip}>
+                    <Text color={on ? "fg" : "fgFaint"} fontSize={FS} noOfLines={1}
+                      sx={{ textDecoration: on ? undefined : "line-through" }}>{c.name}</Text>
+                  </EditRow>
+                );
+              }}
+            />
+            <PanelAddButton onClick={() => setAdding(true)}>+ Állapot hozzáadása</PanelAddButton>
+          </>
         )}
       </Card>
       {editing !== null && rows[editing] && (
@@ -115,6 +137,14 @@ export const VitalsCard: React.FC<{
       )}
       {adding && (
         <AddConditionModal onAdd={(c) => onSetConditions([...conditions, c])} onClose={() => setAdding(false)} />
+      )}
+      {viewing && (
+        <ConditionModal
+          condition={viewing}
+          onSave={(c) => onSetConditions(conditions.map((x) => (x.id === c.id ? c : x)))}
+          onDelete={() => onSetConditions(conditions.filter((x) => x.id !== viewing.id))}
+          onClose={() => setViewingId(null)}
+        />
       )}
       {removing && (
         <ConfirmModal title="Állapot eltávolítása" confirmLabel="Eltávolítás"

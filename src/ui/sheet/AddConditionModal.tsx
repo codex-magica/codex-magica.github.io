@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { Box, Button, Flex, Heading, HStack, Input, Select, Text } from "@chakra-ui/react";
 import { ModalShell, ModalHeader } from "../Modal";
 import { CharacterCondition } from "../../model/character";
+import { Effect } from "../../model/effects";
 import {
   CONDITION_GROUPS, CONDITION_PRESETS, CONDITION_TARGETS, CONDITION_TARGET_GROUPS,
   ConditionPreset, ConditionTarget, buildCustomEffects, conditionSummary,
 } from "../../model/conditions";
 import { FS, FS_SUB } from "./primitives";
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+export const uid = () => Math.random().toString(36).slice(2, 10);
 
 const field = {
   size: "sm" as const, bg: "fieldBg", borderColor: "fieldBd", borderRadius: "7px", color: "fg",
@@ -73,25 +74,36 @@ const MagnitudeStep: React.FC<{ preset: ConditionPreset; onAdd: (c: CharacterCon
 
 const TARGET_BY_KEY: Record<string, ConditionTarget> = Object.fromEntries(CONDITION_TARGETS.map((t) => [t.key, t]));
 
-// Step 2 for a fully custom condition: a name, plus a list of "pick a value → set its bonus" rows the
-// player adds one at a time. A given value can be chosen only once (already-used ones drop out of the
-// other rows' menus).
-type ModRow = { id: string; key: string; value: string };
-const CustomStep: React.FC<{ onAdd: (c: CharacterCondition) => void; onBack: () => void }> = ({ onAdd, onBack }) => {
-  const [name, setName] = useState("");
-  const [rows, setRows] = useState<ModRow[]>([{ id: uid(), key: "", value: "" }]);
-  const setRow = (id: string, patch: Partial<ModRow>) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  const used = new Set(rows.map((r) => r.key).filter(Boolean));
+// One "pick a value → set its bonus" row of the custom-condition editor. Shared between the add
+// flow's CustomStep and the ConditionModal's edit mode.
+export type ModRow = { id: string; key: string; value: string };
+export const newModRow = (): ModRow => ({ id: uid(), key: "", value: "" });
 
+export const rowsToEffects = (rows: ModRow[]): Effect[] => {
   const numeric: Record<string, number> = {};
   for (const r of rows) { const n = parseInt(r.value, 10); if (r.key && Number.isFinite(n) && n !== 0) numeric[r.key] = n; }
-  const effects = buildCustomEffects(numeric);
+  return buildCustomEffects(numeric);
+};
 
+// The inverse, for editing a stored custom condition: each bonus effect maps back to a target row.
+// (`note` effects only occur in book presets, which aren't editable — safe to skip.)
+export const effectsToRows = (effects: Effect[]): ModRow[] => {
+  const rows: ModRow[] = [];
+  for (const e of effects) {
+    if (e.kind === "combatBonus") rows.push({ id: uid(), key: e.channel, value: fmtSigned(e.amount) });
+    else if (e.kind === "derivedBonus") rows.push({ id: uid(), key: e.target, value: fmtSigned(e.amount) });
+    else if (e.kind === "statBonus") rows.push({ id: uid(), key: e.stat, value: fmtSigned(e.amount) });
+  }
+  return rows.length > 0 ? rows : [newModRow()];
+};
+
+// The modifier-row list editor: select a target, set its bonus, one row per target. A given target
+// can be chosen only once (already-used ones drop out of the other rows' menus).
+export const CustomModsEditor: React.FC<{ rows: ModRow[]; onRows: (rows: ModRow[]) => void }> = ({ rows, onRows }) => {
+  const setRow = (id: string, patch: Partial<ModRow>) => onRows(rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  const used = new Set(rows.map((r) => r.key).filter(Boolean));
   return (
-    <Box px="20px" pb="18px">
-      <Text fontFamily="ui" fontSize="12px" color="muted" mb="4px">Név</Text>
-      <Input {...field} value={name} onChange={(e) => setName(e.target.value)} placeholder="pl. Áldás, Sebláz…" autoFocus w="100%" mb="14px" />
-
+    <>
       <Box fontSize={FS_SUB} fontWeight={700} color="muted" pb="3px" mb="9px" borderBottom="1px solid" borderColor="hair">Módosítók</Box>
       {rows.map((r) => {
         const target = TARGET_BY_KEY[r.key];
@@ -110,7 +122,7 @@ const CustomStep: React.FC<{ onAdd: (c: CharacterCondition) => void; onBack: () 
             <StepInput ariaLabel={target?.label ?? "érték"} value={r.value} step={target?.step ?? 1} disabled={!r.key}
               onChange={(v) => setRow(r.id, { value: v })} />
             <Box as="button" type="button" aria-label="Sor törlése" title="Sor törlése"
-              onClick={() => setRows((rs) => (rs.length > 1 ? rs.filter((x) => x.id !== r.id) : [{ id: uid(), key: "", value: "" }]))}
+              onClick={() => onRows(rows.length > 1 ? rows.filter((x) => x.id !== r.id) : [newModRow()])}
               color="fgFaint" fontSize="14px" lineHeight="1" px="3px" flexShrink={0} _hover={{ color: "bad" }}>✕</Box>
           </HStack>
         );
@@ -118,10 +130,26 @@ const CustomStep: React.FC<{ onAdd: (c: CharacterCondition) => void; onBack: () 
       {used.size < CONDITION_TARGETS.length && (
         <Button variant="outline" size="sm" w="100%" borderColor="fieldBd" color="accentTx" mt="2px" mb="12px"
           _hover={{ borderColor: "accent", bg: "accentSoft" }}
-          onClick={() => setRows((rs) => [...rs, { id: uid(), key: "", value: "" }])}>
+          onClick={() => onRows([...rows, newModRow()])}>
           + Módosító
         </Button>
       )}
+    </>
+  );
+};
+
+// Step 2 for a fully custom condition: a name plus the modifier-row editor.
+const CustomStep: React.FC<{ onAdd: (c: CharacterCondition) => void; onBack: () => void }> = ({ onAdd, onBack }) => {
+  const [name, setName] = useState("");
+  const [rows, setRows] = useState<ModRow[]>([newModRow()]);
+  const effects = rowsToEffects(rows);
+
+  return (
+    <Box px="20px" pb="18px">
+      <Text fontFamily="ui" fontSize="12px" color="muted" mb="4px">Név</Text>
+      <Input {...field} value={name} onChange={(e) => setName(e.target.value)} placeholder="pl. Áldás, Sebláz…" autoFocus w="100%" mb="14px" />
+
+      <CustomModsEditor rows={rows} onRows={setRows} />
 
       <Text fontFamily="ui" fontSize="12.5px" color="accentTx" minH="18px" mb="12px" sx={{ fontVariantNumeric: "tabular-nums" }}>
         {conditionSummary(effects) || "Nincs módosító — csak emlékeztető."}

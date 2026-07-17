@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
+import { CheckIcon, EditIcon } from "@chakra-ui/icons";
 import { ParchPanel } from "../ParchPanel";
 
 // Shared presentational atoms + type scale for the character sheet and its cards. The sheet uses a
@@ -40,3 +41,54 @@ export const Empty: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 export const rowProps = { display: "flex", alignItems: "baseline", py: ROWPY } as const;
+
+// The header pencil that flips a list panel into edit mode (add / delete / reorder live there) —
+// the same affordance the Felszerelés card established. Check = done.
+export const PanelEditButton: React.FC<{ editing: boolean; onToggle: () => void; label: string }> = ({ editing, onToggle, label }) => (
+  <Box as="button" type="button" onClick={onToggle}
+    title={editing ? "Kész" : label} aria-label={editing ? "Kész" : label}
+    display="inline-flex" alignItems="center" justifyContent="center" w="26px" h="22px" flexShrink={0}
+    borderRadius="6px" border="1px solid" borderColor={editing ? "accent" : "fieldBd"} bg={editing ? "accentSoft" : "transparent"}
+    color={editing ? "accentTx" : "muted"} _hover={{ borderColor: "accent", bg: "accentSoft", color: "accentTx" }}>
+    {editing ? <CheckIcon boxSize="10px" /> : <EditIcon boxSize="11px" />}
+  </Box>
+);
+
+// The edit-mode "add" row at a list's end.
+export const PanelAddButton: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <Box as="button" type="button" onClick={onClick} w="100%" mt="7px" py="7px" borderRadius="7px"
+    border="1px dashed" borderColor="fieldBd" color="accentTx" fontWeight={600} fontSize="13px"
+    _hover={{ borderColor: "accent", bg: "accentSoft" }}>
+    {children}
+  </Box>
+);
+
+// The quiet mini-switch: a squarish on/off toggle in the sheet's own materials (fieldBg/hair off,
+// accentSoft/accent on) instead of the stock rounded pill — same affordance, native look.
+export const QuietSwitch: React.FC<{ checked: boolean; onToggle: () => void; label: string }> = ({ checked, onToggle, label }) => (
+  <Box as="button" type="button" role="switch" aria-checked={checked} aria-label={label} title={label}
+    onClick={onToggle}
+    position="relative" w="28px" h="16px" flexShrink={0} borderRadius="5px"
+    border="1px solid" borderColor={checked ? "accent" : "fieldBd"}
+    bg={checked ? "accentSoft" : "fieldBg"}
+    transition="background .15s, border-color .15s"
+    _focusVisible={{ boxShadow: "0 0 0 2px var(--chakra-colors-accentSoft)" }}>
+    <Box position="absolute" top="2px" left="2px" w="10px" h="10px" borderRadius="3px"
+      bg={checked ? "accentTx" : "fgFaint"}
+      transform={checked ? "translateX(12px)" : "translateX(0)"}
+      transition="transform .15s, background .15s" />
+  </Box>
+);
+
+// An edit-mode list row: [delete ✕] [content] [drag grip]. Opaque so the row reads as a movable
+// object (and so the drag lift never blends into the rows under it).
+export const EditRow: React.FC<{ onDelete: () => void; deleteLabel: string; grip: React.ReactNode; children: React.ReactNode }> = ({ onDelete, deleteLabel, grip, children }) => (
+  // no margin here — the row gap is the ReorderList item's padding, so drag measurements stay contiguous
+  <Box display="flex" alignItems="stretch" gap="4px" px="5px" bg="band" border="1px solid" borderColor="hair" borderRadius="7px">
+    <Box as="button" type="button" aria-label={deleteLabel} title={deleteLabel}
+      onClick={onDelete} flexShrink={0} px="4px" color="fgFaint" fontSize="14px" lineHeight="1"
+      display="inline-flex" alignItems="center" _hover={{ color: "bad" }}>✕</Box>
+    <Box flex="1 1 auto" minW={0} py="7px">{children}</Box>
+    {grip}
+  </Box>
+);

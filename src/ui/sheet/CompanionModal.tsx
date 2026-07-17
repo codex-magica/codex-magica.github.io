@@ -62,6 +62,7 @@ const MiniField: React.FC<{ label: string; value: string; onChange: (v: string) 
 export const CompanionModal: React.FC<{ companion: Companion; onSave: (c: Companion) => void; onDelete: () => void; onClose: () => void }> = ({ companion, onSave, onDelete, onClose }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [name, setName] = useState(companion.name);
+  const [species, setSpecies] = useState(companion.species);
   const [note, setNote] = useState(companion.note ?? "");
   const [icon, setIcon] = useState(companionIconKey(companion));
   const [stats, setStats] = useState<CompanionStats>(companion.stats);
@@ -87,7 +88,7 @@ export const CompanionModal: React.FC<{ companion: Companion; onSave: (c: Compan
   ].filter((s) => (s.value || 0) > 0);
 
   const assemble = (): Companion => ({
-    ...companion, name: displayName, note: note.trim() || undefined, icon,
+    ...companion, name: displayName, species: species.trim() || companion.species, note: note.trim() || undefined, icon,
     ep: clampVital(ep, epMaxN), fp: clampVital(fp, fpMaxN),
     stats: { ...stats, epMax: epMaxN, fpMax: fpMaxN },
   });
@@ -97,7 +98,7 @@ export const CompanionModal: React.FC<{ companion: Companion; onSave: (c: Compan
   const saveRef = useRef(onSave); saveRef.current = onSave;
   const first = useRef(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (first.current) { first.current = false; return; } saveRef.current(assemble()); }, [name, note, icon, stats, epMax, fpMax, ep, fp]);
+  useEffect(() => { if (first.current) { first.current = false; return; } saveRef.current(assemble()); }, [name, species, note, icon, stats, epMax, fpMax, ep, fp]);
 
   return (
     <ModalShell onClose={onClose} width="min(430px, 100%)" maxH="86vh">
@@ -125,7 +126,7 @@ export const CompanionModal: React.FC<{ companion: Companion; onSave: (c: Compan
           </Box>
           <Box minW={0}>
             <Heading as="h3" fontSize={{ base: "19px", md: "20px" }} fontWeight={700} color="fg" noOfLines={1}>{displayName}</Heading>
-            <Text fontFamily="ui" fontSize="12px" color="muted" noOfLines={1}>{companion.species}</Text>
+            <Text fontFamily="ui" fontSize="12px" color="muted" noOfLines={1}>{species.trim() || companion.species}</Text>
           </Box>
         </HStack>
       </Box>
@@ -181,8 +182,10 @@ export const CompanionModal: React.FC<{ companion: Companion; onSave: (c: Compan
           </>
         ) : (
           <>
-            <Text fontFamily="ui" fontSize="12px" color="muted" mb="4px">Név</Text>
-            <Input {...field} value={name} onChange={(e) => setName(e.target.value)} w="100%" mb="16px" />
+            <Box display="grid" gridTemplateColumns="1fr 1fr" gap="10px 8px" mb="16px">
+              <MiniField label="Név" value={name} onChange={setName} />
+              <MiniField label="Fajta" value={species} onChange={setSpecies} />
+            </Box>
 
             <Box fontSize={FS_SUB} fontWeight={700} color="muted" pb="3px" mb="9px" borderBottom="1px solid" borderColor="hair">Életerő</Box>
             <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap="8px" mb="16px">

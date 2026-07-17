@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { DerivedCharacter } from "../../engine/types";
 import { CombatKey, FIST, WeaponRowView, masteryLabel, weaponUseKey } from "../../model/weaponUse";
-import { Card, FS, FS_SUB, ROWPY, SecHead, ValNum, rowProps } from "./primitives";
+import { Card, EditRow, PanelAddButton, PanelEditButton, FS, FS_SUB, ROWPY, SecHead, ValNum, rowProps } from "./primitives";
 import { AddWeaponModal } from "./AddWeaponModal";
+import { WeaponDetailModal } from "./WeaponDetailModal";
+import { ReorderList } from "./ReorderList";
 import { ConfirmModal } from "../ConfirmModal";
 
 // Calculator-tile icons — crossed swords (közelharc) / crosshair (célzás, távolsági).
@@ -47,7 +49,12 @@ export const CombatCard: React.FC<{
   onCombatInfo: (key: string) => void;
 }> = ({ derived, weaponRows, activeRow, pinnedWeapons, onSetWeapons, onSetActiveWeapon, onOpenWeapon, onCombatInfo }) => {
   const [addWeaponOpen, setAddWeaponOpen] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null); // unpinning is a click away from "take in hand" — confirm it
+  // The chevron opens the weapon card (stats, mastery breakdown, calculator; removing lives there).
+  const [detailName, setDetailName] = useState<string | null>(null);
+  const detailRow = detailName ? weaponRows.find((r) => r.w.name === detailName) : undefined;
+  // The header pencil flips the list into edit mode: add / delete / drag-reorder appear only there.
+  const [editMode, setEditMode] = useState(false);
+  const [removing, setRemoving] = useState<string | null>(null);
 
   const combatTile = (k: CombatKey): Tile => ({
     label: k,
@@ -71,6 +78,36 @@ export const CombatCard: React.FC<{
       // ranged: CÉ replaces TÉ, but VÉ stays — being shot at doesn't stop you being attacked in melee
       : [combatTile("KÉ"), combatTile("CÉ"), combatTile("VÉ"), calcTile];
   const tilesCaption = activeRow ? `${activeRow.w.name} · ${masteryLabel(activeRow)}` : "Alapértékek";
+
+  // One weapon row: tap = take in hand (the tiles switch to it); the chevron opens the weapon card.
+  const weaponRow = (row: WeaponRowView) => {
+    const { w, use, dmg } = row;
+    const fixed = w.name === FIST; // the built-in default — not removable, selecting it = bare hands
+    const selected = activeRow?.w.name === w.name;
+    return (
+      <Flex key={w.name} align="stretch" gap="2px" mx="-5px">
+        <Box onClick={() => onSetActiveWeapon(fixed || selected ? null : w.name)} role="button" tabIndex={0} cursor="pointer" flex="1 1 auto" minW={0}
+          title={fixed ? "Puszta kéz — alapértelmezett" : selected ? "Letétel (puszta kéz)" : "Kézbevétel — a fenti értékek erre váltanak"}
+          py={ROWPY} px="5px" borderRadius="7px" bg={selected ? "accentSoft" : undefined}
+          border="1px solid" borderColor={selected ? "accentBd" : "transparent"} _hover={{ bg: "accentSoft" }}>
+          <HStack justify="space-between" align="baseline" gap="10px">
+            <Text color={selected ? "accentTx" : "fg"} fontSize={FS} fontWeight={selected ? 600 : 400} noOfLines={1}>{w.name}</Text>
+            <Text color="accentTx" fontSize={FS} fontWeight={600} maxW="110px" flexShrink={0} isTruncated title={dmg} sx={{ fontVariantNumeric: "tabular-nums" }}>{dmg}</Text>
+          </HStack>
+          {/* skill state only — the accumulated modifiers show up in the tiles on selection */}
+          <Text fontFamily="ui" fontSize="11.5px" mt="1px" color="muted">
+            {use.fok === 0 ? "képzetlen (kockánként −1 Sp)" : masteryLabel(row)}
+          </Text>
+        </Box>
+        <Flex as="button" type="button" align="center" justify="center" w="22px" flexShrink={0}
+          aria-label={`${w.name} részletei`} title="Részletek"
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); setDetailName(w.name); }}
+          color="fgFaint" borderRadius="6px" _hover={{ color: "accentTx", bg: "accentSoft" }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+        </Flex>
+      </Flex>
+    );
+  };
 
   return (
     <Card>
@@ -121,45 +158,47 @@ export const CombatCard: React.FC<{
           <ValNum sx={{ fontVariantNumeric: "tabular-nums", ...INFO_UL }}>{`+${derived.derived.Sebzésbónusz}`}</ValNum>
         </Box>
       )}
-      {/* subhead with the add-weapon launcher at its right end (the picker itself is a modal) */}
+      {/* subhead: the pencil flips the list into edit mode (add / delete / drag-reorder) */}
       <Flex align="center" justify="space-between" gap="10px" mt="13px" mb="3px" pb="3px" borderBottom="1px solid" borderColor="hair">
         <Box fontSize={FS_SUB} fontWeight={700} color="muted" letterSpacing=".02em">Fegyverek</Box>
-        <Box as="button" type="button" onClick={() => setAddWeaponOpen(true)}
-          title="Fegyver hozzáadása" aria-label="Fegyver hozzáadása"
-          display="inline-flex" alignItems="center" justifyContent="center" w="26px" h="22px" flexShrink={0}
-          borderRadius="6px" border="1px solid" borderColor="fieldBd" color="accentTx"
-          _hover={{ borderColor: "accent", bg: "accentSoft" }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-        </Box>
+        <PanelEditButton editing={editMode} onToggle={() => setEditMode(!editMode)} label="Fegyverek szerkesztése" />
       </Flex>
-      {weaponRows.map((row) => {
-        const { w, use, dmg } = row;
-        const fixed = w.name === FIST; // the built-in default — not removable, selecting it = bare hands
-        const selected = activeRow?.w.name === w.name;
-        return (
-          // tap = take in hand: the tiles above and the header calculator switch to this weapon
-          <Box key={w.name} onClick={() => onSetActiveWeapon(fixed || selected ? null : w.name)} role="button" tabIndex={0} cursor="pointer"
-            title={fixed ? "Puszta kéz — alapértelmezett" : selected ? "Letétel (puszta kéz)" : "Kézbevétel — a fenti értékek erre váltanak"}
-            py={ROWPY} px="5px" mx="-5px" borderRadius="7px" bg={selected ? "accentSoft" : undefined}
-            border="1px solid" borderColor={selected ? "accentBd" : "transparent"} _hover={{ bg: "accentSoft" }}>
-            <HStack justify="space-between" align="baseline" gap="10px">
-              <Text color={selected ? "accentTx" : "fg"} fontSize={FS} fontWeight={selected ? 600 : 400} noOfLines={1}>{w.name}</Text>
-              <HStack gap="7px" flexShrink={0} align="baseline">
-                <Text color="accentTx" fontSize={FS} fontWeight={600} maxW="110px" isTruncated title={dmg} sx={{ fontVariantNumeric: "tabular-nums" }}>{dmg}</Text>
-                {!fixed && (
-                  <Box as="button" type="button" aria-label={`${w.name} eltávolítása`} title="Eltávolítás"
-                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); setRemoving(w.name); }}
-                    color="fgFaint" fontSize="13px" lineHeight="1" px="3px" _hover={{ color: "bad" }}>✕</Box>
-                )}
-              </HStack>
-            </HStack>
-            {/* skill state only — the accumulated modifiers show up in the tiles on selection */}
-            <Text fontFamily="ui" fontSize="11.5px" mt="1px" color="muted">
-              {use.fok === 0 ? "képzetlen (kockánként −1 Sp)" : masteryLabel(row)}
-            </Text>
-          </Box>
-        );
-      })}
+      {!editMode && weaponRows.map((row) => weaponRow(row))}
+      {editMode && (
+        <>
+          {/* the fist row is fixed — shown for context, but it can't be moved or removed */}
+          {weaponRows.filter((r) => r.w.name === FIST).map((row) => (
+            <Box key={row.w.name} opacity={0.55} py="7px" px="9px" mb="5px">
+              <Text color="fg" fontSize={FS} noOfLines={1}>{row.w.name}</Text>
+            </Box>
+          ))}
+          <ReorderList
+            items={pinnedWeapons}
+            keyOf={(n) => n}
+            onReorder={onSetWeapons}
+            row={(name, grip) => {
+              const row = weaponRows.find((r) => r.w.name === name);
+              return row ? (
+                <EditRow onDelete={() => setRemoving(name)} deleteLabel={`${name} eltávolítása`} grip={grip}>
+                  <HStack justify="space-between" align="baseline" gap="10px">
+                    <Text color="fg" fontSize={FS} noOfLines={1}>{name}</Text>
+                    <Text color="accentTx" fontSize={FS} fontWeight={600} maxW="110px" flexShrink={0} isTruncated sx={{ fontVariantNumeric: "tabular-nums" }}>{row.dmg}</Text>
+                  </HStack>
+                </EditRow>
+              ) : null;
+            }}
+          />
+          <PanelAddButton onClick={() => setAddWeaponOpen(true)}>+ Fegyver hozzáadása</PanelAddButton>
+        </>
+      )}
+      {detailRow && (
+        <WeaponDetailModal
+          row={detailRow}
+          onRemove={detailRow.w.name === FIST ? undefined : () => onSetWeapons(pinnedWeapons.filter((n) => n !== detailRow.w.name))}
+          onCalc={() => { setDetailName(null); onOpenWeapon(detailRow); }}
+          onClose={() => setDetailName(null)}
+        />
+      )}
       {addWeaponOpen && (
         <AddWeaponModal
           pinned={pinnedWeapons}
@@ -171,7 +210,7 @@ export const CombatCard: React.FC<{
         <ConfirmModal title="Fegyver eltávolítása" confirmLabel="Eltávolítás"
           onConfirm={() => { onSetWeapons(pinnedWeapons.filter((n) => n !== removing)); setRemoving(null); }}
           onClose={() => setRemoving(null)}>
-          Biztosan leveszed a(z) <b>{removing}</b> fegyvert a lapról? Bármikor visszaveheted a „+” gombbal.
+          Biztosan leveszed a(z) <b>{removing}</b> fegyvert a lapról? Bármikor visszaveheted a szerkesztőben.
         </ConfirmModal>
       )}
     </Card>

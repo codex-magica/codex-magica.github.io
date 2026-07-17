@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Box, Heading, HStack, IconButton, Text, Textarea } from "@chakra-ui/react";
-import { EditIcon, CheckIcon } from "@chakra-ui/icons";
+import { Box, Heading, HStack, Text, Textarea } from "@chakra-ui/react";
 import { NumPadDialog } from "./NumPadDialog";
-import { Card, FS, FS_SEC } from "./primitives";
+import { Card, FS, FS_SEC, PanelEditButton } from "./primitives";
 
 // Quantity calculator for a numbered equipment line — mirrors the resource-pool pad.
 const InventoryQtyModal: React.FC<{ name: string; qty: number; onApply: (n: number) => void; onClose: () => void }> = ({ name, qty, onApply, onClose }) => {
@@ -45,10 +44,8 @@ export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void 
       <Card>
         <HStack spacing="9px" pb="6px" mb="6px" borderBottom="1px solid" borderColor="rule" align="center" justify="space-between">
           <Heading as="h2" fontSize={FS_SEC} fontWeight={700} color="fg">Felszerelés</Heading>
-          <IconButton aria-label={editing ? "Mentés" : "Felszerelés szerkesztése"} title={editing ? "Kész" : "Szerkesztés"} size="xs" variant="outline"
-            borderColor={editing ? "accent" : "hair"} bg={editing ? "accentSoft" : "fieldBg"} color={editing ? "accentTx" : "muted"}
-            icon={editing ? <CheckIcon boxSize="12px" /> : <EditIcon boxSize="13px" />}
-            onClick={() => { if (editing) { onSet(draft!); setDraft(null); } else setDraft(text); }} />
+          <PanelEditButton editing={editing} label="Felszerelés szerkesztése"
+            onToggle={() => { if (editing) { onSet(draft!); setDraft(null); } else setDraft(text); }} />
         </HStack>
         {editing ? (
           <Textarea value={draft ?? ""} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft != null && onSet(draft)} autoFocus rows={Math.max(MIN_LINES, lines.length + 1)}
