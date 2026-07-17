@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
   <title>Bejelentkezés · Codex Magica</title>
+  <!-- The common case here is the invisible hourly cookie refresh (§auth path 2): get the Firebase
+       SDK and the token endpoints connecting before the module script even runs, so the silent
+       bounce-back is as short as possible. -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js" crossorigin />
   <style>
     /* ============================================================
        Codex Magica — login screen (standalone, no framework).
@@ -131,6 +139,15 @@
     .google-btn[aria-busy="true"] .google-icon { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* "signing you in" splash — shown while we check for an existing Firebase session. In the common
+       (already-logged-in) case the page just refreshes the cookie and redirects, so the interactive
+       sign-in UI never appears; it's revealed only once we know there is no session to resume. */
+    .auth-check { display: flex; flex-direction: column; align-items: center; gap: 13px; padding: 4px 0 2px; }
+    .auth-check .spinner-lg { width: 24px; height: 24px; border: 2.5px solid var(--sepia); border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; opacity: .75; }
+    .auth-check .ac-tx { font-family: var(--sans); font-size: 12.5px; letter-spacing: .03em; color: var(--faint); }
+    body.pending .google-btn, body.pending .divider, body.pending .fine { display: none; }
+    body:not(.pending) .auth-check { display: none; }
+
     .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 0; }
     .div-line { flex: 1 1 0; height: 1px; background: var(--div-line); }
     .div-text { font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
@@ -142,7 +159,7 @@
     .footer { position: relative; z-index: 2; margin-top: 10px; font-family: var(--sans); font-size: 11.5px; letter-spacing: .04em; color: var(--footer); }
   </style>
 </head>
-<body>
+<body class="pending">
   <div class="page">
     <div class="vignette"></div>
     <div class="page-grain"></div>
@@ -166,6 +183,11 @@
         <h1 class="title" id="title">Codex Magica</h1>
         <div class="rule"></div>
         <p class="lead" id="lead">Lépj be a krónikáid közé. Karaktereid, varázslataid és kompendiumod egyetlen fiókban, bárhol elérhetők.</p>
+
+        <div class="auth-check" id="authCheck" aria-live="polite">
+          <span class="spinner-lg" aria-hidden="true"></span>
+          <span class="ac-tx">Bejelentkezés folytatása…</span>
+        </div>
 
         <button class="google-btn" id="signInBtn" type="button">
           <span class="google-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg></span>
@@ -206,6 +228,13 @@
         applyTheme(next);
         try { localStorage.setItem(COLOR_MODE_KEY, next); } catch (e) {}
       });
+
+      // Failsafe: if the Firebase module never loads (offline / CDN blocked), the module can't reveal
+      // the sign-in button — so a plain timer does it, guaranteeing the user is never stuck on the
+      // "signing you in" spinner. The module clears this the moment it takes over the decision.
+      window.__authFailsafe = setTimeout(function () {
+        document.body.classList.remove("pending");
+      }, 9000);
 
     })();
   </script>
@@ -251,20 +280,31 @@
       catch { return []; }
     };
 
+    // Reveal the interactive sign-in UI (button + fine print), replacing the "signing you in"
+    // splash. Called whenever there is no session to resume silently.
+    const reveal = () => {
+      clearTimeout(window.__authFailsafe);
+      document.body.classList.remove("pending");
+    };
+
     const denied = new URLSearchParams(window.location.search).get("denied") === "1";
     if (denied) {
       clearCookie();
       signOut(auth).catch(() => {});
       document.getElementById("title").textContent = "Nincs jogosultság";
       setLead("Ezzel a Google-fiókkal nem léphetsz be a Codex Magicába. Ha szerinted ez tévedés, szólj az adminnak — vagy próbáld újra egy másik fiókkal.");
+      reveal();
     } else {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         unsubscribe();
         const recent = recentAutoRedirects();
-        if (!user || recent.length >= 3) return; // no session (or looping) → wait for the button
+        if (!user || recent.length >= 3) { reveal(); return; } // no session (or looping) → show the button
+        // Session found: keep the splash up and silently bounce back to the app. Only reveal the
+        // sign-in button if minting the fresh cookie fails.
+        clearTimeout(window.__authFailsafe);
         recent.push(Date.now());
         try { sessionStorage.setItem(AUTO_KEY, JSON.stringify(recent)); } catch {}
-        setCookie(user).then(goApp).catch(() => {});
+        setCookie(user).then(goApp).catch(reveal);
       });
     }
 
