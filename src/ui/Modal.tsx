@@ -39,7 +39,11 @@ export const ModalShell: React.FC<{
 }> = ({ onClose, width, maxH = "92vh", zIndex = 45, overlayPad = "20px", children }) => {
   useEscClose(onClose);
   return (
-    <Box position="fixed" inset={0} zIndex={zIndex} bg="overlayBg" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}>
+    <Box position="fixed" inset={0} zIndex={zIndex} bg="overlayBg" display="flex" alignItems="center" justifyContent="center" p={overlayPad} onClick={onClose}
+      // The overlay + panel both carry onClick (backdrop closes, panel stops propagation), which makes
+      // the whole modal a tap target — so mobile paints its default tap-highlight box on every touch,
+      // read as a flicker. Kill it here; the property inherits down to the panel and all its controls.
+      sx={{ WebkitTapHighlightColor: "transparent" }}>
       {/* vh resolves against the REAL viewport, but #root's desktop scaling (--app-zoom, index.css)
           multiplies rendered lengths — divide so "92vh" still means 92% of the screen when scaled. */}
       <ParchPanel role="dialog" aria-modal="true" onClick={(e: React.MouseEvent) => e.stopPropagation()} borderRadius="12px" p={0} w={width} maxH={`calc((${maxH}) / var(--app-zoom, 1))`} display="flex" flexDirection="column" overflow="hidden" boxShadow="modal">

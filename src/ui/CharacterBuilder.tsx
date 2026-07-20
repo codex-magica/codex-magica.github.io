@@ -11,6 +11,7 @@ import { activeChoices, defaultSelections, ChoiceDef } from "../model/choices";
 import { STAT_KEYS, Stat } from "../model/attributes";
 import { AttributeEditor } from "./AttributeEditor";
 import { BackgroundSelector } from "./BackgroundSelector";
+import { SphereEditor } from "./sheet/SphereEditor";
 import { SkillLevelPanel } from "./SkillLevelPanel";
 import { PointBuyPanel } from "./PointBuyPanel";
 import { LevelGainsPanel } from "./LevelGainsPanel";
@@ -137,6 +138,9 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const isLevelup = mode === "levelup";
   const activeLevel = isLevelup ? record.levels.length : Math.min(selectedLevel, record.levels.length);
   const showBase = activeLevel === 1; // creation panels (race/class/attrs/backgrounds) live on level 1 only
+  // A kegyelt (Kegyelt háttér — granted by a priest class or chosen directly) may pick which szakrális
+  // szférák they command; the deity/rend only sets the defaults.
+  const hasKegyelt = derived.grantedBackgrounds.includes("Kegyelt") || record.backgrounds.some((b) => b.background === "Kegyelt");
   // Edit mode always shows the level row: pick which level to edit, add a level (szintlépés from the
   // editor), or revert the last one. Level-up mode pins the fresh level; create is level-1 only.
   const showSwitcher = mode === "edit";
@@ -293,7 +297,12 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
 
         {showBase && (
         <ParchPanel>
-          <BackgroundSelector record={record} granted={derived.grantedBackgrounds} onToggle={toggleBackground} onLevel={setBackgroundLevel} onOption={setBackgroundOption} />
+          <BackgroundSelector record={record} granted={derived.grantedBackgrounds} onToggle={toggleBackground} onLevel={setBackgroundLevel} onOption={setBackgroundOption}
+            kegyeltExtra={hasKegyelt ? (
+              <SphereEditor effective={derived.spheres} defaults={derived.sphereDefaults}
+                overridden={record.sacredSpheres != null} granted={derived.grantedBackgrounds.includes("Kegyelt")}
+                onSet={(spheres) => update({ sacredSpheres: spheres })} />
+            ) : undefined} />
         </ParchPanel>
         )}
 

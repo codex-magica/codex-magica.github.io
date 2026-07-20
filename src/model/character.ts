@@ -164,6 +164,10 @@ export interface CharacterRecord {
   vitalsState: Partial<Record<VitalKey, number>>; // current Ép/Fp/Mana/Psi/Kegy
   conditions?: CharacterCondition[]; // active status effects
   companions?: Companion[]; // társ állatok (horses, dogs…) — independent creatures, not part of the build
+  // Manual override of the Szakrális szférák a kegyelt has access to (a Kegyelt + Vallásismeret 3
+  // character can cast prayers without being pap/paplovag). undefined = use the deity/rend defaults;
+  // any array (incl. empty) = an explicit player-set list. Only meaningful for a kegyelt.
+  sacredSpheres?: string[];
 }
 
 export const emptyLevel = (level: number): LevelRecord => ({

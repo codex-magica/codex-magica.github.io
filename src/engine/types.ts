@@ -98,6 +98,11 @@ export interface DerivedCharacter {
   spells: SpellView[];
   // Special abilities (tag grants). See AbilityTag.
   tags: AbilityTag[];
+  // Effective Szakrális szférák (a manual kegyelt override, else the deity/rend defaults) — drives the
+  // Szakrális panel caption and the prayer sphere-gate (a Kis/Nagy Arkánum fohász is castable only if
+  // it shares a sphere with these).
+  spheres: string[];
+  sphereDefaults: string[]; // the deity/rend-granted spheres, ignoring any override — for "reset to default"
   grantedBackgrounds: string[]; // backgrounds conferred free by race/class (locked in the UI)
   money: number;
   inventory: InventoryItem[];

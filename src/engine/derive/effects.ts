@@ -76,6 +76,9 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
       else if (text) existing.text = text;
       break;
     }
+    case "grantSphere":
+      if (e.sphere.trim()) ctx.spheres.add(e.sphere.trim());
+      break;
     case "grantEquipment":
       ctx.inventory.push({ name: e.item, qty: e.qty });
       break;

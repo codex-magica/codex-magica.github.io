@@ -35,6 +35,13 @@ interface Props {
 
 // one sheet panel per spell list the character has unlocked, in this order
 const SCHOOL_ORDER = ["Bárdmágia", "Tűzmágia", "Boszorkánymágia", "Boszorkánymesteri", "Magasmágia", "Pszi", "Szakrális"];
+// Display captions for school panels whose data key omits "mágia". The keys stay as-is for
+// filtering/lookups (the prayer/spell `school`); only the visible header reads the fuller name.
+const SCHOOL_CAPTIONS: Record<string, string> = {
+  "Szakrális": "Szakrális mágia",
+  "Boszorkánymesteri": "Boszorkánymesteri mágia",
+};
+const schoolCaption = (school: string) => SCHOOL_CAPTIONS[school] ?? school;
 
 // spell table: name (takes the slack) | Mana(/Ψp/Kp) | Időigény (clock) — the two value columns are
 // narrow, fixed-width and tucked tightly together at the right, with their headers + values centred.
@@ -43,6 +50,7 @@ const SPELL_GAP = "5px";
 // Prayers only: the spheres a fohász belongs to, as initials after its name (ÉHLT). A prayer open to
 // all four spheres is the unremarkable case — show nothing there, so the marks flag the restrictions.
 const SPHERE_INITIAL: Record<string, string> = { "Élet": "É", "Halál": "H", "Lélek": "L", "Természet": "T" };
+const SPHERE_ORDER = ["Élet", "Halál", "Lélek", "Természet"]; // canonical order for the panel caption
 const spheres = (domains?: string[]): string | undefined =>
   domains && domains.length > 0 && domains.length < 4 ? domains.map((d) => SPHERE_INITIAL[d] ?? d[0].toUpperCase()).join("") : undefined;
 
@@ -195,7 +203,15 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
         return (
           <Col key={g.school}>
             <Card>
-              <SecHead>{g.school}</SecHead>
+              <SecHead>{schoolCaption(g.school)}</SecHead>
+              {/* Szakrális: the kegyelt's spheres — the fohászok below are filtered to these, and a
+                  Kegyelt + Vallásismeret 3 character may edit them (priesthood only sets the defaults). */}
+              {/* read-only here — the szférák are edited in the character builder, not on the sheet */}
+              {g.school === "Szakrális" && derived.spheres.length > 0 && (
+                <Text mt="-4px" mb="2px" fontFamily="ui" fontSize="11px" fontWeight={600} color="muted" letterSpacing=".01em">
+                  Szférák: {SPHERE_ORDER.filter((s) => derived.spheres.includes(s)).join(" · ")}
+                </Text>
+              )}
               {cats.map((cat) => (
                 <Box key={cat}>
                   {/* subcategory header — column indicators (clock = Időigény, unit = pool) sit inline on the right */}

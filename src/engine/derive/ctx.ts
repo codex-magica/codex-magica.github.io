@@ -53,6 +53,7 @@ export interface DeriveCtx {
   owned: OwnedMap;
   grantedFokOf: Record<string, number>; // key → highest GRANTED fok (grants don't need prereqs)
   tags: AbilityTag[]; // special abilities, with their origin/level (and custom rules text on KM grants)
+  spheres: Set<string>; // szakrális szférák the deity/rend grants — gates Kis/Nagy Arkánum fohászok
   money: number;
   inventory: InventoryItem[];
   discounts: Discount[];
@@ -120,6 +121,7 @@ export function createCtx(db: RulesDB, rec: CharacterRecord): DeriveCtx {
     owned: {},
     grantedFokOf: {},
     tags: [],
+    spheres: new Set(),
     money: 0,
     inventory: rec.inventory.slice(),
     discounts: [],

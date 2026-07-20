@@ -47,5 +47,8 @@ export const forbidCat = (...cats: SkillCategory[]): GrantEntry[] => cats.map((c
 export const capSkill = (fok: SkillFok, ...skills: string[]): GrantEntry[] => skills.map((skill) => grant({ kind: "maxSkillFok", skill, fok }));
 export const capCat = (fok: SkillFok, ...cats: SkillCategory[]): GrantEntry[] => cats.map((category) => grant({ kind: "maxSkillFok", category, fok }));
 export const tag = (t: string): GrantEntry => grant({ kind: "tag", tag: t }); // #6: school "ability"/sense, like Elf látás
+// Szakrális szférák a deity/rend confers (Élet/Halál/Lélek/Természet). Gate Kis/Nagy Arkánum fohászok.
+export const sphere = (s: string): GrantEntry => grant({ kind: "grantSphere", sphere: s });
+export const spheres = (...ss: string[]): GrantEntry[] => ss.map(sphere);
 export const equip = (item: string): GrantEntry => grant({ kind: "grantEquipment", item });
 export const restrict = (text: string): GrantEntry => grant({ kind: "restriction", text });

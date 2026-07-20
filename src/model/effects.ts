@@ -43,6 +43,7 @@ export type Effect =
   | { kind: "combatBonus"; channel: CombatChannel; amount: number }
   | { kind: "derivedBonus"; target: DerivedKey; amount: number }
   | { kind: "tag"; tag: string; text?: string } // text = custom (KM-authored) rules text; built-in tags look their text up in ABILITIES instead
+  | { kind: "grantSphere"; sphere: string } // szakrális szféra a deity/rend grants — gates Kis/Nagy Arkánum fohászok on the sheet
   | { kind: "grantEquipment"; item: string; qty?: number }
   | { kind: "grantMoney"; amount: number }
   | { kind: "restriction"; text: string }

@@ -11,6 +11,7 @@ interface Props {
   onToggle: (name: string) => void;
   onLevel: (name: string, level: number) => void;
   onOption: (name: string, option: string) => void;
+  kegyeltExtra?: React.ReactNode; // szféra editor — rendered under the Kegyelt row's description when active
 }
 
 const costLabel = (cost: number, range?: [number, number]): string =>
@@ -32,7 +33,7 @@ const pillStyle = {
   focusBorderColor: "accent",
 };
 
-export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle, onLevel, onOption }) => {
+export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle, onLevel, onOption, kegyeltExtra }) => {
   const chosenEntry = (name: string) =>
     record.backgrounds.find((b) => b.background === name && b.source === "chosen");
 
@@ -78,8 +79,9 @@ export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle,
                   },
                 }}
               />
-              <Box flex="1" minW={0} opacity={isGranted ? 0.62 : 1}>
-                <HStack spacing="6px" flexWrap="wrap" align="center">
+              {/* dim only the row's own text when granted — the Kegyelt szféra editor below stays full-strength */}
+              <Box flex="1" minW={0}>
+                <HStack spacing="6px" flexWrap="wrap" align="center" opacity={isGranted ? 0.62 : 1}>
                   <Text fontSize={FS_NAME} fontWeight={600} color={isGranted ? "fgFaint" : "fg"}>{name}</Text>
                   <Text as="span" fontSize=".85em" color="fgFaint">({costLabel(bg.cost, bg.costRange)})</Text>
                   {isGranted && (
@@ -103,8 +105,9 @@ export const BackgroundSelector: React.FC<Props> = ({ record, granted, onToggle,
                   )}
                 </HStack>
                 {bg.description && (
-                  <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" lineHeight="1.4" mt="2px">{bg.description}</Text>
+                  <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" lineHeight="1.4" mt="2px" opacity={isGranted ? 0.62 : 1}>{bg.description}</Text>
                 )}
+                {name === "Kegyelt" && kegyeltExtra}
               </Box>
             </HStack>
           );

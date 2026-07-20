@@ -136,12 +136,23 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
     }
   }
 
+  // A kegyelt's effective szférák: the player's manual override if set (a Kegyelt + Vallásismeret 3
+  // character needs no priesthood), otherwise the deity/rend defaults from the class grants.
+  const effectiveSpheres = rec.sacredSpheres != null ? new Set(rec.sacredSpheres) : ctx.spheres;
+
   const spells = db.spells.map((sp) => {
     // Pool existence is the background proxy: a list is castable only if its pool (Mana/Pszi/Kegy)
     // exists — itself gated by Mágikus fogékonyság / Pszi érzékenység / Kegyelt háttér.
     const hasPool = vitals[sp.pool].max > 0;
     // ALL requirements must hold (e.g. Magasmágia 3 AND the category's governing skill 3).
-    const known = hasPool && sp.requires.every((r) => reqMet(ctx, r));
+    let known = hasPool && sp.requires.every((r) => reqMet(ctx, r));
+    // Szakrális sphere-gate (book ch.25): a szférikus fohász — the Kis/Nagy Arkánum, whose `category`
+    // IS its `source` — is castable only if it shares at least one sphere with the deity's grants.
+    // Általános fohászok (all spheres) and a deity's egyedi prayers (own-deity, gated by the
+    // Vallásismeret subtype requirement) are exempt. No spheres granted ⇒ only Általános remains.
+    if (known && sp.school === "Szakrális" && (sp.category === "Kis Arkánum" || sp.category === "Nagy Arkánum")) {
+      known = !!sp.domains && sp.domains.some((d) => effectiveSpheres.has(d));
+    }
     const cur = vitals[sp.pool].current;
     return { name: sp.name, school: sp.school, category: sp.category, pool: sp.pool, cost: sp.cost, castingTime: sp.castingTime, known, castableNow: known && cur >= sp.cost, ...(sp.domains ? { domains: sp.domains } : {}) };
   });
@@ -169,6 +180,8 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
     costMultipliers: ctx.costMultipliers,
     spells,
     tags: ctx.tags,
+    spheres: Array.from(effectiveSpheres), // effective (override or default) — drives caption + filter
+    sphereDefaults: Array.from(ctx.spheres), // the deity/rend grants — for the editor's "reset to default"
     grantedBackgrounds: Object.keys(ctx.grantedBg),
     money: ctx.money,
     inventory: ctx.inventory,

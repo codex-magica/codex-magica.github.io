@@ -7457,6 +7457,8 @@ Object {
       "school": "Szakrális",
     },
   ],
+  "sphereDefaults": Array [],
+  "spheres": Array [],
   "tags": Array [
     Object {
       "atLevel": undefined,
@@ -15495,6 +15497,8 @@ Object {
       "school": "Szakrális",
     },
   ],
+  "sphereDefaults": Array [],
+  "spheres": Array [],
   "tags": Array [
     Object {
       "atLevel": undefined,

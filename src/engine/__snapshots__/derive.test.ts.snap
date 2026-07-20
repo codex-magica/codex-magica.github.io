@@ -8063,6 +8063,8 @@ Object {
       "school": "Szakrális",
     },
   ],
+  "sphereDefaults": Array [],
+  "spheres": Array [],
   "tags": Array [],
   "teachingDiscounts": Array [
     Object {
@@ -14194,14 +14196,14 @@ Object {
       "school": "Szakrális",
     },
     Object {
-      "castableNow": true,
+      "castableNow": false,
       "castingTime": "1 szegmens",
       "category": "Kis Arkánum",
       "cost": 5,
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "A halál szava",
       "pool": "Kegy",
       "school": "Szakrális",
@@ -14343,14 +14345,14 @@ Object {
       "school": "Szakrális",
     },
     Object {
-      "castableNow": true,
+      "castableNow": false,
       "castingTime": "1 szegmens",
       "category": "Kis Arkánum",
       "cost": 6,
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "Életerő-csapolás",
       "pool": "Kegy",
       "school": "Szakrális",
@@ -14451,14 +14453,14 @@ Object {
       "school": "Szakrális",
     },
     Object {
-      "castableNow": true,
+      "castableNow": false,
       "castingTime": "1 kör",
       "category": "Kis Arkánum",
       "cost": 2,
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "Mérgezés",
       "pool": "Kegy",
       "school": "Szakrális",
@@ -14711,7 +14713,7 @@ Object {
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "Izzó vér",
       "pool": "Kegy",
       "school": "Szakrális",
@@ -14847,20 +14849,20 @@ Object {
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "Véráldozat",
       "pool": "Kegy",
       "school": "Szakrális",
     },
     Object {
-      "castableNow": true,
+      "castableNow": false,
       "castingTime": "Rajzolás hossza",
       "category": "Kis Arkánum",
       "cost": 10,
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "Vérgát - Egyedre",
       "pool": "Kegy",
       "school": "Szakrális",
@@ -14873,7 +14875,7 @@ Object {
       "domains": Array [
         "Halál",
       ],
-      "known": true,
+      "known": false,
       "name": "Vérgát - Fajra",
       "pool": "Kegy",
       "school": "Szakrális",
@@ -15800,6 +15802,16 @@ Object {
       "pool": "Kegy",
       "school": "Szakrális",
     },
+  ],
+  "sphereDefaults": Array [
+    "Élet",
+    "Lélek",
+    "Természet",
+  ],
+  "spheres": Array [
+    "Élet",
+    "Lélek",
+    "Természet",
   ],
   "tags": Array [],
   "teachingDiscounts": Array [
@@ -23074,6 +23086,8 @@ Object {
       "school": "Szakrális",
     },
   ],
+  "sphereDefaults": Array [],
+  "spheres": Array [],
   "tags": Array [],
   "teachingDiscounts": Array [
     Object {
@@ -30665,6 +30679,8 @@ Object {
       "school": "Szakrális",
     },
   ],
+  "sphereDefaults": Array [],
+  "spheres": Array [],
   "tags": Array [
     Object {
       "atLevel": undefined,
@@ -38335,6 +38351,8 @@ Object {
       "school": "Szakrális",
     },
   ],
+  "sphereDefaults": Array [],
+  "spheres": Array [],
   "tags": Array [
     Object {
       "atLevel": undefined,
