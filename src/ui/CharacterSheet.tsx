@@ -28,6 +28,10 @@ interface Props {
   onSetCompanions: (companions: Companion[]) => void;
   onSetWeapons: (weapons: string[]) => void;
   onSetActiveWeapon: (name: string | null) => void;
+  onSetArmor: (name: string | null) => void;
+  onSetShield: (name: string | null) => void;
+  onToggleArmorWorn: () => void;
+  onToggleShieldWorn: () => void;
   onOpenSkill: (name: string, fok: number, percent?: number | null) => void;
   onOpenSpell: (name: string, school: string) => void;
   onOpenWeapon: (w: WeaponModalState) => void;
@@ -68,7 +72,7 @@ const shortTime = (raw: string): string => {
   return c.length > 7 ? "…" : c;
 };
 
-export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, onSetInventory, onSetConditions, onSetCompanions, onSetWeapons, onSetActiveWeapon, onOpenSkill, onOpenSpell, onOpenWeapon }) => {
+export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, onSetInventory, onSetConditions, onSetCompanions, onSetWeapons, onSetActiveWeapon, onSetArmor, onSetShield, onToggleArmorWorn, onToggleShieldWorn, onOpenSkill, onOpenSpell, onOpenWeapon }) => {
   const id = record.identity;
   const specs = Object.values(record.selections).filter(Boolean).join(" · ");
   const idFields: { k: string; v: string }[] = [
@@ -172,6 +176,10 @@ export const CharacterSheet: React.FC<Props> = ({ record, derived, onSetVital, o
           pinnedWeapons={pinnedWeapons}
           onSetWeapons={onSetWeapons}
           onSetActiveWeapon={onSetActiveWeapon}
+          onSetArmor={onSetArmor}
+          onSetShield={onSetShield}
+          onToggleArmorWorn={onToggleArmorWorn}
+          onToggleShieldWorn={onToggleShieldWorn}
           onOpenWeapon={(row) => onOpenWeapon(row.modal)}
           onCombatInfo={setCombatInfo}
         />

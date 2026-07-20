@@ -7,6 +7,7 @@ import { CombatChannel, Pool } from "../../model/effects";
 import { skillKey } from "../../model/common";
 import { fixedSubtypesOf } from "../../model/skills";
 import { COMBAT_INFO } from "../../model/combatInfo";
+import { armorByName, resolveArmorUse, resolveShieldUse, shieldByName } from "../../model/armorUse";
 import { FOK_CHECK_MOD, MAGIC_DEFENSE_OFFSET } from "../constants";
 import { DerivedCharacter, OwnedSkill } from "../types";
 import { DeriveCtx, POOLS, SkillSnapshot } from "./ctx";
@@ -140,6 +141,13 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
   // character needs no priesthood), otherwise the deity/rend defaults from the class grants.
   const effectiveSpheres = rec.sacredSpheres != null ? new Set(rec.sacredSpheres) : ctx.spheres;
 
+  // Worn vért / carried pajzs resolved for the panel (their stat/VÉ effects were applied in derive()).
+  const wornArmor = rec.armor ? armorByName(rec.armor) : undefined;
+  const carriedShield = rec.shield ? shieldByName(rec.shield) : undefined;
+  const skillViews = Object.values(owned);
+  const armorUse = wornArmor ? { ...resolveArmorUse(wornArmor, skillViews), worn: rec.armorActive !== false } : undefined;
+  const shieldUse = carriedShield ? { ...resolveShieldUse(carriedShield, skillViews), worn: rec.shieldActive !== false } : undefined;
+
   const spells = db.spells.map((sp) => {
     // Pool existence is the background proxy: a list is castable only if its pool (Mana/Pszi/Kegy)
     // exists — itself gated by Mágikus fogékonyság / Pszi érzékenység / Kegyelt háttér.
@@ -182,6 +190,8 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
     tags: ctx.tags,
     spheres: Array.from(effectiveSpheres), // effective (override or default) — drives caption + filter
     sphereDefaults: Array.from(ctx.spheres), // the deity/rend grants — for the editor's "reset to default"
+    ...(armorUse ? { armorUse } : {}),
+    ...(shieldUse ? { shieldUse } : {}),
     grantedBackgrounds: Object.keys(ctx.grantedBg),
     money: ctx.money,
     inventory: ctx.inventory,

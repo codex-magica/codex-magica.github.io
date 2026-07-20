@@ -68,6 +68,16 @@ export interface WeaponRowView {
 // Build the weapon rows for the sheet: the fist row first (always), then the pinned weapons. Pure
 // weapon-math — the melee damage bonus and the weapon-adjusted calculator base values live here, next
 // to resolveWeaponUse, so the sheet component only renders.
+// Fold a flat damage bonus into an NkM(±X) dice expression, so the row shows one rollable value
+// ("1k3−1" + 2 → "1k3+1") — non-dice damage strings keep the " +N" suffix instead.
+export const withDmgBonus = (dmg: string, plus: number): string => {
+  if (plus <= 0) return dmg;
+  const m = dmg.trim().replace(/−/g, "-").match(/^(\d+)k(\d+)\s*([+-]\s*\d+)?$/);
+  if (!m) return `${dmg} +${plus}`;
+  const mod = (m[3] ? parseInt(m[3].replace(/\s/g, ""), 10) : 0) + plus;
+  return `${m[1]}k${m[2]}${mod > 0 ? `+${mod}` : mod < 0 ? `−${-mod}` : ""}`;
+};
+
 export function buildWeaponRows(
   pinned: string[],
   skills: SkillView[],
@@ -81,7 +91,7 @@ export function buildWeaponRows(
       const use = resolveWeaponUse(w, skills);
       const melee = use.kind === "melee";
       const dmgPlus = use.dmgBonus + (melee ? sebzesBonus : 0);
-      const dmg = `${use.baseDmg}${dmgPlus > 0 ? ` +${dmgPlus}` : ""}`;
+      const dmg = withDmgBonus(use.baseDmg, dmgPlus);
       const modal = melee
         ? { kind: "melee" as const, name: w.name, dmg, baseKE: combat.KÉ + use.ke, baseTE: combat.TÉ + use.te, baseVE: combat.VÉ + use.ve }
         : { kind: "ranged" as const, name: w.name, dmg, range: w.range, baseCE: combat.CÉ + use.ce };

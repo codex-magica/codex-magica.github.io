@@ -153,6 +153,12 @@ export interface CharacterRecord {
   pathChoices?: SkillPathChoice[]; // committing path choices (Pszi tudat/test), per instance
   weapons?: string[]; // weapons pinned to the sheet's Harcértékek panel (names from the weapon table)
   activeWeapon?: string; // the pinned weapon currently "in hand" — the sheet's combat tiles show its adjusted values
+  armor?: string; // the sheet's vért slot (name from data/armor.ts) — its MGT/SFÉ apply as play-state
+  shield?: string; // the sheet's pajzs slot — VÉ (when trained) and MGT apply as play-state
+  // Worn/doffed toggles (like a weapon's kézbevétel): false = on the sheet but not equipped — nothing
+  // applies. Absent/true = worn (the conditions' `active` convention).
+  armorActive?: boolean;
+  shieldActive?: boolean;
   skillAttrChoices?: SkillAttrChoice[]; // chosen attribute requirements for open branches, per instance
 
   levels: LevelRecord[]; // the build ledger (ordered per-level decisions)

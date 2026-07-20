@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { DerivedCharacter } from "../../engine/types";
 import { CombatKey, FIST, WeaponRowView, masteryLabel, weaponUseKey } from "../../model/weaponUse";
+import { pierceFor, signedNum } from "../../model/armorUse";
 import { Card, EditRow, PanelAddButton, PanelEditButton, FS, FS_SUB, ROWPY, SecHead, ValNum, rowProps } from "./primitives";
 import { AddWeaponModal } from "./AddWeaponModal";
+import { AddArmorModal } from "./AddArmorModal";
+import { ArmorDetailModal } from "./ArmorDetailModal";
 import { WeaponDetailModal } from "./WeaponDetailModal";
 import { ReorderList } from "./ReorderList";
 import { ConfirmModal } from "../ConfirmModal";
@@ -45,9 +48,13 @@ export const CombatCard: React.FC<{
   pinnedWeapons: string[];
   onSetWeapons: (weapons: string[]) => void;
   onSetActiveWeapon: (name: string | null) => void;
+  onSetArmor: (name: string | null) => void;
+  onSetShield: (name: string | null) => void;
+  onToggleArmorWorn: () => void;
+  onToggleShieldWorn: () => void;
   onOpenWeapon: (row: WeaponRowView) => void;
   onCombatInfo: (key: string) => void;
-}> = ({ derived, weaponRows, activeRow, pinnedWeapons, onSetWeapons, onSetActiveWeapon, onOpenWeapon, onCombatInfo }) => {
+}> = ({ derived, weaponRows, activeRow, pinnedWeapons, onSetWeapons, onSetActiveWeapon, onSetArmor, onSetShield, onToggleArmorWorn, onToggleShieldWorn, onOpenWeapon, onCombatInfo }) => {
   const [addWeaponOpen, setAddWeaponOpen] = useState(false);
   // The chevron opens the weapon card (stats, mastery breakdown, calculator; removing lives there).
   const [detailName, setDetailName] = useState<string | null>(null);
@@ -55,6 +62,14 @@ export const CombatCard: React.FC<{
   // The header pencil flips the list into edit mode: add / delete / drag-reorder appear only there.
   const [editMode, setEditMode] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  // Vértezet: one vért + one pajzs slot; the chevron opens the gear card, the picker fills a slot.
+  // Its own section with its own pencil — armor shouldn't hide behind the weapons' edit mode.
+  const [gearPicker, setGearPicker] = useState<"armor" | "shield" | null>(null);
+  const [gearDetail, setGearDetail] = useState<"armor" | "shield" | null>(null);
+  const [gearEdit, setGearEdit] = useState(false);
+  const [removingGear, setRemovingGear] = useState<"armor" | "shield" | null>(null);
+  // The in-hand weapon's SFÉ-negation — only rendered when it exists (canPierce + training).
+  const pierce = pierceFor(activeRow);
 
   const combatTile = (k: CombatKey): Tile => ({
     label: k,
@@ -159,6 +174,13 @@ export const CombatCard: React.FC<{
           <ValNum sx={{ fontVariantNumeric: "tabular-nums", ...INFO_UL }}>{`+${derived.derived.Sebzésbónusz}`}</ValNum>
         </Box>
       )}
+      {/* the in-hand weapon's armor-piercing (book: fok 3/4/5 −1/−2/−3; bows: dice count) */}
+      {pierce && (
+        <Box {...rowProps} display="flex" justifyContent="space-between" gap="14px" title={pierce.hint}>
+          <Text color="fg" fontSize={FS}>{pierce.label}</Text>
+          <ValNum sx={{ fontVariantNumeric: "tabular-nums" }}>{pierce.value}</ValNum>
+        </Box>
+      )}
       {/* subhead: the pencil flips the list into edit mode (add / delete / drag-reorder) */}
       <Flex align="center" justify="space-between" gap="10px" mt="13px" mb="3px" pb="3px" borderBottom="1px solid" borderColor="hair">
         <Box fontSize={FS_SUB} fontWeight={700} color="muted" letterSpacing=".02em">Fegyverek</Box>
@@ -192,6 +214,88 @@ export const CombatCard: React.FC<{
           <PanelAddButton onClick={() => setAddWeaponOpen(true)}>+ Fegyver hozzáadása</PanelAddButton>
         </>
       )}
+
+      {/* ── Vértezet: one vért + one pajzs slot. Their MGT/VÉ are already folded into the stats and
+          tiles by the engine — these rows show the effective values and open the gear card. ── */}
+      <Flex align="center" justify="space-between" gap="10px" mt="13px" mb="3px" pb="3px" borderBottom="1px solid" borderColor="hair">
+        <Box fontSize={FS_SUB} fontWeight={700} color="muted" letterSpacing=".02em">Vértezet</Box>
+        <PanelEditButton editing={gearEdit} onToggle={() => setGearEdit(!gearEdit)} label="Vértezet szerkesztése" />
+      </Flex>
+      {!gearEdit && !derived.armorUse && !derived.shieldUse && (
+        <Text fontFamily="ui" fontSize="11.5px" color="fgFaint" py="4px">
+          Nincs viselt vért vagy pajzs.
+        </Text>
+      )}
+      {([
+        derived.armorUse && {
+          kind: "armor" as const,
+          name: derived.armorUse.armor.name,
+          right: `SFÉ ${derived.armorUse.sfe}`,
+          sub: derived.armorUse.worn === false
+            ? "levéve — nem érvényesül"
+            : derived.armorUse.untrained
+              ? `${derived.armorUse.category} · képzetlen viselés!`
+              // MGT 0 is the unremarkable case — only a real drag is worth a mention
+              : `${derived.armorUse.category}${derived.armorUse.mgt !== 0 ? ` · MGT ${signedNum(derived.armorUse.mgt)}` : ""}${derived.armorUse.fok >= 3 ? ` · Vértviselet ${derived.armorUse.fok}. fok` : ""}`,
+          warn: derived.armorUse.worn !== false && derived.armorUse.untrained,
+          worn: derived.armorUse.worn !== false,
+          onToggle: onToggleArmorWorn,
+        },
+        derived.shieldUse && {
+          kind: "shield" as const,
+          name: derived.shieldUse.shield.name,
+          right: derived.shieldUse.untrained ? "VÉ —" : `VÉ +${derived.shieldUse.ve}`,
+          sub: derived.shieldUse.worn === false
+            ? "letéve — nem érvényesül"
+            : derived.shieldUse.untrained
+              ? "képzetlen — a VÉ nem érvényesül"
+              // MGT 0 is the unremarkable case; the fok line keeps the sub from ever being empty
+              : [derived.shieldUse.mgt !== 0 ? `MGT ${signedNum(derived.shieldUse.mgt)}` : "", `Pajzshasználat ${derived.shieldUse.fok}. fok`].filter(Boolean).join(" · "),
+          warn: derived.shieldUse.worn !== false && derived.shieldUse.untrained,
+          worn: derived.shieldUse.worn !== false,
+          onToggle: onToggleShieldWorn,
+        },
+      ].filter(Boolean) as { kind: "armor" | "shield"; name: string; right: string; sub: string; warn: boolean; worn: boolean; onToggle: () => void }[]).map((g) =>
+        gearEdit ? (
+          <Box key={g.kind} mb="5px">
+            <EditRow onDelete={() => setRemovingGear(g.kind)} deleteLabel={`${g.name} eltávolítása`} grip={null}>
+              <HStack justify="space-between" align="baseline" gap="10px">
+                <Text color="fg" fontSize={FS} noOfLines={1}>{g.name}</Text>
+                <Text color="accentTx" fontSize={FS} fontWeight={600} flexShrink={0} sx={{ fontVariantNumeric: "tabular-nums" }}>{g.right}</Text>
+              </HStack>
+            </EditRow>
+          </Box>
+        ) : (
+          // same shell as the weapon rows: body tap = felöltés/levétel toggle, chevron = the gear card.
+          // Worn = accent BORDER only (no fill) — the filled box stays exclusive to the in-hand weapon,
+          // so a fully equipped fighter's card doesn't drown in accent.
+          <Flex key={g.kind} align="stretch" gap="2px" ml="-5px">
+            <Box onClick={g.onToggle} role="button" tabIndex={0} cursor="pointer" flex="1 1 auto" minW={0}
+              title={g.worn ? "Levétel — az értékei nem érvényesülnek" : "Felöltés — az értékei érvényesülnek"}
+              py={ROWPY} px="5px" borderRadius="7px"
+              border="1px solid" borderColor={g.worn ? "accentBd" : "transparent"} _hover={{ bg: "accentSoft" }}>
+              <HStack justify="space-between" align="baseline" gap="10px">
+                <Text color="fg" fontSize={FS} fontWeight={g.worn ? 600 : 400} noOfLines={1}>{g.name}</Text>
+                <Text color={g.worn ? "accentTx" : "fgFaint"} fontSize={FS} fontWeight={600} flexShrink={0} sx={{ fontVariantNumeric: "tabular-nums" }}>{g.right}</Text>
+              </HStack>
+              <Text fontFamily="ui" fontSize="11.5px" mt="1px" color={g.warn ? "bad" : "muted"}>{g.sub}</Text>
+            </Box>
+            <Flex as="button" type="button" align="center" justify="center" w="22px" flexShrink={0}
+              aria-label={`${g.name} részletei`} title="Részletek"
+              onClick={(e: React.MouseEvent) => { e.stopPropagation(); setGearDetail(g.kind); }}
+              color="fgFaint" borderRadius="6px" _hover={{ color: "accentTx", bg: "accentSoft" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 6 15 12 9 18" /></svg>
+            </Flex>
+          </Flex>
+        )
+      )}
+      {gearEdit && !derived.armorUse && (
+        <PanelAddButton onClick={() => setGearPicker("armor")}>+ Vért felvétele</PanelAddButton>
+      )}
+      {gearEdit && !derived.shieldUse && (
+        <PanelAddButton onClick={() => setGearPicker("shield")}>+ Pajzs felvétele</PanelAddButton>
+      )}
+
       {detailRow && (
         <WeaponDetailModal
           row={detailRow}
@@ -207,11 +311,31 @@ export const CombatCard: React.FC<{
           onClose={() => setAddWeaponOpen(false)}
         />
       )}
+      {gearPicker && (
+        <AddArmorModal
+          kind={gearPicker}
+          onPick={(name) => { (gearPicker === "armor" ? onSetArmor : onSetShield)(name); setGearPicker(null); }}
+          onClose={() => setGearPicker(null)}
+        />
+      )}
+      {gearDetail === "armor" && derived.armorUse && (
+        <ArmorDetailModal armorUse={derived.armorUse} onRemove={() => onSetArmor(null)} onClose={() => setGearDetail(null)} />
+      )}
+      {gearDetail === "shield" && derived.shieldUse && (
+        <ArmorDetailModal shieldUse={derived.shieldUse} onRemove={() => onSetShield(null)} onClose={() => setGearDetail(null)} />
+      )}
       {removing && (
         <ConfirmModal title="Fegyver eltávolítása" confirmLabel="Eltávolítás"
           onConfirm={() => { onSetWeapons(pinnedWeapons.filter((n) => n !== removing)); setRemoving(null); }}
           onClose={() => setRemoving(null)}>
           Biztosan leveszed a(z) <b>{removing}</b> fegyvert a lapról? Bármikor visszaveheted a szerkesztőben.
+        </ConfirmModal>
+      )}
+      {removingGear && (
+        <ConfirmModal title={removingGear === "armor" ? "Vért eltávolítása" : "Pajzs eltávolítása"} confirmLabel="Eltávolítás"
+          onConfirm={() => { (removingGear === "armor" ? onSetArmor : onSetShield)(null); setRemovingGear(null); }}
+          onClose={() => setRemovingGear(null)}>
+          Biztosan eltávolítod a(z) <b>{removingGear === "armor" ? derived.armorUse?.armor.name : derived.shieldUse?.shield.name}</b> {removingGear === "armor" ? "vértet" : "pajzsot"} a lapról? Ha csak ideiglenesen nem viseled, elég a sorára koppintva levenned — úgy a lapon marad.
         </ConfirmModal>
       )}
     </Card>

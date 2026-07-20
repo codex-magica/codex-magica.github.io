@@ -103,6 +103,10 @@ export interface DerivedCharacter {
   // it shares a sphere with these).
   spheres: string[];
   sphereDefaults: string[]; // the deity/rend-granted spheres, ignoring any override — for "reset to default"
+  // Worn vért / carried pajzs, resolved against Vértviselet/Pajzshasználat (effective SFÉ/MGT/VÉ).
+  // Their stat/VÉ effects are already folded into effectiveStats/combat; these views drive the panel.
+  armorUse?: import("../model/armorUse").ArmorUse;
+  shieldUse?: import("../model/armorUse").ShieldUse;
   grantedBackgrounds: string[]; // backgrounds conferred free by race/class (locked in the UI)
   money: number;
   inventory: InventoryItem[];

@@ -50,6 +50,11 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   const setWeapons = (weapons: string[]) =>
     onPatchRecord({ ...record, weapons, activeWeapon: record.activeWeapon && weapons.includes(record.activeWeapon) ? record.activeWeapon : undefined });
   const setActiveWeapon = (name: string | null) => onPatchRecord({ ...record, activeWeapon: name ?? undefined });
+  // Picking or removing a piece also resets its worn flag — a fresh pick is equipped immediately.
+  const setArmor = (name: string | null) => onPatchRecord({ ...record, armor: name ?? undefined, armorActive: undefined });
+  const setShield = (name: string | null) => onPatchRecord({ ...record, shield: name ?? undefined, shieldActive: undefined });
+  const toggleArmorWorn = () => onPatchRecord({ ...record, armorActive: record.armorActive === false ? undefined : false });
+  const toggleShieldWorn = () => onPatchRecord({ ...record, shieldActive: record.shieldActive === false ? undefined : false });
 
   const isSheet = view === "sheet";
   const goComp = (tab?: number) => { setView("compendium"); if (tab != null) setCompTab(tab); setModal(null); };
@@ -111,6 +116,10 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
           onSetCompanions={setCompanions}
           onSetWeapons={setWeapons}
           onSetActiveWeapon={setActiveWeapon}
+          onSetArmor={setArmor}
+          onSetShield={setShield}
+          onToggleArmorWorn={toggleArmorWorn}
+          onToggleShieldWorn={toggleShieldWorn}
           onOpenSkill={(name, fok, percent) => openSkillModal(name, fok, percent)}
           onOpenSpell={(name, school) => openSpellModal(name, school)}
           onOpenWeapon={setWeaponModal}

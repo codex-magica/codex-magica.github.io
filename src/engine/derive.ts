@@ -11,6 +11,7 @@
 
 import { RulesDB } from "../model/rulesDb";
 import { CharacterRecord } from "../model/character";
+import { MGT_STATS, armorByName, resolveArmorUse, resolveShieldUse, shieldByName } from "../model/armorUse";
 import { DerivedCharacter } from "./types";
 import { createCtx } from "./derive/ctx";
 import { applyBaseStats } from "./derive/baseStats";
@@ -39,20 +40,40 @@ export function derive(db: RulesDB, rec: CharacterRecord): DerivedCharacter {
     adj.effects.forEach((e) => applyEffect(ctx, e, e.kind === "tag" ? tagSource : source, at, true));
   });
 
-  // ── 6. Állapotok (play-state) ──────────────────────────────────────────────
-  // Last, so a condition sees the finished character — and BEFORE finalize, so a condition that moves
-  // an attribute cascades into the combat values, MME/AME, Ép/Fp max and Mozgás the same way any other
-  // stat bonus does. The snapshot lets finalize re-base the BUILD ledger onto pre-condition totals:
-  // "KÉ 64 → 68" is what you bought, and must not shift because you're currently dazed.
+  // ── 6. Vértezet + állapotok (play-state) ───────────────────────────────────
+  // Last, so they see the finished character — and BEFORE finalize, so a moved attribute cascades
+  // into the combat values, MME/AME, Ép/Fp max and Mozgás the same way any other stat bonus does.
+  // The snapshot lets finalize re-base the BUILD ledger onto pre-play-state totals: "KÉ 64 → 68" is
+  // what you bought, and must not shift because you donned a vért or are currently dazed.
+  const conditions = (rec.conditions ?? []).filter((c) => c.active !== false && c.effects?.length);
+  // A doffed piece (armorActive/shieldActive === false) stays on the sheet but applies nothing —
+  // same toggle semantics as putting a weapon down.
+  const armor = rec.armor && rec.armorActive !== false ? armorByName(rec.armor) : undefined;
+  const shield = rec.shield && rec.shieldActive !== false ? shieldByName(rec.shield) : undefined;
+  if (conditions.length > 0 || armor || shield) {
+    ctx.preConditions = { effective: { ...ctx.effective }, combatAcc: { ...ctx.combatAcc }, derivedBonus: { ...ctx.derivedBonus } };
+  }
+  // Armor/shield first (a garment, not a condition): the effective MGT (book ch.21, relieved by
+  // Vértviselet/Pajzshasználat) drags Ügyesség/Gyorsaság/Állóképesség down — but never below 5 —
+  // and the shield's VÉ applies only when trained (Pajzshasználat 1+).
+  const skillViews = Object.values(ctx.owned);
+  const applyMgt = (mgt: number, source: string) => {
+    for (const stat of MGT_STATS) {
+      const amount = -Math.min(Math.max(ctx.effective[stat] - 5, 0), -mgt);
+      if (amount < 0) applyEffect(ctx, { kind: "statBonus", stat, amount }, source, N, true);
+    }
+  };
+  if (armor) applyMgt(resolveArmorUse(armor, skillViews).mgt, `Vért: ${armor.name}`);
+  if (shield) {
+    const use = resolveShieldUse(shield, skillViews);
+    applyMgt(use.mgt, `Pajzs: ${shield.name}`);
+    if (use.ve > 0) applyEffect(ctx, { kind: "combatBonus", channel: "VÉ", amount: use.ve }, `Pajzs: ${shield.name}`, N, true);
+  }
   // A condition can be parked (active === false): it stays on the sheet — a psi shield you re-raise
   // every fight is worth keeping around — but contributes nothing until it's switched back on.
-  const conditions = (rec.conditions ?? []).filter((c) => c.active !== false && c.effects?.length);
-  if (conditions.length > 0) {
-    ctx.preConditions = { effective: { ...ctx.effective }, combatAcc: { ...ctx.combatAcc }, derivedBonus: { ...ctx.derivedBonus } };
-    conditions.forEach((c) => {
-      c.effects!.forEach((e) => applyEffect(ctx, e, `Állapot: ${c.name}`, N, true));
-    });
-  }
+  conditions.forEach((c) => {
+    c.effects!.forEach((e) => applyEffect(ctx, e, `Állapot: ${c.name}`, N, true));
+  });
 
   return finalize(ctx);
 }
