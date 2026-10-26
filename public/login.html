@@ -164,7 +164,7 @@
     <div class="vignette"></div>
     <div class="page-grain"></div>
 
-    <button class="theme-btn" id="themeBtn" type="button" aria-label="Téma váltása" aria-pressed="false" title="Téma váltása">
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Világos/sötét mód váltása" aria-pressed="false" title="Világos/sötét mód váltása">
       <span class="sun" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg></span>
       <span class="moon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
     </button>
@@ -182,17 +182,17 @@
         <div class="eyebrow">M · A · G · U · S</div>
         <h1 class="title" id="title">Codex Magica</h1>
         <div class="rule"></div>
-        <p class="lead" id="lead">Lépj be a krónikáid közé. Karaktereid, varázslataid és kompendiumod egyetlen fiókban, bárhol elérhetők.</p>
+        <p class="lead" id="lead">Karaktereid, varázslataid és a teljes Kompendium – egy fiókkal, bárhonnan.</p>
 
         <div class="auth-check" id="authCheck" aria-live="polite">
           <span class="spinner-lg" aria-hidden="true"></span>
-          <span class="ac-tx">Bejelentkezés folytatása…</span>
+          <span class="ac-tx">Bejelentkezés folyamatban…</span>
         </div>
 
         <button class="google-btn" id="signInBtn" type="button">
           <span class="google-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path></svg></span>
           <span class="spinner" aria-hidden="true"></span>
-          <span class="google-label">Folytatás Google-fiókkal</span>
+          <span class="google-label">Bejelentkezés Google-fiókkal</span>
         </button>
 
         <div class="divider">
@@ -201,7 +201,7 @@
           <span class="div-line"></span>
         </div>
 
-        <p class="fine">A folytatással elfogadod a <a href="#">felhasználási feltételeket</a> és az <a href="#">adatkezelési tájékoztatót</a>.</p>
+        <p class="fine">A folytatással elfogadod a <a href="#">felhasználási feltételeket</a>, és tudomásul veszed az <a href="#">adatkezelési tájékoztatót</a>.</p>
       </div>
     </div>
 
@@ -291,8 +291,8 @@
     if (denied) {
       clearCookie();
       signOut(auth).catch(() => {});
-      document.getElementById("title").textContent = "Nincs jogosultság";
-      setLead("Ezzel a Google-fiókkal nem léphetsz be a Codex Magicába. Ha szerinted ez tévedés, szólj az adminnak — vagy próbáld újra egy másik fiókkal.");
+      document.getElementById("title").textContent = "Nincs hozzáférésed";
+      setLead("Ezzel a Google-fiókkal nem léphetsz be a Codex Magicába. Ha szerinted ez tévedés, szólj az adminnak, vagy próbálkozz egy másik fiókkal.");
       reveal();
     } else {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -321,7 +321,7 @@
         btn.removeAttribute("aria-busy");
         if (e && (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request")) return;
         console.error("Sign-in failed", e);
-        setLead("A bejelentkezés nem sikerült. Ellenőrizd, hogy a böngésző nem blokkolja-e a felugró ablakot, majd próbáld újra.");
+        setLead("A bejelentkezés nem sikerült. Ellenőrizd, hogy a böngésző nem blokkolja-e a felugró ablakokat, majd próbáld újra.");
       }
     });
   </script>
