@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { WelcomeScreen } from "./WelcomeScreen";
-import { initAuthCookieRefresh } from "../state/authCookie";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
-import { SyncConflictModal } from "./SyncConflictModal";
 import { useRoster } from "../state/useRoster";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
@@ -14,7 +12,6 @@ import { CharacterRecord } from "../model/character";
 // via the roster; the creator commits a working copy on save.
 export const RootApp: React.FC = () => {
   const roster = useRoster();
-  useEffect(() => initAuthCookieRefresh(), []);
   const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
@@ -49,7 +46,6 @@ export const RootApp: React.FC = () => {
       ) : (
         <WelcomeScreen
           records={roster.records}
-          sync={roster.sync}
           onOpenCharacter={(id) => { setCurrentId(id); setScreen("sheet"); }}
           onNew={() => setCreator({ mode: "create", record: createBlankRecord() })}
           onEdit={editChar}
@@ -74,15 +70,6 @@ export const RootApp: React.FC = () => {
         />
       )}
 
-      {/* Sync conflicts are global: a focus-refresh can detect one on any screen. One at a time. */}
-      {roster.conflicts.length > 0 && !creator && (
-        <SyncConflictModal
-          conflict={roster.conflicts[0]}
-          remaining={roster.conflicts.length}
-          onResolve={(choice) => roster.resolveConflict(roster.conflicts[0].id, choice)}
-          onClose={roster.dismissConflicts}
-        />
-      )}
     </>
   );
 };

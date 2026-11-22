@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Box, Flex, Heading, HStack, IconButton, Input, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, HStack, Input, Text } from "@chakra-ui/react";
 import { ParchPanel, useParchmentHoverShadow } from "./ParchPanel";
 import { ConfirmModal } from "./ConfirmModal";
 import { ModalShell } from "./Modal";
@@ -10,13 +10,10 @@ import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
-import { SyncApi } from "../state/useRoster";
-import { signOutCloud } from "../state/cloudSync";
 import { exportRecordFile, parseImportedRecord } from "../state/transfer";
 
 interface Props {
   records: CharacterRecord[];
-  sync: SyncApi;
   onOpenCharacter: (id: string) => void;
   onNew: () => void;
   onEdit: (id: string) => void;
@@ -43,31 +40,14 @@ const CopyIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" str
 const TrashIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>;
 const ImportIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>;
 const ExportIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 8l5-5 5 5" /><path d="M12 3v12" /></svg>;
-const LogoutIcon = <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>;
-const CloudIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .42-8.98 7 7 0 0 0-13.6 1.98A4 4 0 0 0 6 19z" /></svg>;
-
-// Sign out: end the Firebase session FIRST (otherwise login.html would silently mint a fresh
-// token from it and bounce straight back in), then clear the id_token cookie and return to the
-// root, where the CloudFront edge gate redirects to the branded login page.
-// The unique query string is a cache-buster: without it the browser can serve "/" from its cache
-// without a network request, so the edge auth check is skipped and the redirect to login only
-// happens on a later manual reload.
-const logout = async () => {
-  await signOutCloud().catch(() => {});
-  document.cookie = "id_token=; Path=/; Secure; SameSite=Lax; Max-Age=0";
-  window.location.replace(window.location.origin + "/?loggedout=" + Date.now());
-};
-
 const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: boolean; children: React.ReactNode }> = ({ icon, onClick, danger, children }) => (
   <Box as="button" type="button" onClick={onClick} display="flex" alignItems="center" gap="11px" w="100%" textAlign="left" px="13px" py="11px" borderRadius="9px" border="none" bg="transparent" color={danger ? "bad" : "fg"} fontWeight={600} fontSize="15px" _hover={{ bg: danger ? "badSoft" : "accentSoft" }}>
     {icon}{children}
   </Box>
 );
 
-export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium }) => {
+export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
-  const [confirmLogout, setConfirmLogout] = useState(false);
-  const [confirmSyncOff, setConfirmSyncOff] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -123,17 +103,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
         active="karakter"
         onKarakter={() => {}}
         onKompendium={onOpenCompendium}
-        right={
-          <IconButton
-            aria-label="Kijelentkezés"
-            title="Kijelentkezés"
-            size="sm"
-            variant="ghost"
-            color="muted"
-            icon={LogoutIcon}
-            onClick={() => setConfirmLogout(true)}
-          />
-        }
       />
       <Box flex="1 1 auto" overflowY="auto" position="relative">
       <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "32px", md: "30px" }} pb="90px">
@@ -141,10 +110,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
           <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
           <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
           <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
-            Válassz egy hőst a folytatáshoz, vagy teremts újat.{" "}
-            {sync.status === "on"
-              ? "A karaktereid a Google-fiókodba mentve minden eszközödön elérhetők."
-              : "A karaktereid helyben, ezen az eszközön tárolódnak."}
+            Válassz egy hőst a folytatáshoz, vagy teremts újat. A karaktereid helyben, ezen az eszközön
+            tárolódnak.
           </Text>
         </Box>
 
@@ -211,31 +178,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
         )}
 
         <HStack justify="center" gap="18px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
-          <Box
-            as="button"
-            type="button"
-            onClick={() => {
-              if (sync.status === "on") setConfirmSyncOff(true);
-              else if (sync.status !== "connecting") sync.enable();
-            }}
-            display="inline-flex"
-            alignItems="center"
-            gap="6px"
-            color={sync.status === "error" ? "bad" : "muted"}
-            fontSize="12px"
-            cursor={sync.status === "connecting" ? "default" : "pointer"}
-            title={sync.status === "on" ? "Kattints a szinkron kikapcsolásához" : undefined}
-          >
-            {CloudIcon}
-            {sync.status === "on"
-              ? `Szinkron: ${sync.email ?? "Google-fiók"}`
-              : sync.status === "connecting"
-              ? "Szinkronizálás…"
-              : sync.status === "error"
-              ? "Szinkronhiba — koppints az újracsatlakozáshoz"
-              : "Google-szinkron bekapcsolása"}
-          </Box>
-          <Text as="span" opacity={0.5}>·</Text>
           <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
           <Text as="span" opacity={0.5}>·</Text>
           <Text as="span">{records.length} / 12 hely foglalt</Text>
@@ -251,9 +193,9 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
           }}
         />
 
-        {(sync.message || importError) && (
+        {importError && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="bad" mt="9px" maxW="52ch" mx="auto">
-            {importError ?? sync.message}
+            {importError}
           </Text>
         )}
       </Box>
@@ -283,7 +225,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
           onClose={() => setConfirmDeleteId(null)}
         >
           Biztosan törlöd <Text as="span" fontWeight={700} color="fg">{deleteView.name}</Text> karaktert?
-          Ez nem vonható vissza{sync.status === "on" ? ", és a törlés minden szinkronizált eszközödre átterjed" : ""}.
+          Ez nem vonható vissza.
         </ConfirmModal>
       )}
 
@@ -315,25 +257,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
         </ModalShell>
       )}
 
-      {confirmSyncOff && (
-        <ConfirmModal
-          title="Google-szinkron kikapcsolása"
-          confirmLabel="Kikapcsolás"
-          onConfirm={() => {
-            sync.disable();
-            setConfirmSyncOff(false);
-          }}
-          onClose={() => setConfirmSyncOff(false)}
-        >
-          A karaktereid ezen az eszközön megmaradnak, de mostantól nem szinkronizálódnak a Google-fiókoddal.
-        </ConfirmModal>
-      )}
-
-      {confirmLogout && (
-        <ConfirmModal title="Kijelentkezés" confirmLabel="Kijelentkezés" onConfirm={logout} onClose={() => setConfirmLogout(false)}>
-          Biztosan ki szeretnél jelentkezni?
-        </ConfirmModal>
-      )}
     </Flex>
   );
 };
