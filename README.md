@@ -105,9 +105,9 @@ level. Each level is stored as its own entry, so you can go back and edit an ear
   <img src="docs/assets/mobile-light.webp" alt="The character sheet on a phone, split into swipeable pages">
 </picture>
 
-**Phone, tablet and desktop.** On a phone the sheet becomes swipeable pages; on an iPad or desktop it spreads
-into columns. Light and dark themes, an app you can add to your home screen, and characters saved on the
-device, with export and import as JSON files.
+**Phone, tablet and desktop, online or not.** On a phone the sheet becomes swipeable pages; on an iPad or
+desktop it spreads into columns. It installs to the home screen and works offline at the table. Light and
+dark themes; characters stay on the device, with one-tap backups.
 
 ## How it was built
 
@@ -169,14 +169,37 @@ flowchart LR
   migrations run on load so old saves keep working, and a character can be exported to and imported from
   a JSON file.
 
-### 3 · Hosting (example)
+### 3 · Hosting
 
-The app is a static build, so it can be hosted anywhere. The setup that ran our group's private instance
+The app is a static, offline-capable build (a service worker precaches everything), so it can be hosted
+anywhere; see [Use it](#use-it). The setup that ran our group's private instance
 is kept as a documented example in [`examples/aws-infra/`](examples/aws-infra): S3 + CloudFront, a
 Lambda@Edge function that only lets in allowlisted Google accounts (verified Firebase ID tokens), a
 standalone login page, and a CodePipeline that deploys on every push. All of it is Terraform.
 
-## Getting started
+## Use it
+
+**Host your own copy (free, a few clicks).**
+
+- **GitHub Pages:** fork this repository, then in the fork's settings choose **Pages → Source: GitHub
+  Actions** and add the Actions variable `DEPLOY_PAGES` = `true`. Every push to `main` deploys to
+  `https://<you>.github.io/codex-magica/` ([workflow](.github/workflows/deploy.yml)). For a custom domain,
+  also set `BASE_PATH` = `/`.
+- **Cloudflare Pages, Netlify, or any static host** (these also work with private repositories): build
+  command `npm run build`, output folder `dist`.
+
+**Install it.** Open the site, then on iPad/iPhone use Safari's **Share → Add to Home Screen**, on Android
+Chrome's **Install app**. It then opens like an app and works without a connection. When a new version is
+deployed, the app offers to update; it never reloads on its own.
+
+**Keep your characters safe.** There's no account and no server: characters live in the browser on your
+device. Use **Biztonsági mentés** (backup) on the roster now and then; on a phone or tablet it opens the
+share sheet, so the file can go straight to iCloud Drive, Google Drive or Files. **Importálás fájlból**
+restores it, on the same or another device, and never overwrites anything. Single characters can be sent
+to someone else the same way (character menu → **Exportálás fájlba**). The app also asks the browser to
+keep its storage permanently; installing it to the home screen helps with that on Safari.
+
+## Getting started (development)
 
 Requires Node.js 22.12 or newer.
 
@@ -194,9 +217,8 @@ npm run dev          # http://localhost:3000
 | `npm run lint` | Oxlint, including the React hooks rules |
 | `npm run build` | Production build into `dist/` (`npm run preview` serves it) |
 
-The app opens on the character roster. Characters are saved in your browser's local storage; to move one
-to another device, use **Exportálás fájlba** (export) in its menu and **Karakter importálása** (import) on
-the other side.
+The service worker is only active in production builds (`npm run build && npm run preview`), so the dev
+server always serves fresh code.
 
 <details>
 <summary><b>Project structure</b></summary>

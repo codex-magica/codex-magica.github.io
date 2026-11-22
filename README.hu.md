@@ -56,18 +56,33 @@ Ezekre készült ez az alkalmazás:
 - **KM-eszközök:** egyedi kaszt, szintenkénti KM-jutalmak és módosítók, egyedi képességek saját
   szabályszöveggel.
 - **Házi szabály:** választható átdolgozott képzettségrendszer (karakterenként, a létrehozáskor rögzítve).
-- **Világos és sötét téma**, a kezdőképernyőre tehető alkalmazás, karakterek exportja és importja
-  JSON-fájlként.
+- **Világos és sötét téma**, kezdőképernyőre telepíthető, **internet nélkül is működik**.
+- **Biztonsági mentés** egy gombbal (az összes karakter egy fájlban), egyes karakterek exportja és
+  importja.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mobile-dark.webp">
   <img src="docs/assets/mobile-light.webp" alt="A karakterlap telefonon, lapozható oldalakra bontva">
 </picture>
 
-## Hogyan próbálhatod ki?
+## Hogyan használhatod?
 
-Nyilvános példány jelenleg nincs, de a saját gépeden pár perc alatt elindítható. Ehhez
-[Node.js](https://nodejs.org) 22 vagy újabb kell:
+**Saját példány, ingyen.** Forkold a repót, a fork beállításaiban válaszd a **Pages → Source: GitHub
+Actions** lehetőséget, és vegyél fel egy `DEPLOY_PAGES` = `true` Actions-változót. Ezután minden
+módosítás után magától frissül a `https://<felhasználóneved>.github.io/codex-magica/` oldal. (Cloudflare
+Pages vagy Netlify is jó: build parancs `npm run build`, mappa `dist`.)
+
+**Telepítés.** Nyisd meg az oldalt, majd iPaden/iPhone-on Safariban **Megosztás → Főképernyőhöz adás**,
+Androidon Chrome-ban **Alkalmazás telepítése**. Így alkalmazásként indul, és játék közben internet nélkül is
+működik. Ha új verzió jelenik meg, az alkalmazás felajánlja a frissítést, magától sosem tölt újra.
+
+**Vigyázz a karakterekre!** Nincs fiók és nincs szerver: a karakterek a böngészőben, az eszközödön
+vannak. Időnként nyomd meg a **Biztonsági mentés** gombot a karakterlistán; telefonon és tableten a
+megosztás menü nyílik meg, így a fájl egyenesen iCloud Drive-ba, Google Drive-ba vagy a Fájlokba mehet.
+Az **Importálás fájlból** gombbal visszaállítható, akár másik eszközön is, és sosem ír felül semmit.
+Egy-egy karaktert ugyanígy át is küldhetsz valakinek (karakter menü → **Exportálás fájlba**).
+
+**Saját gépen, fejlesztéshez.** [Node.js](https://nodejs.org) 22.12 vagy újabb kell:
 
 ```sh
 git clone https://github.com/marcigo36/codex-magica.git
@@ -75,10 +90,6 @@ cd codex-magica
 npm ci
 npm run dev          # megnyílik: http://localhost:3000
 ```
-
-Az alkalmazás a karakterlistával indul. A karakterek a böngésző helyi tárolójában maradnak, fiók nem kell.
-Másik eszközre a karakter menüjéből exportálva (**Exportálás fájlba**), majd ott importálva
-(**Karakter importálása**) vihetők át.
 
 ## Hibát találtál?
 
