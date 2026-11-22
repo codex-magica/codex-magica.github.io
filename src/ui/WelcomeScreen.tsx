@@ -179,8 +179,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
 
         <HStack justify="center" gap="18px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
           <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
-          <Text as="span" opacity={0.5}>·</Text>
-          <Text as="span">{records.length} / 12 hely foglalt</Text>
         </HStack>
         <input
           ref={fileInputRef}
