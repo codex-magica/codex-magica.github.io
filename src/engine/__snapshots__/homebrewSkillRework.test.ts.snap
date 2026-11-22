@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`golden: homebrew Harcművész Nisen-nid-to (Éberség granted+taught, Mászás attrsAny purchase) 1`] = `
 Object {

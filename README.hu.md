@@ -73,7 +73,7 @@ Nyilvános példány jelenleg nincs, de a saját gépeden pár perc alatt elind�
 git clone https://github.com/marcigo36/codex-magica.git
 cd codex-magica
 npm ci
-npm start            # megnyílik: http://localhost:3000
+npm run dev          # megnyílik: http://localhost:3000
 ```
 
 Az alkalmazás a karakterlistával indul. A karakterek a böngésző helyi tárolójában maradnak, fiók nem kell.

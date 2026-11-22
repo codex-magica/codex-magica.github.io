@@ -7,7 +7,7 @@ import {RootApp} from "@/ui/RootApp";
 
 // Dev-only referential check over the rules data (typo'd skill/background/tag names surface in the
 // console instead of as silent ghost rows). Dynamic import keeps it out of the production bundle.
-if (process.env.NODE_ENV === "development") {
+if (import.meta.env.DEV) {
   Promise.all([import("@/model/validateRules"), import("@/model/rulesDb"), import("@/model/rulesVariants")]).then(
     ([{ validateRules }, { RULES }, { rulesHomebrew, homebrewProse }]) => {
       const problems = validateRules(RULES);

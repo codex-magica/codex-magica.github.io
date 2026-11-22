@@ -18,12 +18,8 @@ import { SKILL_CATEGORIES } from "../model/common";
 // tabs. The full book text is NOT distributed with this repository: drop your own copy of these chapters
 // into src/book/ (see src/book/README.md) and the tabs appear; without them they're simply absent.
 const CHAPTER_BASE = TABS.length;
-const bookChapters = require.context("../book", false, /^\.\/0[12]-[a-z-]+\.md$/);
-const chapterMd = (file: string): string | undefined => {
-  if (!bookChapters.keys().includes(`./${file}`)) return undefined;
-  const mod = bookChapters(`./${file}`) as string | { default: string };
-  return typeof mod === "string" ? mod : mod.default;
-};
+const bookChapters = import.meta.glob<string>("../book/0[12]-*.md", { query: "?raw", import: "default", eager: true });
+const chapterMd = (file: string): string | undefined => bookChapters[`../book/${file}`];
 const CHAPTERS = [
   { name: "Bevezető", file: "01-bevezeto.md" },
   { name: "Karakteralkotás", file: "02-karakteralkotas.md" },
@@ -445,7 +441,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
           <Box
             as="nav" position="absolute" top={0} bottom={0} left={0} w="min(320px, 86vw)" bg="page" borderRight="1px solid" borderColor="hair"
             px="14px" py="16px" pb="max(16px, env(safe-area-inset-bottom))" overflowY="auto" boxShadow="12px 0 40px rgba(0,0,0,.3)"
-            animation={`${drawerIn} .22s ease`} onClick={(e) => e.stopPropagation()}
+            animation={`${drawerIn} .22s ease`} onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             {navContent}
           </Box>

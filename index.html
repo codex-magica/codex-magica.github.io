@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hu">
   <head>
     <meta charset="utf-8" />
-    <!-- Icon filenames carry %REACT_APP_ICON_SUFFIX%: empty in production, "-dev" in local
+    <!-- Icon filenames carry the VITE_ICON_SUFFIX env var: empty in production, "-dev" in local
          development (see .env / .env.development) so the dev PWA/home-screen icon shows a DEV badge. -->
-    <link rel="icon" href="%PUBLIC_URL%/favicon%REACT_APP_ICON_SUFFIX%.ico" />
+    <link rel="icon" href="/favicon%VITE_ICON_SUFFIX%.ico" />
     <meta name="description" content="M.A.G.U.S. compendium and character creator"/>
 
     <!-- PWA Meta Tags -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#000000" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- Android Specific Tags -->
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" sizes="192x192" href="%PUBLIC_URL%/logo192%REACT_APP_ICON_SUFFIX%.png">
-    <link rel="icon" sizes="512x512" href="%PUBLIC_URL%/logo512%REACT_APP_ICON_SUFFIX%.png">
+    <link rel="icon" sizes="192x192" href="/logo192%VITE_ICON_SUFFIX%.png">
+    <link rel="icon" sizes="512x512" href="/logo512%VITE_ICON_SUFFIX%.png">
 
     <!-- Apple Specific Tags -->
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192%REACT_APP_ICON_SUFFIX%.png">
+    <link rel="apple-touch-icon" href="/logo192%VITE_ICON_SUFFIX%.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Codex Magica">
@@ -29,5 +29,6 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <!-- #root's size + desktop UI scaling live in index.css (the --app-zoom rules) -->
     <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

@@ -14,7 +14,8 @@ built from a scanned copy of the _Új Törvénykönyv_ rulebook.**
 
 [![CI](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
-![React 18](https://img.shields.io/badge/React_18-149ECA?logo=react&logoColor=white)
+![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 [![Code license: MIT](https://img.shields.io/badge/code-MIT-6E7781)](LICENSE)
 
 </div>
@@ -177,20 +178,21 @@ standalone login page, and a CodePipeline that deploys on every push. All of it 
 
 ## Getting started
 
-Requires Node 22+.
+Requires Node.js 22.12 or newer.
 
 ```sh
 git clone https://github.com/marcigo36/codex-magica.git
 cd codex-magica
 npm ci
-npm start            # http://localhost:3000
+npm run dev          # http://localhost:3000
 ```
 
 | Command | What it does |
 |---|---|
-| `npm test` | Jest suite, including the rules-engine golden snapshots |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run build` | Production build into `build/` |
+| `npm test` | Vitest suite, including the rules-engine golden snapshots |
+| `npm run typecheck` | Type check with TypeScript 7 |
+| `npm run lint` | Oxlint, including the React hooks rules |
+| `npm run build` | Production build into `dist/` (`npm run preview` serves it) |
 
 The app opens on the character roster. Characters are saved in your browser's local storage; to move one
 to another device, use **Exportálás fájlba** (export) in its menu and **Karakter importálása** (import) on
@@ -218,10 +220,10 @@ docs/                design notes, pipeline write-up, README assets
 
 ## Tech stack
 
-**App:** React 18 · TypeScript · Chakra UI · Emotion · Create React App (react-app-rewired)<br>
+**App:** React 19 · TypeScript 7 · Chakra UI 2 · Emotion · Vite 8<br>
 **Storage:** localStorage · JSON import/export<br>
 **Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
-**Tooling:** Jest · GitHub Actions<br>
+**Tooling:** Vitest · Oxlint · GitHub Actions<br>
 **Example hosting:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · Firebase Auth
 
 ## Credits & license
