@@ -4,6 +4,8 @@ import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
 import { UpdateBanner } from "./UpdateBanner";
+import { CreditsModal } from "./CreditsModal";
+import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
@@ -16,6 +18,8 @@ export const RootApp: React.FC = () => {
   const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
+  // one-time "about & credits" notice on first launch; reopenable from the roster footer
+  const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 
   const current = currentId ? roster.get(currentId) : undefined;
 
@@ -58,6 +62,7 @@ export const RootApp: React.FC = () => {
             if (r) roster.upsert({ ...r, name });
           }}
           onOpenCompendium={() => setScreen("compendium")}
+          onOpenCredits={() => setShowCredits(true)}
         />
       )}
 
@@ -68,6 +73,15 @@ export const RootApp: React.FC = () => {
           initialRecord={creator.record}
           onClose={() => setCreator(null)}
           onCommit={commit}
+        />
+      )}
+
+      {showCredits && (
+        <CreditsModal
+          onClose={() => {
+            markCreditsSeen();
+            setShowCredits(false);
+          }}
         />
       )}
 

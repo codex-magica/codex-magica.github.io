@@ -22,6 +22,7 @@ interface Props {
   onImport: (records: CharacterRecord[]) => void;
   onRename: (id: string, name: string) => void;
   onOpenCompendium: () => void;
+  onOpenCredits: () => void;
 }
 
 const SIDE = { base: "20px", sm: "32px" };
@@ -55,7 +56,7 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
   </Box>
 );
 
-export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium }) => {
+export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium, onOpenCredits }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
@@ -211,6 +212,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
             </>
           )}
           <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás fájlból</Box>
+          <Text as="span" opacity={0.5}>·</Text>
+          <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
         </HStack>
         {records.length > 0 && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
