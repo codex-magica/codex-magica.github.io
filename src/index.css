@@ -1,15 +1,22 @@
+/* Crimson Pro (SIL OFL 1.1, see ./fonts/OFL.txt) — static instances cut from the variable font.
+   Tuned to match the look of the original Warnock Pro Caption: regular is weight 450,
+   bold is 700, and size-adjust compensates for Crimson's smaller x-height. */
 @font-face {
-  font-family: 'Warnock';
-  src: url('./fonts/Warnock Pro Caption.otf') format('opentype');
+  font-family: 'Crimson Pro';
+  src: url('./fonts/CrimsonPro-Text.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
+  size-adjust: 106%;
 }
 
 @font-face {
-  font-family: 'Warnock';
-  src: url('./fonts/Warnock Pro Bold Caption.otf') format('opentype');
+  font-family: 'Crimson Pro';
+  src: url('./fonts/CrimsonPro-Bold.woff2') format('woff2');
   font-weight: bold;
   font-style: normal;
+  font-display: swap;
+  size-adjust: 106%;
 }
 
 body {

@@ -79,7 +79,7 @@ export const Markdown: React.FC<{ source: string }> = ({ source }) => {
     if (h) {
       const lvl = Math.min(4, h[1].length);
       blocks.push(
-        <Heading as={`h${lvl}` as "h1"} key={key++} fontFamily="Warnock, serif" fontWeight={700} color="fg" lineHeight="1.2" {...H_PROPS[lvl]}>
+        <Heading as={`h${lvl}` as "h1"} key={key++} fontFamily="'Crimson Pro', Georgia, serif" fontWeight={700} color="fg" lineHeight="1.2" {...H_PROPS[lvl]}>
           {inline(h[2])}
         </Heading>
       );

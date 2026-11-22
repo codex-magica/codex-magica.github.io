@@ -16,7 +16,7 @@ export const CompendiumScreen: React.FC<{ onExit: () => void }> = ({ onExit }) =
   const [modal, setModal] = useState<ModalState | null>(null);
   const [pref, setPref] = useRulesPreference();
   return (
-    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="'Crimson Pro', Georgia, serif">
       <Box display={{ base: "none", md: "block" }} flexShrink={0}>
         <ZoneBar active="kompendium" onKarakter={onExit} onKompendium={() => {}} />
       </Box>

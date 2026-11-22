@@ -118,7 +118,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, sync, onOpenCharacter,
   );
 
   return (
-    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="'Crimson Pro', Georgia, serif">
       <ZoneBar
         active="karakter"
         onKarakter={() => {}}

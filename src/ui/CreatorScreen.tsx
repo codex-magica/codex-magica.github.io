@@ -62,7 +62,7 @@ export const CreatorScreen: React.FC<{
   };
 
   return (
-    <Flex position="fixed" inset={0} zIndex={50} direction="column" bg="page" color="fg" fontFamily="Warnock, serif">
+    <Flex position="fixed" inset={0} zIndex={50} direction="column" bg="page" color="fg" fontFamily="'Crimson Pro', Georgia, serif">
       <Box flexShrink={0} borderBottom="1px solid" borderColor="hair" bg="page">
         <HStack maxW="980px" mx="auto" justify="space-between" gap={{ base: "10px", md: "14px" }} px={SIDE} py="12px">
           <HStack gap={{ base: "9px", md: "12px" }} minW={0} flex="1 1 auto">

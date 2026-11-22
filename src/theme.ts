@@ -5,7 +5,7 @@ const theme = extendTheme({
     initialColorMode: 'light', // Default color mode
   },
   fonts: {
-    body: 'Warnock, sans-serif',
+    body: "'Crimson Pro', Georgia, serif",
     // UI micro-text (labels, captions, chips) — the serif is for content, system-ui for chrome.
     ui: 'system-ui',
   },
@@ -80,7 +80,7 @@ const theme = extendTheme({
     Table: {
       baseStyle: {
         th: {
-          fontFamily: 'Warnock, sans-serif',
+          fontFamily: "'Crimson Pro', Georgia, serif",
           fontWeight: 'bold',
           textTransform: 'none',
         },
