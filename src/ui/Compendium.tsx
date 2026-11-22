@@ -77,7 +77,7 @@ const drawerIn = keyframes`from { transform: translateX(-100%); } to { transform
 const fadeIn = keyframes`from { opacity: 0; } to { opacity: 1; }`;
 
 // square icon button for the mobile header (menu / search) — quiet ghost style, matching the
-// roster bar's right-side icon buttons (logout / dark mode)
+// roster bar's dark-mode toggle
 const HeaderIconBtn: React.FC<{ label: string; onClick: () => void; children: React.ReactNode }> = ({ label, onClick, children }) => (
   <Box as="button" type="button" aria-label={label} onClick={onClick} w="40px" h="40px" flexShrink={0} borderRadius="10px"
     bg="transparent" color="muted" display="inline-flex" alignItems="center" justifyContent="center" _active={{ bg: "accentSoft" }}>

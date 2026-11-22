@@ -3,7 +3,7 @@ import { Box, Heading, HStack, Text } from "@chakra-ui/react";
 import { ModalShell } from "./Modal";
 
 // A hard-confirm dialog: title, explanatory body, Mégse + a (danger) confirm button. Shared by the
-// race/class change confirms and the logout confirm.
+// race/class change confirms and the delete-character confirm.
 export const ConfirmModal: React.FC<{
   title: string;
   confirmLabel: string;

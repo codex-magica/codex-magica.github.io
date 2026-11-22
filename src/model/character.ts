@@ -130,7 +130,7 @@ export interface Identity {
 export interface CharacterRecord {
   schemaVersion: number;
   id: string;
-  updatedAt?: number; // ms epoch of the last local edit — drives last-write-wins in Google sync
+  updatedAt?: number; // ms epoch of the last local edit (stamped on every save; dropped from exports)
   name: string;
   player?: string;
   concept?: string;

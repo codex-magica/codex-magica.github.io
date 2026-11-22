@@ -67,10 +67,12 @@ Ezekre készült ez az alkalmazás:
 
 ## Hogyan használhatod?
 
-**Saját példány, ingyen.** Forkold a repót, a fork beállításaiban válaszd a **Pages → Source: GitHub
-Actions** lehetőséget, és vegyél fel egy `DEPLOY_PAGES` = `true` Actions-változót. Ezután minden
-módosítás után magától frissül a `https://<felhasználóneved>.github.io/codex-magica/` oldal. (Cloudflare
-Pages vagy Netlify is jó: build parancs `npm run build`, mappa `dist`.)
+**Saját példány, ingyen.** Forkold a repót, és a fork **Actions** fülén engedélyezd a workflow-kat. A
+fork beállításaiban válaszd a **Pages → Source: GitHub Actions** lehetőséget, vegyél fel egy
+`DEPLOY_PAGES` = `true` Actions-változót, majd az Actions fülön futtasd le egyszer a **Deploy to GitHub
+Pages** workflow-t. Ezután minden módosítás után magától frissül a
+`https://<felhasználóneved>.github.io/codex-magica/` oldal. Saját domainhez a `BASE_PATH` változót is
+állítsd `/`-re. (Cloudflare Pages vagy Netlify is jó: build parancs `npm run build`, mappa `dist`.)
 
 **Telepítés.** Nyisd meg az oldalt, majd iPaden/iPhone-on Safariban **Megosztás → Főképernyőhöz adás**,
 Androidon Chrome-ban **Alkalmazás telepítése**. Így alkalmazásként indul, és játék közben internet nélkül is
@@ -80,7 +82,9 @@ működik. Ha új verzió jelenik meg, az alkalmazás felajánlja a frissítést
 vannak. Időnként nyomd meg a **Biztonsági mentés** gombot a karakterlistán; telefonon és tableten a
 megosztás menü nyílik meg, így a fájl egyenesen iCloud Drive-ba, Google Drive-ba vagy a Fájlokba mehet.
 Az **Importálás fájlból** gombbal visszaállítható, akár másik eszközön is, és sosem ír felül semmit.
-Egy-egy karaktert ugyanígy át is küldhetsz valakinek (karakter menü → **Exportálás fájlba**).
+Egy-egy karaktert ugyanígy át is küldhetsz valakinek (karakter menü → **Exportálás fájlba**). Az
+alkalmazás azt is kéri a böngészőtől, hogy tartósan őrizze meg az adatait; Safariban ebben segít, ha a
+főképernyőre telepíted.
 
 **Saját gépen, fejlesztéshez.** [Node.js](https://nodejs.org) 22.12 vagy újabb kell:
 
@@ -88,8 +92,11 @@ Egy-egy karaktert ugyanígy át is küldhetsz valakinek (karakter menü → **Ex
 git clone https://github.com/marcigo36/codex-magica.git
 cd codex-magica
 npm ci
-npm run dev          # megnyílik: http://localhost:3000
+npm run dev          # elérhető: http://localhost:3000
 ```
+
+A service worker csak az éles buildben aktív (`npm run build && npm run preview`), így a fejlesztői
+szerver mindig a friss kódot adja.
 
 ## Hibát találtál?
 
@@ -109,10 +116,17 @@ részletek angolul, a [fő README-ben](README.md#how-it-was-built) és a
 
 A repóban található **forráskód** [MIT licenc](LICENSE) alatt szabadon felhasználható.
 
-Az `src/data/` mappában lévő szabályadatok a szabálykönyvből lettek átírva és újrarendezve ehhez a
-projekthez, így **származékos művek**: ezek, valamint a játék nevei és fogalmai **nem** tartoznak e licenc
-alá, azok a mindenkori jogtulajdonosokat illetik. A szabálykönyv teljes szövegét a repó nem tartalmazza. A Codex Magica nem hivatalos,
-nonprofit rajongói projekt, amely nem áll kapcsolatban velük. A könyv eredeti közreműködőinek listája a
+A **M.A.G.U.S. tartalom**, valamint a játék nevei és fogalmai **nem** tartoznak e licenc alá, azok a
+mindenkori jogtulajdonosokat illetik. Az `src/data/` mappában lévő szabályadatok a szabálykönyvből lettek
+átírva és újrarendezve ehhez a projekthez, így **származékos művek**: a képzettségek, varázslatok, imák,
+pszi diszciplínák és mágiaiskolák, a fegyverek, vértek, tárgyak, mérgek és harci helyzetek leírásait és
+szabályszövegét tartalmazzák, továbbá (az `src/model/` mappában) a fajok és kasztok képességeinek, a
+tulajdonságoknak és a harcértékeknek rövid leírását. A könyv többi része, például a bevezető és a
+karakteralkotás fejezete, a kasztfejezetek szövege, a világleírás, az istenek, a bestiárium és a
+varázstárgyak, nincs benne.
+
+A Codex Magica nem hivatalos, nem kereskedelmi célú rajongói projekt, amely nem áll kapcsolatban a
+jogtulajdonosokkal, és ők nem is támogatják. A könyv eredeti közreműködőinek listája a
 [NOTICE.md](NOTICE.md) fájlban található. Ha jogtulajdonosként bármit módosítanál vagy eltávolíttatnál,
 nyiss egy [issue-t](https://github.com/marcigo36/codex-magica/issues).
 

@@ -66,7 +66,7 @@ attributes, the class, the weapon, the skill level, the game master's adjustment
 </picture>
 
 **Spells, prayers and psi.** Bard, witch, warlock, fire and high magic, prayers and psi, each
-with costs, casting times and durations, and the book's full text one click away.
+with costs, casting times and durations, and each one's full description one click away.
 </td>
 </tr>
 <tr>
@@ -100,6 +100,10 @@ book's order, with a table of contents that tracks your scroll position.
 requirements are computed as you go, and the remaining development points (KAP) carry over to the next
 level. Each level is stored as its own entry, so you can go back and edit an earlier one.
 
+**For the game master.** The same builder makes NPCs. On top of it: custom classes, per-level GM grants
+and modifiers, custom abilities with their own rules text, and an optional house-rule variant of the
+skill system, fixed per character.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mobile-dark.webp">
   <img src="docs/assets/mobile-light.webp" alt="The character sheet on a phone, split into swipeable pages">
@@ -126,7 +130,7 @@ flowchart LR
     STRIPS --> TABLES["Vision agent<br/>reads tables"]
     PROSE --> MD["Markdown<br/>514 pages"]
     TABLES --> MD
-    MD --> CH["34 chapters<br/>proofread by hand"]
+    MD --> CH["Chapters<br/>proofread by hand"]
 ```
 
 **Lessons from the pipeline:**
@@ -181,10 +185,11 @@ standalone login page, and a CodePipeline that deploys on every push. All of it 
 
 **Host your own copy (free, a few clicks).**
 
-- **GitHub Pages:** fork this repository, then in the fork's settings choose **Pages → Source: GitHub
-  Actions** and add the Actions variable `DEPLOY_PAGES` = `true`. Every push to `main` deploys to
+- **GitHub Pages:** fork this repository and enable workflows in the fork's **Actions** tab. In its
+  settings choose **Pages → Source: GitHub Actions** and add the Actions variable `DEPLOY_PAGES` = `true`,
+  then run **Deploy to GitHub Pages** once from the Actions tab. After that every push to `main` deploys to
   `https://<you>.github.io/codex-magica/` ([workflow](.github/workflows/deploy.yml)). For a custom domain,
-  also set `BASE_PATH` = `/`.
+  also set the variable `BASE_PATH` = `/`.
 - **Cloudflare Pages, Netlify, or any static host** (these also work with private repositories): build
   command `npm run build`, output folder `dist`.
 
@@ -198,6 +203,13 @@ share sheet, so the file can go straight to iCloud Drive, Google Drive or Files.
 restores it, on the same or another device, and never overwrites anything. Single characters can be sent
 to someone else the same way (character menu → **Exportálás fájlba**). The app also asks the browser to
 keep its storage permanently; installing it to the home screen helps with that on Safari.
+
+## Found a mistake?
+
+The text comes from OCR of a low-quality scan and was proofread by hand, but errors can remain. If you spot
+a typo, a wrong table value or a rule the app calculates differently from the book, please
+[open an issue](https://github.com/marcigo36/codex-magica/issues) with the page or chapter and what the
+book says. Pull requests are welcome too.
 
 ## Getting started (development)
 
@@ -242,7 +254,7 @@ docs/                design notes, pipeline write-up, README assets
 
 ## Tech stack
 
-**App:** React 19 · TypeScript 7 · Chakra UI 2 · Emotion · Vite 8<br>
+**App:** React 19 · TypeScript 7 · Chakra UI 2 · Emotion · Vite 8 · vite-plugin-pwa (Workbox)<br>
 **Storage:** localStorage · JSON import/export<br>
 **Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
 **Tooling:** Vitest · Oxlint · GitHub Actions<br>
@@ -252,12 +264,19 @@ docs/                design notes, pipeline write-up, README assets
 
 The **code** in this repository is open source under the [MIT License](LICENSE).
 
-The rules data in `src/data/` was transcribed and restructured from the rulebook for this project, so it is a
-**derivative work**: it, and the game's names and terms, are **not** covered by that license and remain the
-property of the respective rights holders. The full rulebook text is not included.
-Codex Magica is an unofficial, non-commercial fan project, not affiliated with or endorsed by them. The
-book's original credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this material and
-would like something changed or removed, please [open an issue](https://github.com/marcigo36/codex-magica/issues).
+The **M.A.G.U.S. content** is **not** covered by that license and remains the property of its respective
+rights holders, as do the game's names and terms. The rules data in `src/data/` was transcribed and
+restructured from the rulebook for this project, so it is a **derivative work**. It contains
+the descriptions and rules text of skills, spells, prayers, psi disciplines and the magic schools,
+weapons, armor, items, poisons and combat situations, plus short descriptions of class and race
+abilities, attributes and combat values (in `src/model/`). The rest of the book, including the
+introduction and character-creation chapters, the class chapters' prose, the world and lore, the gods,
+the bestiary and the magic items, is not included.
+
+Codex Magica is an unofficial, non-commercial fan project, not affiliated with or endorsed by the rights
+holders. The book's original credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this
+material and would like something changed or removed, please
+[open an issue](https://github.com/marcigo36/codex-magica/issues).
 
 The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro) (SIL OFL 1.1). The icons are
 from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons).

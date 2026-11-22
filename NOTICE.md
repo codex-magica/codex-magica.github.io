@@ -11,11 +11,14 @@ That content is:
 
 | Path | What it is |
 |---|---|
-| `src/data/` | Rules tables, spells, skills, weapons, armor, etc., transcribed and restructured from the rulebook for this project (a derivative work) |
+| `src/data/` | Rules data transcribed and restructured from the rulebook for this project (a derivative work): the descriptions and rules text of skills, spells, prayers, psi disciplines and the magic schools, weapons, armor, items, poisons and combat situations |
+| `src/model/abilities.ts`, `attributeInfo.ts`, `combatInfo.ts` | Short descriptions of class and race abilities, attributes and combat values, from the same source |
 | everywhere | The names, terms and game mechanics of M.A.G.U.S. |
 
 **The full rulebook text is not distributed.** Neither the scanned book nor the OCR output or the generated
-per-page/per-chapter Markdown is in this repository or its history. The pipeline scripts in
+per-page/per-chapter Markdown is in this repository or its history. The rest of the book (the
+introduction and character-creation chapters, the class chapters' prose, the world and lore, the gods, the
+bestiary, the magic items and so on) is not included in any form. The pipeline scripts in
 `source_material/build/` are included so it can be run on your own copy, and `src/book/` can hold a local,
 gitignored copy of two chapters (see [`src/book/README.md`](src/book/README.md)).
 
@@ -40,13 +43,13 @@ If you hold rights to any of this material and would like something changed or r
 [open an issue](https://github.com/marcigo36/codex-magica/issues) or contact the maintainer through
 GitHub. Requests will be handled promptly.
 
-> **Magyarul:** A Codex Magica nem hivatalos, nonprofit rajongói projekt, nem áll kapcsolatban a
-> M.A.G.U.S. védjegyek tulajdonosaival, sem a könyvek szerzőivel vagy kiadóival. A forráskód MIT licenc
-> alatt szabadon felhasználható. A szabálykönyvből átvett és újrarendezett adatok (származékos művek),
-> valamint a játék nevei, fogalmai nem tartoznak e licenc alá, azok a mindenkori jogtulajdonosokat
-> illetik. A szabálykönyv teljes szövegét a repó nem tartalmazza. Az alkalmazás
-> ikonjául szolgáló M.A.G.U.S.-pecséten kívül a könyv illusztrációit és tördelését a repó nem
-> tartalmazza. Ha jogtulajdonosként bármit módosítanál vagy eltávolíttatnál, nyiss egy issue-t, és
+> **Magyarul:** A Codex Magica nem hivatalos, nem kereskedelmi célú rajongói projekt. Nem áll
+> kapcsolatban a M.A.G.U.S. védjegyek tulajdonosaival, sem a könyvek szerzőivel vagy kiadóival, és ők nem
+> is támogatják. A forráskód MIT licenc alatt szabadon felhasználható. A szabálykönyvből átvett és
+> újrarendezett adatok (származékos művek), valamint a játék nevei és fogalmai nem tartoznak e licenc
+> alá, azok a mindenkori jogtulajdonosokat illetik. A szabálykönyv teljes szövegét a repó nem
+> tartalmazza. Az alkalmazás ikonjául szolgáló M.A.G.U.S.-pecséten kívül a könyv illusztrációit és
+> tördelését sem. Ha jogtulajdonosként bármit módosítanál vagy eltávolíttatnál, nyiss egy issue-t, és
 > hamar intézzük.
 
 ## Fonts

@@ -23,7 +23,7 @@ interface AppShellProps {
 const SIDE = { base: "12px", md: "16px" }; // base matches the compendium's merged mobile bar
 
 // action button: full label on md+, icon-only on phones (the title carries the label).
-// Phones: quiet ghost icon, matching the roster bar's right-side buttons (logout / dark mode).
+// Phones: quiet ghost icon, matching the roster bar's dark-mode toggle.
 const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: boolean; label: string }> = ({ onClick, icon, accent, label }) => (
   <Box as="button" type="button" onClick={onClick} title={label} aria-label={label} display="inline-flex" alignItems="center" justifyContent="center" gap="7px"
     px={{ base: 0, md: "13px" }} py={{ base: 0, md: "8px" }} w={{ base: "40px", md: "auto" }} minH={{ base: "40px", md: "36px" }} borderRadius={{ base: "10px", md: "9px" }}
