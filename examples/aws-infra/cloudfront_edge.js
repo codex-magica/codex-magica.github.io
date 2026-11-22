@@ -1,10 +1,10 @@
 // Viewer-request auth gate. Verifies the Firebase ID token carried in the `id_token` cookie:
-// RS256 signature against Google's securetoken certs, issuer/audience/expiry claims, then the
-// email against the baked-in allowlist. Outcomes:
+// RS256 signature against Google's securetoken certs, issuer/audience/expiry claims, a Google-verified
+// email, then that email against the baked-in allowlist. Outcomes:
 //   - no/invalid/expired token → 302 /login.html            (the login page silently refreshes the
 //                                                            cookie from the Firebase session and
 //                                                            bounces back — no popup)
-//   - valid token, email not allowed → 302 /login.html?denied=1  (login page signs out + explains,
+//   - valid token, email not allowed/unverified → 302 /login.html?denied=1  (signs out + explains,
 //                                                                 so this can never redirect-loop)
 //   - valid + allowed → pass through to S3
 //
@@ -78,6 +78,13 @@ async function checkToken(token) {
     if (typeof payload.iat !== "number" || payload.iat > now + 300) return "invalid";
     if (payload.aud !== PROJECT_ID || payload.iss !== ISSUER) return "invalid";
     if (typeof payload.sub !== "string" || payload.sub.length === 0) return "invalid";
+
+    // Only trust an email Google itself verified. Without this, enabling any other sign-in method on
+    // the Firebase project (e.g. email/password) would let someone register an allowlisted address
+    // they don't own. Valid-but-unacceptable tokens are "denied", so login.html explains instead of
+    // silently retrying.
+    const provider = payload.firebase && payload.firebase.sign_in_provider;
+    if (provider !== "google.com" || payload.email_verified !== true) return "denied";
 
     const email = typeof payload.email === "string" ? payload.email.toLowerCase() : "";
     return ALLOWED_EMAILS.indexOf(email) >= 0 ? "ok" : "denied";

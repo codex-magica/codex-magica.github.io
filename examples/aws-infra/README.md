@@ -1,18 +1,19 @@
 # Example: private hosting behind Google sign-in (AWS + Firebase)
 
 > **This is an example, not part of the app.** Codex Magica itself is a static, local-only web app:
-> `npm start` / `npm run build` need none of this. This folder is the setup that once hosted a private
+> `npm run dev` / `npm run build` need none of this. This folder is the setup that once hosted a private
 > instance for our gaming group, kept as a reference for anyone who wants to put a static single-page app
 > behind a **Google sign-in with an email allowlist, without running a backend**.
 
 ## What it does
 
 - Serves the production build from a **private S3 bucket through CloudFront**.
-- Runs a small **Lambda@Edge** function on every request that checks for a valid **Firebase ID token** in a
-  cookie, and lets the request through only if the token's email is on an **allowlist**.
+- Runs a small **Lambda@Edge** function (Node.js 24) on every request that checks for a valid **Firebase ID
+  token** in a cookie, and lets the request through only for a **Google-verified email on an allowlist**.
 - Redirects everyone else to a standalone, branded **login page** (`login.html`) that signs in with Google
   via Firebase Auth, sets the cookie and sends the user back.
-- Rebuilds and redeploys on every push to `main` with **CodePipeline + CodeBuild**.
+- Rebuilds and redeploys on every push to `main` with **CodePipeline (V2) + CodeBuild**, over an AWS
+  **CodeConnections** link to GitHub.
 - Everything is **Terraform**; the allowlist and account-specific settings live in gitignored files.
 
 ## Architecture
@@ -25,7 +26,7 @@ flowchart LR
     EDGE -.->|"no / expired token"| LOGIN["/login.html"]
     EDGE -.->|"not on the allowlist"| DENIED["/login.html?denied=1"]
     LOGIN -->|Google sign-in| FB[Firebase Auth]
-    GH[GitHub main] -->|CodeStar connection| CP[CodePipeline] --> CB["CodeBuild<br/>npm ci + build"] -->|"s3 sync + invalidation"| S3
+    GH[GitHub main] -->|CodeConnections| CP[CodePipeline] --> CB["CodeBuild<br/>npm ci + build"] -->|"s3 sync + invalidation"| S3
 ```
 
 ## How the sign-in works
@@ -49,7 +50,7 @@ sequenceDiagram
     end
     L-->>B: redirect to /?signedin=…
     B->>E: GET / (with cookie)
-    E->>E: verify RS256 signature, iss, aud, exp + allowlist
+    E->>E: verify RS256 signature, iss, aud, exp,<br/>Google-verified email + allowlist
     E-->>B: 200 from S3
 ```
 
@@ -58,8 +59,11 @@ Details that make it pleasant to use:
 - **Silent renewal.** Firebase ID tokens last about an hour. When one expires, the edge sends the user to
   `login.html`, which finds the persisted Firebase session, mints a fresh token and bounces straight back.
   There's no popup and the user barely sees it.
-- **No redirect loops.** A valid token for an email that isn't allowlisted goes to `?denied=1`; the login
-  page then signs out, explains, and never auto-redirects. The silent path also stops after three
+- **Verified Google accounts only.** The token must come from the Google provider with `email_verified`
+  set. Otherwise turning on another sign-in method in Firebase (say, email/password) would let someone
+  register an allowlisted address they don't own.
+- **No redirect loops.** A valid token that isn't acceptable (not allowlisted, or not a verified Google
+  account) goes to `?denied=1`; the login page then signs out, explains, and never auto-redirects. The silent path also stops after three
   automatic redirects in 30 seconds and shows the sign-in button instead.
 - **Cache-busting redirects** (`/?signedin=<timestamp>`), so the browser can't serve `/` from its cache and
   skip the edge check.
@@ -67,27 +71,31 @@ Details that make it pleasant to use:
   their `Cache-Control` header allows.
 - **Public paths.** `login.html`, the favicons/logos, the web manifest and `robots.txt` bypass the gate so
   the login page can render.
+- **Caching that suits a Vite build.** Content-hashed files under `assets/` are uploaded with a one-year
+  `immutable` cache header; `index.html` and the rest with `no-cache`. CloudFront uses the managed
+  `CachingOptimized` policy (path-only cache key, compression) and adds the managed security headers
+  (HSTS, `nosniff`, frame and referrer policies). HTTP/3 and IPv6 are on.
 
 ## Files
 
 | File | What it does |
 |---|---|
 | `s3.tf` | Private bucket for the build, readable only through CloudFront (Origin Access Control). |
-| `cloudfront.tf` | The distribution and the edge function. The allowlist and Firebase project ID are rendered into the function source with `templatefile()`, because Lambda@Edge has no environment variables. |
+| `cloudfront.tf` | The distribution (managed cache and security-header policies) and the edge function. The allowlist and Firebase project ID are rendered into the function source with `templatefile()`, because Lambda@Edge has no environment variables. |
 | `cloudfront_edge.js` | The viewer-request handler: token verification, allowlist check, redirects. |
 | `login.html` | The standalone login page (no framework, Firebase loaded from Google's CDN, light and dark theme). The build copies it to the site root. |
-| `pipeline.tf`, `buildspec.yaml` | GitHub → CodePipeline → CodeBuild → `s3 sync` + CloudFront invalidation. |
+| `pipeline.tf`, `buildspec.yaml` | GitHub (CodeConnections) → CodePipeline V2 → CodeBuild (Amazon Linux 2023, Node 22) → `s3 sync` with cache headers + CloudFront invalidation. |
 | `backend.tf` | Remote Terraform state in S3 with DynamoDB locking (bucket supplied at init time). |
 | `variables.tf`, `locals.tf`, `providers.tf`, `outputs.tf` | Inputs, naming, providers (incl. the `us-east-1` alias Lambda@Edge requires), outputs. |
 
 ## Setting it up
 
+Requires Terraform 1.10+ and the AWS provider 6.x.
+
 1. **Firebase.** Create a project, enable **Authentication → Sign-in method → Google**, and register a web
    app. Put its config into the `firebaseConfig` block in `login.html`. After the first deploy, add your
    CloudFront domain under **Authentication → Settings → Authorized domains**.
-2. **GitHub connection.** In the AWS console create a CodeStar (CodeConnections) connection to GitHub named
-   after `project_name` (default `codex-magica`) and approve it.
-3. **Terraform inputs.** From this folder:
+2. **Terraform.** From this folder:
 
    ```sh
    cp backend.hcl.example backend.hcl            # your state bucket + lock table
@@ -96,7 +104,11 @@ Details that make it pleasant to use:
    terraform apply
    ```
 
-4. **Deploy.** Push to `main`; the pipeline builds the app, copies `login.html` into the build and syncs it
+3. **Approve the GitHub connection.** Terraform creates it in `PENDING` state (see the
+   `github_connection_status` output). In the AWS console open **Developer Tools → Settings →
+   Connections**, pick the connection and choose **Update pending connection** to install AWS's GitHub app.
+   This one step can't be automated.
+4. **Deploy.** Push to `main`; the pipeline builds the app, copies `login.html` into `dist/` and syncs it
    to S3. The site URL is the `cloudfront_domain` output.
 
 Changing the allowlist means editing `terraform.tfvars` and running `terraform apply` again; a new edge

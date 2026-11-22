@@ -1,6 +1,9 @@
-# Connection to GitHub via CodeStar Connections (create the connection once in console, then reference here)
-data "aws_codestarconnections_connection" "github" {
-  name = local.name_prefix
+# Connection to GitHub via AWS CodeConnections (formerly CodeStar Connections). Terraform creates it
+# in PENDING state; approve it once in the console (Developer Tools → Settings → Connections →
+# "Update pending connection") so AWS can install its GitHub app. The pipeline can't run until then.
+resource "aws_codeconnections_connection" "github" {
+  name          = local.name_prefix
+  provider_type = "GitHub"
 }
 
 
@@ -35,7 +38,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       },
       {
         Effect   = "Allow",
-        Action   = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:PutObjectAcl"],
+        Action   = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
         Resource = [aws_s3_bucket.frontend.arn, "${aws_s3_bucket.frontend.arn}/*"]
       },
       {
@@ -59,7 +62,7 @@ resource "aws_codebuild_project" "frontend" {
   artifacts { type = "CODEPIPELINE" }
   environment {
     compute_type    = "BUILD_GENERAL1_SMALL"
-    image           = "aws/codebuild/standard:7.0"
+    image           = "aws/codebuild/amazonlinux-x86_64-standard:5.0" # Amazon Linux 2023; Node 22 via buildspec
     type            = "LINUX_CONTAINER"
     privileged_mode = false
     environment_variable {
@@ -108,7 +111,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-      { Effect = "Allow", Action = ["codestar-connections:UseConnection"], Resource = data.aws_codestarconnections_connection.github.arn },
+      # Both prefixes: connections created before the rename still authorize via codestar-connections.
+      { Effect = "Allow", Action = ["codeconnections:UseConnection", "codestar-connections:UseConnection"], Resource = aws_codeconnections_connection.github.arn },
       { Effect = "Allow", Action = ["codebuild:BatchGetBuilds", "codebuild:StartBuild"], Resource = aws_codebuild_project.frontend.arn },
       { Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject", "s3:GetObjectVersion", "s3:GetBucketVersioning", "s3:List*"], Resource = "*" }
     ]
@@ -124,8 +128,10 @@ resource "aws_s3_bucket" "artifacts" {
 
 
 resource "aws_codepipeline" "frontend" {
-  name     = "${local.name_prefix}-frontend"
-  role_arn = aws_iam_role.codepipeline.arn
+  name           = "${local.name_prefix}-frontend"
+  role_arn       = aws_iam_role.codepipeline.arn
+  pipeline_type  = "V2"     # V1 is legacy; V2 bills per action-minute (a small site stays in the free tier)
+  execution_mode = "QUEUED" # pushes in quick succession deploy in order instead of superseding each other
 
 
   artifact_store {
@@ -144,7 +150,7 @@ resource "aws_codepipeline" "frontend" {
       version          = "1"
       output_artifacts = ["SourceOutput"]
       configuration = {
-        ConnectionArn    = data.aws_codestarconnections_connection.github.arn
+        ConnectionArn    = aws_codeconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.github_branch
         DetectChanges    = true
@@ -161,8 +167,7 @@ resource "aws_codepipeline" "frontend" {
       owner           = "AWS"
       provider        = "CodeBuild"
       input_artifacts = ["SourceOutput"]
-      # output_artifacts = ["BuildOutput"]
-      version = "1"
+      version         = "1"
       configuration = {
         ProjectName = aws_codebuild_project.frontend.name
       }

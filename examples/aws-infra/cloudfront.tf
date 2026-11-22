@@ -10,10 +10,23 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 
 
 
+# AWS-managed policies: cache on path only (the edge auth runs on every viewer request before the
+# cache, so query strings and cookies never need to be part of the cache key), plus a standard set
+# of security response headers (HSTS, nosniff, frame-options, referrer-policy).
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+data "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "Managed-SecurityHeadersPolicy"
+}
+
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   comment             = "${local.name_prefix} frontend"
   default_root_object = "index.html"
+  http_version        = "http2and3"
+  is_ipv6_enabled     = true
 
 
   origin {
@@ -32,11 +45,9 @@ resource "aws_cloudfront_distribution" "cdn" {
     cached_methods         = ["GET", "HEAD", "OPTIONS"]
 
 
-    forwarded_values {
-      query_string = true
-      headers      = ["Origin"]
-      cookies { forward = "none" }
-    }
+    compress                   = true
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_optimized.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
 
     lambda_function_association {
       event_type   = "viewer-request"
@@ -53,9 +64,10 @@ resource "aws_cloudfront_distribution" "cdn" {
     geo_restriction { restriction_type = "none" }
   }
 
+  # The default *.cloudfront.net certificate. For a custom domain, use an ACM certificate in
+  # us-east-1 and set minimum_protocol_version = "TLSv1.2_2021".
   viewer_certificate {
     cloudfront_default_certificate = true
-    # minimum_protocol_version = "TLSv1.2_2021"
   }
 }
 
@@ -81,13 +93,14 @@ data "archive_file" "edge_zip" {
 }
 
 resource "aws_lambda_function" "viewer_auth" {
-  provider      = aws.us_east_1
-  filename      = data.archive_file.edge_zip.output_path
-  function_name = "${local.name_prefix}-edge-auth"
-  role          = aws_iam_role.lambda_edge.arn
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-  publish       = true
+  provider         = aws.us_east_1
+  filename         = data.archive_file.edge_zip.output_path
+  source_code_hash = data.archive_file.edge_zip.output_base64sha256
+  function_name    = "${local.name_prefix}-edge-auth"
+  role             = aws_iam_role.lambda_edge.arn
+  handler          = "index.handler"
+  runtime          = "nodejs24.x"
+  publish          = true
   # Viewer-request cap is 5s; the only slow path is the (cached) Google cert fetch.
   timeout = 5
 }
