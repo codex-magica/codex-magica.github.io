@@ -1,10 +1,11 @@
 #!/bin/bash
-# !!! WARNING !!!  src/book/ now contains MANUAL corrections made after generation
-# (filled-in [?] values, term fixes like Méreg-/Immunis, etc.) that are NOT in
-# source_material/build/md. Re-running this script OVERWRITES src/book and loses them.
-# Back up src/book first, or backport fixes to build/md, before regenerating.
+# Builds the app-ready chapters in src/book/ (gitignored, not distributed) from the per-page
+# Markdown in source_material/build/md. The app reads two of them, 01-bevezeto.md and
+# 02-karakteralkotas.md (see src/book/README.md).
 #
-# Builds the APP-READY book (src/book/) from per-page Markdown.
+# Note: proofreading fixes made directly in src/book are not written back to the per-page files,
+# so re-running this overwrites them. Back up src/book first.
+#
 # - drops front matter (cover/title/impresszum/foreword) and back matter
 #   (character sheet, maps, TOC, bookstore ad)
 # - skips trivial art/blank pages (their title is redundant with the chapter H1)
@@ -14,7 +15,7 @@ cd "$(dirname "$0")/../.."
 SRC=source_material/build/md
 OUT=src/book
 mkdir -p "$OUT"
-rm -f "$OUT"/*.md
+rm -f "$OUT"/[0-9]*.md  # chapters only; keeps src/book/README.md
 
 # Pages to exclude entirely (front + back matter). 0-4 also covered by dropping ch.00.
 is_excluded() { local p=$1; { (( p>=0 && p<=4 )) || (( p>=503 && p<=513 )); }; }
@@ -61,9 +62,7 @@ n=${#chapters[@]}
 for ((i=0; i<n; i++)); do
   IFS='|' read -r start fname title <<< "${chapters[$i]}"
   if (( i+1 < n )); then IFS='|' read -r nstart _ _ <<< "${chapters[$((i+1))]}"; else nstart=514; fi
-  # Book I = Kalandozók Könyve (player's book); Book II = Kalandmesterek Könyve (starts at page 402)
-  book=1; (( start >= 402 )) && book=2
-  out="$OUT/${book}-${fname}.md"
+  out="$OUT/${fname}.md"
   { printf '# %s\n\n' "$title"; } > "$out"
   for ((p=start; p<nstart; p++)); do
     is_excluded "$p" && continue

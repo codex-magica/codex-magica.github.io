@@ -3,6 +3,11 @@
 You assemble ONE page of a Hungarian M.A.G.U.S. (Új Törvénykönyv) rulebook into clean Markdown.
 You will be told the page index NNN (zero-padded, e.g. 014).
 
+> **How this file is used.** Stage 1 of `assemble.workflow.js` follows these instructions but skips
+> step 4: it leaves a `<!-- TABLE: … -->` placeholder for each table, and stage 2 (or
+> `tablefill.workflow.js`) fills them by reading full-width strips at native resolution. Step 4 below is
+> the original single-agent approach, kept for running one page by hand.
+
 ## Inputs
 - Deskewed page image: `source_material/build/deskewed/p-NNN.png`
 - Tesseract OCR prose (GROUND TRUTH for wording): `source_material/build/ocr/p-NNN.txt`
@@ -24,6 +29,8 @@ You will be told the page index NNN (zero-padded, e.g. 014).
    - `TOC` — a table of contents. Reproduce as a Markdown list preserving entries and page numbers.
    - `PROSE` — body text, possibly with headings and flavour quotes.
    - `TABLE` — contains one or more stat tables (plus possibly prose).
+   - `FAINT` — low-contrast and largely unreadable. Still write what tesseract got and mark unreadable spots `[?]`.
+   - `BLANK` — no content at all.
 
 3. **PROSE assembly (from tesseract text):**
    - Keep the wording from tesseract verbatim. Fix only: hyphenation across line breaks (`Tapasz-\ntalati` → `Tapasztalati`), and obvious join of wrapped lines into paragraphs.

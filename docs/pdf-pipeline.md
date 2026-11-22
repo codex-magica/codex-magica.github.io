@@ -57,6 +57,13 @@ flowchart TD
 5. **Proofreading.** The longest part. The Markdown was read against the scan, then the typed rules data
    (`src/data/`, `src/model/`) was cross-checked against the book.
 
+## Running it
+
+The shell scripts (`prep.sh`, `group_chapters.sh`, `build_appbook.sh`) need only tesseract (with the `hun`
+language data) and ImageMagick. The two `*.workflow.js` files are Claude Code workflow scripts: they use
+its `agent()`, `pipeline()` and `phase()` helpers to fan the pages out to sub-agents, so they run inside
+Claude Code rather than plain Node. `AGENT_INSTRUCTIONS.md` is the per-page brief each agent receives.
+
 ## Practical lessons
 
 - **Use OCR for the words and the LLM for the structure.** An LLM grounded in OCR text restructures
