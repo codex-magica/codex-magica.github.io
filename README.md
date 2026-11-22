@@ -105,8 +105,8 @@ level. Each level is stored as its own entry, so you can go back and edit an ear
 </picture>
 
 **Phone, tablet and desktop.** On a phone the sheet becomes swipeable pages; on an iPad or desktop it spreads
-into columns. Light and dark themes, an app you can add to your home screen, characters saved on the
-device, and optional Google sync across devices.
+into columns. Light and dark themes, an app you can add to your home screen, and characters saved on the
+device, with export and import as JSON files.
 
 ## How it was built
 
@@ -164,16 +164,16 @@ flowchart LR
   number fails CI. A `validateRules` test checks that the rules data is internally consistent.
 - **House rules as data variants.** Each character is fixed to a rules variant at creation; the
   homebrew skill rework is a transform over the base rules, not a fork of the code.
-- **Device-first storage with three-way sync.** Characters live in `localStorage` with schema migrations
-  on load. Optional Google sync stores one Firestore document per character and merges each one against
-  the last synced version. A change on only one side applies silently. If both sides changed, the user picks
-  which version to keep, and an edit always wins over a delete, so nothing is lost.
+- **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema
+  migrations run on load so old saves keep working, and a character can be exported to and imported from
+  a JSON file.
 
-### 3 · Hosting
+### 3 · Hosting (example)
 
-The private instance for our group ran as a static build on **S3 + CloudFront**, with a **Lambda@Edge**
-function verifying Firebase ID tokens against an allowlist, deployed by **CodePipeline** from `main`.
-It's all Terraform, documented in [`infrastructure/`](infrastructure).
+The app is a static build, so it can be hosted anywhere. The setup that ran our group's private instance
+is kept as a documented example in [`examples/aws-infra/`](examples/aws-infra): S3 + CloudFront, a
+Lambda@Edge function that only lets in allowlisted Google accounts (verified Firebase ID tokens), a
+standalone login page, and a CodePipeline that deploys on every push. All of it is Terraform.
 
 ## Getting started
 
@@ -192,8 +192,9 @@ npm start            # http://localhost:3000
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Production build into `build/` |
 
-Characters are saved in the browser. Google sync is optional and needs a Firebase project with Google
-sign-in; put its web config in [`src/state/firebase.ts`](src/state/firebase.ts).
+The app opens on the character roster. Characters are saved in your browser's local storage; to move one
+to another device, use **Exportálás fájlba** (export) in its menu and **Karakter importálása** (import) on
+the other side.
 
 <details>
 <summary><b>Project structure</b></summary>
@@ -204,12 +205,12 @@ src/
 ├── model/           rules model: classes, races, skills, effects DSL, house-rule variants
 ├── data/            typed rules data transcribed from the book (spells, weapons, armor…)
 ├── book/            not distributed: optional local copy of two rulebook chapters
-├── state/           roster storage, migrations, import/export, Firebase sync
+├── state/           roster storage (localStorage), migrations, import/export
 ├── ui/              React + Chakra UI screens: welcome, sheet, builder, compendium
 └── fonts/           Crimson Pro (OFL)
 source_material/
 └── build/           the PDF → Markdown pipeline: scripts and agent instructions
-infrastructure/      Terraform: S3, CloudFront, Lambda@Edge auth, CodePipeline
+examples/aws-infra/  example hosting: Terraform, Lambda@Edge Google sign-in gate, login page
 docs/                design notes, pipeline write-up, README assets
 ```
 
@@ -218,9 +219,10 @@ docs/                design notes, pipeline write-up, README assets
 ## Tech stack
 
 **App:** React 18 · TypeScript · Chakra UI · Emotion · Create React App (react-app-rewired)<br>
-**Data & sync:** localStorage · Firebase Auth · Cloud Firestore<br>
+**Storage:** localStorage · JSON import/export<br>
 **Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
-**Infra:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · GitHub Actions
+**Tooling:** Jest · GitHub Actions<br>
+**Example hosting:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · Firebase Auth
 
 ## Credits & license
 

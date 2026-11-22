@@ -9,6 +9,7 @@ phases:
     commands:
       - echo "Building React app..."
       - npm run build
+      - cp examples/aws-infra/login.html build/login.html
   post_build:
     commands:
       - echo "Uploading to S3..."

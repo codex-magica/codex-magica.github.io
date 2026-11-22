@@ -1,11 +1,11 @@
 
 # CloudFront for HTTPS + CDN
 resource "aws_cloudfront_origin_access_control" "oac" {
-  name = "${local.name_prefix}-oac"
-  description = "OAC for ${aws_s3_bucket.frontend.bucket}"
+  name                              = "${local.name_prefix}-oac"
+  description                       = "OAC for ${aws_s3_bucket.frontend.bucket}"
   origin_access_control_origin_type = "s3"
-  signing_behavior = "always"
-  signing_protocol = "sigv4"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 
@@ -28,13 +28,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_cache_behavior {
     target_origin_id       = "s3-origin"
     viewer_protocol_policy = "redirect-to-https"
-    allowed_methods = ["GET", "HEAD", "OPTIONS"]
-    cached_methods = ["GET", "HEAD", "OPTIONS"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD", "OPTIONS"]
 
 
     forwarded_values {
       query_string = true
-      headers = ["Origin"]
+      headers      = ["Origin"]
       cookies { forward = "none" }
     }
 
@@ -65,6 +65,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 locals {
   edge_src = templatefile("${path.module}/cloudfront_edge.js", {
     allowed_emails_json = jsonencode([for e in var.allowed_emails : lower(e)])
+    firebase_project_id = var.firebase_project_id
   })
   edge_hash = sha256(local.edge_src)
 }
@@ -80,15 +81,15 @@ data "archive_file" "edge_zip" {
 }
 
 resource "aws_lambda_function" "viewer_auth" {
-  provider         = aws.us_east_1
-  filename         = data.archive_file.edge_zip.output_path
-  function_name    = "${local.name_prefix}-edge-auth"
-  role             = aws_iam_role.lambda_edge.arn
-  handler          = "index.handler"
-  runtime          = "nodejs20.x"
-  publish          = true
+  provider      = aws.us_east_1
+  filename      = data.archive_file.edge_zip.output_path
+  function_name = "${local.name_prefix}-edge-auth"
+  role          = aws_iam_role.lambda_edge.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+  publish       = true
   # Viewer-request cap is 5s; the only slow path is the (cached) Google cert fetch.
-  timeout          = 5
+  timeout = 5
 }
 
 resource "aws_iam_role" "lambda_edge" {

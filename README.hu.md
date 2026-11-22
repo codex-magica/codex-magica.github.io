@@ -57,7 +57,7 @@ Ezekre készült ez az alkalmazás:
   szabályszöveggel.
 - **Házi szabály:** választható átdolgozott képzettségrendszer (karakterenként, a létrehozáskor rögzítve).
 - **Világos és sötét téma**, a kezdőképernyőre tehető alkalmazás, karakterek exportja és importja
-  JSON-fájlként, opcionális Google-szinkron több eszköz között.
+  JSON-fájlként.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mobile-dark.webp">
@@ -76,8 +76,9 @@ npm ci
 npm start            # megnyílik: http://localhost:3000
 ```
 
-A karakterek a böngészőben tárolódnak, nincs szükség fiókra. A Google-szinkronhoz saját Firebase-projekt
-kell (lásd: [`src/state/firebase.ts`](src/state/firebase.ts)).
+Az alkalmazás a karakterlistával indul. A karakterek a böngésző helyi tárolójában maradnak, fiók nem kell.
+Másik eszközre a karakter menüjéből exportálva (**Exportálás fájlba**), majd ott importálva
+(**Karakter importálása**) vihetők át.
 
 ## Hibát találtál?
 

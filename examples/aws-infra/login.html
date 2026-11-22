@@ -251,12 +251,11 @@
     import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
       from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
+    // Your Firebase web app config (Firebase console → Project settings → Your apps).
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "your-project-id.firebaseapp.com",
       projectId: "your-project-id",
-      storageBucket: "your-project-id.firebasestorage.app",
-      messagingSenderId: "YOUR_SENDER_ID",
       appId: "YOUR_APP_ID",
     };
     const auth = getAuth(initializeApp(firebaseConfig));

@@ -1,36 +1,36 @@
 variable "project_name" {
-  type = string
+  type    = string
   default = "codex-magica"
 }
 variable "aws_region" {
-  type = string
+  type    = string
   default = "eu-central-1"
 }
 # Named AWS CLI profile; null falls back to the default credential chain.
 variable "aws_profile" {
-  type = string
+  type    = string
   default = null
 }
 
 
 # GitHub source for pipeline
 variable "github_owner" {
-  type = string
+  type    = string
   default = "marcigo36"
 }
 variable "github_repo" {
-  type = string
+  type    = string
   default = "codex-magica"
 }
 variable "github_branch" {
-  type = string
+  type    = string
   default = "main"
 }
 
 
 # Path to frontend relative to repo root (e.g. "frontend")
 variable "frontend_dir" {
-  type = string
+  type    = string
   default = "."
 }
 
@@ -40,4 +40,10 @@ variable "frontend_dir" {
 # gitignored terraform.tfvars (see terraform.tfvars.example).
 variable "allowed_emails" {
   type = list(string)
+}
+
+
+# Firebase project whose ID tokens the edge gate accepts (token audience/issuer check).
+variable "firebase_project_id" {
+  type = string
 }

@@ -1,4 +1,5 @@
 # Copy to terraform.tfvars (gitignored) and fill in.
-allowed_emails = ["you@example.com", "a-friend@example.com"]
+allowed_emails      = ["you@example.com", "a-friend@example.com"]
+firebase_project_id = "your-firebase-project-id"
 # aws_profile  = "my-profile"
 # github_owner = "your-github-user"

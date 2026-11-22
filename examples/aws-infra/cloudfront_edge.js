@@ -13,7 +13,7 @@
 
 import crypto from "node:crypto";
 
-const PROJECT_ID = "your-project-id";
+const PROJECT_ID = "${firebase_project_id}"; // rendered by Terraform from var.firebase_project_id
 const ISSUER = "https://securetoken.google.com/" + PROJECT_ID;
 const CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 

@@ -1,14 +1,14 @@
 resource "aws_s3_bucket" "frontend" {
-  bucket = local.s3_bucket_name
+  bucket        = local.s3_bucket_name
   force_destroy = true
 }
 
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
-  bucket = aws_s3_bucket.frontend.id
-  block_public_acls = true
-  block_public_policy = true
-  ignore_public_acls = true
+  bucket                  = aws_s3_bucket.frontend.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
   restrict_public_buckets = true
 }
 
@@ -20,12 +20,12 @@ resource "aws_s3_bucket_policy" "site_oac" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid = "AllowCloudFrontServicePrincipalReadOnly",
+        Sid    = "AllowCloudFrontServicePrincipalReadOnly",
         Effect = "Allow",
         Principal = {
           Service = "cloudfront.amazonaws.com"
         },
-        Action = ["s3:GetObject"],
+        Action   = ["s3:GetObject"],
         Resource = ["${aws_s3_bucket.frontend.arn}/*"],
         Condition = {
           StringEquals = {
