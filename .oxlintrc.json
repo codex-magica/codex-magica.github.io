@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn", "oxc", "import"],
+  "env": { "browser": true, "es2024": true },
+  "categories": { "correctness": "error" },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/jsx-key": "error",
+    "no-unused-vars": ["error", { "ignoreRestSiblings": true }],
+    "no-useless-escape": "error",
+    // React Compiler-oriented checks: the app uses the "latest value in a ref" idiom on purpose,
+    // so these flag rather than fail.
+    "react/refs": "warn",
+    "react/set-state-in-effect": "warn"
+  },
+  "ignorePatterns": ["dist", "src/book", "examples", "source_material"]
+}
