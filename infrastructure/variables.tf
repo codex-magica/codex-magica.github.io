@@ -6,9 +6,10 @@ variable "aws_region" {
   type = string
   default = "eu-central-1"
 }
+# Named AWS CLI profile; null falls back to the default credential chain.
 variable "aws_profile" {
   type = string
-  default = "default"
+  default = null
 }
 
 
@@ -34,9 +35,9 @@ variable "frontend_dir" {
 }
 
 
-# Whitelisted emails allowed past the CloudFront edge gate (baked into the edge function;
-# changing this list requires a terraform apply).
+# Google accounts allowed past the CloudFront edge gate (baked into the edge function;
+# changing this list requires a terraform apply). No default on purpose: set it in a
+# gitignored terraform.tfvars (see terraform.tfvars.example).
 variable "allowed_emails" {
   type = list(string)
-  default = ["owner@example.com","player1@example.com","player2@example.com","player3@example.com","player4@example.com"]
 }

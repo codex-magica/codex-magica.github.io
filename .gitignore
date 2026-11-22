@@ -21,6 +21,8 @@
 /infrastructure/.terraform
 /infrastructure/.terraform.lock.hcl
 /infrastructure/build
+/infrastructure/terraform.tfvars
+/infrastructure/backend.hcl
 
 npm-debug.log*
 yarn-debug.log*

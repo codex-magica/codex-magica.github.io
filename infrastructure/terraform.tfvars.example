@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+allowed_emails = ["you@example.com", "a-friend@example.com"]
+# aws_profile  = "my-profile"
+# github_owner = "your-github-user"
