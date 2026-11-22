@@ -1,46 +1,242 @@
-# Getting Started with Create React App
+<div align="center">
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
+  <img src="docs/assets/logo-light.png" alt="Codex Magica sigil" width="96">
+</picture>
 
-## Available Scripts
+# Codex Magica
 
-In the project directory, you can run:
+**A digital compendium and character sheet for _M.A.G.U.S._, the classic Hungarian tabletop RPG,<br>
+built from a scanned copy of the _Új Törvénykönyv_ rulebook.**
 
-### `npm start`
+**English** · [Magyar](README.hu.md)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+[![CI](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![React 18](https://img.shields.io/badge/React_18-149ECA?logo=react&logoColor=white)
+[![Code license: MIT](https://img.shields.io/badge/code-MIT-6E7781)](LICENSE)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+</div>
 
-### `npm test`
+<br>
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.webp">
+  <img src="docs/assets/hero-light.webp" alt="The character sheet of a level-1 elf bard: attributes, combat values, skills, bard spells and equipment">
+</picture>
 
-### `npm run build`
+## Why this exists
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Our group plays _M.A.G.U.S. Új Törvénykönyv_ (2007) from the printed book and a **low-resolution scanned
+PDF**. That made three things harder than they should be:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **During sessions**, finding a spell or a rule in the physical book or the PDF took too long.
+- **Between sessions**, levelling up meant a lot of bookkeeping: costs, prerequisites and bonuses spread
+  across a dozen tables.
+- **For the game master**, building NPCs by hand under the same rules was tedious.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Codex Magica turns the book into:
 
-### `npm run eject`
+- 📖 **A searchable compendium**: every skill, spell, prayer, psi discipline, weapon, armor and poison, each with its rules text.
+- 🧙 **A guided character builder**: race, class, school, backgrounds, point-buy, per-level skill purchases and level-ups, with the book's costs and prerequisites enforced. It works just as well for the game master's NPCs as for player characters.
+- 📜 **A live character sheet for the table**: hit points and pain points, mana, conditions, weapons and armor, companions. It works on a phone, an iPad or a desktop.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+It covers 12 classes, 6 races, 83 skills, 636 spells, prayers and psi disciplines, 83 weapons and 21 armors
+and shields. The UI is in Hungarian, like the game.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Features
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+<table>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/breakdown-dark.webp">
+  <img src="docs/assets/breakdown-light.webp" alt="Breakdown of the attack value (TÉ): Strength, Speed, Dexterity, combat-value points, weapon and skill bonus">
+</picture>
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+**Value breakdowns.** Tap any value on the sheet to see exactly where it comes from: the
+attributes, the class, the weapon, the skill level, the game master's adjustments.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/spell-dark.webp">
+  <img src="docs/assets/spell-light.webp" alt="The Tűzgolyó (fireball) spell card from the fire magic compendium">
+</picture>
 
-## Learn More
+**Spells, prayers and psi.** Bard, witch, warlock, fire and high magic, prayers and psi, each
+with costs, casting times and durations, and the book's full text one click away.
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/search-dark.webp">
+  <img src="docs/assets/search-light.webp" alt="Command palette search for 'sárkány' listing spells and psi disciplines">
+</picture>
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+**Search.** A <kbd>⌘K</kbd> palette searches every spell, skill and item, and you
+don't need to type the accents: `tuzgolyo` finds _Tűzgolyó_.
+</td>
+<td width="50%" valign="top">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/reader-dark.webp">
+  <img src="docs/assets/reader-light.webp" alt="Reader view of the fire magic chapter">
+</picture>
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Reader view.** The magic and skill sections can switch from tables to one continuous text in the
+book's order, with a table of contents that tracks your scroll position.
+</td>
+</tr>
+</table>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/creator-dark.webp">
+  <img src="docs/assets/creator-light.webp" alt="Character editor: skill purchases with granted skills, attribute requirements and KAP costs">
+</picture>
+
+**Character builder.** Skills granted by your class are marked, costs and attribute
+requirements are computed as you go, and the remaining development points (KAP) carry over to the next
+level. Each level is stored as its own entry, so you can go back and edit an earlier one.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mobile-dark.webp">
+  <img src="docs/assets/mobile-light.webp" alt="The character sheet on a phone, split into swipeable pages">
+</picture>
+
+**Phone, tablet and desktop.** On a phone the sheet becomes swipeable pages; on an iPad or desktop it spreads
+into columns. Light and dark themes, an app you can add to your home screen, characters saved on the
+device, and optional Google sync across devices.
+
+## How it was built
+
+### 1 · From a scanned PDF to Markdown
+
+The source was a 514-page scan at ~150 DPI with two columns, ornamental borders, rotated margin labels and
+dense stat tables. I tried several approaches before settling on a hybrid pipeline (the scripts are in
+[`source_material/build/`](source_material/build)):
+
+```mermaid
+flowchart LR
+    PDF["Scanned PDF<br/>514 pages"] --> PREP["Deskew + normalize<br/>(ImageMagick)"]
+    PREP --> OCR["tesseract -l hun<br/>prose = ground truth"]
+    PREP --> STRIPS["Full-width strips<br/>at native resolution"]
+    OCR --> PROSE["LLM agent per page<br/>structure, headings, quotes"]
+    STRIPS --> TABLES["Vision agent<br/>reads tables"]
+    PROSE --> MD["Markdown<br/>514 pages"]
+    TABLES --> MD
+    MD --> CH["34 chapters<br/>proofread by hand"]
+```
+
+**Lessons from the pipeline:**
+
+- **Full-page vision transcription hallucinates.** Vision models downscale the image (to a 1568 px long edge for Claude), so dense
+  prose blurs and the model fills in plausible but invented words and stat values. Tesseract with the
+  Hungarian model is near-perfect on the prose and never invents anything; when unsure it produces
+  obvious garbage instead. So **tesseract owns the wording**, and the LLM only decides structure.
+- **Tables needed a different approach.** Tesseract destroys table layout, and vision misreads cells on
+  full pages. Slicing pages into full-width strips at native resolution (under the downscale limit)
+  got the numbers right.
+- **Model choice is a cost lever.** A small model grounded in the OCR text handled the prose, and a larger
+  model was used only for table strips.
+- After assembly came a long round of **proofreading and cross-checking the data against the book**.
+
+The generated Markdown (the full rulebook text) is **not** part of this repository; the scripts are, so
+the pipeline can be run on your own copy. The [pipeline write-up](docs/pdf-pipeline.md) covers this in more
+detail.
+
+### 2 · From text to a rules engine
+
+```mermaid
+flowchart LR
+    DATA["Typed rules data<br/>transcribed from the book"] --> ENGINE["derive(rules, record)<br/>pure function"]
+    REC["Character record<br/>per-level ledger"] --> ENGINE
+    ENGINE --> SHEET["Sheet · builder · compendium<br/>values + provenance + diagnostics"]
+```
+
+- **A character is a ledger, not a stat block.** The record stores decisions: race, class, point-buy,
+  and per level the skill purchases, combat-value points and resource buys. `derive()` replays the
+  ledger into a full sheet every time, so editing a past level or levelling up is just another replay.
+- **The engine is a pure, total function.** It never throws. Bad input shows up as diagnostics the builder can show.
+  Derived values carry their **provenance** (which attribute, class, item or adjustment contributed what), and that powers the "explain this number" modals.
+- **Golden snapshot tests pin the rules.** Representative characters (a barbarian warrior, a Domvik
+  priest, a Doran wizard, an elf bard) are derived in full and snapshotted, so a refactor that changes a
+  number fails CI. A `validateRules` test checks that the rules data is internally consistent.
+- **House rules as data variants.** Each character is fixed to a rules variant at creation; the
+  homebrew skill rework is a transform over the base rules, not a fork of the code.
+- **Device-first storage with three-way sync.** Characters live in `localStorage` with schema migrations
+  on load. Optional Google sync stores one Firestore document per character and merges each one against
+  the last synced version. A change on only one side applies silently. If both sides changed, the user picks
+  which version to keep, and an edit always wins over a delete, so nothing is lost.
+
+### 3 · Hosting
+
+The private instance for our group ran as a static build on **S3 + CloudFront**, with a **Lambda@Edge**
+function verifying Firebase ID tokens against an allowlist, deployed by **CodePipeline** from `main`.
+It's all Terraform, documented in [`infrastructure/`](infrastructure).
+
+## Getting started
+
+Requires Node 22+.
+
+```sh
+git clone https://github.com/marcigo36/codex-magica.git
+cd codex-magica
+npm ci
+npm start            # http://localhost:3000
+```
+
+| Command | What it does |
+|---|---|
+| `npm test` | Jest suite, including the rules-engine golden snapshots |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run build` | Production build into `build/` |
+
+Characters are saved in the browser. Google sync is optional and needs a Firebase project with Google
+sign-in; put its web config in [`src/state/firebase.ts`](src/state/firebase.ts).
+
+<details>
+<summary><b>Project structure</b></summary>
+
+```text
+src/
+├── engine/          derive(): the pure rules engine, in phases, with golden tests
+├── model/           rules model: classes, races, skills, effects DSL, house-rule variants
+├── data/            typed rules data transcribed from the book (spells, weapons, armor…)
+├── book/            not distributed: optional local copy of two rulebook chapters
+├── state/           roster storage, migrations, import/export, Firebase sync
+├── ui/              React + Chakra UI screens: welcome, sheet, builder, compendium
+└── fonts/           Crimson Pro (OFL)
+source_material/
+└── build/           the PDF → Markdown pipeline: scripts and agent instructions
+infrastructure/      Terraform: S3, CloudFront, Lambda@Edge auth, CodePipeline
+docs/                design notes, pipeline write-up, README assets
+```
+
+</details>
+
+## Tech stack
+
+**App:** React 18 · TypeScript · Chakra UI · Emotion · Create React App (react-app-rewired)<br>
+**Data & sync:** localStorage · Firebase Auth · Cloud Firestore<br>
+**Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
+**Infra:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · GitHub Actions
+
+## Credits & license
+
+The **code** in this repository is open source under the [MIT License](LICENSE).
+
+The rules data in `src/data/` was transcribed and restructured from the rulebook for this project, so it is a
+**derivative work**: it, and the game's names and terms, are **not** covered by that license and remain the
+property of the respective rights holders. The full rulebook text is not included.
+Codex Magica is an unofficial, non-commercial fan project, not affiliated with or endorsed by them. The
+book's original credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this material and
+would like something changed or removed, please [open an issue](https://github.com/marcigo36/codex-magica/issues).
+
+The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro) (SIL OFL 1.1). The icons are
+from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons).
+
+<div align="center">
+<br>
+<sub>Made for one gaming group, shared with everyone who still plays on Ynev. 🎲</sub>
+</div>
