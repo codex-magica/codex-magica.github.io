@@ -28,8 +28,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# MAGUS source material — large binaries (the Markdown results in
-# source_material/build/{md,chapters,ocr} ARE kept and committed)
+# MAGUS source material. The scanned PDF, page images and the full rulebook text (OCR output,
+# per-page and per-chapter Markdown) are NOT distributed; see NOTICE.md and src/book/README.md.
 /source_material/Magus_UTK_v1.pdf
 /source_material/pages/
 /source_material/pilot_md/
@@ -38,6 +38,11 @@ yarn-error.log*
 /source_material/build/strips/
 /source_material/build/crops/
 /source_material/build/prep_full.log
+/source_material/build/md/
+/source_material/build/ocr/
+/source_material/build/chapters/
+/src/book/*.md
+!/src/book/README.md
 
 # local certificates
 /local-cert/

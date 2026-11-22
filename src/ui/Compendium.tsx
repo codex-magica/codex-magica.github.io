@@ -14,15 +14,23 @@ import { OpenBookIcon } from "./icons";
 import { SKILLS, SkillDef } from "../model/skills";
 import { rulesHomebrew } from "../model/rulesVariants";
 import { SKILL_CATEGORIES } from "../model/common";
-import introMd from "../book/01-bevezeto.md";
-import charMd from "../book/02-karakteralkotas.md";
-
-// rulebook chapters shown via the Markdown renderer; tab indices start right after the data tabs
+// Optional rulebook chapters shown via the Markdown renderer; tab indices start right after the data
+// tabs. The full book text is NOT distributed with this repository: drop your own copy of these chapters
+// into src/book/ (see src/book/README.md) and the tabs appear; without them they're simply absent.
 const CHAPTER_BASE = TABS.length;
+const bookChapters = require.context("../book", false, /^\.\/0[12]-[a-z-]+\.md$/);
+const chapterMd = (file: string): string | undefined => {
+  if (!bookChapters.keys().includes(`./${file}`)) return undefined;
+  const mod = bookChapters(`./${file}`) as string | { default: string };
+  return typeof mod === "string" ? mod : mod.default;
+};
 const CHAPTERS = [
-  { name: "Bevezető", md: introMd },
-  { name: "Karakteralkotás", md: charMd },
-];
+  { name: "Bevezető", file: "01-bevezeto.md" },
+  { name: "Karakteralkotás", file: "02-karakteralkotas.md" },
+].flatMap((c) => {
+  const md = chapterMd(c.file);
+  return md ? [{ name: c.name, md }] : [];
+});
 
 interface Props {
   compTab: number;
