@@ -71,6 +71,10 @@ Details that make it pleasant to use:
   their `Cache-Control` header allows.
 - **Public paths.** `login.html`, the favicons/logos, the web manifest and `robots.txt` bypass the gate so
   the login page can render.
+- **No service worker behind the gate.** The app is normally an offline-capable PWA, but a service worker
+  answers navigations from the device's cache, so requests would stop reaching the edge: no silent
+  renewal, no `login.html`, and removing someone from the allowlist wouldn't lock them out. The pipeline
+  therefore builds with `DISABLE_PWA=true`. The trade-off: behind the gate the app needs a connection.
 - **Caching that suits a Vite build.** Content-hashed files under `assets/` are uploaded with a one-year
   `immutable` cache header; `index.html` and the rest with `no-cache`. CloudFront uses the managed
   `CachingOptimized` policy (path-only cache key, compression) and adds the managed security headers
@@ -85,7 +89,7 @@ Details that make it pleasant to use:
 | `cloudfront_edge.js` | The viewer-request handler: token verification, allowlist check, redirects. |
 | `login.html` | The standalone login page (no framework, Firebase loaded from Google's CDN, light and dark theme). The build copies it to the site root. |
 | `pipeline.tf`, `buildspec.yaml` | GitHub (CodeConnections) → CodePipeline V2 → CodeBuild (Amazon Linux 2023, Node 22) → `s3 sync` with cache headers + CloudFront invalidation. |
-| `backend.tf` | Remote Terraform state in S3 with DynamoDB locking (bucket supplied at init time). |
+| `backend.tf` | Remote Terraform state in S3 with S3-native locking (bucket supplied at init time). |
 | `variables.tf`, `locals.tf`, `providers.tf`, `outputs.tf` | Inputs, naming, providers (incl. the `us-east-1` alias Lambda@Edge requires), outputs. |
 
 ## Setting it up
@@ -146,7 +150,7 @@ export const logout = async () => {
   request, at the edge, against Google's signing keys).
 - **Least privilege:** each role can touch only its own resources. The build can write only to the site
   bucket and invalidate only this distribution; the pipeline reads and writes only its artifacts bucket;
-  both functions log only to their own log groups.
+  the build and the edge function each log only to their own log groups.
 - **Buckets:** both are private (all public access blocked) and reject any non-HTTPS request. The site
   bucket is readable only by this CloudFront distribution (Origin Access Control). Pipeline artifacts,
   which are zips of the repository, expire after 30 days.

@@ -28,11 +28,6 @@ variable "github_branch" {
 }
 
 
-# Path to frontend relative to repo root (e.g. "frontend")
-variable "frontend_dir" {
-  type    = string
-  default = "."
-}
 
 
 # Google accounts allowed past the CloudFront edge gate (baked into the edge function;

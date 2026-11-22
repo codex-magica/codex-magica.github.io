@@ -10,7 +10,8 @@ phases:
       - npm ci
   build:
     commands:
-      - npm run build
+      # No service worker behind the gate: a cached app would never reach the edge auth check again.
+      - DISABLE_PWA=true npm run build
       # The login page is part of this example, not the app: ship it at the site root.
       - cp examples/aws-infra/login.html dist/login.html
   post_build:

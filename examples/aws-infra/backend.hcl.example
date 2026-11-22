@@ -1,5 +1,5 @@
 # Copy to backend.hcl (gitignored), then: terraform init -backend-config=backend.hcl
-bucket         = "your-terraform-state-bucket"
-region         = "eu-central-1"
-dynamodb_table = "terraform-locks"
-# profile      = "my-profile"
+bucket       = "your-terraform-state-bucket"
+region       = "eu-central-1"
+use_lockfile = true # S3-native state locking (no DynamoDB table needed)
+# profile    = "my-profile"

@@ -5,6 +5,9 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // Hosting under a subpath (GitHub Pages serves project sites at /<repo>/): set BASE_PATH=/<repo>/.
 const base = process.env.BASE_PATH || "/";
+// DISABLE_PWA=true builds without the service worker, for hosting behind a per-request auth gate
+// (see examples/aws-infra): a cached app would never reach the gate again.
+const disablePwa = process.env.DISABLE_PWA === "true";
 
 export default defineConfig({
   base,
@@ -14,6 +17,7 @@ export default defineConfig({
     // opens with no connection at the table. New versions are announced in-app (UpdateBanner),
     // never applied mid-session behind the user's back.
     VitePWA({
+      disable: disablePwa,
       registerType: "prompt",
       manifest: {
         name: "Codex Magica",
