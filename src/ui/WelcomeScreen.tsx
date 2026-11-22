@@ -10,7 +10,7 @@ import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
-import { exportRecordFile, parseImportedRecord } from "../state/transfer";
+import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
 
 interface Props {
   records: CharacterRecord[];
@@ -19,7 +19,7 @@ interface Props {
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
-  onImport: (record: CharacterRecord) => void;
+  onImport: (records: CharacterRecord[]) => void;
   onRename: (id: string, name: string) => void;
   onOpenCompendium: () => void;
 }
@@ -40,6 +40,15 @@ const CopyIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" str
 const TrashIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>;
 const ImportIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>;
 const ExportIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 8l5-5 5 5" /><path d="M12 3v12" /></svg>;
+const BackupIcon = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 8l5-5 5 5" /><path d="M12 3v12" /></svg>;
+
+const DAY_MS = 24 * 3600 * 1000;
+const BACKUP_STALE_DAYS = 14;
+const daysAgo = (ts: number, now: number): string => {
+  const d = Math.floor((now - ts) / DAY_MS);
+  return d <= 0 ? "ma" : d === 1 ? "tegnap" : `${d} napja`;
+};
+
 const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: boolean; children: React.ReactNode }> = ({ icon, onClick, danger, children }) => (
   <Box as="button" type="button" onClick={onClick} display="flex" alignItems="center" gap="11px" w="100%" textAlign="left" px="13px" py="11px" borderRadius="9px" border="none" bg="transparent" color={danger ? "bad" : "fg"} fontWeight={600} fontSize="15px" _hover={{ bg: danger ? "badSoft" : "accentSoft" }}>
     {icon}{children}
@@ -52,19 +61,36 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
+  const [importInfo, setImportInfo] = useState<string | null>(null);
+  const [lastBackupAt, setLastBackupAt] = useState<number | null>(() => loadLastBackupAt());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hoverShadow = useParchmentHoverShadow();
+  const [now] = useState(() => Date.now()); // render must stay pure: read the clock once per visit
+  const backupStale = lastBackupAt === null || now - lastBackupAt > BACKUP_STALE_DAYS * DAY_MS;
 
   const handleImportFile = (file: File | undefined) => {
     if (!file) return;
     void file.text().then((text) => {
-      const rec = parseImportedRecord(text);
-      if (rec) {
-        setImportError(null);
-        onImport(rec);
-      } else {
-        setImportError("Érvénytelen karakterfájl — az importáláshoz az alkalmazásból exportált .json fájl kell.");
+      const result = parseImportFile(text, records);
+      if (!result) {
+        setImportInfo(null);
+        setImportError("Érvénytelen fájl — az alkalmazásból exportált karakter- vagy mentésfájl (.json) kell.");
+        return;
       }
+      setImportError(null);
+      onImport(result.add);
+      if (result.kind === "backup") {
+        if (result.add.length === 0) setImportInfo(`Nincs új karakter a mentésben — mind a ${result.skipped} megvolt már.`);
+        else setImportInfo(`${result.add.length} karakter visszaállítva${result.skipped > 0 ? `, ${result.skipped} már megvolt` : ""}.`);
+      } else {
+        setImportInfo(null);
+      }
+    });
+  };
+
+  const handleBackup = () => {
+    void exportBackupFile(records).then((saved) => {
+      if (saved) setLastBackupAt(loadLastBackupAt());
     });
   };
 
@@ -91,7 +117,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       <MenuItem icon={PencilIcon} onClick={() => { setMenuId(null); onEdit(v.id); }}>Szerkesztés</MenuItem>
       <MenuItem icon={RenameIcon} onClick={() => { setMenuId(null); setRenameValue(v.name); setRenameId(v.id); }}>Átnevezés</MenuItem>
       <MenuItem icon={CopyIcon} onClick={() => { setMenuId(null); onDuplicate(v.id); }}>Másolat készítése</MenuItem>
-      <MenuItem icon={ExportIcon} onClick={() => { const r = records.find((x) => x.id === v.id); setMenuId(null); if (r) exportRecordFile(r); }}>Exportálás fájlba</MenuItem>
+      <MenuItem icon={ExportIcon} onClick={() => { const r = records.find((x) => x.id === v.id); setMenuId(null); if (r) void exportRecordFile(r); }}>Exportálás fájlba</MenuItem>
       <Box h="1px" bg="rule" mx="10px" my="6px" />
       <MenuItem icon={TrashIcon} onClick={() => { setMenuId(null); setConfirmDeleteId(v.id); }} danger>Törlés</MenuItem>
     </>
@@ -178,8 +204,20 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         )}
 
         <HStack justify="center" gap="18px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
-          <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Karakter importálása</Box>
+          {records.length > 0 && (
+            <>
+              <Box as="button" type="button" onClick={handleBackup} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{BackupIcon}Biztonsági mentés</Box>
+              <Text as="span" opacity={0.5}>·</Text>
+            </>
+          )}
+          <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás fájlból</Box>
         </HStack>
+        {records.length > 0 && (
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
+            {lastBackupAt === null ? "Még nem készült biztonsági mentés." : `Utolsó biztonsági mentés: ${daysAgo(lastBackupAt, now)}.`}
+            {backupStale && " A karakterek csak ebben a böngészőben vannak — érdemes menteni."}
+          </Text>
+        )}
         <input
           ref={fileInputRef}
           type="file"
@@ -191,9 +229,9 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           }}
         />
 
-        {importError && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="bad" mt="9px" maxW="52ch" mx="auto">
-            {importError}
+        {(importError || importInfo) && (
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={importError ? "bad" : "good"} mt="9px" maxW="52ch" mx="auto">
+            {importError ?? importInfo}
           </Text>
         )}
       </Box>

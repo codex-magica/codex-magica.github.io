@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vite/client", "vitest/globals"],
+    "types": ["vite/client", "vitest/globals", "vite-plugin-pwa/react"],
     "paths": {
       "@/*": ["./src/*"]
     }

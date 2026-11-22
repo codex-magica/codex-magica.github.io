@@ -3,6 +3,7 @@ import { WelcomeScreen } from "./WelcomeScreen";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
+import { UpdateBanner } from "./UpdateBanner";
 import { useRoster } from "../state/useRoster";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
@@ -51,7 +52,7 @@ export const RootApp: React.FC = () => {
           onEdit={editChar}
           onDuplicate={roster.duplicate}
           onDelete={roster.remove}
-          onImport={roster.upsert}
+          onImport={(rs) => rs.forEach(roster.upsert)}
           onRename={(id, name) => {
             const r = roster.get(id);
             if (r) roster.upsert({ ...r, name });
@@ -70,6 +71,7 @@ export const RootApp: React.FC = () => {
         />
       )}
 
+      <UpdateBanner />
     </>
   );
 };
