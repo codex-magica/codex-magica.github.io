@@ -1,8 +1,8 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
-  <img src="docs/assets/logo-light.png" alt="Codex Magica sigil" width="96">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+  <img src="docs/brand/logo-light.svg" alt="Codex Magica logo: a pentagram drawn as a woven knot inside a ring" width="120">
 </picture>
 
 # Codex Magica

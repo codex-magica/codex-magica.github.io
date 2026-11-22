@@ -4,7 +4,8 @@
     <meta charset="utf-8" />
     <!-- Icon filenames carry the VITE_ICON_SUFFIX env var: empty in production, "-dev" in local
          development (see .env / .env.development) so the dev PWA/home-screen icon shows a DEV badge. -->
-    <link rel="icon" href="/favicon%VITE_ICON_SUFFIX%.ico" />
+    <link rel="icon" href="/favicon%VITE_ICON_SUFFIX%.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon%VITE_ICON_SUFFIX%.svg" type="image/svg+xml" />
     <meta name="description" content="M.A.G.U.S. kompendium, karakteralkotó és karakterlap"/>
 
     <!-- PWA Meta Tags -->
@@ -14,8 +15,6 @@
 
     <!-- Android Specific Tags -->
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="icon" sizes="192x192" href="/logo192%VITE_ICON_SUFFIX%.png">
-    <link rel="icon" sizes="512x512" href="/logo512%VITE_ICON_SUFFIX%.png">
 
     <!-- Apple Specific Tags -->
     <link rel="apple-touch-icon" href="/logo192%VITE_ICON_SUFFIX%.png">

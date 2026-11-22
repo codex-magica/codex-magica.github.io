@@ -22,9 +22,7 @@ bestiary, the magic items and so on) is not included in any form. The pipeline s
 `source_material/build/` are included so it can be run on your own copy, and `src/book/` can hold a local,
 gitignored copy of two chapters (see [`src/book/README.md`](src/book/README.md)).
 
-The app icon (`public/logo*.png`, `public/favicon*.ico` and the recoloured copies in `docs/assets/`) is the
-M.A.G.U.S. sigil as it appears in the rulebook. Apart from that, no illustrations, cover art or page layout
-from the printed book are included.
+No illustrations, cover art or page layout from the printed book are included.
 
 ### Credits as printed in the book
 
@@ -48,9 +46,8 @@ GitHub. Requests will be handled promptly.
 > is támogatják. A forráskód MIT licenc alatt szabadon felhasználható. A szabálykönyvből átvett és
 > újrarendezett adatok (származékos művek), valamint a játék nevei és fogalmai nem tartoznak e licenc
 > alá, azok a mindenkori jogtulajdonosokat illetik. A szabálykönyv teljes szövegét a repó nem
-> tartalmazza. Az alkalmazás ikonjául szolgáló M.A.G.U.S.-pecséten kívül a könyv illusztrációit és
-> tördelését sem. Ha jogtulajdonosként bármit módosítanál vagy eltávolíttatnál, nyiss egy issue-t, és
-> hamar intézzük.
+> tartalmazza, ahogy a könyv illusztrációit és tördelését sem. Ha jogtulajdonosként bármit
+> módosítanál vagy eltávolíttatnál, nyiss egy issue-t, és hamar intézzük.
 
 ## Fonts
 
@@ -59,6 +56,9 @@ GitHub. Requests will be handled promptly.
   cut from the variable font.
 
 ## Icons
+
+The **app icon and logo** are an original design for this project (sources in [`docs/brand/`](docs/brand)):
+a pentagram drawn as a woven knot inside a ring.
 
 The companion-animal icons on the character sheet (`src/ui/sheet/animalIcons.tsx`) come from two
 open-source icon libraries. Neither requires attribution; they are credited here anyway.
