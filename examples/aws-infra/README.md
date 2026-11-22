@@ -140,6 +140,22 @@ export const logout = async () => {
 };
 ```
 
+## Security notes
+
+- **Who gets in:** only Google accounts whose verified email is on the allowlist (checked on every
+  request, at the edge, against Google's signing keys).
+- **Least privilege:** each role can touch only its own resources. The build can write only to the site
+  bucket and invalidate only this distribution; the pipeline reads and writes only its artifacts bucket;
+  both functions log only to their own log groups.
+- **Buckets:** both are private (all public access blocked) and reject any non-HTTPS request. The site
+  bucket is readable only by this CloudFront distribution (Origin Access Control). Pipeline artifacts,
+  which are zips of the repository, expire after 30 days.
+- **Transport:** viewers are redirected to HTTPS, with HSTS from the managed security-headers policy.
+  With the default `*.cloudfront.net` certificate CloudFront also accepts older TLS versions; use your
+  own domain and ACM certificate to require TLS 1.2+.
+- **Not covered:** the `id_token` cookie is set by JavaScript, so it can't be `HttpOnly`; the app must
+  stay free of XSS (it renders no user-supplied HTML).
+
 ## Caveats
 
 - The gate protects **files**, not data: it's right for a private static app, but anything the app fetches

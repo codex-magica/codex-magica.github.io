@@ -13,12 +13,20 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
 }
 
 
-# Allow CloudFront to read from the bucket
+# Only this CloudFront distribution may read the bucket, and every S3 API call must use HTTPS.
 resource "aws_s3_bucket_policy" "site_oac" {
   bucket = aws_s3_bucket.frontend.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
+      {
+        Sid       = "DenyInsecureTransport",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
+        Resource  = [aws_s3_bucket.frontend.arn, "${aws_s3_bucket.frontend.arn}/*"],
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      },
       {
         Sid    = "AllowCloudFrontServicePrincipalReadOnly",
         Effect = "Allow",

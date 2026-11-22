@@ -49,7 +49,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       {
         Effect   = "Allow",
         Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
-        Resource = "*"
+        Resource = ["${local.codebuild_log_group_arn}", "${local.codebuild_log_group_arn}:*"]
       }
     ]
   })
@@ -80,7 +80,7 @@ resource "aws_codebuild_project" "frontend" {
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/codebuild/${local.name_prefix}-frontend"
+      group_name  = local.codebuild_log_group
       stream_name = "build"
     }
   }
@@ -114,16 +114,61 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       # Both prefixes: connections created before the rename still authorize via codestar-connections.
       { Effect = "Allow", Action = ["codeconnections:UseConnection", "codestar-connections:UseConnection"], Resource = aws_codeconnections_connection.github.arn },
       { Effect = "Allow", Action = ["codebuild:BatchGetBuilds", "codebuild:StartBuild"], Resource = aws_codebuild_project.frontend.arn },
-      { Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject", "s3:GetObjectVersion", "s3:GetBucketVersioning", "s3:List*"], Resource = "*" }
+      { Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject", "s3:GetObjectVersion"], Resource = "${aws_s3_bucket.artifacts.arn}/*" },
+      { Effect = "Allow", Action = ["s3:GetBucketVersioning", "s3:ListBucket"], Resource = aws_s3_bucket.artifacts.arn }
     ]
   })
 }
 
 
-# Artifact store for pipeline
+data "aws_caller_identity" "current" {}
+
+locals {
+  codebuild_log_group     = "/codebuild/${local.name_prefix}-frontend"
+  codebuild_log_group_arn = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:${local.codebuild_log_group}"
+}
+
+# Artifact store for the pipeline: it holds a zip of the repository for every run, so it gets the
+# same lockdown as the site bucket, plus an expiry so old runs don't pile up.
 resource "aws_s3_bucket" "artifacts" {
   bucket        = "${local.name_prefix}-${random_id.suffix.hex}-artifacts"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket                  = aws_s3_bucket.artifacts.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "artifacts_tls_only" {
+  bucket = aws_s3_bucket.artifacts.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "DenyInsecureTransport",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
+        Resource  = [aws_s3_bucket.artifacts.arn, "${aws_s3_bucket.artifacts.arn}/*"],
+        Condition = { Bool = { "aws:SecureTransport" = "false" } }
+      }
+    ]
+  })
+  depends_on = [aws_s3_bucket_public_access_block.artifacts]
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  rule {
+    id     = "expire-old-pipeline-artifacts"
+    status = "Enabled"
+    filter {}
+    expiration { days = 30 }
+  }
 }
 
 

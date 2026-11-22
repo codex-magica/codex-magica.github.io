@@ -139,7 +139,14 @@ resource "aws_iam_role_policy" "lambda_edge_logging" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:*:*:*"
+        # Lambda@Edge replicas write to /aws/lambda/us-east-1.<name> in whichever region served the
+        # request; direct invocations in us-east-1 (e.g. console tests) use /aws/lambda/<name>.
+        Resource = [
+          "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.name_prefix}-edge-auth",
+          "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${local.name_prefix}-edge-auth:*",
+          "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/us-east-1.${local.name_prefix}-edge-auth",
+          "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/us-east-1.${local.name_prefix}-edge-auth:*",
+        ]
       }
     ]
   })
