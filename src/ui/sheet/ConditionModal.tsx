@@ -6,7 +6,7 @@ import { CharacterCondition } from "../../model/character";
 import { Effect } from "../../model/effects";
 import { CONDITION_PRESETS, conditionSummary } from "../../model/conditions";
 import { CustomModsEditor, ModRow, effectsToRows, rowsToEffects } from "./AddConditionModal";
-import { FS, FS_SUB, QuietSwitch } from "./primitives";
+import { FS_SUB, QuietSwitch } from "./primitives";
 
 const field = {
   size: "sm" as const, bg: "fieldBg", borderColor: "fieldBd", borderRadius: "7px", color: "fg",

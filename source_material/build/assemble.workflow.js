@@ -10,7 +10,7 @@ export const meta = {
 // args: array of page indices to process. Defaults to all 514.
 const pages = (Array.isArray(args) && args.length) ? args : Array.from({ length: 514 }, (_, i) => i)
 const pad = (n) => String(n).padStart(3, '0')
-const DIR = '/Users/me/Projects/magus/source_material/build'
+const DIR = 'source_material/build'  // relative to the repo root (the workflow's cwd)
 
 const ASSEMBLE_SCHEMA = {
   type: 'object',
@@ -27,7 +27,7 @@ const ASSEMBLE_SCHEMA = {
   },
 }
 
-const assemblePrompt = (p) => `Read /Users/me/Projects/magus/source_material/build/AGENT_INSTRUCTIONS.md and follow it to assemble page index ${p}.
+const assemblePrompt = (p) => `Read source_material/build/AGENT_INSTRUCTIONS.md and follow it to assemble page index ${p}.
 Inputs: ${DIR}/deskewed/p-${p}.png (deskewed image) and ${DIR}/ocr/p-${p}.txt (tesseract prose ground-truth).
 Write the assembled Markdown to ${DIR}/md/p-${p}.md.
 PROSE WORDING MUST COME FROM THE TESSERACT TEXT — never transcribe dense prose from the image (it hallucinates).

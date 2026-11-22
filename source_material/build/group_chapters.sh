@@ -2,7 +2,7 @@
 # Groups per-page Markdown (build/md/p-NNN.md) into per-chapter files (build/chapters/).
 # Chapter boundaries are the chapter-opener pages; names are cleaned (chapter-art OCR is garbled).
 set -uo pipefail
-cd /Users/me/Projects/magus/source_material
+cd "$(dirname "$0")/.."
 OUT=build/chapters
 mkdir -p "$OUT"
 rm -f "$OUT"/*.md

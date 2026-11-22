@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, Flex, Heading, HStack, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
 import { ModalShell, ModalCloseButton } from "../Modal";
 import { ConfirmModal } from "../ConfirmModal";
 import { BodyPart } from "../DetailModal";

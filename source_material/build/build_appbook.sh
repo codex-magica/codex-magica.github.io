@@ -10,7 +10,7 @@
 # - skips trivial art/blank pages (their title is redundant with the chapter H1)
 # - de-dupes consecutive identical headings (removes the "title twice" pattern)
 set -uo pipefail
-cd /Users/me/Projects/magus
+cd "$(dirname "$0")/../.."
 SRC=source_material/build/md
 OUT=src/book
 mkdir -p "$OUT"

@@ -14,7 +14,7 @@ if (!Array.isArray(pages) || !pages.length) {
   pages = [47, 54, 62, 76, 83, 96, 97, 198, 214, 283, 312, 352, 370, 392, 477]
 }
 const pad = (n) => String(n).padStart(3, '0')
-const DIR = '/Users/me/Projects/magus/source_material/build'
+const DIR = 'source_material/build'  // relative to the repo root (the workflow's cwd)
 
 const tablePrompt = (p) => `Page ${p} of the MAGUS rulebook has one or more "<!-- TABLE: ... -->" placeholders in its Markdown that must be replaced with real tables. Do EXACTLY this:
 1. Get dimensions: run \`magick identify -format '%w %h' ${DIR}/deskewed/p-${p}.png\`.

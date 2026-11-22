@@ -4,11 +4,11 @@ You assemble ONE page of a Hungarian M.A.G.U.S. (Új Törvénykönyv) rulebook i
 You will be told the page index NNN (zero-padded, e.g. 014).
 
 ## Inputs
-- Deskewed page image: `/Users/me/Projects/magus/source_material/build/deskewed/p-NNN.png`
-- Tesseract OCR prose (GROUND TRUTH for wording): `/Users/me/Projects/magus/source_material/build/ocr/p-NNN.txt`
+- Deskewed page image: `source_material/build/deskewed/p-NNN.png`
+- Tesseract OCR prose (GROUND TRUTH for wording): `source_material/build/ocr/p-NNN.txt`
 
 ## Output
-- Write final Markdown to `/Users/me/Projects/magus/source_material/build/md/p-NNN.md`
+- Write final Markdown to `source_material/build/md/p-NNN.md`
 
 ## Core principle — DIVISION OF LABOR (do not violate)
 - **PROSE wording comes from the tesseract text, NOT from your reading of the image.** The scan is too low-res for you to read dense prose reliably — if you transcribe prose from the image you WILL hallucinate. Trust tesseract for the words.
@@ -34,7 +34,7 @@ You will be told the page index NNN (zero-padded, e.g. 014).
 
 4. **TABLES (use the image, not tesseract):**
    - For each table visible in the image, compute its bounding box as pixel coordinates (fractions of W×H, add ~15px padding) and crop it from the deskewed PNG:
-     `magick <deskewed png> -crop WxH+X+Y +repage /Users/me/Projects/magus/source_material/build/crops/p-NNN-tK.png`
+     `magick <deskewed png> -crop WxH+X+Y +repage source_material/build/crops/p-NNN-tK.png`
    - Read the crop and transcribe to a clean Markdown table: EVERY column header, EVERY row, exact numbers. Keep empty cells empty. Preserve footnote markers (`*`,`**`,`***`) and transcribe the footnote lines below the table.
    - If the crop is still unclear, re-crop tighter/larger. If a cell is genuinely illegible, use `[?]`.
    - Place each table in its correct position in the reading flow, replacing the garbled tesseract table lines.

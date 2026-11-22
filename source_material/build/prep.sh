@@ -9,7 +9,7 @@
 # NOTE: intentionally NOT using `set -e`; one bad page must not abort the whole batch.
 set -uo pipefail
 
-ROOT="/Users/me/Projects/magus/source_material"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PAGES="$ROOT/pages"
 OUT="$ROOT/build"
 mkdir -p "$OUT/deskewed" "$OUT/ocr" "$OUT/md" "$OUT/crops"
