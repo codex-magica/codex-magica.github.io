@@ -2,6 +2,24 @@
 <html lang="hu">
   <head>
     <meta charset="utf-8" />
+    <!-- Paint the page in the right colour before the app's ~2 MB script has loaded, so a cold start in
+         dark mode doesn't flash white. The mode comes from where Chakra keeps it; the colours are the
+         app's `page` token (theme.ts) as hex, so even browsers without OKLCH show them. -->
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem("chakra-ui-color-mode");
+          if (m === "dark" || m === "light") {
+            document.documentElement.dataset.theme = m;
+            document.documentElement.style.colorScheme = m;
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      html, body { background-color: #ebeff2; }
+      html[data-theme="dark"], html[data-theme="dark"] body { background-color: #13171f; }
+    </style>
     <!-- Icon filenames carry the VITE_ICON_SUFFIX env var: empty in production, "-dev" in local
          development (see .env / .env.development) so the dev PWA/home-screen icon shows a DEV badge.
          ?v=N busts Safari's favicon cache, which is keyed by URL and ignores reloads: bump it whenever
