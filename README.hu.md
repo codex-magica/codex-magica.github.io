@@ -60,6 +60,8 @@ Ezekre készült ez az alkalmazás:
 - **Világos és sötét téma**, kezdőképernyőre telepíthető, **internet nélkül is működik**.
 - **Biztonsági mentés** egy gombbal (az összes karakter egy fájlban), egyes karakterek exportja és
   importja.
+- **Google Drive szinkron** (választható): a karakterek a saját Google Drive-odon keresztül minden
+  eszközödön ugyanazok, külön fiók és szerver nélkül.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mobile-dark.webp">
@@ -80,7 +82,10 @@ Androidon Chrome-ban **Alkalmazás telepítése**. Így alkalmazásként indul, 
 működik. Ha új verzió jelenik meg, az alkalmazás felajánlja a frissítést, magától sosem tölt újra.
 
 **Vigyázz a karakterekre!** Nincs fiók és nincs szerver: a karakterek a böngészőben, az eszközödön
-vannak. Időnként nyomd meg a **Biztonsági mentés** gombot a karakterlistán; telefonon és tableten a
+vannak. Ha több eszközön is használnád őket, kapcsold be a karakterlistán a **Google Drive** szinkront:
+a karakterek ekkor a saját Google Drive-od egy rejtett mappáján keresztül szinkronizálódnak (ha az oldal
+Google-azonosítóval készült, lásd [docs/google-drive-sync.md](docs/google-drive-sync.md)). Emellett is
+érdemes időnként megnyomni a **Biztonsági mentés** gombot; telefonon és tableten a
 megosztás menü nyílik meg, így a fájl egyenesen iCloud Drive-ba, Google Drive-ba vagy a Fájlokba mehet.
 Az **Importálás fájlból** gombbal visszaállítható, akár másik eszközön is, és sosem ír felül semmit.
 Egy-egy karaktert ugyanígy át is küldhetsz valakinek (karakter menü → **Exportálás fájlba**). Az

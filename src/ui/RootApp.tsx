@@ -7,6 +7,7 @@ import { UpdateBanner } from "./UpdateBanner";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
+import { useDriveSync } from "../state/useDriveSync";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
 
@@ -15,6 +16,7 @@ import { CharacterRecord } from "../model/character";
 // via the roster; the creator commits a working copy on save.
 export const RootApp: React.FC = () => {
   const roster = useRoster();
+  const drive = useDriveSync(roster); // optional Google Drive sync (absent without a client ID)
   const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
@@ -63,6 +65,7 @@ export const RootApp: React.FC = () => {
           }}
           onOpenCompendium={() => setScreen("compendium")}
           onOpenCredits={() => setShowCredits(true)}
+          drive={drive}
         />
       )}
 

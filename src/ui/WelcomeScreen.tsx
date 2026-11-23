@@ -11,6 +11,8 @@ import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
+import { DriveSyncApi } from "../state/useDriveSync";
+import { CloudIcon, DriveSyncModal, driveStatusLine } from "./DriveSyncModal";
 
 interface Props {
   records: CharacterRecord[];
@@ -23,6 +25,7 @@ interface Props {
   onRename: (id: string, name: string) => void;
   onOpenCompendium: () => void;
   onOpenCredits: () => void;
+  drive: DriveSyncApi;
 }
 
 const SIDE = { base: "20px", sm: "32px" };
@@ -56,7 +59,7 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
   </Box>
 );
 
-export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium, onOpenCredits }) => {
+export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium, onOpenCredits, drive }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
@@ -64,10 +67,13 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [importError, setImportError] = useState<string | null>(null);
   const [importInfo, setImportInfo] = useState<string | null>(null);
   const [lastBackupAt, setLastBackupAt] = useState<number | null>(() => loadLastBackupAt());
+  const [driveOpen, setDriveOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hoverShadow = useParchmentHoverShadow();
   const [now] = useState(() => Date.now()); // render must stay pure: read the clock once per visit
-  const backupStale = lastBackupAt === null || now - lastBackupAt > BACKUP_STALE_DAYS * DAY_MS;
+  // with Google Drive sync on, the characters are not "only in this browser" any more
+  const backupStale = !drive.enabled && (lastBackupAt === null || now - lastBackupAt > BACKUP_STALE_DAYS * DAY_MS);
+  const driveLine = driveStatusLine(drive, now);
 
   const handleImportFile = (file: File | undefined) => {
     if (!file) return;
@@ -212,6 +218,15 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
             </>
           )}
           <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás fájlból</Box>
+          {drive.available && (
+            <>
+              <Text as="span" opacity={0.5}>·</Text>
+              <Box as="button" type="button" onClick={() => setDriveOpen(true)} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
+                color={drive.status === "needsTap" || drive.status === "error" ? "accentTx" : "muted"} fontWeight={drive.status === "needsTap" ? 700 : undefined}>
+                {CloudIcon}Google Drive
+              </Box>
+            </>
+          )}
           <Text as="span" opacity={0.5}>·</Text>
           <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
         </HStack>
@@ -219,6 +234,11 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
             {lastBackupAt === null ? "Még nem készült biztonsági mentés." : `Utolsó biztonsági mentés: ${daysAgo(lastBackupAt, now)}.`}
             {backupStale && " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes menteni."}
+          </Text>
+        )}
+        {driveLine && (
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={drive.status === "error" ? "warn" : "fgFaint"} mt="4px" maxW="52ch" mx="auto">
+            {driveLine}
           </Text>
         )}
         <input
@@ -239,6 +259,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         )}
       </Box>
       </Box>
+
+      {driveOpen && <DriveSyncModal drive={drive} onClose={() => setDriveOpen(false)} />}
 
       {menuView && !menuAsPopover && (
         <ModalShell onClose={() => setMenuId(null)} width="min(340px, 100%)" zIndex={40} overlayPad="28px">

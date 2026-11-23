@@ -111,7 +111,8 @@ skill system, fixed per character.
 
 **Phone, tablet and desktop, online or not.** On a phone the sheet becomes swipeable pages; on an iPad or
 desktop it spreads into columns. It installs to the home screen and works offline at the table. Light and
-dark themes; characters stay on the device, with one-tap backups.
+dark themes; characters stay on the device, with one-tap backups, or sync between devices through the
+player's own Google Drive.
 
 ## How it was built
 
@@ -172,6 +173,11 @@ flowchart LR
 - **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema
   migrations run on load so old saves keep working, and a character can be exported to and imported from
   a JSON file.
+- **Optional sync without a server.** Players can sync through their own Google Drive: the browser
+  writes one file to the hidden app-data folder of their Drive, so the data never passes through a
+  server of ours. Merging is three-way per character against the last synced version, deletions travel
+  as tombstones, and when the same character was edited on two devices both versions are kept. Setup:
+  [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
 ### 3 · Hosting
 
@@ -198,7 +204,9 @@ Chrome's **Install app**. It then opens like an app and works without a connecti
 deployed, the app offers to update; it never reloads on its own.
 
 **Keep your characters safe.** There's no account and no server: characters live in the browser on your
-device. Use **Biztonsági mentés** (backup) on the roster now and then; on a phone or tablet it opens the
+device. To use them on several devices, turn on **Google Drive** on the roster: the characters then sync
+through a hidden folder in your own Google Drive (available when the site was built with a Google client
+ID, see [docs/google-drive-sync.md](docs/google-drive-sync.md)). Either way, use **Biztonsági mentés** (backup) on the roster now and then; on a phone or tablet it opens the
 share sheet, so the file can go straight to iCloud Drive, Google Drive or Files. **Importálás fájlból**
 restores it, on the same or another device, and never overwrites anything. Single characters can be sent
 to someone else the same way (character menu → **Exportálás fájlba**). The app also asks the browser to
@@ -241,7 +249,7 @@ src/
 ├── model/           rules model: classes, races, skills, effects DSL, house-rule variants
 ├── data/            typed rules data transcribed from the book (spells, weapons, armor…)
 ├── book/            not distributed: local output of the PDF pipeline (the app does not read it)
-├── state/           roster storage (localStorage), migrations, import/export
+├── state/           roster storage (localStorage), migrations, import/export, Google Drive sync
 ├── ui/              React + Chakra UI screens: welcome, sheet, builder, compendium
 └── fonts/           Crimson Pro (OFL)
 source_material/
@@ -255,7 +263,7 @@ docs/                design notes, pipeline write-up, README assets
 ## Tech stack
 
 **App:** React 19 · TypeScript 7 · Chakra UI 2 · Emotion · Vite 8 · vite-plugin-pwa (Workbox)<br>
-**Storage:** localStorage · JSON import/export<br>
+**Storage:** localStorage · JSON import/export · optional Google Drive sync (Google Identity Services, Drive app-data folder)<br>
 **Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
 **Tooling:** Vitest · Oxlint · GitHub Actions<br>
 **Example hosting:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · Firebase Auth

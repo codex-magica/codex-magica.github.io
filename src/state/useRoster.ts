@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CharacterRecord } from "../model/character";
 import { clone, genId, loadRoster, saveRoster } from "./storage";
+import { addTombstone } from "./syncState";
 
 export interface RosterApi {
   records: CharacterRecord[];
@@ -8,6 +9,10 @@ export interface RosterApi {
   upsert: (record: CharacterRecord) => void; // create or replace by id
   remove: (id: string) => void;
   duplicate: (id: string) => void;
+  // for the optional Google Drive sync: counts local edits (not sync results), and applies a merge
+  localRevision: number;
+  applySync: (update: (current: CharacterRecord[]) => CharacterRecord[]) => void;
+  currentRecords: () => CharacterRecord[];
 }
 
 // Ask the browser not to evict our storage (Safari, for one, may clear a site's data after a week
@@ -21,11 +26,14 @@ const requestPersistentStorage = (): void => {
 };
 
 // The character roster, kept in local storage on this device and saved on every change.
-// `updatedAt` is stamped on each mutation (handy for exports and any future sync layer).
+// `updatedAt` is stamped on each mutation, and deletions leave a tombstone, so the optional Google
+// Drive sync can tell what changed where.
 export function useRoster(): RosterApi {
   const [records, setRecords] = useState<CharacterRecord[]>(() => loadRoster());
   const recordsRef = useRef(records);
   recordsRef.current = records;
+  const [localRevision, setLocalRevision] = useState(0);
+  const bump = () => setLocalRevision((n) => n + 1);
 
   useEffect(() => {
     saveRoster(records);
@@ -43,16 +51,28 @@ export function useRoster(): RosterApi {
       copy[i] = stamped;
       return copy;
     });
+    bump();
   };
 
-  const remove = (id: string) => setRecords((rs) => rs.filter((r) => r.id !== id));
+  const remove = (id: string) => {
+    addTombstone(id);
+    setRecords((rs) => rs.filter((r) => r.id !== id));
+    bump();
+  };
 
   const duplicate = (id: string) => {
     const r = recordsRef.current.find((x) => x.id === id);
     if (!r) return;
     const copy = { ...clone(r), id: genId(), name: `${r.name} (másolat)`, updatedAt: Date.now() };
     setRecords((rs) => [...rs, copy]);
+    bump();
   };
 
-  return { records, get, upsert, remove, duplicate };
+  const applySync = (update: (current: CharacterRecord[]) => CharacterRecord[]) => {
+    const next = update(recordsRef.current);
+    recordsRef.current = next;
+    setRecords(next);
+  };
+
+  return { records, get, upsert, remove, duplicate, localRevision, applySync, currentRecords: () => recordsRef.current };
 }
