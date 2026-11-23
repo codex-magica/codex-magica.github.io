@@ -22,6 +22,7 @@ All values are on a 512 × 512 canvas, centred at 256, 256 (see [`build_icons.py
 | Weave | each strand passes under at 61.8% of its length; the gap there is 16 + 30 = 46 long |
 | Ring | radius 196, stroke 8 |
 | Favicon | heavier for tiny sizes: points on radius 166, strands 30; ring radius 206, stroke 24, a shade lighter |
+| Finish | a faint version of the app panels' parchment surface on the tile (see below) |
 
 Every line of a pentagram crosses the others at the **golden-ratio points** of its length, 38.2% and
 61.8%. So the weave is exact and needs no path maths: a strand is drawn in two pieces, with a gap
@@ -44,6 +45,19 @@ line like the cards' warm borders. Values were chosen in OKLCH.
 | Pale ring | `#d1c2a7` | 0.82 0.04 82 | ring on white (lighter than the strands, mirroring the dark version) |
 | Dev red | `#d64545` | | DEV badge on development icons |
 
+## Finish
+
+The tiles carry the panels' parchment surface at well below the panels' strength, so the icon is a little
+less flat without looking textured:
+
+- the tile: 3.5% lighter at the top, 11% deeper at the bottom, at the panels' 158° angle;
+- a warm glow from the top edge (`#c9ad7c` at 5%) and a slight falloff toward the corners (14% black);
+- gilt: strands 9% lighter at the top point and 9% deeper at the lower points, the ring 8% / 10%;
+- paper grain over all of it: fractal noise added as an even brightness jitter (about ±1.5% per pixel),
+  so it doesn't lighten or grey the colours the way a soft-light blend would.
+
+The DEV badges sit on top of the finish, crisp. The README logos stay flat.
+
 ## Files
 
 | Master | Rendered to | Notes |
@@ -57,19 +71,29 @@ line like the cards' warm borders. Values were chosen in OKLCH.
 
 ## Regenerating
 
+Render every master at **512 and scale down** from there: rendering straight at 16 or 192 px samples the
+grain too coarsely and it comes out harsh. Any SVG renderer with filter support works (the shipped
+files were rendered in Chrome); for example with librsvg and ImageMagick:
+
 ```sh
 python3 docs/brand/build_icons.py                    # writes the SVG masters here
 
-cd docs/brand                                        # any SVG rasteriser works; e.g. librsvg:
-rsvg-convert -w 512 icon.svg -o ../../public/logo512.png
-rsvg-convert -w 192 icon.svg -o ../../public/logo192.png
-rsvg-convert -w 512 icon-maskable.svg -o ../../public/logo512-maskable.png
-rsvg-convert -w 512 icon-dev.svg -o ../../public/logo512-dev.png
-rsvg-convert -w 192 icon-dev.svg -o ../../public/logo192-dev.png
-cp favicon.svg favicon-dev.svg ../../public/
-for s in 16 32 48; do rsvg-convert -w $s favicon.svg -o /tmp/f$s.png; done
-magick /tmp/f16.png /tmp/f32.png /tmp/f48.png ../../public/favicon.ico   # same for favicon-dev
+cd docs/brand
+for f in icon icon-dev icon-maskable favicon favicon-dev; do rsvg-convert -w 512 $f.svg -o /tmp/$f.png; done
+P=../../public
+magick /tmp/icon.png $P/logo512.png;          magick /tmp/icon.png -resize 192x192 $P/logo192.png
+magick /tmp/icon-dev.png $P/logo512-dev.png;  magick /tmp/icon-dev.png -resize 192x192 $P/logo192-dev.png
+magick /tmp/icon-maskable.png $P/logo512-maskable.png
+for d in "" -dev; do
+  for s in 16 32 48; do magick /tmp/favicon$d.png -resize ${s}x$s /tmp/f$d$s.png; done
+  magick /tmp/f${d}16.png /tmp/f${d}32.png /tmp/f${d}48.png $P/favicon$d.ico
+done
+cp favicon.svg favicon-dev.svg $P/
+# the grain doesn't compress: a 256-colour palette keeps it visually identical (~52 dB) at half the size
+for f in $P/logo*.png; do magick $f -dither None -colors 256 PNG8:$f; done
 ```
+
+Then bump the `?v=` on the icon links in `index.html`, so Safari doesn't keep the old ones.
 
 ## Using it
 

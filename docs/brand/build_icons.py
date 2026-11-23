@@ -7,6 +7,10 @@ The mark is a pentagram drawn as a woven knot: travelling along the star, each l
 first line it crosses and under the second, the way interlace is drawn in manuscripts and on seals.
 Every line of a pentagram crosses the other lines at the golden-ratio points of its length (38.2% and
 61.8%), so the weave is exact: a line is drawn in two pieces, with a gap around its 61.8% crossing.
+
+The tiles carry a faint version of the app panels' parchment surface: light from above, a warm glow at
+the top edge, a slight falloff toward the corners, gilt shading on the strands and ring, and paper
+grain. The grain only shifts brightness, so the colours stay put.
 """
 import math
 import os
@@ -39,6 +43,55 @@ FAV_RING_R, FAV_RING_W = 206, 24
 UNDER_T = (math.sqrt(5) - 1) / 2  # 0.618: where each line passes under the next one
 
 
+# ── parchment finish (subtler than the app panels) ───────────────────────────────────────────────
+def shade(hex_color, d):
+    """Lighten (d > 0, toward white) or darken (d < 0, toward black) by a fraction, in sRGB."""
+    rgb = [int(hex_color[i:i + 2], 16) for i in (1, 3, 5)]
+    rgb = [round(v + (255 - v) * d) if d > 0 else round(v * (1 + d)) for v in rgb]
+    return "#" + "".join(f"{max(0, min(255, v)):02x}" for v in rgb)
+
+
+def vertical(id_, color, y1, y2, up, down):
+    return (f'<linearGradient id="{id_}" gradientUnits="userSpaceOnUse" x1="0" y1="{y1}" x2="0" y2="{y2}">'
+            f'<stop offset="0" stop-color="{shade(color, up)}"/><stop offset="1" stop-color="{shade(color, -down)}"/>'
+            f'</linearGradient>')
+
+
+def finish_defs(ring_color, ring_r, star_r):
+    top, bottom = C - star_r, C + star_r * math.sin(math.radians(54))  # the star's top point and lower points
+    return (
+        "<defs>"
+        # the panels' 158° base gradient: a touch lighter at the top, deeper at the bottom
+        f'<linearGradient id="tile" x1="0.6" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="{shade(TILE, 0.035)}"/>'
+        f'<stop offset="1" stop-color="{shade(TILE, -0.11)}"/></linearGradient>'
+        # warm light falling from above, as on the panels
+        '<radialGradient id="glow" cx="0.5" cy="-0.12" r="0.95" gradientTransform="translate(0.5 0) scale(1.25 1) translate(-0.5 0)">'
+        '<stop offset="0" stop-color="#c9ad7c" stop-opacity="0.05"/><stop offset="0.62" stop-color="#c9ad7c" stop-opacity="0"/></radialGradient>'
+        # a faint falloff toward the corners, so the tile isn't a flat plate
+        '<radialGradient id="falloff" cx="0.5" cy="0.42" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/>'
+        '<stop offset="1" stop-color="#000" stop-opacity="0.14"/></radialGradient>'
+        # gilt: lighter where the light hits, deeper below
+        + vertical("gilt", GOLD, f"{top:.0f}", f"{bottom:.0f}", 0.09, 0.09)
+        + vertical("ringgilt", ring_color, C - ring_r, C + ring_r, 0.08, 0.10)
+        # paper grain: an even ± brightness jitter around the colours (the noise averages 0.495)
+        + '<filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="2" seed="7" stitchTiles="stitch" result="n"/>'
+        '<feColorMatrix in="n" type="matrix" values="0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1" result="g"/>'
+        '<feComposite in="SourceGraphic" in2="g" operator="arithmetic" k1="0" k2="1" k3="0.2" k4="-0.099" result="t"/>'
+        '<feComposite in="t" in2="SourceGraphic" operator="in"/></filter>'
+        '<clipPath id="round"><rect width="512" height="512" rx="112"/></clipPath>'
+        "</defs>"
+    )
+
+
+def finished(body, rounded=False):
+    """The tile and the mark (drawn with url(#gilt) / url(#ringgilt)) under the parchment finish."""
+    clip = ' clip-path="url(#round)"' if rounded else ""
+    return (f'<g{clip} filter="url(#grain)"><rect width="512" height="512" fill="url(#tile)"/>'
+            '<rect width="512" height="512" fill="url(#glow)"/><rect width="512" height="512" fill="url(#falloff)"/>'
+            f"{body}</g>")
+
+
 def pt(r, deg):
     a = math.radians(deg)
     return C + r * math.cos(a), C + r * math.sin(a)
@@ -69,7 +122,12 @@ def mark(strands, ring_color):
 
 
 def favicon_mark():
-    return ring(FAV_RING, FAV_RING_R, FAV_RING_W) + knot(GOLD, FAV_R, FAV_STRAND, FAV_GAP)
+    return ring("url(#ringgilt)", FAV_RING_R, FAV_RING_W) + knot("url(#gilt)", FAV_R, FAV_STRAND, FAV_GAP)
+
+
+ICON = finish_defs(RING, RING_R, STAR_R)
+FAVICON = finish_defs(FAV_RING, FAV_RING_R, FAV_R)
+GILT_MARK = mark("url(#gilt)", "url(#ringgilt)")
 
 
 def doc(body, size=512):
@@ -80,8 +138,8 @@ def scaled(body, s):
     return f'<g transform="translate({C},{C}) scale({s}) translate({-C},{-C})">{body}</g>'
 
 
-SQUARE = f'<rect width="512" height="512" fill="{TILE}"/>'          # app icons: the OS applies its own mask
-ROUNDED = f'<rect width="512" height="512" rx="112" fill="{TILE}"/>'  # favicons: no OS mask, round it here
+# app icons are full-bleed squares (the OS applies its own mask); favicons have no OS mask, so they're
+# rounded here
 # sits below the star's lower points, over the faint ring only
 DEV_PILL = (f'<rect x="156" y="414" width="200" height="74" rx="37" fill="{DEV_RED}"/>'
             f'<text x="256" y="467" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" '
@@ -89,12 +147,12 @@ DEV_PILL = (f'<rect x="156" y="414" width="200" height="74" rx="37" fill="{DEV_R
 DEV_DOT = f'<circle cx="420" cy="420" r="88" fill="{DEV_RED}" stroke="{TILE}" stroke-width="24"/>'
 
 FILES = {
-    "icon.svg": doc(SQUARE + mark(GOLD, RING)),
-    "icon-dev.svg": doc(SQUARE + mark(GOLD, RING) + DEV_PILL),
+    "icon.svg": doc(ICON + finished(GILT_MARK)),
+    "icon-dev.svg": doc(ICON + finished(GILT_MARK) + DEV_PILL),
     # Android maskable: everything inside the 80% safe-zone circle (radius 204.8), with margin
-    "icon-maskable.svg": doc(SQUARE + scaled(mark(GOLD, RING), 0.92)),
-    "favicon.svg": doc(ROUNDED + favicon_mark()),
-    "favicon-dev.svg": doc(ROUNDED + favicon_mark() + DEV_DOT),
+    "icon-maskable.svg": doc(ICON + finished(scaled(GILT_MARK, 0.92))),
+    "favicon.svg": doc(FAVICON + finished(favicon_mark(), rounded=True)),
+    "favicon-dev.svg": doc(FAVICON + finished(favicon_mark(), rounded=True) + DEV_DOT),
     # README logo: transparent; the weave's gaps need no background colour, so it works on any page
     "logo-light.svg": doc(mark(GOLD_DEEP, RING_PALE), 96),
     "logo-dark.svg": doc(mark(GOLD, RING), 96),
