@@ -38,7 +38,6 @@ export const RootApp: React.FC = () => {
     const c = colorMode === "dark" ? "#13171f" : "#ebeff2";
     document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
       m.setAttribute("content", c);
-      m.removeAttribute("media");
     });
   }, [colorMode]);
   // back from a Google Drive token renewal round trip: land on the screen, tab and scroll position the

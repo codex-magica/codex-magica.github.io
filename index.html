@@ -2,30 +2,25 @@
 <html lang="hu">
   <head>
     <meta charset="utf-8" />
-    <!-- The browser/OS chrome and the launch screen use the app's page colour (light/dark), not black. -->
-    <meta name="theme-color" content="#ebeff2" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#13171f" media="(prefers-color-scheme: dark)" />
+    <!-- The browser/OS chrome and the launch screen use the app's page colour: dark by default, light if the
+         player chose light (switched below and by the app). -->
+    <meta name="theme-color" content="#13171f" />
     <!-- Paint the page in the right colour before the app's ~2 MB script has loaded, so a cold start in
          dark mode doesn't flash white. The mode comes from where Chakra keeps it; the colours are the
          app's `page` token (theme.ts) as hex, so even browsers without OKLCH show them. -->
     <script>
       (function () {
         try {
-          var m = localStorage.getItem("chakra-ui-color-mode");
-          if (m === "dark" || m === "light") {
-            document.documentElement.dataset.theme = m;
-            document.documentElement.style.colorScheme = m;
-            // the app's own mode beats the system's for the chrome colour too
-            var c = m === "dark" ? "#13171f" : "#ebeff2";
-            var metas = document.querySelectorAll('meta[name="theme-color"]');
-            for (var i = 0; i < metas.length; i++) { metas[i].setAttribute("content", c); metas[i].removeAttribute("media"); }
-          }
+          var m = localStorage.getItem("chakra-ui-color-mode") === "light" ? "light" : "dark"; // dark unless chosen otherwise
+          document.documentElement.dataset.theme = m;
+          document.documentElement.style.colorScheme = m;
+          if (m === "light") document.querySelector('meta[name="theme-color"]').setAttribute("content", "#ebeff2");
         } catch (e) {}
       })();
     </script>
     <style>
-      html, body { background-color: #ebeff2; }
-      html[data-theme="dark"], html[data-theme="dark"] body { background-color: #13171f; }
+      html, body, html[data-theme="dark"], html[data-theme="dark"] body { background-color: #13171f; }
+      html[data-theme="light"], html[data-theme="light"] body { background-color: #ebeff2; }
     </style>
     <!-- Icon filenames carry the VITE_ICON_SUFFIX env var: empty in production, "-dev" in local
          development (see .env / .env.development) so the dev PWA/home-screen icon shows a DEV badge.

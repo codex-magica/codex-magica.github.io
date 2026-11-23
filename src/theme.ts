@@ -2,7 +2,7 @@ import { extendTheme } from "@chakra-ui/react";
 
 const theme = extendTheme({
   config: {
-    initialColorMode: 'light', // Default color mode
+    initialColorMode: 'dark', // default for new players; a choice made with the toggle is remembered
   },
   fonts: {
     body: "'Crimson Pro', Georgia, serif",
