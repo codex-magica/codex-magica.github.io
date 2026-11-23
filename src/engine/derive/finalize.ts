@@ -175,6 +175,7 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
     level: rec.levels.length || 1,
     baseStats: ctx.base,
     effectiveStats: effective,
+    buildStats: pre ? pre.effective : effective,
     combat,
     derived,
     vitals,

@@ -75,6 +75,9 @@ export interface DerivedCharacter {
   level: number;
   baseStats: Stats;
   effectiveStats: Stats;
+  // the attributes as built, without armor and active conditions: what the builder prices and caps
+  // against (the engine charges skills and attribute buys at these, not at the play-state values)
+  buildStats: Stats;
   combat: Record<CombatChannel, number>;
   derived: Record<DerivedKeyOut, number>;
   vitals: Record<VitalKey, { current: number; max: number }>;

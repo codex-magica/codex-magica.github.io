@@ -45,7 +45,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
   const boughtStats = STAT_KEYS.filter((s) => statBuyOf(s) > 0);
   // Effective ceiling: racial cap RAISED by Adottság points (absolute 20) — matches the engine's cap check.
   const maxOf = (s: Stat) => (caps ? Math.min(20, caps[s] + (record.adottsag?.[s] ?? 0)) : 20);
-  const availableForDraft = STAT_KEYS.filter((s) => statBuyOf(s) === 0 && derived.effectiveStats[s] < maxOf(s));
+  const availableForDraft = STAT_KEYS.filter((s) => statBuyOf(s) === 0 && derived.buildStats[s] < maxOf(s));
 
   const buyRow = (
     key: string,
@@ -157,10 +157,10 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
       </SubHeader>
       {boughtStats.map((s) => {
         const amount = statBuyOf(s);
-        const atCap = derived.effectiveStats[s] >= maxOf(s);
+        const atCap = derived.buildStats[s] >= maxOf(s);
         return buyRow(
           s,
-          <>{s} <Text as="span" color="fgFaint">(= {derived.effectiveStats[s]})</Text></>,
+          <>{s} <Text as="span" color="fgFaint">(= {derived.buildStats[s]})</Text></>,
           `+${amount}`,
           String(ATTR_KAP_COST),
           () => onStat(level, s, amount - 1),
@@ -184,7 +184,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
             }}
           >
             {availableForDraft.map((o) => (
-              <option key={o} value={o}>{o} ({derived.effectiveStats[o]})</option>
+              <option key={o} value={o}>{o} ({derived.buildStats[o]})</option>
             ))}
           </Select>
           <Box flex="1" minW="8px" />
