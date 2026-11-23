@@ -38,9 +38,9 @@ flowchart TD
     I --> J["Manual proofreading +<br/>book-vs-data cross-checks"]
     classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
     classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef key fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
+    classDef output fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
     class A input
-    class J key
+    class H,I output
 ```
 
 1. **Prep** ([`prep.sh`](../source_material/build/prep.sh)): tesseract's orientation detection rotates

@@ -166,9 +166,9 @@ flowchart LR
     MD --> CH["Chapters<br/>proofread by hand"]
     classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
     classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef key fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
+    classDef output fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
     class PDF input
-    class CH key
+    class CH output
 ```
 
 **Lessons from the pipeline:**
@@ -197,9 +197,9 @@ flowchart LR
     ENGINE --> SHEET["Sheet · builder · compendium<br/>values + provenance + diagnostics"]
     classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
     classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef key fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
+    classDef output fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
     class DATA,REC input
-    class ENGINE key
+    class SHEET output
 ```
 
 - **A character is a ledger, not a stat block.** The record stores decisions: race, class, point-buy,
@@ -220,9 +220,6 @@ flowchart LR
     A["Phone<br/>browser storage"] <-->|"sync"| D[("Player's Google Drive<br/>hidden app-data folder")]
     D <-->|"sync"| B["iPad<br/>browser storage"]
     classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
-    classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef key fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
-    class D key
 ```
 
 - **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema
