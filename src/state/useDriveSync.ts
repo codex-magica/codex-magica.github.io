@@ -35,14 +35,17 @@ import {
 // - While the ~1 hour access token is valid it syncs by itself: 2 seconds after an edit, when the app
 //   goes to the background, and when it comes back.
 // - When the token has expired, the app renews it WITHOUT a tap at safe moments (start, coming back to
-//   the app, arriving at the roster) by a quick round trip through Google with prompt=none, then
-//   returns to the same screen. Never while a window is open, the creator is open or a field has focus,
-//   and at most once every 10 minutes.
+//   the app, arriving at the roster, or a minute without touches while changes are waiting) by a quick
+//   round trip through Google with prompt=none, then returns to the same screen and scroll position.
+//   A small notice announces it 3 seconds ahead ("Most ne" cancels). Never while a window is open, the
+//   creator is open or a field has focus, and at most once every 10 minutes.
 // - Only if Google says it needs the user (signed out, permission removed) does the footer ask for a
 //   tap; silent attempts then pause for 12 hours.
 // Google's script is loaded only once the user opens the Drive window or has sync turned on.
 
 export type DriveStatus = "off" | "idle" | "syncing" | "needsTap" | "error";
+// The renewal notice: about to leave for Google, back and syncing, back and done.
+export type DriveHop = "leaving" | "backSyncing" | "backDone" | null;
 
 export interface DriveSyncApi {
   available: boolean; // built with a Google client ID
@@ -58,6 +61,8 @@ export interface DriveSyncApi {
   syncNow: () => void; // call from a tap
   disable: () => void;
   atRoster: () => void; // the user arrived at the roster: a safe moment to renew
+  hop: DriveHop;
+  cancelHop: () => void; // "Most ne" on the notice
 }
 
 export interface DriveSyncOptions {
@@ -69,6 +74,10 @@ const AUTO_DELAY_MS = 2000;
 const FOREGROUND_MIN_GAP_MS = 20_000;
 const SILENT_MIN_GAP_MS = 10 * 60_000;
 const SILENT_BLOCK_MS = 12 * 3600_000;
+export const HOP_NOTICE_MS = 3000; // the notice is shown this long before leaving for Google
+const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
+const IDLE_HOP_MS = 60_000; // no touches for this long, with changes waiting: renew
+const IDLE_CHECK_MS = 10_000;
 const NEEDS_USER = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required", "access_denied", "drive permission not granted"]);
 
 const errorNote = (e: unknown): string => {
@@ -111,6 +120,14 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
   enabledRef.current = settings.enabled;
   const optsRef = useRef(opts);
   optsRef.current = opts;
+  const [hop, setHopState] = useState<DriveHop>(() => (initialOutcome.kind === "token" && settings.enabled ? "backSyncing" : null));
+  const hopRef = useRef(hop);
+  const setHop = useCallback((h: DriveHop) => {
+    hopRef.current = h;
+    setHopState(h);
+  }, []);
+  const hopTimer = useRef<number | undefined>(undefined);
+  const lastInput = useRef(Date.now());
 
   const patchSettings = useCallback((patch: Partial<DriveSettings>) => setSettings(updateDriveSettings(patch)), []);
 
@@ -154,6 +171,10 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
           saveTombstones(Object.fromEntries(Object.entries(tombs).filter(([, ts]) => ts >= startedAt)));
           patchSettings({ enabled: true, lastSyncAt: Date.now(), fileId: out.fileId });
           setSyncTick((n) => n + 1);
+          if (hopRef.current === "backSyncing") {
+            setHop("backDone");
+            window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
+          }
           setNote(
             out.conflictCopies > 0
               ? `${out.conflictCopies} karakter két eszközön is módosult. A másik változat külön karakterként került a listára („… (másik eszközről)”), hogy semmi ne vesszen el.`
@@ -162,13 +183,14 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
         } while (again.current);
         setStatus("idle");
       } catch (e) {
+        if (hopRef.current === "backSyncing") setHop(null);
         setStatus(e instanceof DriveAuthError ? "needsTap" : "error");
         setNote(errorNote(e));
       } finally {
         running.current = false;
       }
     },
-    [roster, patchSettings]
+    [roster, patchSettings, setHop]
   );
 
   // Renew by redirect when nothing would be lost and it isn't looping.
@@ -177,6 +199,7 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     const now = Date.now();
     return (
       navigator.onLine !== false &&
+      document.visibilityState !== "hidden" &&
       !running.current &&
       (s.silentBlockedUntil ?? 0) < now &&
       now - (s.lastSilentAt ?? 0) > SILENT_MIN_GAP_MS &&
@@ -196,16 +219,35 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
         void round(token);
         return;
       }
+      if (allowRedirect && hopRef.current === "leaving") return; // already announced
       if (allowRedirect && canLeave()) {
-        patchSettings({ lastSilentAt: Date.now() });
-        beginSilentRenewal(optsRef.current.returnContext(), loadDriveSettings().email);
+        // announce first, then go if it is still a safe moment
+        setHop("leaving");
+        hopTimer.current = window.setTimeout(() => {
+          hopTimer.current = undefined;
+          if (hopRef.current !== "leaving") return;
+          if (enabledRef.current && !validToken() && canLeave()) {
+            patchSettings({ lastSilentAt: Date.now() });
+            if (beginSilentRenewal(optsRef.current.returnContext(), loadDriveSettings().email)) return; // the notice stays up while the page unloads
+          }
+          setHop(null);
+          setStatus((s) => (s === "syncing" ? s : validToken() ? s : "needsTap"));
+        }, HOP_NOTICE_MS);
         return;
       }
       setStatus((s) => (s === "syncing" ? s : "needsTap"));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [available, round, learnEmail, patchSettings]
+    [available, round, learnEmail, patchSettings, setHop]
   );
+
+  const cancelHop = useCallback(() => {
+    window.clearTimeout(hopTimer.current);
+    hopTimer.current = undefined;
+    setHop(null);
+    patchSettings({ lastSilentAt: Date.now() }); // "Most ne": not again for 10 minutes
+    setStatus((s) => (s === "syncing" ? s : "needsTap"));
+  }, [patchSettings, setHop]);
 
   const interactive = (firstTime: boolean) => {
     if (!signInReady()) {
@@ -231,6 +273,8 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
 
   const disable = () => {
     enabledRef.current = false;
+    window.clearTimeout(hopTimer.current);
+    setHop(null);
     void revokeAccess();
     clearDriveState();
     setSettings({ ...OFF_SETTINGS });
@@ -273,6 +317,30 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     };
   }, [available, settings.enabled, trySilent, round, roster]);
 
+  // A screen left open for a long time (a sheet during a game): after a minute without touches, with
+  // changes waiting and the token expired, renew so the changes reach Drive.
+  useEffect(() => {
+    if (!available || !settings.enabled) return;
+    const touched = () => {
+      lastInput.current = Date.now();
+    };
+    const opts = { capture: true, passive: true } as const;
+    const kinds = ["pointerdown", "keydown", "wheel", "scroll", "touchstart"] as const;
+    kinds.forEach((k) => window.addEventListener(k, touched, opts));
+    const iv = window.setInterval(() => {
+      if (hopRef.current || running.current || validToken() || document.visibilityState !== "visible") return;
+      if (Date.now() - lastInput.current < IDLE_HOP_MS) return;
+      if (pendingChanges(roster.currentRecords(), loadSyncBase(), loadTombstones()).count === 0) return;
+      trySilent(true);
+    }, IDLE_CHECK_MS);
+    return () => {
+      kinds.forEach((k) => window.removeEventListener(k, touched, opts));
+      window.clearInterval(iv);
+    };
+  }, [available, settings.enabled, trySilent, roster]);
+
+  useEffect(() => () => window.clearTimeout(hopTimer.current), []);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const pending = useMemo(() => pendingChanges(roster.records, loadSyncBase(), loadTombstones()), [roster.records, syncTick]);
 
@@ -292,5 +360,7 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     atRoster: () => {
       if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) trySilent(true);
     },
+    hop: settings.enabled ? hop : null,
+    cancelHop,
   };
 }

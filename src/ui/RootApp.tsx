@@ -4,11 +4,13 @@ import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
 import { UpdateBanner } from "./UpdateBanner";
+import { DriveHopNotice } from "./DriveHopNotice";
+import { captureScroll, restoreScroll } from "./scrollMemory";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { useDriveSync } from "../state/useDriveSync";
-import { consumeRedirectResult } from "../state/googleDrive";
+import { ReturnContext, consumeRedirectResult } from "../state/googleDrive";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
 
@@ -17,25 +19,37 @@ import { CharacterRecord } from "../model/character";
 // via the roster; the creator commits a working copy on save.
 export const RootApp: React.FC = () => {
   const roster = useRoster();
-  // back from a Google Drive token renewal round trip: land on the screen the user was on
-  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">(() => {
+  // back from a Google Drive token renewal round trip: land on the screen, tab and scroll position the
+  // user was on (read once; later screens open normally)
+  const [back] = useState<ReturnContext | null>(() => {
     const o = consumeRedirectResult();
-    return o.kind !== "none" && o.ctx && (o.ctx.screen !== "sheet" || o.ctx.characterId) ? o.ctx.screen : "roster";
+    return o.kind !== "none" ? o.ctx : null;
   });
-  const [currentId, setCurrentId] = useState<string | null>(() => {
-    const o = consumeRedirectResult();
-    return o.kind !== "none" && o.ctx ? o.ctx.characterId : null;
-  });
+  const restore = useRef(back);
+  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">(() =>
+    back && (back.screen !== "sheet" || back.characterId) ? back.screen : "roster"
+  );
+  const [currentId, setCurrentId] = useState<string | null>(() => back?.characterId ?? null);
+  useEffect(() => {
+    restore.current = null;
+    if (back?.scroll) restoreScroll(back.scroll);
+  }, [back]);
+  // where inside the current screen the user is (sheet or its compendium, compendium tab)
+  const inner = useRef<{ view?: "sheet" | "compendium"; compTab?: number }>({});
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
   const creatorOpen = useRef(false);
   creatorOpen.current = creator !== null;
   const where = useRef({ screen, characterId: currentId });
   where.current = { screen, characterId: currentId };
+  const go = (s: typeof screen) => {
+    inner.current = {};
+    setScreen(s);
+  };
   // optional Google Drive sync (absent without a client ID); may renew its token by a quick round trip
   // through Google, but only when the creator (unsaved edits) is closed
   const drive = useDriveSync(roster, {
     safeToLeave: () => !creatorOpen.current,
-    returnContext: () => where.current,
+    returnContext: () => ({ ...where.current, ...inner.current, scroll: captureScroll() }),
   });
   const { atRoster } = drive;
   const firstScreen = useRef(true);
@@ -60,7 +74,7 @@ export const RootApp: React.FC = () => {
     roster.upsert(rec);
     if (creator?.mode === "create") {
       setCurrentId(rec.id); // new character → land on its sheet
-      setScreen("sheet");
+      go("sheet");
     }
     setCreator(null);
   };
@@ -70,17 +84,27 @@ export const RootApp: React.FC = () => {
       {screen === "sheet" && current ? (
         <AppShell
           record={current}
-          onBack={() => setScreen("roster")}
+          restore={restore.current ?? undefined}
+          onPlace={(view, compTab) => {
+            inner.current = { view, compTab };
+          }}
+          onBack={() => go("roster")}
           onEdit={() => editChar(current.id)}
           onLevelup={() => setCreator({ mode: "levelup", record: current })}
           onPatchRecord={roster.upsert}
         />
       ) : screen === "compendium" ? (
-        <CompendiumScreen onExit={() => setScreen("roster")} />
+        <CompendiumScreen
+          initialTab={restore.current?.compTab}
+          onTab={(compTab) => {
+            inner.current = { compTab };
+          }}
+          onExit={() => go("roster")}
+        />
       ) : (
         <WelcomeScreen
           records={roster.records}
-          onOpenCharacter={(id) => { setCurrentId(id); setScreen("sheet"); }}
+          onOpenCharacter={(id) => { setCurrentId(id); go("sheet"); }}
           onNew={() => setCreator({ mode: "create", record: createBlankRecord() })}
           onEdit={editChar}
           onDuplicate={roster.duplicate}
@@ -90,7 +114,7 @@ export const RootApp: React.FC = () => {
             const r = roster.get(id);
             if (r) roster.upsert({ ...r, name });
           }}
-          onOpenCompendium={() => setScreen("compendium")}
+          onOpenCompendium={() => go("compendium")}
           onOpenCredits={() => setShowCredits(true)}
           drive={drive}
         />
@@ -115,6 +139,7 @@ export const RootApp: React.FC = () => {
         />
       )}
 
+      <DriveHopNotice hop={drive.hop} onCancel={drive.cancelHop} />
       <UpdateBanner />
     </>
   );

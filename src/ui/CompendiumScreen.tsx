@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Flex } from "@chakra-ui/react";
 import { ZoneBar } from "./ZoneBar";
 import { Compendium } from "./Compendium";
@@ -11,8 +11,11 @@ import { useRulesPreference } from "../state/rulesPreference";
 // Phones: the ZoneBar is hidden and its contents move into the compendium's single merged top bar.
 // Shows the rules variant from the app-level preference (nav-footer switch); the same preference
 // seeds the house-rules toggle of newly created characters.
-export const CompendiumScreen: React.FC<{ onExit: () => void }> = ({ onExit }) => {
-  const [compTab, setCompTab] = useState(0);
+export const CompendiumScreen: React.FC<{ onExit: () => void; initialTab?: number; onTab?: (tab: number) => void }> = ({ onExit, initialTab, onTab }) => {
+  const [compTab, setCompTab] = useState(() => initialTab ?? 0);
+  useEffect(() => {
+    onTab?.(compTab);
+  }, [compTab, onTab]);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [pref, setPref] = useRulesPreference();
   return (

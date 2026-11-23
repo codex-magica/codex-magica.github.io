@@ -155,9 +155,17 @@ export const fetchAccountEmail = async (token: string): Promise<string | null> =
 
 // ── renewal by redirect (no tap) ───────────────────────────────────────────────────────────────────
 // Where the app was, so the round trip through Google lands the user back on the same screen.
+export interface ScrollMark {
+  path: number[]; // child indexes from #root down to the scrolled element
+  top: number;
+  left: number;
+}
 export interface ReturnContext {
   screen: "roster" | "sheet" | "compendium";
   characterId: string | null;
+  view?: "sheet" | "compendium"; // inside a character: the sheet or its compendium
+  compTab?: number;
+  scroll?: ScrollMark[];
 }
 interface PendingRedirect {
   state: string;
@@ -172,12 +180,13 @@ export type RedirectOutcome =
 // The app's own address, registered in the Google Cloud console as an authorized redirect URI.
 export const redirectUri = (): string => `${window.location.origin}${import.meta.env.BASE_URL}`;
 
-export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null): void => {
+// Returns false (and stays) if the round trip can't be made safely.
+export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null): boolean => {
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
   try {
     localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx } satisfies PendingRedirect));
   } catch {
-    return; // without storage we couldn't verify the answer: don't go
+    return false; // without storage we couldn't verify the answer: don't go
   }
   const q = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
@@ -190,6 +199,7 @@ export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null)
   });
   if (loginHint) q.set("login_hint", loginHint);
   window.location.assign(`${AUTH_ENDPOINT}?${q}`);
+  return true;
 };
 
 // Read Google's answer from the URL fragment once, at startup, before anything renders. The token is

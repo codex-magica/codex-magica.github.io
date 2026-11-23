@@ -1,7 +1,9 @@
 # Plan: fewer taps for Google Drive sync
 
 Status: **built** (2026-11-23), all six items; tested against a fake Google in the browser. Still to
-confirm on a real iPad home-screen install. The current sync (see
+confirm on a real iPad home-screen install. Added afterwards: a card that announces each round trip 3
+seconds ahead (with "Most ne"), a round trip after a minute without touches while changes are waiting
+(for a sheet left open all evening), and the return restores the sheet/compendium view, tab and scroll. The current sync (see
 [google-drive-sync.md](google-drive-sync.md)) needs a tap whenever the one-hour Google token has expired.
 
 ## What "a tap per hour" means today

@@ -21,11 +21,16 @@ Without one, the app stays local-only and never contacts Google.
 - Browser-only apps get a Google access token that lasts about an hour and no refresh token. While it
   is valid, sync runs by itself 2 seconds after each edit, when the app goes to the background and when
   it comes back.
-- **Renewal without a tap.** When the token has expired, the app renews it at safe moments (app start,
-  coming back to the app, arriving at the roster) with a quick round trip through Google's authorization
-  endpoint with `prompt=none` and `login_hint`, and lands back on the same screen. It never does this
-  while a window or the character creator is open or a text field has focus, and at most once every 10
-  minutes. This works as long as the user's Google session is alive, which is usually weeks.
+- **Renewal without a tap.** When the token has expired, the app renews it at safe moments with a quick
+  round trip through Google's authorization endpoint with `prompt=none` and `login_hint`:
+  - app start, coming back to the app, arriving at the roster;
+  - a minute without touches while changes are waiting (a sheet left open during a game).
+
+  A small card announces it 3 seconds ahead ("Most ne" cancels it for 10 minutes), and after the round
+  trip says "Szinkronizálva". The app lands back on the same screen, sheet or compendium tab and scroll
+  position. It never leaves while a window or the character creator is open or a text field has focus
+  (checked again when the 3 seconds are up), and at most once every 10 minutes. This works as long as
+  the user's Google session is alive, which is usually weeks.
 - Only if Google answers that it needs the user (signed out, permission removed) does the footer ask
   for a tap on **Google Drive**; silent attempts then pause for 12 hours. The tap's popup has the
   account pre-filled, so it usually just closes by itself.
@@ -37,7 +42,8 @@ Without one, the app stays local-only and never contacts Google.
   be deleted under Drive → Settings → Manage apps.
 
 Code: `src/state/googleDrive.ts` (sign-in, renewal by redirect and Drive calls), `driveMerge.ts` (the merge),
-`driveSyncEngine.ts` (one sync round), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`.
+`driveSyncEngine.ts` (one sync round), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`,
+`DriveHopNotice.tsx` (the card around the round trip), `scrollMemory.ts` (scroll positions across it).
 Tests: `src/state/driveSync.test.ts` simulates several devices against an in-memory Drive.
 
 ## Setting it up
