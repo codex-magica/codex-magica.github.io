@@ -9,9 +9,10 @@ import { VitePWA, type ManifestOptions } from "vite-plugin-pwa";
 // Hosting under a subpath (GitHub Pages serves project sites at /<repo>/): set BASE_PATH=/<repo>/.
 const base = process.env.BASE_PATH || "/";
 
-// Oldest browsers the build supports: the same floor the original app had (iOS/iPadOS 12.2, Safari 12,
-// so older iPads still at the table keep working). Newer JavaScript syntax is rewritten for them.
-const BROWSER_TARGET = ["es2018", "safari12", "ios12", "chrome80", "firefox78", "edge88"];
+// Oldest browsers the build supports. The floor is set by the CSS: the theme's oklch() colors need
+// Safari / iOS / iPadOS 15.4, Chrome and Edge 111, Firefox 113 (older ones show transparent backgrounds),
+// and Drive sync's Web Locks need Safari 15.4 too. iOS 15 still runs on the iPad Air 2 and iPad mini 4.
+const BROWSER_TARGET = ["es2022", "safari15.4", "ios15.4", "chrome111", "firefox113", "edge111"];
 
 const manifest: Partial<ManifestOptions> = {
   name: "Codex Magica",

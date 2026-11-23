@@ -252,7 +252,7 @@ same in a few clicks; see [Use it](#use-it).
 ## Use it
 
 **Open it.** Go to **[marcigo36.github.io/codex-magica](https://marcigo36.github.io/codex-magica/)**. It
-runs in any current browser, and there's nothing to sign up for.
+runs in any current browser (iPhone and iPad: iOS 15.4 or later), and there's nothing to sign up for.
 
 **Add it to your home screen.**
 
