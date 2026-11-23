@@ -97,7 +97,7 @@ book's order, with a table of contents that tracks your scroll position.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/creator-dark.webp">
-  <img src="docs/assets/creator-light.webp" alt="Character editor: skill purchases with granted skills, attribute requirements and KAP costs">
+  <img src="docs/assets/creator-light.webp" alt="Character editor for a level-2 priest: the level strip, remaining KAP, and the skills one per line with granted marks, subtypes, attribute requirements and costs">
 </picture>
 
 **Character builder.** Skills granted by your class are marked, costs and attribute

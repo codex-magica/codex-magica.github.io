@@ -3,7 +3,7 @@ import { Box, Input, Select } from "@chakra-ui/react";
 import { SKILL_BY_NAME, SkillDef, fixedSubtypesOf } from "../../model/skills";
 
 // phones: the subtype control gets its own full-width line in the row; md+: a compact inline field
-export const SUBW = { base: "100%", md: "128px" };
+export const SUBW = { base: "100%", md: "160px" }; // fits the common values ("egykezes kardok", "altípus kötelező…") on one line
 
 export const SubtypeInput: React.FC<{
   value: string;
