@@ -2,6 +2,9 @@
 <html lang="hu">
   <head>
     <meta charset="utf-8" />
+    <!-- The browser/OS chrome and the launch screen use the app's page colour (light/dark), not black. -->
+    <meta name="theme-color" content="#ebeff2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#13171f" media="(prefers-color-scheme: dark)" />
     <!-- Paint the page in the right colour before the app's ~2 MB script has loaded, so a cold start in
          dark mode doesn't flash white. The mode comes from where Chakra keeps it; the colours are the
          app's `page` token (theme.ts) as hex, so even browsers without OKLCH show them. -->
@@ -12,6 +15,10 @@
           if (m === "dark" || m === "light") {
             document.documentElement.dataset.theme = m;
             document.documentElement.style.colorScheme = m;
+            // the app's own mode beats the system's for the chrome colour too
+            var c = m === "dark" ? "#13171f" : "#ebeff2";
+            var metas = document.querySelectorAll('meta[name="theme-color"]');
+            for (var i = 0; i < metas.length; i++) { metas[i].setAttribute("content", c); metas[i].removeAttribute("media"); }
           }
         } catch (e) {}
       })();
@@ -30,7 +37,6 @@
 
     <!-- PWA Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#000000" />
     <!-- the web app manifest link is injected by vite-plugin-pwa (see vite.config.ts) -->
 
     <!-- Android Specific Tags -->

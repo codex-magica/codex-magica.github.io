@@ -22,8 +22,8 @@ const manifest: Partial<ManifestOptions> = {
   start_url: ".",
   scope: ".",
   display: "standalone",
-  theme_color: "#000000",
-  background_color: "#1c2129", // splash screen matches the icon tile (the app's card colour)
+  theme_color: "#13171f",
+  background_color: "#13171f", // launch/splash screen: the app's dark page colour (the `page` token)
   icons: [
     { src: "logo192.png", sizes: "192x192", type: "image/png" },
     { src: "logo512.png", sizes: "512x512", type: "image/png" },

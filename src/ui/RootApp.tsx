@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, useColorMode } from "@chakra-ui/react";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
@@ -32,6 +32,15 @@ const SaveFailedBanner: React.FC = () => (
 // via the roster; the creator commits a working copy on save.
 export const RootApp: React.FC = () => {
   const roster = useRoster();
+  // keep the browser/OS chrome colour (theme-color) in step with the app's light/dark mode
+  const { colorMode } = useColorMode();
+  useEffect(() => {
+    const c = colorMode === "dark" ? "#13171f" : "#ebeff2";
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+      m.setAttribute("content", c);
+      m.removeAttribute("media");
+    });
+  }, [colorMode]);
   // back from a Google Drive token renewal round trip: land on the screen, tab and scroll position the
   // user was on (read once; later screens open normally)
   const [back] = useState<ReturnContext | null>(() => {
