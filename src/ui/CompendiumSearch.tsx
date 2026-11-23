@@ -137,7 +137,7 @@ const MatchedName: React.FC<{ name: string; pos: number; len: number }> = ({ nam
 );
 
 const Kbd: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Box as="kbd" px="5px" py="1px" borderRadius="5px" border="1px solid" borderColor="hair" bg="band" fontFamily="system-ui" fontSize="10.5px" fontWeight={600} color="fgFaint" lineHeight="1.4">
+  <Box as="kbd" display="inline-flex" alignItems="center" px="5px" py="1px" borderRadius="5px" border="1px solid" borderColor="hair" bg="band" fontFamily="system-ui" fontSize="10.5px" fontWeight={600} color="fgFaint" lineHeight="1.4">
     {children}
   </Box>
 );
@@ -276,7 +276,7 @@ export const SearchButton: React.FC<{ onClick: () => void }> = ({ onClick }) => 
     >
       <SearchIcon boxSize="13px" flexShrink={0} />
       <Text fontSize="13.5px" noOfLines={1}>Keresés…</Text>
-      <Box ml="auto" display={{ base: "none", md: "block" }}><Kbd>{isMac ? "⌘K" : "Ctrl K"}</Kbd></Box>
+      <Box ml="auto" display={{ base: "none", md: "flex" }} alignItems="center"><Kbd>{isMac ? "⌘K" : "Ctrl K"}</Kbd></Box>
     </Flex>
   );
 };
