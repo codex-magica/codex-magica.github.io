@@ -25,8 +25,6 @@ it removes nothing.
   Vagyon at 1 point; the data grants a plain `bg("Vagyon")`.
 - **Default starting weapon:** `Fegyverhasználat (egykezes kardok)` is used where the book leaves the weapon
   open (Tolvaj types, Bárd base and Aszisz, Boszorkánymester options…). Check against the book's intent.
-- **A second check of the long description texts** (bard, witch, warlock, fire magic, prayers, psi, skills,
-  weapons, armor) against the book: the first cross-check was a single pass.
 
 ## Sync
 
