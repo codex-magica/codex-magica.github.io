@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { ModalShell } from "./Modal";
 
-const REPO_URL = "https://github.com/marcigo36/codex-magica";
+const REPO_URL = "https://github.com/codex-magica/codex-magica";
 
 // "About": a short independent-fan-project notice for people who use the app without ever reading the
 // repository. Same wording as NOTICE.md (no claim of permission); the full credits live there.

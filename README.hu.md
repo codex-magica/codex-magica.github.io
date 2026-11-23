@@ -11,9 +11,9 @@
 
 Böngészőben fut · telepíthető a kezdőképernyőre · internet nélkül is működik · választható szinkron a saját Google Drive-oddal
 
-[**Az alkalmazás megnyitása**](https://marcigo36.github.io/codex-magica/) · [English](README.md) · **Magyar**
+[**Az alkalmazás megnyitása**](https://codex-magica.github.io/codex-magica/) · [English](README.md) · **Magyar**
 
-[![CI](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml)
+[![CI](https://github.com/codex-magica/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/codex-magica/codex-magica/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
@@ -105,7 +105,7 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
 - A webes alkalmazások Google-hozzáférése óránként lejár. Az alkalmazás ezt egy gyors, Google-on keresztüli
   átirányítással megújítja: előtte egy kis értesítést mutat, utána pedig oda hoz vissza, ahol voltál.
 - Nem kell fiókot létrehoznod, és nincs köztes szerverünk: az adatok közvetlenül a böngésződből a
-  Drive-odra kerülnek. Részletek az [adatvédelmi tájékoztatóban](https://marcigo36.github.io/codex-magica/privacy.html).
+  Drive-odra kerülnek. Részletek az [adatvédelmi tájékoztatóban](https://codex-magica.github.io/codex-magica/privacy.html).
 
 **Az adataid nálad maradnak.** Szinkron nélkül a karakterek csak az eszközöd böngészőjében vannak. Az
 összes karakterről egy koppintással mentés készíthető, és a fájl egyenesen iCloud Drive-ba, Google
@@ -114,7 +114,7 @@ elküldhető másnak.
 
 ## Hogyan használhatod?
 
-**Megnyitás.** Nyisd meg a **[marcigo36.github.io/codex-magica](https://marcigo36.github.io/codex-magica/)**
+**Megnyitás.** Nyisd meg a **[codex-magica.github.io/codex-magica](https://codex-magica.github.io/codex-magica/)**
 oldalt. Bármelyik mai böngészőben fut, és nem kell hozzá regisztrálni.
 
 **Telepítés a kezdőképernyőre.**
@@ -147,7 +147,7 @@ egyszerűen nincs szinkron gomb, minden más ugyanúgy működik.
 **Saját gépen, fejlesztéshez.** [Node.js](https://nodejs.org) 22.12 vagy újabb kell:
 
 ```sh
-git clone https://github.com/marcigo36/codex-magica.git
+git clone https://github.com/codex-magica/codex-magica.git
 cd codex-magica
 npm ci
 npm run dev          # elérhető: http://localhost:3000
@@ -161,7 +161,7 @@ szerver mindig a friss kódot adja. A Google Drive-szinkron helyi kipróbálás�
 
 A szöveg egy rossz minőségű szkennelésből, OCR-rel készült, és bár kézzel alaposan átnéztük, maradhattak
 benne hibák. Ha elírást, hibás táblázatértéket vagy rosszul számolt szabályt találsz, nyiss egy
-[issue-t](https://github.com/marcigo36/codex-magica/issues/new/choose) (van hozzá űrlap). Írd meg az
+[issue-t](https://github.com/codex-magica/codex-magica/issues/new/choose) (van hozzá űrlap). Írd meg az
 oldalszámot vagy a fejezetet, és azt, hogy mi szerepel a könyvben. Pull requestet is szívesen fogadunk.
 
 ## Hogyan készült?
@@ -193,7 +193,7 @@ varázstárgyak, nincs benne.
 A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos M.A.G.U.S.-termék: nem a
 jogosultak adták ki, és a tartalmáért nem ők felelnek. A könyv eredeti közreműködőinek listája a
 [NOTICE.md](NOTICE.md) fájlban található. Ha jogosultként bármit módosíttatnál vagy eltávolíttatnál,
-nyiss egy [issue-t](https://github.com/marcigo36/codex-magica/issues).
+nyiss egy [issue-t](https://github.com/codex-magica/codex-magica/issues).
 
 A felület betűtípusa a [Crimson Pro](https://github.com/Fonthausen/CrimsonPro), a Ψ és a ⅓ jel az
 [EB Garamondból](https://github.com/octaviopardo/EBGaramond12) származik (mindkettő SIL OFL 1.1). Egyes ikonok a
