@@ -15,6 +15,7 @@ export const SETTINGS_KEY = "magus.driveSync.v1";
 const PUBLISHED_KEY = "magus.drivePublished.v2";
 const BACKED_UP_KEY = "magus.driveBackedUp.v1";
 const NONCES_KEY = "magus.driveNonces.v1";
+const CONFIRMED_NONCE_KEY = "magus.driveNonceConfirmed.v1";
 const LEGACY_BASE_KEY = "magus.syncBase.v1"; // the first version of the sync; no longer used
 
 const write = (key: string, value: unknown): void => {
@@ -91,9 +92,40 @@ export const loadBackedUp = (): Set<string> => new Set(read<string[]>(BACKED_UP_
 export const saveBackedUp = (s: Set<string>): void => write(BACKED_UP_KEY, [...s].slice(-BACKED_UP_MAX));
 
 // ── the marks this device wrote into its Drive file (to notice another device writing it) ──────────
-export const loadNonces = (): string[] => read<string[]>(NONCES_KEY, []);
-export const rememberNonce = (n: string): void => write(NONCES_KEY, [...loadNonces(), n].slice(-20));
-export const forgetNonces = (): void => write(NONCES_KEY, []);
+// Three places, so a mark of ours is never mistaken for another device's:
+//   - the mark last seen in (or written to) the file, kept on its own: failed writes can't push it out;
+//   - the marks of recent write attempts (an answer can get lost after the write happened);
+//   - all of these in memory too, for when storage is full.
+// (Keyed by the storage object, which is one per browser; tests simulate several devices with one each.)
+const sessions = new WeakMap<object, Set<string>>();
+const session = (): Set<string> => {
+  const key = (globalThis as { localStorage?: object }).localStorage ?? sessions;
+  let s = sessions.get(key);
+  if (!s) sessions.set(key, (s = new Set()));
+  return s;
+};
+export const forgetSessionNoncesForTests = (): void => session().clear(); // as after a reload
+export const loadNonces = (): string[] => {
+  const confirmed = read<string | null>(CONFIRMED_NONCE_KEY, null);
+  return [...new Set([...read<string[]>(NONCES_KEY, []), ...(confirmed ? [confirmed] : []), ...session()])];
+};
+export const rememberNonce = (n: string): void => {
+  session().add(n);
+  write(NONCES_KEY, [...read<string[]>(NONCES_KEY, []), n].slice(-20));
+};
+export const confirmNonce = (n: string): void => {
+  session().add(n);
+  write(CONFIRMED_NONCE_KEY, n);
+};
+export const forgetNonces = (): void => {
+  session().clear();
+  write(NONCES_KEY, []);
+  try {
+    localStorage.removeItem(CONFIRMED_NONCE_KEY);
+  } catch {
+    /* ignore */
+  }
+};
 
 // Turning sync off forgets the pairing with Drive. The characters (and deletion markers) stay, and the
 // device keeps its id, so turning it back on later continues where it left off. The backups choice is
@@ -105,6 +137,7 @@ export const clearDriveState = (): void => {
     localStorage.removeItem(LEGACY_BASE_KEY);
     localStorage.removeItem(BACKED_UP_KEY); // another account may be next: its backups are its own
     localStorage.removeItem(NONCES_KEY);
+    localStorage.removeItem(CONFIRMED_NONCE_KEY);
   } catch {
     /* ignore */
   }

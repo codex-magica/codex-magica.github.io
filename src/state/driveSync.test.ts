@@ -24,7 +24,8 @@ import { Version, combine, localVersions, mergeRound, parseDeviceFile, reconcile
 import { DeviceIdClashError, SyncNewerVersionError, runSync } from "./driveSyncEngine";
 import { RosterStore, conflictCopyName, createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
-import { setDeviceIdForTests } from "./versions";
+import { resetDeviceId, setDeviceIdForTests } from "./versions";
+import { confirmNonce, forgetNonces, forgetSessionNoncesForTests, loadNonces, rememberNonce } from "./syncState";
 import { normalizeRecord } from "./storage";
 import { parseImportFile } from "./transfer";
 
@@ -166,7 +167,7 @@ class Device {
   store: RosterStore;
   backups = true;
   cache = new Map();
-  published = {};
+  published: Record<string, string> = {};
   backedUp = new Set<string>();
   nonces: string[] = [];
   constructor(
@@ -235,15 +236,14 @@ class Device {
         // what useDriveSync does: a fresh id, this device's versions relabelled, sync again
         const old = this.id;
         this.id = `${old}x${Math.floor(Math.random() * 1e6)}`;
-        this.run(() => this.store.relabelDevice(old, this.id));
+        this.run(() => this.store.relabelDevice(old, this.id, new Set<string>([...e.published, ...Object.values(this.published)])));
         this.nonces = [];
         this.published = {};
         out = await go();
       }
       const snapshotUsed = snap;
       this.run(() => {
-        const next = reconcile(snapshotUsed, this.store.getState(), out);
-        this.store.applySync(next.records, next.deletions);
+        this.store.applyRound(snapshotUsed, out);
       });
       this.published = out.published;
       this.backedUp = out.backedUp;
@@ -1030,4 +1030,309 @@ describe("Google Drive sync: randomized multi-device runs", () => {
   };
 
   for (let seed = 1; seed <= 24; seed++) test(`seed ${seed}`, () => run(seed), 60_000);
+});
+
+// ═══════════════════ second adversarial review: each test was a proven failure ═══════════════════
+
+class QuotaStorage extends MemStorage {
+  cap = Infinity;
+  used() {
+    let n = 0;
+    for (const [k, v] of this.m) n += k.length + v.length;
+    return n;
+  }
+  setItem(k: string, v: string) {
+    const prev = this.m.get(k);
+    const next = this.used() - (prev === undefined ? 0 : k.length + prev.length) + k.length + String(v).length;
+    if (next > this.cap) throw new Error("QuotaExceededError");
+    super.setItem(k, v);
+  }
+}
+
+// one round exactly the way useDriveSync.round does it: the real nonce bookkeeping (syncState), a clash
+// → resetDeviceId + relabelDevice (only versions not in Drive) + forgetNonces, applyRound
+const clashes = new Map<Device, number>();
+async function realSync(dev: Device, drive: FakeDrive) {
+  dev.run(() => dev.store.reload());
+  let snap = dev.store.getState();
+  const go = () =>
+    dev.run(() => {
+      snap = dev.store.getState();
+      return runSync(
+        drive,
+        {
+          records: snap.records,
+          deletions: snap.deletions,
+          device: dev.id,
+          backups: dev.backups,
+          backedUp: dev.backedUp,
+          ourNonces: loadNonces(),
+          rememberNonce: (n: string) => dev.run(() => rememberNonce(n)),
+          confirmNonce: (n: string) => dev.run(() => confirmNonce(n)),
+        },
+        dev.now,
+        dev.cache
+      );
+    });
+  let out;
+  try {
+    out = await go();
+  } catch (e) {
+    if (!(e instanceof DeviceIdClashError)) throw e;
+    clashes.set(dev, (clashes.get(dev) ?? 0) + 1);
+    const old = dev.id;
+    const fresh = dev.run(() => resetDeviceId());
+    dev.id = fresh;
+    dev.run(() => {
+      dev.store.relabelDevice(old, fresh, new Set<string>([...e.published, ...Object.values(dev.published)]));
+      forgetNonces();
+    });
+    dev.published = {};
+    out = await go();
+  }
+  const used = snap;
+  dev.run(() => dev.store.applyRound(used, out));
+  dev.published = out.published;
+  dev.backedUp = out.backedUp;
+  return out;
+}
+
+describe("review 2: nonces, tabs, conflicts, clones", () => {
+  test("P1 storage full: the nonce isn't saved, the next round takes the device for a clone", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.storage = qs;
+    a.store = a.run(() => createRosterStore());
+    const b = new Device("devb");
+    const x = a.create("Xena");
+    const w = a.create("Wulf");
+    const v = a.create("Vera");
+    await realSync(a, drive);
+    await b.sync(drive);
+    await realSync(a, drive);
+    // storage fills up (the case the design says is handled: "the sync uploads from memory")
+    qs.cap = qs.used();
+    later();
+    a.edit(x.id, "while-full");
+    expect(a.store.getState().saveFailed).toBe(true);
+    await realSync(a, drive); // uploads the edit; rememberNonce silently fails
+    later();
+    b.remove(w.id);
+    b.edit(v.id, "b-edit");
+    await b.sync(drive);
+    await realSync(a, drive);
+    for (let i = 0; i < 2; i++) {
+      await realSync(a, drive);
+      await b.sync(drive);
+    }
+    expect(clashes.get(a) ?? 0).toBe(0);
+    expect(b.byName("Wulf")).toBeUndefined(); // b deleted it; nobody edited it since
+    expect(b.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
+  });
+
+  test("P2 Drive full (or any repeated update failure) for 20+ rounds: the remembered nonces roll over → false clash", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const x = a.create("Xena");
+    const w = a.create("Wulf");
+    const v = a.create("Vera");
+    await realSync(a, drive);
+    await b.sync(drive);
+    later();
+    b.remove(w.id);
+    b.edit(v.id, "b-edit");
+    await b.sync(drive);
+    drive.failOn = "update"; // e.g. 403 storageQuotaExceeded: list and reads work, writes don't
+    for (let i = 0; i < 21; i++) {
+      later();
+      a.edit(x.id, `a${i}`);
+      await realSync(a, drive).catch(() => undefined);
+    }
+    drive.failOn = null;
+    a.run(() => forgetSessionNoncesForTests()); // and the app was reopened meanwhile: only what's saved counts
+    await realSync(a, drive);
+    for (let i = 0; i < 2; i++) {
+      await b.sync(drive);
+      await realSync(a, drive);
+    }
+    expect(clashes.get(a) ?? 0).toBe(0);
+    expect(b.byName("Wulf")).toBeUndefined();
+    expect(b.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
+  });
+
+  test("P3 two tabs: an edit in tab 2 whose storage event reaches tab 1 after its round's last response is overwritten", async () => {
+    const drive = new FakeDrive();
+    const tab1 = new Device("deva");
+    const x = tab1.create("Xena");
+    await tab1.sync(drive);
+    const tab2 = new Device("deva");
+    tab2.storage = tab1.storage;
+    tab2.store = tab2.run(() => createRosterStore());
+    later();
+    tab1.edit(x.id, "tab1-edit"); // something to publish, so the round ends with an update
+    let fired = false;
+    drive.onOp = (op) => {
+      if (op === "update" && !fired) {
+        fired = true;
+        tab2.edit(x.id, "tab2-edit"); // lands while the upload is in flight
+      }
+    };
+    await tab1.sync(drive);
+    drive.onOp = null;
+    tab2.run(() => tab2.store.reload()); // tab 2 receives tab 1's write
+    const saved = JSON.parse(tab1.storage.getItem("magus.roster.v1")!) as CharacterRecord[];
+    expect(saved.flatMap(tokensOf)).toContain("tab2-edit");
+  });
+
+  test("P4 after a conflict, the winning device's next edit (before it pulls the merge) makes a spurious copy of its own older version", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const x = a.create("Xena");
+    await a.sync(drive);
+    await b.sync(drive);
+    later();
+    a.edit(x.id, "A1");
+    later();
+    b.edit(x.id, "B1");
+    await b.sync(drive); // B1 in Drive
+    await a.sync(drive); // a: A1 ∥ B1 → B1 keeps Xena, A1 becomes the copy; a publishes B1 with the joined vector
+    later();
+    b.edit(x.id, "B2"); // b keeps playing; its 2-second round hasn't run yet
+    for (let i = 0; i < 3; i++) {
+      await b.sync(drive);
+      await a.sync(drive);
+    }
+    expect(a.records()).toHaveLength(2); // Xena [B1,B2] and the A1 copy
+  });
+
+  test("P5 a real clone: relabelling also hits versions the clone never touched → deletions by the original come back", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const w = a.create("Wulf");
+    const v = a.create("Vera");
+    await realSync(a, drive);
+    const clone = new Device("deva");
+    for (const [k, val] of a.storage.m) clone.storage.m.set(k, val);
+    clone.published = { ...a.published }; // in the app it's in the copied storage too
+    clone.store = clone.run(() => createRosterStore());
+    later();
+    a.remove(w.id); // the original deletes Wulf and edits Vera after the clone was made
+    a.edit(v.id, "a-edit");
+    await realSync(a, drive);
+    later();
+    clone.create("Cora");
+    await realSync(clone, drive);
+    for (let i = 0; i < 2; i++) {
+      await realSync(a, drive);
+      await realSync(clone, drive);
+    }
+    expect(a.byName("Wulf")).toBeUndefined();
+    expect(a.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
+  });
+});
+
+describe("review 2: storage full, and an edit before a losing deletion", () => {
+  const failRoster = (d: Device) => {
+    const real = d.storage.setItem.bind(d.storage);
+    d.storage.setItem = (k: string, v: string) => {
+      if (k === "magus.roster.v1") throw new Error("QuotaExceededError");
+      real(k, v);
+    };
+  };
+
+  test("P7 storage full → edit uploaded from memory → reload → next edit of that character silently supersedes it", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const x = a.create("Xena");
+    await a.sync(drive);
+    await b.sync(drive);
+    failRoster(a); // storage full: the roster can't be saved (small keys still fit)
+    later();
+    a.edit(x.id, "c1-only-in-memory-and-drive");
+    await a.sync(drive);
+    expect(drive.syncFileOf("deva")!.body).toContain("c1-only-in-memory-and-drive");
+    a.store = a.run(() => createRosterStore()); // the app is closed and reopened (still full)
+    later();
+    a.edit(x.id, "c2-after-reload"); // before the first round of the new session
+    for (let i = 0; i < 2; i++) {
+      await a.sync(drive);
+      await b.sync(drive);
+    }
+    const all = b.records().flatMap(tokensOf);
+    expect(all).toContain("c1-only-in-memory-and-drive");
+  });
+
+  test("P7b same, second tab instead of a reload", async () => {
+    const drive = new FakeDrive();
+    const tab1 = new Device("deva");
+    const x = tab1.create("Xena");
+    await realSync(tab1, drive);
+    failRoster(tab1);
+    const tab2 = new Device("deva");
+    tab2.storage = tab1.storage;
+    tab2.store = tab2.run(() => createRosterStore());
+    later();
+    tab1.edit(x.id, "tab1-unsaved");
+    await realSync(tab1, drive);
+    later();
+    tab2.edit(x.id, "tab2-edit"); // tab 2 only sees what's saved
+    await realSync(tab2, drive);
+    await realSync(tab1, drive);
+    const all = tab1.records().flatMap(tokensOf);
+    expect(all).toContain("tab1-unsaved");
+  });
+
+  test("storage full in tab 1, tab 2 frees space and saves: tab 1 merges instead of overwriting", async () => {
+    const tab1 = new Device("deva");
+    const x = tab1.create("Xena");
+    const w = tab1.create("Wulf");
+    const v = tab1.create("Vera");
+    const tab2 = new Device("deva");
+    tab2.storage = tab1.storage;
+    tab2.store = tab2.run(() => createRosterStore());
+    const real = tab1.storage.setItem.bind(tab1.storage);
+    let full = true;
+    tab1.storage.setItem = (k: string, val: string) => {
+      if (full && k === "magus.roster.v1") throw new Error("QuotaExceededError");
+      real(k, val);
+    };
+    later();
+    tab1.edit(x.id, "tab1-unsaved");
+    expect(tab1.store.getState().saveFailed).toBe(true);
+    full = false; // tab 2 deletes a character: there's room again
+    tab2.remove(w.id);
+    tab2.edit(v.id, "tab2-edit");
+    later();
+    tab1.edit(x.id, "tab1-next"); // tab 1 hasn't had the storage event yet
+    tab2.run(() => tab2.store.reload());
+    for (const t of [tab1, tab2]) {
+      expect(t.byName("Wulf")).toBeUndefined();
+      expect(tokensOf(t.byName("Vera")!)).toContain("tab2-edit");
+      expect(tokensOf(t.byName("Xena")!)).toEqual(expect.arrayContaining(["tab1-unsaved", "tab1-next"]));
+    }
+    expect(tab1.store.getState().saveFailed).toBe(false);
+  });
+
+  test("P6 edit then delete on A, parallel edit on B: A's last edit is kept nowhere", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const x = a.create("Xena");
+    await a.sync(drive);
+    await b.sync(drive);
+    later();
+    a.edit(x.id, "a-last-edit");
+    a.remove(x.id);
+    b.edit(x.id, "b-edit");
+    await b.sync(drive);
+    await a.sync(drive);
+    await b.sync(drive);
+    const inRecords = a.records().flatMap(tokensOf).includes("a-last-edit");
+    const inBackups = drive.backups().some((f) => f.body.includes("a-last-edit"));
+    expect(inRecords || inBackups).toBe(true);
+  });
 });

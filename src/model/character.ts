@@ -132,6 +132,9 @@ export interface CharacterRecord {
   id: string;
   updatedAt?: number; // ms epoch of the last local edit (stamped on every save; dropped from exports)
   syncVc?: Record<string, number>; // version vector for the Drive sync: edits per device (dropped from exports)
+  // the vector of the version this content was made as, when a merge gave the record a joined vector
+  // (absent: the same as syncVc); lets a later edit of that content count as its continuation
+  syncCvc?: Record<string, number>;
   name: string;
   player?: string;
   concept?: string;

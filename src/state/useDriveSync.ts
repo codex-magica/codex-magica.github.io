@@ -16,7 +16,6 @@ import {
   validToken,
 } from "./googleDrive";
 import { BACKUP_FORMAT, DeviceIdClashError, SyncNewerVersionError, runSync } from "./driveSyncEngine";
-import { reconcile } from "./driveMerge";
 import { rosterStore } from "./rosterStore";
 import { deviceId, resetDeviceId } from "./versions";
 import { normalizeRecord, genId } from "./storage";
@@ -32,6 +31,7 @@ import {
   forgetNonces,
   pendingChanges,
   rememberNonce,
+  confirmNonce,
   saveBackedUp,
   savePublished,
   updateDriveSettings,
@@ -221,7 +221,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             let snapshot = store.getState();
             const run = () => {
               snapshot = store.getState();
-              const input = { records: snapshot.records, deletions: snapshot.deletions, device: deviceId(), backups: s.backups, backedUp: loadBackedUp(), ourNonces: loadNonces(), rememberNonce };
+              const input = { records: snapshot.records, deletions: snapshot.deletions, device: deviceId(), backups: s.backups, backedUp: loadBackedUp(), ourNonces: loadNonces(), rememberNonce, confirmNonce };
               return runSync(httpDrive(token), input);
             };
             let out;
@@ -232,14 +232,14 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
               // another device writes under this device's id: take a new one, keep this device's edits as
               // its own, and sync again
               const old = deviceId();
-              store.relabelDevice(old, resetDeviceId());
+              // shared history: what Drive holds, and what this device itself last published there
+              store.relabelDevice(old, resetDeviceId(), new Set([...e.published, ...Object.values(loadPublished())]));
               forgetNonces();
               savePublished({});
               out = await run();
             }
             if (!current()) return; // turned off meanwhile: drop the result
-            const next = reconcile(snapshot, store.getState(), out);
-            store.applySync(next.records, next.deletions);
+            store.applyRound(snapshot, out); // against what's saved now: edits made meanwhile (here or in another tab) stay
             savePublished(out.published);
             saveBackedUp(out.backedUp);
             patchSettings({ lastSyncAt: Date.now() });
@@ -505,7 +505,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       const rec = data && data.format === BACKUP_FORMAT ? normalizeRecord({ ...(data.record as object), id: genId() }) : null;
       if (!rec) throw new Error("unreadable backup");
       const [y, m, d] = b.day.split("-");
-      const restored: CharacterRecord = { ...rec, id: genId(), name: `${rec.name} (${y}. ${m}. ${d}.)`, syncVc: undefined, updatedAt: undefined };
+      const restored: CharacterRecord = { ...rec, id: genId(), name: `${rec.name} (${y}. ${m}. ${d}.)`, syncVc: undefined, syncCvc: undefined, updatedAt: undefined };
       store.upsert(restored);
       return restored;
     },

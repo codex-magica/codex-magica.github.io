@@ -91,5 +91,10 @@ export const vcKey = (vc: VersionVector): string =>
     .map((k) => `${k}:${vc[k]}`)
     .join(",");
 
+// A version of a character, as compared between devices: its vector plus its content fingerprint (or
+// DELETED_HASH for a deletion).
+export const DELETED_HASH = "deleted";
+export const versionKeyOf = (vc: VersionVector, h: string): string => `${vcKey(vc)}|${h}`;
+
 export const isVersionVector = (v: unknown): v is VersionVector =>
   !!v && typeof v === "object" && !Array.isArray(v) && Object.values(v as object).every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0);

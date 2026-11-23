@@ -18,24 +18,32 @@
 import { CharacterRecord } from "../model/character";
 import { repairRecord } from "./storage";
 import { contentHash } from "./recordHash";
-import { Deletions, conflictCopyName } from "./rosterStore";
-import { VersionVector, dominatedBy, isVersionVector, join, vcKey } from "./versions";
+import type { Deletions } from "./rosterStore";
+import { DELETED_HASH, VersionVector, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
+
+// The name a parallel version gets when both are kept. Neutral, so it reads right on every device.
+export const conflictCopyName = (name: string): string => `${name} (másik változat)`;
 
 export const SYNC_FORMAT = "codex-magica-sync";
 export const SYNC_VERSION = 2;
-export const DELETED = "deleted";
+export const DELETED = DELETED_HASH;
 
 export interface Version {
   id: string;
   t: number; // when it was made (never behind its ancestors; see recordHash.nextStamp)
   vc: VersionVector;
+  // The vector of the version whose content this is, when a merge gave it a joined vector (absent: vc).
+  // A later edit of exactly this content then counts as continuing it, not as a parallel edit.
+  cvc?: VersionVector;
   h: string; // content fingerprint, or DELETED
   record?: CharacterRecord; // absent for a deletion
 }
+const cvcOf = (v: Version): VersionVector => v.cvc ?? v.vc;
 
 interface FileEntry {
   t: number;
   vc: VersionVector;
+  cvc?: VersionVector;
   h: string;
   deleted?: true;
   record?: CharacterRecord;
@@ -59,9 +67,18 @@ export type ParsedFile =
 export const LEGACY_FILE_NAME = "codex-magica-roster.json";
 const LEGACY_VC = { legacy: 1 };
 
-export const versionKey = (v: Pick<Version, "vc" | "h">): string => `${vcKey(v.vc)}|${v.h}`;
+export const versionKey = (v: Pick<Version, "vc" | "h">): string => versionKeyOf(v.vc, v.h);
 
-const fromRecord = (r: CharacterRecord): Version => ({ id: r.id, t: r.updatedAt ?? 0, vc: r.syncVc ?? {}, h: contentHash(r), record: r });
+const fromRecord = (r: CharacterRecord): Version => {
+  const v: Version = { id: r.id, t: r.updatedAt ?? 0, vc: r.syncVc ?? {}, h: contentHash(r), record: r };
+  return isVersionVector(r.syncCvc) && Object.keys(r.syncCvc).length > 0 ? { ...v, cvc: r.syncCvc } : v;
+};
+// a version with a (possibly) new vector: its record carries the same bookkeeping
+const withVc = (v: Version, vc: VersionVector, cvc: VersionVector): Version => {
+  const own = vcKey(cvc) === vcKey(vc) ? undefined : cvc;
+  const { cvc: _old, ...rest } = v;
+  return { ...rest, vc, ...(own ? { cvc: own } : {}), record: v.record && { ...v.record, syncVc: vc, syncCvc: own } };
+};
 
 export const localVersions = (records: CharacterRecord[], deletions: Deletions): Map<string, Version> => {
   const out = new Map<string, Version>();
@@ -97,8 +114,9 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
       if (!legacy) versions.set(id, { id, t, vc, h: DELETED });
       continue;
     }
-    const record = { ...rec!, id, updatedAt: t, syncVc: vc };
-    versions.set(id, { id, t, vc, h: contentHash(record), record });
+    const cvc = !legacy && isVersionVector(e.cvc) && Object.keys(e.cvc).length > 0 ? e.cvc : undefined;
+    const record = { ...rec!, id, updatedAt: t, syncVc: vc, syncCvc: cvc };
+    versions.set(id, { id, t, vc, h: contentHash(record), record, ...(cvc ? { cvc } : {}) });
   }
   return { ok: true, device: legacy ? "" : f.device!, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque, skipped };
 };
@@ -117,13 +135,22 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   const aDel = a.h === DELETED;
   const bDel = b.h === DELETED;
   if (aDel && bDel) return { version: { ...a, t: Math.max(a.t, b.t), vc } };
-  if (aDel) return { version: { ...b, vc, record: b.record && { ...b.record, syncVc: vc } } };
-  if (bDel) return { version: { ...a, vc, record: a.record && { ...a.record, syncVc: vc } } };
+  if (aDel) return { version: withVc(b, vc, cvcOf(b)) };
+  if (bDel) return { version: withVc(a, vc, cvcOf(a)) };
+  // One side's content is an earlier step of the other side: a merge gave it a joined vector (the version
+  // it lost to is kept as a copy in that same merge), and then the device it came from edited it again
+  // before seeing the merge. That edit continues the content: no new copy.
+  const aSeenByB = dominatedBy(cvcOf(a), b.vc);
+  const bSeenByA = dominatedBy(cvcOf(b), a.vc);
+  if (aSeenByB !== bSeenByA) {
+    const next = aSeenByB ? b : a;
+    return { version: withVc(next, vc, cvcOf(next)) };
+  }
   const [win, lose] = a.t > b.t || (a.t === b.t && a.h > b.h) ? [a, b] : [b, a];
-  const version: Version = { ...win, vc, record: win.record && { ...win.record, syncVc: vc } };
+  const version: Version = withVc(win, vc, cvcOf(win));
   if (a.h === b.h) return { version };
   const id = copyId(a.id, lose);
-  const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: lose.vc };
+  const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: lose.vc, syncCvc: undefined };
   return { version, copy: { id, t: lose.t, vc: lose.vc, h: contentHash(record), record } };
 };
 
@@ -248,12 +275,22 @@ export function mergeRound(
         !replaced.some((u) => u !== v && vcKey(u.vc) !== vcKey(v.vc) && dominatedBy(v.vc, u.vc) && (deleted || dayOf(u.t) === dayOf(v.t)));
       for (const v of replaced) if (lastOfItsDay(v)) backupList.push({ id, version: v, reason: deleted ? "deleted" : "daily" });
     }
+  // A character deleted here but edited in parallel elsewhere stays (the edit wins over a deletion that
+  // didn't see it). The state it had here before deleting is kept as a backup, so nothing is lost.
+  if (backups)
+    for (const v of lastStates) {
+      const latest = acc.get(v.id);
+      if (!latest || latest.h === DELETED || latest.h === v.h) continue;
+      if (backupList.some((b) => b.id === v.id && versionKey(b.version) === versionKey(v))) continue;
+      backupList.push({ id: v.id, version: v, reason: "deleted" });
+    }
 
   const characters: Record<string, FileEntry | unknown> = {};
   // carried over untouched: this device's file never drops what it couldn't read
   for (const [id, raw] of Object.entries(ownOpaque)) if (!acc.has(id)) characters[id] = raw;
   for (const v of acc.values())
-    characters[v.id] = v.h === DELETED ? { t: v.t, vc: v.vc, h: DELETED, deleted: true } : { t: v.t, vc: v.vc, h: v.h, record: stripBookkeeping(v.record!) };
+    characters[v.id] =
+      v.h === DELETED ? { t: v.t, vc: v.vc, h: DELETED, deleted: true } : { t: v.t, vc: v.vc, ...(v.cvc ? { cvc: v.cvc } : {}), h: v.h, record: stripBookkeeping(v.record!) };
   const publishNeeded = !ownPrevious || canonical(ownPrevious) !== canonical(acc);
 
   const published: Record<string, string> = {};
@@ -262,7 +299,7 @@ export function mergeRound(
 }
 
 export const stripBookkeeping = (r: CharacterRecord): CharacterRecord => {
-  const { updatedAt: _t, syncVc: _v, ...rest } = r;
+  const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...rest } = r;
   return rest as CharacterRecord;
 };
 
@@ -303,4 +340,47 @@ export function reconcile(
   for (const r of merged.records) if (!done.has(r.id)) records.push(r);
   for (const [id, d] of Object.entries(merged.deletions)) if (!done.has(id) && !mergedById.has(id)) deletions[id] = d;
   return { records, deletions };
+}
+
+// Two states of this device's roster, merged the way the sync merges devices: memory that couldn't be
+// saved (storage full) and what another tab saved meanwhile. Nothing is lost: replaced versions are
+// dropped, parallel ones are both kept.
+export function mergeLocal(
+  mem: { records: CharacterRecord[]; deletions: Deletions },
+  saved: { records: CharacterRecord[]; deletions: Deletions }
+): { records: CharacterRecord[]; deletions: Deletions; copies: number } {
+  const a = localVersions(mem.records, mem.deletions);
+  const b = localVersions(saved.records, saved.deletions);
+  const out = new Map<string, Version>();
+  const extra: Version[] = [];
+  for (const id of new Set([...a.keys(), ...b.keys()])) {
+    const va = a.get(id);
+    const vb = b.get(id);
+    if (!va || !vb) {
+      out.set(id, (va ?? vb)!);
+      continue;
+    }
+    const r = combine(va, vb);
+    out.set(id, r.version);
+    if (r.copy) extra.push(r.copy);
+  }
+  let copies = 0;
+  for (const c of extra)
+    if (!out.has(c.id)) {
+      out.set(c.id, c);
+      copies++;
+    }
+  const order = new Map<string, number>();
+  for (const r of [...mem.records, ...saved.records]) if (!order.has(r.id)) order.set(r.id, order.size);
+  const records = [...out.values()]
+    .filter((v) => v.record)
+    .sort((x, y) => (order.get(x.id) ?? 1e9) - (order.get(y.id) ?? 1e9) || x.t - y.t)
+    .map((v) => v.record!);
+  const deletions: Deletions = {};
+  for (const v of out.values())
+    if (v.h === DELETED) {
+      const last = [mem.deletions[v.id], saved.deletions[v.id]].find((d) => d && vcKey(d.vc) === vcKey(v.vc))?.last ?? mem.deletions[v.id]?.last ?? saved.deletions[v.id]?.last;
+      deletions[v.id] = last ? { t: v.t, vc: v.vc, last } : { t: v.t, vc: v.vc };
+    }
+  return { records, deletions, copies };
 }

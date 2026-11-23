@@ -15,15 +15,18 @@
 //   - an edit made from an older version than the one stored now (an editor stayed open while a sync or
 //     another tab changed the character) is saved next to the newer version, not over it;
 //   - while saving fails (storage full), memory is never replaced by the older saved state: it's the
-//     only copy of the latest edits, and the sync uploads from it.
+//     only copy of the latest edits, and the sync uploads from it. Those edits get a lineage of their own
+//     (not this device's id), so an edit made later from the older saved state (after a reload, or in
+//     another tab) counts as parallel to them, never as their successor; and another tab's saved changes
+//     are merged into memory rather than overwritten.
 
 import { CharacterRecord } from "../model/character";
 import { clone, genId, loadRoster, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
-import { VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey } from "./versions";
+import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
+import { conflictCopyName, mergeLocal, reconcile } from "./driveMerge";
 
-// The name a parallel version gets when both are kept. Neutral, so it reads right on every device.
-export const conflictCopyName = (name: string): string => `${name} (másik változat)`;
+export { conflictCopyName };
 
 export interface Deletion {
   t: number;
@@ -130,11 +133,36 @@ export const createRosterStore = () => {
     emit();
   };
 
-  // Re-read what's saved if another tab changed it; never while saving fails (memory is newer then).
+  // The lineage of edits that exist only in memory (saving failed): one per session, never this device's
+  // id, see the header.
+  let unsavedLineage: string | null = null;
+  const lineageFor = (failing: boolean) => (failing ? (unsavedLineage ??= `${deviceId()}.u${Math.random().toString(36).slice(2, 8)}`) : deviceId());
+
+  // A local edit: built against the current state with this device's lineage; if it can't be saved, it's
+  // rebuilt with the unsaved lineage before it's kept in memory.
+  const mutate = (build: (lineage: string) => { records: CharacterRecord[]; deletions: Deletions } | null) => {
+    let next = build(lineageFor(state.saveFailed));
+    if (!next) return;
+    let saved = persist(next.records, next.deletions);
+    if (!saved && !state.saveFailed) {
+      next = build(lineageFor(true)) ?? next;
+      saved = persist(next.records, next.deletions);
+    }
+    state = { records: next.records, deletions: next.deletions, revision: state.revision + 1, saveFailed: !saved };
+    emit();
+  };
+
+  // Re-read what's saved if another tab changed it. While saving fails, memory holds edits that aren't
+  // saved anywhere: it's merged with the saved state instead of replaced, and saved if that works now.
   const refresh = (): boolean => {
-    if (state.saveFailed) return false;
     const now = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
     if (now.roster === seen.roster && now.deletions === seen.deletions) return false;
+    if (state.saveFailed) {
+      const merged = mergeLocal(state, load());
+      const saved = persist(merged.records, merged.deletions);
+      state = { ...state, records: merged.records, deletions: merged.deletions, saveFailed: !saved };
+      return true;
+    }
     state = { ...state, ...load() };
     seen = now;
     return true;
@@ -157,53 +185,69 @@ export const createRosterStore = () => {
       const deletion = state.deletions[record.id];
       // re-creating a deleted id (restoring a backup) must outrank the deletion
       const vc = join(prev?.syncVc ?? record.syncVc ?? {}, deletion?.vc ?? {});
-      const stamped: CharacterRecord = { ...record, updatedAt: nextStamp(Math.max(prev?.updatedAt ?? 0, deletion?.t ?? 0, record.updatedAt ?? 0)), syncVc: bump(vc, deviceId()) };
-      const i = state.records.findIndex((r) => r.id === record.id);
-      let records = i < 0 ? [...state.records, stamped] : state.records.map((r, j) => (j === i ? stamped : r));
-      if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped))
-        records = [...records, { ...prev, id: genId(), name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, deviceId()) }];
-      const deletions = { ...state.deletions };
-      delete deletions[record.id];
-      commit(records, deletions, true);
+      mutate((lineage) => {
+        const stamped: CharacterRecord = {
+          ...record,
+          updatedAt: nextStamp(Math.max(prev?.updatedAt ?? 0, deletion?.t ?? 0, record.updatedAt ?? 0)),
+          syncVc: bump(vc, lineage),
+          syncCvc: undefined, // new content
+        };
+        const i = state.records.findIndex((r) => r.id === record.id);
+        let records = i < 0 ? [...state.records, stamped] : state.records.map((r, j) => (j === i ? stamped : r));
+        if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped))
+          records = [...records, { ...prev, id: genId(), name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, lineage), syncCvc: undefined }];
+        const deletions = { ...state.deletions };
+        delete deletions[record.id];
+        return { records, deletions };
+      });
     },
 
     remove(id: string): void {
       refresh();
       const prev = find(id);
       if (!prev) return;
-      const deletions = { ...state.deletions, [id]: { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, deviceId()), last: prev } };
-      commit(
-        state.records.filter((r) => r.id !== id),
-        deletions,
-        true
-      );
+      mutate((lineage) => ({
+        records: state.records.filter((r) => r.id !== id),
+        deletions: { ...state.deletions, [id]: { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, lineage), last: prev } },
+      }));
     },
 
     duplicate(id: string): void {
       refresh();
       const r = find(id);
       if (!r) return;
-      const copy: CharacterRecord = { ...clone(r), id: genId(), name: `${r.name} (másolat)`, updatedAt: Date.now(), syncVc: bump({}, deviceId()) };
-      commit([...state.records, copy], state.deletions, true);
+      mutate((lineage) => ({
+        records: [...state.records, { ...clone(r), id: genId(), name: `${r.name} (másolat)`, updatedAt: Date.now(), syncVc: bump({}, lineage), syncCvc: undefined }],
+        deletions: state.deletions,
+      }));
     },
 
     // After this device got a fresh id because another device was using the old one: the versions made
-    // here under the old id get the new one instead, so they count as this device's own parallel edits
-    // (and are kept next to the other device's) rather than as older steps of the other device's history.
-    relabelDevice(oldId: string, newId: string): void {
-      const move = (vc: VersionVector): VersionVector => {
-        if (vc[oldId] === undefined) return vc;
+    // here under the old id that were never published (`published`: the version keys Drive holds now plus
+    // what this device last published, both shared history with the other device) get the new id
+    // instead, so they count as this device's own parallel edits (and are kept next to the other
+    // device's) rather than as steps of the other device's history.
+    relabelDevice(oldId: string, newId: string, published: Set<string> = new Set()): void {
+      refresh();
+      const move = (vc: VersionVector, h: string): VersionVector => {
+        if (vc[oldId] === undefined || published.has(versionKeyOf(vc, h))) return vc;
         const { [oldId]: n, ...rest } = vc;
         return { ...rest, [newId]: n };
       };
-      const records = state.records.map((r) => ({ ...r, syncVc: move(r.syncVc ?? {}) }));
-      const deletions = Object.fromEntries(Object.entries(state.deletions).map(([id, d]) => [id, { ...d, vc: move(d.vc) }]));
+      const records = state.records.map((r) => {
+        const vc = move(r.syncVc ?? {}, contentHash(r));
+        return vc === r.syncVc ? r : { ...r, syncVc: vc, syncCvc: undefined };
+      });
+      const deletions = Object.fromEntries(Object.entries(state.deletions).map(([id, d]) => [id, { ...d, vc: move(d.vc, DELETED_HASH) }]));
       commit(records, deletions, false);
     },
 
-    // the result of a sync round (not a local edit)
-    applySync(records: CharacterRecord[], deletions: Deletions): void {
-      commit(records, deletions, false);
+    // The result of a sync round (not a local edit), applied to the roster as saved NOW: what changed
+    // since the round started (here or in another tab) is kept, see driveMerge.reconcile.
+    applyRound(snapshot: { records: CharacterRecord[]; deletions: Deletions }, merged: { records: CharacterRecord[]; deletions: Deletions }): void {
+      refresh();
+      const next = reconcile(snapshot, state, merged);
+      commit(next.records, next.deletions, false);
     },
 
     // re-read what's saved (another tab changed it, or right before a sync round); a no-op while

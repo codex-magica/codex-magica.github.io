@@ -10,14 +10,23 @@
 
 import { CharacterRecord } from "../model/character";
 import { DriveFileMeta, DriveTransport, FileBody, fitBytes } from "./googleDrive";
-import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping } from "./driveMerge";
+import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping, versionKey } from "./driveMerge";
 import { Deletions } from "./rosterStore";
 import { Published } from "./syncState";
 
 export class SyncNewerVersionError extends Error {}
 // Another device is writing this device's file: two devices ended up with the same id (browser data
 // restored from a backup onto a second device). The caller takes a fresh id and syncs again.
-export class DeviceIdClashError extends Error {}
+// Another device writes this device's file (browser data copied to a second device). `published`: the
+// version keys every readable Drive file holds, so only versions that aren't in Drive yet get relabelled.
+export class DeviceIdClashError extends Error {
+  constructor(
+    message: string,
+    readonly published: Set<string> = new Set()
+  ) {
+    super(message);
+  }
+}
 
 export const BACKUP_FORMAT = "codex-magica-snapshot";
 
@@ -29,6 +38,7 @@ export interface SyncInput {
   backedUp: Set<string>; // "id:fingerprint" of versions already backed up
   ourNonces: string[]; // the marks this device wrote into its file recently
   rememberNonce: (nonce: string) => void; // called (and must persist) before a write
+  confirmNonce?: (nonce: string) => void; // the mark now in the file is ours (read back, or written)
 }
 export interface SyncOutput {
   records: CharacterRecord[];
@@ -79,6 +89,7 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
   let ownOpaque: Record<string, unknown> = {};
   let ownUnreadable: string | null = null;
   let skippedFiles = 0;
+  let clash = false;
   for (const f of files) {
     const { parsed, raw } = await read(drive, f, cache);
     if (!parsed.ok && parsed.reason === "newer") throw new SyncNewerVersionError(`sync file version ${parsed.version}`);
@@ -88,11 +99,17 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
       continue;
     }
     if (f.id === own?.id) {
-      if (parsed.nonce && input.ourNonces.length > 0 && !input.ourNonces.includes(parsed.nonce)) throw new DeviceIdClashError("own file written elsewhere");
+      if (parsed.nonce && input.ourNonces.length > 0 && !input.ourNonces.includes(parsed.nonce)) clash = true;
+      else if (parsed.nonce) input.confirmNonce?.(parsed.nonce);
       ownPrevious = parsed.versions;
       ownOpaque = parsed.opaque;
     }
     sources.push(parsed.versions);
+  }
+  if (clash) {
+    const published = new Set<string>();
+    for (const src of sources) for (const v of src.values()) published.add(versionKey(v));
+    throw new DeviceIdClashError("own file written elsewhere", published);
   }
 
   const nonce = newNonce();
@@ -122,6 +139,7 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
       const created = await drive.createSyncFile(input.device, result.file);
       cache.set(created.id, { version: created.version, parsed: parseDeviceFile(result.file) });
     }
+    input.confirmNonce?.(nonce);
     uploaded = true;
   }
 

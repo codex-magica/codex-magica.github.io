@@ -22,7 +22,7 @@ interface BackupFile {
 // `updatedAt` and `syncVc` are local bookkeeping; they're meaningless in a file and must not make copies
 // look different.
 const withoutStamp = (record: CharacterRecord): CharacterRecord => {
-  const { updatedAt: _t, syncVc: _v, ...rest } = record;
+  const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...rest } = record;
   return rest;
 };
 

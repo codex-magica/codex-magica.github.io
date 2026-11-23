@@ -24,7 +24,9 @@ Without one, the app stays local-only and never contacts Google.
   - edited in parallel, same content → one version;
   - edited in parallel, different content → **both are kept**: the one edited last keeps the character, the
     other becomes "Név (másik változat)". Every device resolves it identically (the copy's id comes from its
-    content), so they converge without extra copies.
+    content), so they converge without extra copies. The kept version also remembers which version its
+    content was made as, so when the device it came from edits it again before seeing the merge, that edit
+    counts as continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
   download that isn't valid JSON is fetched again (a cut-off response reads fine the second time); a damaged
   file of this device's own is kept aside (`kind=unreadable`) before it's rewritten; another device's damaged
@@ -42,14 +44,21 @@ Without one, the app stays local-only and never contacts Google.
   parse at all stay in its file verbatim. Saved data that couldn't be read is kept aside and offered on
   the roster for download.
 - **Storage full:** memory isn't replaced by the older saved state; the sync uploads from memory, so the
-  edit survives in Drive, and the renewal round trip waits.
+  edit survives in Drive, and neither the renewal round trip nor the update banner reloads the page. Edits
+  that exist only in memory get a lineage of their own, so an edit made later from the older saved state
+  (after a reload, or in another tab) is parallel to them and both are kept; another tab's saved changes
+  are merged into memory, not overwritten. A round's result is applied to what's saved at that moment.
 - **A cloned device** (browser data restored onto a second device) is noticed by the mark each write
-  leaves in the device file; it takes a new id and keeps its own edits as parallel versions.
+  leaves in the device file. The last mark seen in the file is kept apart from recent attempts, so a run
+  of failed writes can't make a device's own file look foreign. It takes a new id; its versions that were
+  never published (in neither Drive nor its own last upload) move to the new id and are kept as parallel
+  versions, while shared history keeps its vector, so deletions made by the other device still apply.
 - **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
   file can't bring a deleted character back.
 - **Daily backups** (if on, a per-device setting): before Drive's copy of a character is replaced by an edit
   from another day, or by a deletion, the last state of that day is saved as its own file (a deletion keeps
-  the last state on the device until it's in Drive, so an edit just before deleting is kept too) (`kind=backup`; created once, never modified).
+  the last state on the device until it's in Drive, so an edit just before deleting is kept too, also when
+  a parallel edit elsewhere wins over the deletion) (`kind=backup`; created once, never modified).
   Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.
