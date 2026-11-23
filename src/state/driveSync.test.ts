@@ -5,7 +5,7 @@ import { createBlankRecord } from "./storage";
 import { DriveTransport, RemoteFile } from "./googleDrive";
 import { applyMerge, conflictCopyName, mergeWithCloud, parseCloudFile } from "./driveMerge";
 import { runSync } from "./driveSyncEngine";
-import { SyncBase, Tombstones } from "./syncState";
+import { SyncBase, Tombstones, pendingChanges } from "./syncState";
 
 // ── fake Drive ──────────────────────────────────────────────────────────────────────────────────
 class FakeDrive implements DriveTransport {
@@ -198,5 +198,13 @@ describe("Google Drive sync", () => {
     expect(result.map((r) => r.name)).toEqual(["A edited during sync", "B merged", "New during sync"]);
     const afterDelete = applyMerge(current.filter((r) => r.id !== "b"), [a, b], { b: 140 }, startedAt);
     expect(afterDelete.map((r) => r.id)).toEqual(["a", "n"]);
+  });
+
+  test("pending changes: unsynced edits, new characters and uploaded-then-deleted ones", () => {
+    const base: SyncBase = { a: 10, b: 20, gone: 30 };
+    const records = [{ id: "a", updatedAt: 10 }, { id: "b", updatedAt: 25 }, { id: "new", updatedAt: 40 }];
+    expect(pendingChanges(records, base, {})).toEqual({ count: 2, oldest: 25 });
+    expect(pendingChanges(records, base, { gone: 50, neverSynced: 60 })).toEqual({ count: 3, oldest: 25 });
+    expect(pendingChanges([{ id: "a", updatedAt: 10 }], base, {})).toEqual({ count: 0, oldest: null });
   });
 });

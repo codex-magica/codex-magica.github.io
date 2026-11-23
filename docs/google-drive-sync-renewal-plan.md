@@ -1,6 +1,7 @@
 # Plan: fewer taps for Google Drive sync
 
-Status: **planned, not built** (2026-11-23). The current sync (see
+Status: **built** (2026-11-23), all six items; tested against a fake Google in the browser. Still to
+confirm on a real iPad home-screen install. The current sync (see
 [google-drive-sync.md](google-drive-sync.md)) needs a tap whenever the one-hour Google token has expired.
 
 ## What "a tap per hour" means today

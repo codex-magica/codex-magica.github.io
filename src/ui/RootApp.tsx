@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
@@ -8,6 +8,7 @@ import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { useDriveSync } from "../state/useDriveSync";
+import { consumeRedirectResult } from "../state/googleDrive";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
 
@@ -16,10 +17,36 @@ import { CharacterRecord } from "../model/character";
 // via the roster; the creator commits a working copy on save.
 export const RootApp: React.FC = () => {
   const roster = useRoster();
-  const drive = useDriveSync(roster); // optional Google Drive sync (absent without a client ID)
-  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  // back from a Google Drive token renewal round trip: land on the screen the user was on
+  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">(() => {
+    const o = consumeRedirectResult();
+    return o.kind !== "none" && o.ctx && (o.ctx.screen !== "sheet" || o.ctx.characterId) ? o.ctx.screen : "roster";
+  });
+  const [currentId, setCurrentId] = useState<string | null>(() => {
+    const o = consumeRedirectResult();
+    return o.kind !== "none" && o.ctx ? o.ctx.characterId : null;
+  });
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
+  const creatorOpen = useRef(false);
+  creatorOpen.current = creator !== null;
+  const where = useRef({ screen, characterId: currentId });
+  where.current = { screen, characterId: currentId };
+  // optional Google Drive sync (absent without a client ID); may renew its token by a quick round trip
+  // through Google, but only when the creator (unsaved edits) is closed
+  const drive = useDriveSync(roster, {
+    safeToLeave: () => !creatorOpen.current,
+    returnContext: () => where.current,
+  });
+  const { atRoster } = drive;
+  const firstScreen = useRef(true);
+  useEffect(() => {
+    if (firstScreen.current) {
+      firstScreen.current = false;
+      return;
+    }
+    if (screen === "roster") atRoster();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
   // one-time "about & credits" notice on first launch; reopenable from the roster footer
   const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 

@@ -20,10 +20,15 @@ export const syncedAgo = (ts: number, now: number): string => {
   return d === 1 ? "tegnap" : `${d} napja`;
 };
 
+const STALE_PENDING_MS = 3 * 3600_000;
+
 // One-line status for the roster footer (null while sync is off).
 export const driveStatusLine = (drive: DriveSyncApi, now: number): string | null => {
   if (!drive.enabled) return null;
   if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
+  // changes stuck on this device for hours: say so before the user picks up another device
+  if (drive.status !== "idle" && drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
+    return `Ezen az eszközön vannak még fel nem töltött módosítások (${drive.pending.count}). Koppints a Google Drive gombra, mielőtt másik eszközön folytatod.`;
   if (drive.status === "needsTap") return "Google Drive: a következő szinkronhoz koppints a Google Drive gombra.";
   if (drive.status === "error") return "Google Drive: a legutóbbi szinkron nem sikerült.";
   return drive.lastSyncAt ? `Google Drive: szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.` : "Google Drive: bekapcsolva.";
@@ -59,8 +64,9 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; onClose: () => void
           Így minden eszközödön ugyanazok a karakterek lesznek, ahol bekapcsolod a szinkront.
         </Text>
         <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
-          Nincs külön fiók és nincs saját szerverünk: az adatok a te Google-fiókodban maradnak. A Google egy felugró
-          ablakban kér engedélyt; a hozzáférés egy óráig érvényes, utána a szinkronhoz elég egy koppintás.
+          Nincs külön fiók és nincs saját szerverünk: az adatok a te Google-fiókodban maradnak. A Google egyszer, egy
+          felugró ablakban kér engedélyt. Utána az alkalmazás magától szinkronizál; koppintani csak akkor kell, ha a
+          Google közben kijelentkeztetett.
           Részletek az{" "}
           <Box as="a" href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
             adatvédelmi tájékoztatóban
@@ -69,8 +75,10 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; onClose: () => void
         </Text>
 
         {drive.enabled && (
-          <Box borderTop="1px solid" borderBottom="1px solid" borderColor="rule" py="10px" mb="12px" fontFamily="system-ui" fontSize="13px" color="muted">
-            {driveStatusLine(drive, now)}
+          <Box borderTop="1px solid" borderBottom="1px solid" borderColor="rule" py="10px" mb="12px" fontFamily="system-ui" fontSize="13px" color="muted" display="flex" flexDirection="column" gap="4px">
+            <Text>{driveStatusLine(drive, now)}</Text>
+            {drive.pending.count > 0 && drive.status !== "syncing" && <Text color="accentTx">{drive.pending.count} módosítás vár szinkronra.</Text>}
+            {drive.email && <Text color="fgFaint">Fiók: {drive.email}</Text>}
           </Box>
         )}
         {drive.note && (

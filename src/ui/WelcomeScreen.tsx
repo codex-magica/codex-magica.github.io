@@ -224,6 +224,9 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
               <Box as="button" type="button" onClick={() => setDriveOpen(true)} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
                 color={drive.status === "needsTap" || drive.status === "error" ? "accentTx" : "muted"} fontWeight={drive.status === "needsTap" ? 700 : undefined}>
                 {CloudIcon}Google Drive
+                {drive.pending.count > 0 && drive.status !== "syncing" && (
+                  <Box as="span" aria-label={`${drive.pending.count} módosítás vár szinkronra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
+                )}
               </Box>
             </>
           )}
@@ -237,7 +240,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           </Text>
         )}
         {driveLine && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={drive.status === "error" ? "warn" : "fgFaint"} mt="4px" maxW="52ch" mx="auto">
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={drive.status === "error" || driveLine.startsWith("Ezen az eszközön") ? "warn" : "fgFaint"} mt="4px" maxW="52ch" mx="auto">
             {driveLine}
           </Text>
         )}

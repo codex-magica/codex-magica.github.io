@@ -49,21 +49,49 @@ export interface DriveSettings {
   enabled: boolean;
   lastSyncAt: number | null;
   fileId: string | null;
+  email: string | null; // the Google account that syncs (shown in the window; skips the account chooser)
+  lastSilentAt: number | null; // last renewal attempt by redirect (rate limit: no loops)
+  silentBlockedUntil: number | null; // after Google said "needs the user", don't try silently until then
 }
+
+export const OFF_SETTINGS: DriveSettings = { enabled: false, lastSyncAt: null, fileId: null, email: null, lastSilentAt: null, silentBlockedUntil: null };
 
 export const loadDriveSettings = (): DriveSettings => {
   try {
     const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}");
+    const num = (v: unknown) => (typeof v === "number" ? v : null);
     return {
       enabled: s.enabled === true,
-      lastSyncAt: typeof s.lastSyncAt === "number" ? s.lastSyncAt : null,
+      lastSyncAt: num(s.lastSyncAt),
       fileId: typeof s.fileId === "string" ? s.fileId : null,
+      email: typeof s.email === "string" ? s.email : null,
+      lastSilentAt: num(s.lastSilentAt),
+      silentBlockedUntil: num(s.silentBlockedUntil),
     };
   } catch {
-    return { enabled: false, lastSyncAt: null, fileId: null };
+    return { ...OFF_SETTINGS };
   }
 };
 export const saveDriveSettings = (s: DriveSettings): void => write(SETTINGS_KEY, s);
+export const updateDriveSettings = (patch: Partial<DriveSettings>): DriveSettings => {
+  const next = { ...loadDriveSettings(), ...patch };
+  saveDriveSettings(next);
+  return next;
+};
+
+// Changes on this device not yet in Drive: edits and new characters since the last agreed version, and
+// deletions not yet uploaded. `oldest` is when the oldest of them happened (for the device-switch warning).
+export const pendingChanges = (records: { id: string; updatedAt?: number }[], base: SyncBase, tombstones: Tombstones): { count: number; oldest: number | null } => {
+  let count = 0;
+  let oldest: number | null = null;
+  const note = (ts: number) => {
+    count++;
+    oldest = oldest === null ? ts : Math.min(oldest, ts);
+  };
+  for (const r of records) if (base[r.id] !== (r.updatedAt ?? 0)) note(r.updatedAt ?? 0);
+  for (const [id, ts] of Object.entries(tombstones)) if (base[id] !== undefined && base[id] !== ts) note(ts);
+  return { count, oldest };
+};
 
 // Turning sync off forgets the pairing with Drive (the characters on this device stay as they are).
 export const clearDriveState = (): void => {

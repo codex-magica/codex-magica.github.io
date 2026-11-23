@@ -36,9 +36,12 @@
     <ul>
       <li>A karakterek egy fájlban a saját Google Drive-od rejtett alkalmazásmappájába kerülnek. Ezt a mappát csak
         ez az alkalmazás látja.</li>
-      <li>Az alkalmazás egyetlen engedélyt kér: <code>drive.appdata</code>. Ezzel a Drive-od többi fájlját nem
-        látja, nem olvassa és nem módosítja.</li>
-      <li>A Google-hozzáférés kódja (token) legfeljebb egy óráig a böngésződben marad, kizárólag a szinkronhoz.</li>
+      <li>A Drive-ra vonatkozó egyetlen engedély a <code>drive.appdata</code>. Ezzel az alkalmazás a Drive-od
+        többi fájlját nem látja, nem olvassa és nem módosítja.</li>
+      <li>Az e-mail-címedet is lekéri, de csak azért, hogy megmutassa, melyik fiókkal szinkronizál, és hogy a Google
+        a következő bejelentkezéskor ne kérdezze meg újra, melyik fiókot használod. Ezen az eszközön tárolja.</li>
+      <li>A Google-hozzáférés kódja (token) legfeljebb egy óráig a böngésződben marad, kizárólag a szinkronhoz.
+        Lejárta után az alkalmazás egy gyors, Google-on keresztüli átirányítással kér újat.</li>
       <li>Az adatok a böngésződ és a Google között közlekednek; harmadik félhez, így hozzánk sem jutnak el.</li>
       <li>A szinkron a karakterlistán, a Google Drive gombbal kapcsolható ki. A hozzáférést a
         <a href="https://myaccount.google.com/permissions" rel="noopener">Google-fiókod beállításaiban</a> is
@@ -67,9 +70,12 @@
     <ul>
       <li>Your characters are saved as one file in the hidden app-data folder of your own Google Drive, which only
         this app can see.</li>
-      <li>The app asks for a single permission, <code>drive.appdata</code>. It cannot see, read or change any other
-        file in your Drive.</li>
-      <li>The Google access token stays in your browser for at most an hour, used only for syncing.</li>
+      <li>Its only Drive permission is <code>drive.appdata</code>. It cannot see, read or change any other file in
+        your Drive.</li>
+      <li>It also reads your email address, only to show which account syncs and so that Google doesn't ask which
+        account to use next time. It is stored on this device.</li>
+      <li>The Google access token stays in your browser for at most an hour, used only for syncing. When it
+        expires, the app gets a new one with a quick redirect through Google.</li>
       <li>Data travels between your browser and Google only; it does not reach any third party, including us.</li>
       <li>Turn sync off with the Google Drive button on the character list. You can also revoke access in your
         <a href="https://myaccount.google.com/permissions" rel="noopener">Google Account settings</a>, and delete

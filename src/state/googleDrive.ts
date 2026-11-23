@@ -1,9 +1,15 @@
 // Google Drive access from the browser, with no server of our own.
 //
 // Sign-in uses Google Identity Services' token client: a Google popup asks once for the
-// `drive.appdata` permission (a hidden folder only this app can see in the user's own Drive) and
-// returns an access token that lasts about an hour. Browser-only apps get no refresh token, so after
-// that a new token needs a tap again (the popup closes by itself once permission was given).
+// `drive.appdata` permission (a hidden folder only this app can see in the user's own Drive), plus the
+// user's email (to show which account syncs and to skip Google's account chooser later). It returns an
+// access token that lasts about an hour; browser-only apps get no refresh token.
+//
+// Renewal without a tap: a popup needs a tap, but a page navigation doesn't. So at safe moments the app
+// navigates to Google's authorization endpoint with `prompt=none` and comes straight back with a new
+// token in the URL fragment, as long as the user's Google session is alive (usually weeks). Google calls
+// this endpoint legacy; if it ever stops working, the app falls back to the tap.
+//
 // The token is kept in localStorage until it expires, so reloads within the hour don't ask again.
 //
 // The OAuth client ID comes from VITE_GOOGLE_CLIENT_ID at build time. Without it the feature is
@@ -13,6 +19,9 @@ export const GOOGLE_CLIENT_ID: string = (import.meta.env.VITE_GOOGLE_CLIENT_ID a
 export const driveSyncAvailable = (): boolean => GOOGLE_CLIENT_ID !== "";
 
 const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+const SCOPES = `${SCOPE} openid email`;
+const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
+const RETURN_KEY = "magus.driveReturn.v1";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const TOKEN_KEY = "magus.driveToken.v1";
 export const FILE_NAME = "codex-magica-roster.json";
@@ -25,7 +34,7 @@ interface TokenResponse {
   error_description?: string;
 }
 interface TokenClient {
-  requestAccessToken: (o?: { prompt?: string }) => void;
+  requestAccessToken: (o?: { prompt?: string; login_hint?: string }) => void;
 }
 interface GoogleOAuth2 {
   initTokenClient: (cfg: {
@@ -102,7 +111,7 @@ export const prepareSignIn = async (): Promise<void> => {
   if (tokenClient) return;
   tokenClient = oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    scope: SCOPE,
+    scope: SCOPES,
     callback: (r) => {
       const p = pending;
       pending = null;
@@ -123,12 +132,93 @@ export const signInReady = (): boolean => tokenClient !== null;
 
 // Must be called synchronously inside a click/tap handler (after prepareSignIn() has finished).
 // `firstTime` shows the consent screen; otherwise Google only shows it if permission is missing.
-export const requestTokenInteractive = (firstTime: boolean): Promise<string> => {
+// `loginHint` (the account's email) skips Google's account chooser.
+export const requestTokenInteractive = (firstTime: boolean, loginHint?: string | null): Promise<string> => {
   if (!tokenClient) return Promise.reject(new Error("Google sign-in is not ready yet"));
   pending?.reject(new DriveAuthError("superseded"));
   const p = new Promise<string>((resolve, reject) => (pending = { resolve, reject }));
-  tokenClient.requestAccessToken({ prompt: firstTime ? "consent" : "" });
+  tokenClient.requestAccessToken({ prompt: firstTime ? "consent" : "", ...(loginHint ? { login_hint: loginHint } : {}) });
   return p;
+};
+
+// The signed-in account's email (needs the `email` scope). Null if Google doesn't say.
+export const fetchAccountEmail = async (token: string): Promise<string | null> => {
+  try {
+    const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return null;
+    const info = (await res.json()) as { email?: unknown };
+    return typeof info.email === "string" ? info.email : null;
+  } catch {
+    return null;
+  }
+};
+
+// ── renewal by redirect (no tap) ───────────────────────────────────────────────────────────────────
+// Where the app was, so the round trip through Google lands the user back on the same screen.
+export interface ReturnContext {
+  screen: "roster" | "sheet" | "compendium";
+  characterId: string | null;
+}
+interface PendingRedirect {
+  state: string;
+  at: number;
+  ctx: ReturnContext;
+}
+export type RedirectOutcome =
+  | { kind: "none" }
+  | { kind: "token"; ctx: ReturnContext }
+  | { kind: "error"; error: string; ctx: ReturnContext | null };
+
+// The app's own address, registered in the Google Cloud console as an authorized redirect URI.
+export const redirectUri = (): string => `${window.location.origin}${import.meta.env.BASE_URL}`;
+
+export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null): void => {
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try {
+    localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx } satisfies PendingRedirect));
+  } catch {
+    return; // without storage we couldn't verify the answer: don't go
+  }
+  const q = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: redirectUri(),
+    response_type: "token",
+    scope: SCOPES,
+    include_granted_scopes: "true",
+    prompt: "none",
+    state,
+  });
+  if (loginHint) q.set("login_hint", loginHint);
+  window.location.assign(`${AUTH_ENDPOINT}?${q}`);
+};
+
+// Read Google's answer from the URL fragment once, at startup, before anything renders. The token is
+// accepted only if `state` matches the one saved before leaving, and the fragment is removed from the
+// address bar and history right away.
+let outcome: RedirectOutcome | null = null;
+export const consumeRedirectResult = (): RedirectOutcome => {
+  if (outcome) return outcome;
+  outcome = { kind: "none" };
+  if (typeof window === "undefined" || !window.location.hash.includes("state=")) return outcome;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  let saved: PendingRedirect | null = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
+    localStorage.removeItem(RETURN_KEY);
+  } catch {
+    saved = null;
+  }
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  if (!saved || params.get("state") !== saved.state) return outcome; // not ours: ignore
+  const token = params.get("access_token");
+  const granted = (params.get("scope") ?? "").split(" ");
+  if (token && granted.includes(SCOPE)) {
+    storeToken(token, Number(params.get("expires_in")) || 3600);
+    outcome = { kind: "token", ctx: saved.ctx };
+  } else {
+    outcome = { kind: "error", error: params.get("error") ?? (token ? "drive permission not granted" : "unknown"), ctx: saved.ctx };
+  }
+  return outcome;
 };
 
 export const revokeAccess = async (): Promise<void> => {

@@ -19,13 +19,24 @@ Without one, the app stays local-only and never contacts Google.
   propagate, an edit beats a deletion, and if the same character was edited on two devices, both
   versions are kept (the other one as "… (másik eszközről)").
 - Browser-only apps get a Google access token that lasts about an hour and no refresh token. While it
-  is valid, sync runs by itself a few seconds after each edit and when the app comes back to the
-  foreground. After that, the footer asks for a tap on **Google Drive**; Google's popup then usually
-  closes by itself.
+  is valid, sync runs by itself 2 seconds after each edit, when the app goes to the background and when
+  it comes back.
+- **Renewal without a tap.** When the token has expired, the app renews it at safe moments (app start,
+  coming back to the app, arriving at the roster) with a quick round trip through Google's authorization
+  endpoint with `prompt=none` and `login_hint`, and lands back on the same screen. It never does this
+  while a window or the character creator is open or a text field has focus, and at most once every 10
+  minutes. This works as long as the user's Google session is alive, which is usually weeks.
+- Only if Google answers that it needs the user (signed out, permission removed) does the footer ask
+  for a tap on **Google Drive**; silent attempts then pause for 12 hours. The tap's popup has the
+  account pre-filled, so it usually just closes by itself.
+- A dot on the button shows changes waiting for upload, and if this device holds changes for more than
+  three hours without syncing, the roster says so before you continue on another device.
+- The permission screen also asks for the user's email address. It is used only to show which account
+  syncs and to pre-fill it, so Google's account chooser never appears.
 - **Kikapcsolás** (turn off) revokes the token. The characters on the device stay; the copy in Drive can
   be deleted under Drive → Settings → Manage apps.
 
-Code: `src/state/googleDrive.ts` (sign-in and Drive calls), `driveMerge.ts` (the merge),
+Code: `src/state/googleDrive.ts` (sign-in, renewal by redirect and Drive calls), `driveMerge.ts` (the merge),
 `driveSyncEngine.ts` (one sync round), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`.
 Tests: `src/state/driveSync.test.ts` simulates several devices against an in-memory Drive.
 
@@ -43,11 +54,14 @@ You need a Google account and about fifteen minutes. The steps use the Google Cl
 4. **Audience:** user type *External*. Leave the publishing status on **Testing** and add the Google
    accounts that may use sync as **test users** (up to 100). Only they can turn sync on; this is how
    to roll the feature out privately.
-5. **Data Access:** add the scope `https://www.googleapis.com/auth/drive.appdata`. Google classifies it
-   as non-sensitive, so no security review is needed.
+5. **Data Access:** add the scopes `https://www.googleapis.com/auth/drive.appdata`, `openid` and
+   `.../auth/userinfo.email`. Google classifies all three as non-sensitive, so no security review is
+   needed.
 6. **Clients → Create client → Web application.** Under *Authorized JavaScript origins* add the site's
    origin, e.g. `https://<user>.github.io` (no path), and `http://localhost:3000` for local development.
-   No redirect URIs are needed. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`). It is
+   Under *Authorized redirect URIs* add the app's full address with a trailing slash, e.g.
+   `https://<user>.github.io/<repo>/` (and `http://localhost:3000/`): the token renewal round trip
+   returns there. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`). It is
    not a secret: it only works from the origins listed here.
 7. **Local development:** put it in `.env.local` (gitignored):
 
@@ -61,9 +75,9 @@ You need a Google account and about fifteen minutes. The steps use the Google Cl
 8. **GitHub Pages:** add a repository variable `GOOGLE_CLIENT_ID` with the client ID (Settings → Secrets
    and variables → Actions → Variables). The deploy workflow passes it to the build.
 
-To open sync to everyone later, set the publishing status to **In production** (Audience page). With
-only the non-sensitive `drive.appdata` scope this needs no review; Google may ask you to verify the
-domain in Search Console if you add a logo.
+To open sync to everyone, set the publishing status to **In production** (Audience page). With only
+non-sensitive scopes this needs no review; Google may ask you to verify the domain in Search Console if
+you add a logo.
 
 ## Privacy
 
