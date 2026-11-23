@@ -32,6 +32,10 @@ export function costMultiplierFor(multipliers: (SkillScope & { factor: number })
   return m;
 }
 
+// %/Kp for a percentage skill: scales with the teacher's fok: none/fok 1–2 → 3%, fok 3 → 4%, fok 4 → 5%,
+// fok 5 → 6% (book ch.16).
+export const percentRate = (teachingUpto: number): number => PERCENT_KP_RATE + Math.max(0, teachingUpto - 2);
+
 // Kp cost to raise a skill from→to, with a resolved teacher level and the character's stats.
 // Tiered: cumulative-difference minus a (teacher fok − 2)/fok teaching discount (min 1 each), up to the
 // teacher's fok, plus an unmet-attribute penalty. Percentage: ceil(Δ% / rate), rate 3 (or 5 with a teacher).
@@ -45,9 +49,7 @@ export function skillKpCost(
 ): { kp: number; note?: string } {
   if (to <= from) return { kp: 0 };
   if (def.cost === "percentage") {
-    // %/Kp scales with the teacher's fok: none/fok 1–2 → 3%, fok 3 → 4%, fok 4 → 5%, fok 5 → 6% (book ch.16).
-    const rate = PERCENT_KP_RATE + Math.max(0, teachingUpto - 2);
-    return { kp: Math.ceil((to - from) / rate) };
+    return { kp: Math.ceil((to - from) / percentRate(teachingUpto)) };
   }
   const cum = def.cost;
   // A teacher discounts each levelup: fok 1–2 → 1 Kp, fok 3 → 1, fok 4 → 2, fok 5 → 3 (book ch.16) — and

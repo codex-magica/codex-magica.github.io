@@ -64,7 +64,6 @@ export const TIER_COST: Record<SkillDifficulty, number[]> = {
 };
 
 export const PERCENT_KP_RATE = 3; // 1 Kp = 3%
-export const PERCENT_KP_RATE_TAUGHT = 5; // 1 Kp = 5% with oktatás
 
 export type Raw = {
   name: string;

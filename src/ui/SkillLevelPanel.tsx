@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
 import { CharacterRecord } from "../model/character";
 import { DerivedCharacter, OwnedSkill } from "../engine/types";
-import { PERCENT_KP_RATE, PERCENT_KP_RATE_TAUGHT } from "../model/skills";
+import { percentRate } from "../engine/skillCost";
 import { Stat } from "../model/attributes";
 import { SkillCategory, SKILL_CATEGORIES, findInstanceChoice, sameInstance, skillKey } from "../model/common";
 import { isHomebrew, rulesFor } from "../model/rulesVariants";
@@ -113,9 +113,11 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const grantFloor = data.grantedFloor[skillKey(inst.skill, idSub)] || 0;
     const floor = data.inheritedFloor[skillKey(inst.skill, idSub)] || 0;
     const teacher = teacherOf(inst.skill, inst.subtype);
-    const step = isPct ? (teacher > 0 ? PERCENT_KP_RATE_TAUGHT : PERCENT_KP_RATE) : 1;
+    // one step = what 1 Kp buys (the % rate depends on the teacher's fok); never past 100%
+    const step = isPct ? percentRate(teacher) : 1;
     const atMax = isPct ? cur >= 100 : cur >= 5;
-    const cost = atMax ? 0 : stepCost(inst.skill, cur, cur + step, inst.subtype, inst.attrs);
+    const next = isPct ? Math.min(100, cur + step) : cur + 1;
+    const cost = atMax ? 0 : stepCost(inst.skill, cur, next, inst.subtype, inst.attrs);
     const showFok4 = !isPct && cur >= 4;
     // Real branches always show the subtype control; an OPTIONAL branch (Futás …) shows it only once
     // specialized — it already has a subtype, or the user picked it in the Specializálás menu.
@@ -154,7 +156,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
           decDisabled={cur <= floor}
           incDisabled={atMax || cost > kap}
           onDec={() => (cur - step <= floor ? onRemove(level, inst.skill, idSub) : onUpsert(level, inst.skill, idSub, cur - step))}
-          onInc={() => onUpsert(level, inst.skill, idSub, cur + step)}
+          onInc={() => onUpsert(level, inst.skill, idSub, next)}
         />
       </HStack>
     );
@@ -263,7 +265,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
                       <Box flex="1 1 auto" minW="8px" />
                       <TanulButton
                         relearn={data.skillHasContent(e.skill)}
-                        onLearn={() => onUpsert(level, e.skill, e.subtype, 1)}
+                        onLearn={() => onUpsert(level, e.skill, e.subtype, rulesFor(record).skills[e.skill]?.cost === "percentage" ? percentRate(teacherOf(e.skill, e.subtype)) : 1)}
                         onRelearn={(n) => onAddVariant(level, e.skill, undefined, n, e.subtype)}
                       />
                     </HStack>
