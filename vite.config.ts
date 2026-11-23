@@ -55,7 +55,7 @@ export default defineConfig({
       manifest,
       workbox: {
         globPatterns: ["**/*.{js,css,html,woff2,png,ico,svg}"],
-        globIgnores: ["**/*-dev.*"],
+        globIgnores: ["**/*-dev.*", "**/social-preview.png"], // the link-preview image isn't needed offline
         // the main chunk (~2.4 MB, mostly rules data) is above Workbox's 2 MiB default
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // index.html versions its icon URLs (?v=N) to bust Safari's favicon cache; serve them from the

@@ -65,7 +65,8 @@ The **app icon and logo** are an original design for this project (sources in [`
 a pentagram drawn as a woven knot inside a ring.
 
 The companion-animal icons on the character sheet (`src/ui/sheet/animalIcons.tsx`) come from two
-open-source icon libraries. Neither requires attribution; they are credited here anyway.
+open-source icon libraries, under their licenses (full texts in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)).
+A few interface icons are from Lucide too: the cloud of the Google Drive button and the backup/import arrows.
 
 - **[Lucide](https://lucide.dev)** ([ISC](https://github.com/lucide-icons/lucide/blob/main/LICENSE)):
   `paw-print`, `dog`, `cat`, `rabbit`, `rat`, `squirrel`, `panda`, `bird`, `fish`, `turtle`, `snail`,

@@ -36,6 +36,8 @@ jobs:
           BASE_PATH: ${{ vars.BASE_PATH || format('/{0}/', github.event.repository.name) }}
           # optional: the Google OAuth client ID for Drive sync (see docs/google-drive-sync.md)
           VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          # the site's address, for link previews; set the variable SITE_URL for a custom domain
+          VITE_SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist

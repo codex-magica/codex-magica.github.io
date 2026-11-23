@@ -133,7 +133,7 @@ fork beállításaiban válaszd a **Pages → Source: GitHub Actions** lehetős�
 `DEPLOY_PAGES` = `true` Actions-változót, majd az Actions fülön futtasd le egyszer a **Deploy to GitHub
 Pages** workflow-t. Ezután minden módosítás után magától frissül a
 `https://<felhasználóneved>.github.io/codex-magica/` oldal. Saját domainhez a `BASE_PATH` változót is
-állítsd `/`-re. (Cloudflare Pages vagy Netlify is jó: build parancs `npm run build`, mappa `dist`.) A
+állítsd `/`-re, a `SITE_URL`-t pedig a címedre (a linkelőnézetekhez). (Cloudflare Pages vagy Netlify is jó: build parancs `npm run build`, mappa `dist`.) A
 Google Drive-szinkronhoz saját Google OAuth-ügyfélazonosító kell. Ingyenes, és nagyjából negyedóra alatt
 beállítható: [docs/google-drive-sync.md](docs/google-drive-sync.md) (angolul). Enélkül a saját példányodban
 egyszerűen nincs szinkron gomb, minden más ugyanúgy működik.
@@ -187,6 +187,11 @@ A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivata
 jogosultak adták ki, és a tartalmáért nem ők felelnek. A könyv eredeti közreműködőinek listája a
 [NOTICE.md](NOTICE.md) fájlban található. Ha jogosultként bármit módosíttatnál vagy eltávolíttatnál,
 nyiss egy [issue-t](https://github.com/marcigo36/codex-magica/issues).
+
+A felület betűtípusa a [Crimson Pro](https://github.com/Fonthausen/CrimsonPro), a Ψ és a ⅓ jel az
+[EB Garamondból](https://github.com/octaviopardo/EBGaramond12) származik (mindkettő SIL OFL 1.1). Egyes ikonok a
+[Lucide](https://lucide.dev) és a [Tabler](https://tabler.io/icons) készletéből valók; a licencszövegük a
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) fájlban olvasható.
 
 <div align="center">
 <br>

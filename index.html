@@ -30,6 +30,20 @@
     <link rel="icon" href="/favicon%VITE_ICON_SUFFIX%.svg?v=4" type="image/svg+xml" />
     <meta name="description" content="M.A.G.U.S. kompendium, karakteralkotó és karakterlap"/>
 
+    <!-- Link previews (chat apps, social sites). They need absolute URLs: VITE_SITE_URL is the site's
+         address, set by the deploy workflow; without it these fall back to relative paths. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Codex Magica" />
+    <meta property="og:locale" content="hu_HU" />
+    <meta property="og:url" content="%VITE_SITE_URL%" />
+    <meta property="og:title" content="Codex Magica" />
+    <meta property="og:description" content="M.A.G.U.S. kompendium, karakteralkotó és karakterlap. Telepíthető, internet nélkül is működik." />
+    <meta property="og:image" content="%VITE_SITE_URL%social-preview.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta property="og:image:alt" content="Codex Magica: egy elf bárd karakterlapja sötét módban, mellette a logó és a fő funkciók" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <!-- PWA Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- the web app manifest link is injected by vite-plugin-pwa (see vite.config.ts) -->

@@ -268,7 +268,7 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
   settings choose **Pages → Source: GitHub Actions** and add the Actions variable `DEPLOY_PAGES` = `true`,
   then run **Deploy to GitHub Pages** once from the Actions tab. After that every push to `main` deploys to
   `https://<you>.github.io/codex-magica/` ([workflow](.github/workflows/deploy.yml)). For a custom domain,
-  also set the variable `BASE_PATH` = `/`.
+  also set the variables `BASE_PATH` = `/` and `SITE_URL` = your address (for link previews).
 - **Cloudflare Pages, Netlify, or any static host** (these also work with private repositories): build
   command `npm run build`, output folder `dist`.
 - **Google Drive sync** needs a Google OAuth client ID of your own. It's free and takes about fifteen
@@ -350,8 +350,8 @@ not published or endorsed by the rights holders, who are not responsible for its
 credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this material and would like
 something changed or removed, please [open an issue](https://github.com/marcigo36/codex-magica/issues).
 
-The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro), with Ψ and ⅓ from [EB Garamond](https://github.com/octaviopardo/EBGaramond12) (both SIL OFL 1.1). The icons are
-from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons).
+The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro), with Ψ and ⅓ from [EB Garamond](https://github.com/octaviopardo/EBGaramond12) (both SIL OFL 1.1). Some icons are
+from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons); their license texts are in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
 
 <div align="center">
 <br>
