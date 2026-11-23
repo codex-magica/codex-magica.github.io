@@ -24,7 +24,6 @@ text and the generated Markdown (the full rulebook text) are **not** in the repo
 ## What worked: let each tool do what it's good at
 
 ```mermaid
-%%{init: {"theme": "base", "fontFamily": "Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Helvetica, Arial, sans-serif", "fontSize": "14px", "primaryColor": "#232a35", "primaryTextColor": "#f2ede3", "primaryBorderColor": "#b19869", "lineColor": "#8b93a1", "textColor": "#f2ede3", "edgeLabelBackground": "#232a35"}}}%%
 flowchart TD
     A["pdfimages -j<br/>native page JPEGs"] --> B["prep.sh<br/>OSD rotation → deskew → normalize"]
     B --> C["tesseract -l hun --psm 3<br/>ocr/p-NNN.txt"]
@@ -37,8 +36,9 @@ flowchart TD
     G --> H["group_chapters.sh → chapters/"]
     G --> I["build_appbook.sh → src/book/"]
     I --> J["Manual proofreading +<br/>book-vs-data cross-checks"]
-    classDef input fill:#b19869,stroke:#8a744a,color:#1c2129
-    classDef key fill:#3e5a86,stroke:#a7c8ea,color:#ffffff
+    classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
+    classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
+    classDef key fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
     class A input
     class J key
 ```
