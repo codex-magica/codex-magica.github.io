@@ -13,11 +13,14 @@
   "keywords": [
     "magus",
     "ttrpg",
-    "rpg",
+    "tabletop-rpg",
+    "rpg-tool",
     "character-sheet",
+    "character-builder",
     "compendium",
-    "react",
-    "typescript",
+    "hungarian",
+    "pwa",
+    "offline-first",
     "ocr"
   ],
   "engines": {
