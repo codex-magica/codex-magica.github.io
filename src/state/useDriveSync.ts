@@ -109,7 +109,7 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
   });
   const [status, setStatus] = useState<DriveStatus>(() => (settings.enabled ? (validToken() ? "idle" : "needsTap") : "off"));
   const [note, setNote] = useState<string | null>(() =>
-    initialOutcome.kind === "error" && NEEDS_USER.has(initialOutcome.error) ? "A Google kijelentkeztetett, vagy újra engedélyt kér. Koppints a szinkronhoz." : null
+    initialOutcome.kind === "error" && NEEDS_USER.has(initialOutcome.error) ? "Kijelentkeztél a Google-fiókodból, vagy a Google újra engedélyt kér. Koppints a szinkronhoz." : null
   );
   const [ready, setReady] = useState(false);
   const [syncTick, setSyncTick] = useState(0);
