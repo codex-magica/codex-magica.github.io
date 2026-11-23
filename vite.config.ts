@@ -77,6 +77,8 @@ export default defineConfig({
     target: BROWSER_TARGET,
     cssTarget: BROWSER_TARGET,
     outDir: "dist",
+    // the licenses of the bundled libraries, shipped next to the app (third-party-licenses.md)
+    license: { fileName: "third-party-licenses.md" },
     // One ~760 kB (gzip) chunk, mostly the rules data every screen needs at startup; splitting it
     // wouldn't make the first paint faster, so only warn well above that.
     chunkSizeWarningLimit: 3000,
