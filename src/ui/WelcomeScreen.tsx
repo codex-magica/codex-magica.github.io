@@ -169,7 +169,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
           <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
           <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
-            Válassz egy hőst a folytatáshoz, vagy teremts újat.{" "}
+            Válassz egy karaktert, vagy hozz létre egy újat.{" "}
             {drive.enabled
               ? "A karaktereid ezen az eszközön tárolódnak, és a Google Drive-oddal is szinkronizálódnak."
               : "A karaktereid ezen az eszközön, a böngészőben tárolódnak."}

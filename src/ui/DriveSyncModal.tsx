@@ -228,8 +228,8 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         </Text>
         <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
           Nincs külön fiók és nincs saját szerverünk: az adatok a te Google-fiókodban maradnak. A Google egyszer, egy
-          felugró ablakban kér engedélyt. Utána az alkalmazás magától szinkronizál; koppintanod csak akkor kell, ha közben
-          kijelentkeztél a Google-fiókodból.
+          felugró ablakban kér engedélyt. Utána az alkalmazás magától szinkronizál, és csak akkor kell újra
+          belépned, ha közben kijelentkezel a Google-fiókodból.
           Részletek az{" "}
           <Box as="a" href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
             adatvédelmi tájékoztatóban
