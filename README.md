@@ -315,7 +315,7 @@ src/
 ├── book/            not distributed: local output of the PDF pipeline (the app does not read it)
 ├── state/           roster storage (localStorage), migrations, import/export, Google Drive sync
 ├── ui/              React + Chakra UI screens: welcome, sheet, builder, compendium
-└── fonts/           Crimson Pro (OFL)
+└── fonts/           Crimson Pro, plus a few symbols from EB Garamond (OFL)
 source_material/
 └── build/           the PDF → Markdown pipeline: scripts and agent instructions
 examples/aws-infra/  example hosting: Terraform, Lambda@Edge Google sign-in gate, login page
@@ -350,7 +350,7 @@ not published or endorsed by the rights holders, who are not responsible for its
 credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this material and would like
 something changed or removed, please [open an issue](https://github.com/marcigo36/codex-magica/issues).
 
-The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro) (SIL OFL 1.1). The icons are
+The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro), with Ψ and ⅓ from [EB Garamond](https://github.com/octaviopardo/EBGaramond12) (both SIL OFL 1.1). The icons are
 from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons).
 
 <div align="center">

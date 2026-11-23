@@ -67,7 +67,7 @@ class FakeDrive implements DriveTransport {
 
   private async step(op: string) {
     this.calls.push(op);
-    for (let i = Math.floor(this.rng() * (this.jitter + 1)); i > 0; i--) await new Promise((r) => setImmediate(r));
+    for (let i = Math.floor(this.rng() * (this.jitter + 1)); i > 0; i--) await Promise.resolve(); // let other rounds run in between
     if (this.onOp) await this.onOp(op);
     if (this.failOn === op || this.rng() < this.failRate) throw new Error(`Google Drive: HTTP 503 (${op})`);
   }

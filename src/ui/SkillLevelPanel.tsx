@@ -104,7 +104,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
   // A granted or first-learned instance (no variant id) — an independent row. A branchable skill always
   // shows its subtype control; its subtype edits go through the origSubtype-keyed override (grants) or
   // the combined learned setter.
-  const instRow = (inst: OwnedSkill) => {
+  const instRow = (inst: OwnedSkill, nth: number) => {
     const isPct = inst.percent != null;
     const cur = isPct ? inst.percent! : inst.fok;
     // Stable instance identity: purchases and per-instance choices address a granted instance by its
@@ -122,7 +122,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
     const branchDef = rulesFor(record).skills[inst.skill]?.branch;
     const showSubtype = branchDef != null && (branchDef[0]?.optional !== true || !!inst.subtype || specializing.has(inst.skill));
     return rowShell(
-      skillKey(inst.skill, inst.origSubtype) + ":g",
+      `${skillKey(inst.skill, inst.origSubtype)}:g${nth}`, // two grants of one skill (e.g. Vallásismeret) need distinct keys
       nameGroup(inst.skill, teacher),
       showSubtype ? (
         <SubtypeControl
@@ -272,7 +272,7 @@ export const SkillLevelPanel: React.FC<Props> = ({
                 // Each learning is an independent row (grants + first-learn, then any re-learned instances).
                 return (
                   <Box key={key}>
-                    {insts.map((inst) => instRow(inst))}
+                    {insts.map((inst, i) => instRow(inst, i))}
                     {vars.map((p) => varRow(p))}
                   </Box>
                 );

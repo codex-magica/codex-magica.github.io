@@ -152,8 +152,10 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
           <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
           <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
-            Válassz egy hőst a folytatáshoz, vagy teremts újat. A karaktereidet ez az eszköz tárolja, a
-            böngészőben.
+            Válassz egy hőst a folytatáshoz, vagy teremts újat.{" "}
+            {drive.enabled
+              ? "A karaktereid ezen az eszközön tárolódnak, és a Google Drive-oddal is szinkronizálódnak."
+              : "A karaktereid ezen az eszközön, a böngészőben tárolódnak."}
           </Text>
         </Box>
 
@@ -219,27 +221,27 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           </Text>
         )}
 
-        <HStack justify="center" gap="18px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
+        <HStack justify="center" columnGap="18px" rowGap="8px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
           {records.length > 0 && (
             <>
               <Box as="button" type="button" onClick={handleBackup} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{BackupIcon}Biztonsági mentés</Box>
-              <Text as="span" opacity={0.5}>·</Text>
+              <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
             </>
           )}
           <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás fájlból</Box>
           {drive.available && (
             <>
-              <Text as="span" opacity={0.5}>·</Text>
+              <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
               <Box as="button" type="button" onClick={() => setDriveOpen(true)} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
                 color={drive.status === "needsTap" || drive.status === "error" ? "accentTx" : "muted"} fontWeight={drive.status === "needsTap" ? 700 : undefined}>
                 {CloudIcon}Google Drive
                 {drive.pending.count > 0 && drive.status !== "syncing" && (
-                  <Box as="span" aria-label={`${drive.pending.count} módosítás vár szinkronra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
+                  <Box as="span" role="img" aria-label={`${drive.pending.count} módosítás vár szinkronra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
                 )}
               </Box>
             </>
           )}
-          <Text as="span" opacity={0.5}>·</Text>
+          <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
           <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
         </HStack>
         {records.length > 0 && (
@@ -297,8 +299,12 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           }}
           onClose={() => setConfirmDeleteId(null)}
         >
-          Biztosan törlöd <Text as="span" fontWeight={700} color="fg">{deleteView.name}</Text> karaktert?
-          Ez nem vonható vissza.
+          Biztosan törlöd <Text as="span" fontWeight={700} color="fg">{deleteView.name}</Text> karaktert?{" "}
+          {!drive.enabled
+            ? "Ez nem vonható vissza."
+            : drive.backups
+              ? "A törlés minden szinkronizált eszközödre átterjed. Az utolsó állapota biztonsági másolatként megmarad a Drive-on, onnan visszaállítható."
+              : "A törlés minden szinkronizált eszközödre átterjed, és nem vonható vissza."}
         </ConfirmModal>
       )}
 

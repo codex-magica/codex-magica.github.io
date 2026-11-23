@@ -188,7 +188,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   const tab = TABS[compTab];
   const title = tab?.name ?? "";
   const isSkills = tab?.special === "skills";
-  const blocks: TableBlock[] = isSkills || !tab ? [] : tabBlocks(compTab);
+  const blocks: TableBlock[] = isSkills || !tab ? [] : tabBlocks(compTab, homebrew);
 
   // Reader view ("Olvasó nézet") — the magic-school tabs can swap their tables for a continuous,
   // book-order document (rules prose + every spell in full). Off by default; resets per tab.
@@ -387,7 +387,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       )}
       {onSetHomebrew && homebrew && (
         <Text mt="6px" fontFamily="system-ui" fontSize="10.5px" color="fgFaint" lineHeight="1.5">
-          Képzettség-átdolgozás: a százalékos képzettségek is fokokban mérnek, három észlelő képzettség Éberséggé olvad össze. Az új karakterek alapesetben ezzel készülnek.
+          Képzettség-átdolgozás: a százalékos képzettségeket is fokokban mérjük, három észlelő képzettség Éberséggé olvad össze. Az új karakterek alapesetben ezzel készülnek.
         </Text>
       )}
     </>

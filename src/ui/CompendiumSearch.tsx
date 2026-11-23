@@ -45,7 +45,7 @@ export function searchIndex(homebrew = false): SearchEntry[] {
   }
   for (let tab = 1; tab < TABS.length; tab++) {
     const def = TABS[tab];
-    for (const block of tabBlocks(tab)) {
+    for (const block of tabBlocks(tab, homebrew)) {
       for (const r of block.rows) {
         // right-aligned context value from the tab registry (spell cost, item price, weapon damage…).
         // Long non-values ("Lásd a leírást!") are dropped.

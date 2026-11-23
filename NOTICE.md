@@ -55,6 +55,9 @@ GitHub. Requests will be handled promptly.
 - **[Crimson Pro](https://github.com/Fonthausen/CrimsonPro)** by Jacques Le Bailly, under the
   [SIL Open Font License 1.1](src/fonts/OFL.txt). The two static weights in `src/fonts/` are instances
   cut from the variable font.
+- **[EB Garamond](https://github.com/octaviopardo/EBGaramond12)** by Georg Duffner and Octavio Pardo, under
+  the [SIL Open Font License 1.1](src/fonts/OFL-EBGaramond.txt), for four characters Crimson Pro lacks
+  (Ψ, ψ, ⅓, ⅔): `src/fonts/EBGaramond-Symbols-*.woff2` are subsets of instances of the variable font.
 
 ## Icons
 

@@ -1,7 +1,8 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
+import type { Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { VitePWA } from "vite-plugin-pwa";
+import { VitePWA, type ManifestOptions } from "vite-plugin-pwa";
 
 // Hosting under a subpath (GitHub Pages serves project sites at /<repo>/): set BASE_PATH=/<repo>/.
 const base = process.env.BASE_PATH || "/";
@@ -13,6 +14,34 @@ const disablePwa = process.env.DISABLE_PWA === "true";
 // so older iPads still at the table keep working). Newer JavaScript syntax is rewritten for them.
 const BROWSER_TARGET = ["es2018", "safari12", "ios12", "chrome80", "firefox78", "edge88"];
 
+const manifest: Partial<ManifestOptions> = {
+  name: "Codex Magica",
+  short_name: "Codex Magica",
+  description: "M.A.G.U.S. kompendium és karakterlap",
+  lang: "hu",
+  start_url: ".",
+  scope: ".",
+  display: "standalone",
+  theme_color: "#000000",
+  background_color: "#1c2129", // splash screen matches the icon tile (the app's card colour)
+  icons: [
+    { src: "logo192.png", sizes: "192x192", type: "image/png" },
+    { src: "logo512.png", sizes: "512x512", type: "image/png" },
+    { src: "logo512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+  ],
+};
+
+// Without the service worker (DISABLE_PWA) the PWA plugin emits no manifest either; ship it anyway, so the
+// app still installs with its name and icons.
+const staticManifest: Plugin = {
+  name: "codex-magica-static-manifest",
+  apply: "build",
+  generateBundle() {
+    this.emitFile({ type: "asset", fileName: "manifest.webmanifest", source: JSON.stringify(manifest) });
+  },
+  transformIndexHtml: () => [{ tag: "link", attrs: { rel: "manifest", href: `${base}manifest.webmanifest` }, injectTo: "head" }],
+};
+
 export default defineConfig({
   base,
   plugins: [
@@ -23,22 +52,7 @@ export default defineConfig({
     VitePWA({
       disable: disablePwa,
       registerType: "prompt",
-      manifest: {
-        name: "Codex Magica",
-        short_name: "Codex Magica",
-        description: "M.A.G.U.S. kompendium és karakterlap",
-        lang: "hu",
-        start_url: ".",
-        scope: ".",
-        display: "standalone",
-        theme_color: "#000000",
-        background_color: "#1c2129", // splash screen matches the icon tile (the app's card colour)
-        icons: [
-          { src: "logo192.png", sizes: "192x192", type: "image/png" },
-          { src: "logo512.png", sizes: "512x512", type: "image/png" },
-          { src: "logo512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
+      manifest,
       workbox: {
         globPatterns: ["**/*.{js,css,html,woff2,png,ico,svg}"],
         globIgnores: ["**/*-dev.*"],
@@ -49,6 +63,7 @@ export default defineConfig({
         ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
       },
     }),
+    ...(disablePwa ? [staticManifest] : []),
   ],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

@@ -159,7 +159,7 @@ export const RootApp: React.FC = () => {
 
       {roster.saveFailed && <SaveFailedBanner />}
       <DriveHopNotice hop={drive.hop} onCancel={drive.cancelHop} />
-      <UpdateBanner />
+      <UpdateBanner paused={creator !== null || drive.hop !== null} />
     </>
   );
 };

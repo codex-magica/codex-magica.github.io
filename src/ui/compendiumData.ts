@@ -160,17 +160,21 @@ const MAGAS: Field[] = [["Mana", magasCost], ["Erősség", (s) => dash(s.erosseg
 
 // The blocks are pure functions of static data — build each tab once, on first visit, and reuse
 // (Compendium re-renders per keystroke in search; rebuilding hundreds of rows each time is waste).
-const tabBlocksCache = new Map<number, TableBlock[]>();
-export function tabBlocks(tab: number): TableBlock[] {
-  let blocks = tabBlocksCache.get(tab);
+// Only the Karakteralkotás tab differs between the rules variants (the house rules reshape class and
+// race skill packages), so the cache key carries the variant for that tab alone.
+const tabBlocksCache = new Map<string, TableBlock[]>();
+export function tabBlocks(tab: number, homebrew = false): TableBlock[] {
+  const hb = homebrew && tab === 13;
+  const key = `${tab}:${hb ? "hb" : "base"}`;
+  let blocks = tabBlocksCache.get(key);
   if (!blocks) {
-    blocks = buildTabBlocks(tab);
-    tabBlocksCache.set(tab, blocks);
+    blocks = buildTabBlocks(tab, hb);
+    tabBlocksCache.set(key, blocks);
   }
   return blocks;
 }
 
-function buildTabBlocks(tab: number): TableBlock[] {
+function buildTabBlocks(tab: number, homebrew = false): TableBlock[] {
   switch (tab) {
     case 1: // Bárdmágia
       return spellBlocks(BardMagicValues, "type", "Varázslat", "Bárdmágia", "Mp", COMMON);
@@ -379,7 +383,7 @@ function buildTabBlocks(tab: number): TableBlock[] {
         },
       ];
     case 13: // Karakteralkotás (tulajdonságok, fajok, kasztok, hátterek, pontelosztás) — generated from the rules model
-      return creationBlocks();
+      return creationBlocks(homebrew);
     default:
       return [];
   }

@@ -29,10 +29,10 @@ export const summarize = (entries: GrantEntry[]) => {
       case "maxSkillFok": b.specials.push(`${catName(e)} max ${e.fok}. fok`); break;
       case "classCostDelta": b.specials.push(`Iskolaköltség ${e.amount > 0 ? "+" : ""}${e.amount} KAP`); break;
       case "tag": b.tags.push({ name: e.tag, atLevel: atLevel != null && atLevel > 1 ? atLevel : undefined }); break;
-      case "combatBonus": b.combat.push(`${e.channel} +${e.amount}`); break;
-      case "statBonus": b.other.push(`${e.stat} +${e.amount}`); break;
+      case "combatBonus": b.combat.push(`${e.channel} ${e.amount < 0 ? "−" : "+"}${Math.abs(e.amount)}`); break;
+      case "statBonus": b.other.push(`${e.stat} ${e.amount < 0 ? "−" : "+"}${Math.abs(e.amount)}`); break;
       case "poolAccess": b.other.push(`${POOL_LABEL[e.pool] ?? e.pool} használata`); break;
-      case "grantPoolFromStat": b.other.push(`${e.pool} = ${e.stat}`); break;
+      case "grantPoolFromStat": b.other.push(`${POOL_LABEL[e.pool] ?? e.pool} = ${e.stat}`); break;
       case "grantEquipment": b.other.push(e.item); break;
       case "restriction": b.other.push(e.text); break;
       default: break;
