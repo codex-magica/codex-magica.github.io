@@ -164,9 +164,9 @@ flowchart LR
     PROSE --> MD["Markdown<br/>514 pages"]
     TABLES --> MD
     MD --> CH["Chapters<br/>proofread by hand"]
-    classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
-    classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef output fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
+    classDef default fill:#8b93a10d,stroke:#8b93a199,stroke-width:1px
+    classDef input fill:#b198691a,stroke:#b19869b3,stroke-width:1px
+    classDef output fill:#5b7fb51a,stroke:#5b7fb5b3,stroke-width:1px
     class PDF input
     class CH output
 ```
@@ -195,9 +195,9 @@ flowchart LR
     DATA["Typed rules data<br/>transcribed from the book"] --> ENGINE["derive(rules, record)<br/>pure function"]
     REC["Character record<br/>per-level ledger"] --> ENGINE
     ENGINE --> SHEET["Sheet · builder · compendium<br/>values + provenance + diagnostics"]
-    classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
-    classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef output fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
+    classDef default fill:#8b93a10d,stroke:#8b93a199,stroke-width:1px
+    classDef input fill:#b198691a,stroke:#b19869b3,stroke-width:1px
+    classDef output fill:#5b7fb51a,stroke:#5b7fb5b3,stroke-width:1px
     class DATA,REC input
     class SHEET output
 ```
@@ -219,7 +219,7 @@ flowchart LR
 flowchart LR
     A["Phone<br/>browser storage"] <-->|"sync"| D[("Player's Google Drive<br/>hidden app-data folder")]
     D <-->|"sync"| B["iPad<br/>browser storage"]
-    classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
+    classDef default fill:#8b93a10d,stroke:#8b93a199,stroke-width:1px
 ```
 
 - **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema

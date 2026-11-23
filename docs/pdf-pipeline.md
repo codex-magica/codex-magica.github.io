@@ -36,9 +36,9 @@ flowchart TD
     G --> H["group_chapters.sh → chapters/"]
     G --> I["build_appbook.sh → src/book/"]
     I --> J["Manual proofreading +<br/>book-vs-data cross-checks"]
-    classDef default fill:#8b93a11a,stroke:#8b93a1,stroke-width:1px
-    classDef input fill:#b198692e,stroke:#b19869,stroke-width:1px
-    classDef output fill:#5b7fb52e,stroke:#5b7fb5,stroke-width:1.5px
+    classDef default fill:#8b93a10d,stroke:#8b93a199,stroke-width:1px
+    classDef input fill:#b198691a,stroke:#b19869b3,stroke-width:1px
+    classDef output fill:#5b7fb51a,stroke:#5b7fb5b3,stroke-width:1px
     class A input
     class H,I output
 ```
