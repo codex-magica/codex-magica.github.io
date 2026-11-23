@@ -11,6 +11,7 @@ import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
+import { rosterStore } from "../state/rosterStore";
 import { DriveSyncApi } from "../state/useDriveSync";
 import { CloudIcon, DriveSyncModal, driveStatusLine } from "./DriveSyncModal";
 
@@ -77,22 +78,25 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
 
   const handleImportFile = (file: File | undefined) => {
     if (!file) return;
+    const invalidFile = () => {
+      setImportInfo(null);
+      setImportError("Érvénytelen fájl — az alkalmazásból exportált karakter- vagy mentésfájl (.json) kell.");
+    };
+    if (file.size > 20 * 1024 * 1024) return invalidFile(); // far beyond any real roster
     void file.text().then((text) => {
-      const result = parseImportFile(text, records);
-      if (!result) {
-        setImportInfo(null);
-        setImportError("Érvénytelen fájl — az alkalmazásból exportált karakter- vagy mentésfájl (.json) kell.");
-        return;
-      }
+      const result = parseImportFile(text, rosterStore().getState().records);
+      if (!result) return invalidFile();
       setImportError(null);
       onImport(result.add);
+      const damaged = result.invalid > 0 ? ` ${result.invalid} bejegyzés sérült volt, azt kihagytuk.` : "";
       if (result.kind === "backup") {
-        if (result.add.length === 0) setImportInfo(`Nincs új karakter a mentésben — mind a ${result.skipped} megvolt már.`);
-        else setImportInfo(`${result.add.length} karakter visszaállítva${result.skipped > 0 ? `, ${result.skipped} már megvolt` : ""}.`);
+        if (result.add.length > 0) setImportInfo(`${result.add.length} karakter visszaállítva${result.skipped > 0 ? `, ${result.skipped} már megvolt` : ""}.${damaged}`);
+        else if (result.skipped > 0) setImportInfo(`Nincs új karakter a mentésben: ${result.skipped === 1 ? "az egy karakter" : `mind a ${result.skipped}`} megvolt már.${damaged}`);
+        else setImportInfo(`A mentésben nem volt visszaállítható karakter.${damaged}`);
       } else {
         setImportInfo(null);
       }
-    });
+    }, invalidFile);
   };
 
   const handleBackup = () => {
@@ -105,11 +109,16 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const views: CardView[] = useMemo(
     () =>
       records.map((r) => {
-        const d = derive(rulesFor(r), r);
-        const specs = Object.values(r.selections).filter(Boolean).join(" · ");
-        const pips = PIP_META.filter(([, key]) => d.vitals[key].max > 0)
-          .map(([k, key, kind]) => ({ k, cur: d.vitals[key].current, max: d.vitals[key].max, kind }))
-          .slice(0, 4);
+        const specs = Object.values(r.selections ?? {}).filter(Boolean).join(" · ");
+        let pips: CardView["pips"] = [];
+        try {
+          const d = derive(rulesFor(r), r);
+          pips = PIP_META.filter(([, key]) => d.vitals[key].max > 0)
+            .map(([k, key, kind]) => ({ k, cur: d.vitals[key].current, max: d.vitals[key].max, kind }))
+            .slice(0, 4);
+        } catch {
+          /* one character the rules engine can't handle must never take the roster down with it */
+        }
         return { id: r.id, name: r.name, line: `${r.race} · ${r.class}${specs ? ` · ${specs}` : ""}`, level: r.levels.length, pips };
       }),
     [records]
@@ -263,7 +272,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       </Box>
       </Box>
 
-      {driveOpen && <DriveSyncModal drive={drive} onClose={() => setDriveOpen(false)} />}
+      {driveOpen && <DriveSyncModal drive={drive} records={records} onClose={() => setDriveOpen(false)} />}
 
       {menuView && !menuAsPopover && (
         <ModalShell onClose={() => setMenuId(null)} width="min(340px, 100%)" zIndex={40} overlayPad="28px">

@@ -24,7 +24,6 @@ const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const RETURN_KEY = "magus.driveReturn.v1";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const TOKEN_KEY = "magus.driveToken.v1";
-export const FILE_NAME = "codex-magica-roster.json";
 
 // ── Google Identity Services (minimal typing of what we use) ─────────────────────────────────────
 interface TokenResponse {
@@ -244,22 +243,55 @@ export const revokeAccess = async (): Promise<void> => {
 };
 
 // ── Drive REST ────────────────────────────────────────────────────────────────────────────────────
-export interface RemoteFile {
+// Every file lives in the hidden app folder and is tagged with `appProperties`:
+//   kind=sync     one per device: that device's copy of the roster (only that device writes it)
+//   kind=backup   one per kept version of a character (created once, never modified)
+//   kind=unreadable  a sync file that couldn't be read, kept aside before it was replaced
+export interface DriveFileMeta {
   id: string;
-  version: string; // Drive bumps it on every change
-  content: unknown;
+  device: string;
+  version: string;
+  createdTime: string;
+}
+export interface BackupMeta {
+  id: string;
+  characterId: string;
+  name: string;
+  day: string; // YYYY-MM-DD, the day of the kept version
+  reason: "daily" | "deleted";
+  createdTime: string;
+}
+export type FileBody = { json: unknown } | { raw: string };
+
+// What the sync needs from Drive. The real implementation is below; tests use an in-memory fake.
+export interface DriveTransport {
+  listSyncFiles(): Promise<DriveFileMeta[]>;
+  readFile(id: string): Promise<FileBody>; // throws on any HTTP or network error; { raw } if it isn't JSON
+  createSyncFile(device: string, content: unknown): Promise<DriveFileMeta>;
+  updateFile(id: string, content: unknown): Promise<{ version: string }>;
+  backupExists(name: string): Promise<boolean>;
+  createBackup(name: string, props: Record<string, string>, content: unknown): Promise<void>;
+  keepUnreadable(name: string, raw: string): Promise<void>;
+  listBackups(): Promise<BackupMeta[]>;
 }
 
-// What the sync engine needs from Drive. The real implementation is below; tests use a fake.
-export interface DriveTransport {
-  find(fileIdHint: string | null): Promise<RemoteFile | null>;
-  version(id: string): Promise<string | null>;
-  create(content: unknown): Promise<{ id: string; version: string }>;
-  update(id: string, content: unknown): Promise<{ version: string }>;
-}
+export const SYNC_FILE_PREFIX = "codex-magica-sync";
 
 const API = "https://www.googleapis.com/drive/v3/files";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
+
+// appProperties values are limited to 124 bytes together with the key: cut long names on a character
+// boundary.
+export const fitBytes = (s: string, max: number): string => {
+  const enc = new TextEncoder();
+  if (enc.encode(s).length <= max) return s;
+  let out = "";
+  for (const ch of s) {
+    if (enc.encode(out + ch).length > max - 3) break;
+    out += ch;
+  }
+  return out + "…";
+};
 
 export const httpDrive = (token: string): DriveTransport => {
   const call = async (url: string, init: RequestInit = {}): Promise<Response> => {
@@ -268,53 +300,72 @@ export const httpDrive = (token: string): DriveTransport => {
       forgetToken();
       throw new DriveAuthError("token expired");
     }
+    if (!res.ok) throw new Error(`Google Drive: HTTP ${res.status}`);
     return res;
   };
-  const json = async <T,>(res: Response): Promise<T> => {
-    if (!res.ok) throw new Error(`Google Drive: HTTP ${res.status}`);
-    return (await res.json()) as T;
+  const json = async <T,>(res: Response): Promise<T> => (await res.json()) as T;
+
+  const list = async <F,>(q: string, fields: string): Promise<F[]> => {
+    const out: F[] = [];
+    let pageToken = "";
+    do {
+      const url = `${API}?spaces=appDataFolder&pageSize=100&q=${encodeURIComponent(q)}&fields=${encodeURIComponent(`nextPageToken,files(${fields})`)}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`;
+      const page = await json<{ files?: F[]; nextPageToken?: string }>(await call(url));
+      out.push(...(page.files ?? []));
+      pageToken = page.nextPageToken ?? "";
+    } while (pageToken);
+    return out;
   };
-  const read = async (id: string): Promise<RemoteFile | null> => {
-    const meta = await call(`${API}/${id}?fields=id,version,trashed`);
-    if (meta.status === 404) return null;
-    const m = await json<{ id: string; version: string; trashed?: boolean }>(meta);
-    if (m.trashed) return null;
-    const body = await call(`${API}/${id}?alt=media`);
-    let content: unknown = null;
-    try {
-      content = await json<unknown>(body);
-    } catch {
-      content = null; // unreadable file: treated as empty, and overwritten by the next upload
-    }
-    return { id: m.id, version: m.version, content };
+
+  const multipart = async (meta: object, body: string, mime: string, fields: string) => {
+    const boundary = "codexmagica" + Math.random().toString(36).slice(2);
+    const payload =
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+      JSON.stringify({ parents: ["appDataFolder"], mimeType: mime, ...meta }) +
+      `\r\n--${boundary}\r\nContent-Type: ${mime}\r\n\r\n` +
+      body +
+      `\r\n--${boundary}--`;
+    return call(`${UPLOAD}?uploadType=multipart&fields=${fields}`, { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body: payload });
   };
+
+  type Props = { appProperties?: Record<string, string> };
   return {
-    async find(hint) {
-      if (hint) {
-        const f = await read(hint);
-        if (f) return f;
+    async listSyncFiles() {
+      const files = await list<{ id: string; version: string; createdTime: string } & Props>("appProperties has { key='kind' and value='sync' } and trashed=false", "id,version,createdTime,appProperties");
+      return files.map((f) => ({ id: f.id, version: f.version, createdTime: f.createdTime, device: f.appProperties?.device ?? "" }));
+    },
+    async readFile(id) {
+      const text = await (await call(`${API}/${id}?alt=media`)).text();
+      try {
+        return { json: JSON.parse(text) };
+      } catch {
+        return { raw: text };
       }
-      const q = encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
-      const list = await json<{ files: { id: string }[] }>(await call(`${API}?spaces=appDataFolder&q=${q}&fields=files(id)&orderBy=modifiedTime desc`));
-      return list.files[0] ? read(list.files[0].id) : null;
     },
-    async version(id) {
-      const res = await call(`${API}/${id}?fields=version`);
-      if (res.status === 404) return null;
-      return (await json<{ version: string }>(res)).version;
+    async createSyncFile(device, content) {
+      const res = await multipart({ name: `${SYNC_FILE_PREFIX}.${device}.json`, appProperties: { kind: "sync", device } }, JSON.stringify(content), "application/json", "id,version,createdTime");
+      const f = await json<{ id: string; version: string; createdTime: string }>(res);
+      return { ...f, device };
     },
-    async create(content) {
-      const boundary = "codexmagica" + Math.random().toString(36).slice(2);
-      const body =
-        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-        JSON.stringify({ name: FILE_NAME, parents: ["appDataFolder"], mimeType: "application/json" }) +
-        `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n` +
-        JSON.stringify(content) +
-        `\r\n--${boundary}--`;
-      return json(await call(`${UPLOAD}?uploadType=multipart&fields=id,version`, { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body }));
-    },
-    async update(id, content) {
+    async updateFile(id, content) {
       return json(await call(`${UPLOAD}/${id}?uploadType=media&fields=version`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) }));
+    },
+    async backupExists(name) {
+      const files = await json<{ files?: unknown[] }>(await call(`${API}?spaces=appDataFolder&pageSize=1&q=${encodeURIComponent(`name='${name}' and trashed=false`)}&fields=files(id)`));
+      return (files.files ?? []).length > 0;
+    },
+    async createBackup(name, props, content) {
+      await multipart({ name, appProperties: { kind: "backup", ...props } }, JSON.stringify(content), "application/json", "id");
+    },
+    async keepUnreadable(name, raw) {
+      await multipart({ name, appProperties: { kind: "unreadable" } }, raw, "text/plain", "id");
+    },
+    async listBackups() {
+      const files = await list<{ id: string; createdTime: string } & Props>("appProperties has { key='kind' and value='backup' } and trashed=false", "id,createdTime,appProperties");
+      return files.map((f) => {
+        const p = f.appProperties ?? {};
+        return { id: f.id, createdTime: f.createdTime, characterId: p.char ?? "", name: p.name ?? "", day: p.day ?? "", reason: p.reason === "deleted" ? "deleted" : "daily" };
+      });
     },
   };
 };

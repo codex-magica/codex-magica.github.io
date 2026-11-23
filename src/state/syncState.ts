@@ -1,76 +1,59 @@
 // Local bookkeeping for the optional Google Drive sync. All of it is per device, in localStorage.
+// (Deletion markers live with the roster, in rosterStore.ts.)
 //
-// - Tombstones (id → deletion time) let the merge tell "deleted here" apart from "never seen here";
-//   without them a character deleted on this device would come back from Drive on the next sync.
-// - The sync base (id → the updatedAt this device last agreed with Drive on) is the common ancestor
-//   for three-way merging: it separates a safe fast-forward ("only Drive changed") from a real
-//   conflict ("both sides changed"). It is written only after a successful upload, never optimistically.
-// - Settings: whether sync is on, when it last succeeded, and the Drive file id.
+// - Settings: whether sync and the daily Drive backups are on, the account, when it last succeeded.
+// - Published: what this device last wrote to its file in Drive (id → version key), so the app can show
+//   how many changes are still waiting to go up.
+// - Backed up: which versions already have a backup in Drive, so they aren't checked again every round.
 
-const TOMB_KEY = "magus.tombstones.v1";
-const BASE_KEY = "magus.syncBase.v1";
+import { CharacterRecord } from "../model/character";
+import { contentHash } from "./recordHash";
+import { Deletions } from "./rosterStore";
+import { vcKey } from "./versions";
+
 const SETTINGS_KEY = "magus.driveSync.v1";
-const TOMB_MAX_AGE_MS = 180 * 24 * 3600 * 1000; // forget deletions after half a year
-
-export type Tombstones = Record<string, number>;
-export type SyncBase = Record<string, number>;
-
-const readMap = (key: string): Record<string, number> => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(key) ?? "{}");
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
-    const out: Record<string, number> = {};
-    for (const [id, ts] of Object.entries(parsed)) if (typeof ts === "number") out[id] = ts;
-    return out;
-  } catch {
-    return {};
-  }
-};
+const PUBLISHED_KEY = "magus.drivePublished.v2";
+const BACKED_UP_KEY = "magus.driveBackedUp.v1";
+const LEGACY_BASE_KEY = "magus.syncBase.v1"; // the first version of the sync; no longer used
 
 const write = (key: string, value: unknown): void => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    /* storage full / unavailable: same policy as saveRoster */
+    /* storage full / unavailable: the sync still works, this is only bookkeeping */
   }
 };
-
-export const loadTombstones = (): Tombstones => {
-  const now = Date.now();
-  return Object.fromEntries(Object.entries(readMap(TOMB_KEY)).filter(([, ts]) => now - ts < TOMB_MAX_AGE_MS));
+const read = <T,>(key: string, fallback: T): T => {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) ?? "null");
+    return v === null ? fallback : (v as T);
+  } catch {
+    return fallback;
+  }
 };
-export const saveTombstones = (t: Tombstones): void => write(TOMB_KEY, t);
-export const addTombstone = (id: string): void => saveTombstones({ ...loadTombstones(), [id]: Date.now() });
-
-export const loadSyncBase = (): SyncBase => readMap(BASE_KEY);
-export const saveSyncBase = (b: SyncBase): void => write(BASE_KEY, b);
 
 export interface DriveSettings {
   enabled: boolean;
+  backups: boolean; // daily backups of every character in Drive (on by default)
   lastSyncAt: number | null;
-  fileId: string | null;
   email: string | null; // the Google account that syncs (shown in the window; skips the account chooser)
   lastSilentAt: number | null; // last renewal attempt by redirect (rate limit: no loops)
-  silentBlockedUntil: number | null; // after Google said "needs the user", don't try silently until then
+  silentBlockedUntil: number | null; // after Google said "needs the user" (or kept failing), don't try silently until then
 }
 
-export const OFF_SETTINGS: DriveSettings = { enabled: false, lastSyncAt: null, fileId: null, email: null, lastSilentAt: null, silentBlockedUntil: null };
+export const OFF_SETTINGS: DriveSettings = { enabled: false, backups: true, lastSyncAt: null, email: null, lastSilentAt: null, silentBlockedUntil: null };
 
 export const loadDriveSettings = (): DriveSettings => {
-  try {
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}");
-    const num = (v: unknown) => (typeof v === "number" ? v : null);
-    return {
-      enabled: s.enabled === true,
-      lastSyncAt: num(s.lastSyncAt),
-      fileId: typeof s.fileId === "string" ? s.fileId : null,
-      email: typeof s.email === "string" ? s.email : null,
-      lastSilentAt: num(s.lastSilentAt),
-      silentBlockedUntil: num(s.silentBlockedUntil),
-    };
-  } catch {
-    return { ...OFF_SETTINGS };
-  }
+  const s = read<Record<string, unknown>>(SETTINGS_KEY, {});
+  const num = (v: unknown) => (typeof v === "number" ? v : null);
+  return {
+    enabled: s.enabled === true,
+    backups: s.backups !== false,
+    lastSyncAt: num(s.lastSyncAt),
+    email: typeof s.email === "string" ? s.email : null,
+    lastSilentAt: num(s.lastSilentAt),
+    silentBlockedUntil: num(s.silentBlockedUntil),
+  };
 };
 export const saveDriveSettings = (s: DriveSettings): void => write(SETTINGS_KEY, s);
 export const updateDriveSettings = (patch: Partial<DriveSettings>): DriveSettings => {
@@ -79,26 +62,43 @@ export const updateDriveSettings = (patch: Partial<DriveSettings>): DriveSetting
   return next;
 };
 
-// Changes on this device not yet in Drive: edits and new characters since the last agreed version, and
-// deletions not yet uploaded. `oldest` is when the oldest of them happened (for the device-switch warning).
-export const pendingChanges = (records: { id: string; updatedAt?: number }[], base: SyncBase, tombstones: Tombstones): { count: number; oldest: number | null } => {
+// ── what this device last published ──────────────────────────────────────────────────────────────
+export type Published = Record<string, string>;
+export const loadPublished = (): Published => read<Published>(PUBLISHED_KEY, {});
+export const savePublished = (p: Published): void => write(PUBLISHED_KEY, p);
+
+export const recordKey = (r: CharacterRecord): string => `${vcKey(r.syncVc ?? {})}|${contentHash(r)}`;
+export const deletionKey = (d: { vc: Record<string, number> }): string => `${vcKey(d.vc)}|deleted`;
+
+// Changes on this device not yet in its Drive file: edits, new characters and deletions. `oldest` is
+// when the oldest of them happened (for the "sync before switching devices" hint).
+export const pendingChanges = (records: CharacterRecord[], deletions: Deletions, published: Published): { count: number; oldest: number | null } => {
   let count = 0;
   let oldest: number | null = null;
   const note = (ts: number) => {
     count++;
     oldest = oldest === null ? ts : Math.min(oldest, ts);
   };
-  for (const r of records) if (base[r.id] !== (r.updatedAt ?? 0)) note(r.updatedAt ?? 0);
-  for (const [id, ts] of Object.entries(tombstones)) if (base[id] !== undefined && base[id] !== ts) note(ts);
+  for (const r of records) if (published[r.id] !== recordKey(r)) note(r.updatedAt ?? 0);
+  for (const [id, d] of Object.entries(deletions)) if (published[id] !== undefined && published[id] !== deletionKey(d)) note(d.t);
   return { count, oldest };
 };
 
-// Turning sync off forgets the pairing with Drive (the characters on this device stay as they are).
+// ── versions already backed up ───────────────────────────────────────────────────────────────────
+const BACKED_UP_MAX = 5000;
+export const loadBackedUp = (): Set<string> => new Set(read<string[]>(BACKED_UP_KEY, []));
+export const saveBackedUp = (s: Set<string>): void => write(BACKED_UP_KEY, [...s].slice(-BACKED_UP_MAX));
+
+// Turning sync off forgets the pairing with Drive. The characters (and deletion markers) stay, and the
+// device keeps its id, so turning it back on later continues where it left off. The backups choice is
+// remembered for next time.
 export const clearDriveState = (): void => {
+  const backups = loadDriveSettings().backups;
   try {
-    localStorage.removeItem(BASE_KEY);
-    localStorage.removeItem(SETTINGS_KEY);
+    localStorage.removeItem(PUBLISHED_KEY);
+    localStorage.removeItem(LEGACY_BASE_KEY);
   } catch {
     /* ignore */
   }
+  saveDriveSettings({ ...OFF_SETTINGS, backups });
 };

@@ -8,6 +8,8 @@ import { CLASSES, CLASS_NAMES } from "../model/classes";
 import { RACE_NAMES } from "../model/races";
 import { defaultSelections } from "../model/choices";
 import { getRulesPreference } from "./rulesPreference";
+import { derive } from "../engine/derive";
+import { rulesFor } from "../model/rulesVariants";
 
 const KEY = "magus.roster.v1";
 
@@ -69,26 +71,85 @@ export const migrateRecord = (r: CharacterRecord): CharacterRecord => {
 
 // First run starts empty (the demo seed lives on only as the derive.test.ts golden fixture);
 // the welcome screen's empty state points at "Új karakter".
-export const loadRoster = (): CharacterRecord[] => {
+// If the saved roster can't be read, it's kept aside under another key before anything new is saved
+// over it, so a bug or a damaged write never costs the characters.
+const keepUnreadable = (raw: string) => {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CharacterRecord[]).map(migrateRecord) : [];
+    localStorage.setItem(`${KEY}.unreadable.${Date.now()}`, raw);
   } catch {
+    /* storage full: nothing more we can do here */
+  }
+};
+
+export const loadRoster = (): CharacterRecord[] => {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch {
+    return [];
+  }
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error("not a list");
+    const records: CharacterRecord[] = [];
+    let dropped = false;
+    for (const r of parsed) {
+      const rec = r && typeof r === "object" && typeof (r as CharacterRecord).id === "string" ? normalizeRecord(r) : null;
+      if (rec) records.push(rec);
+      else dropped = true;
+    }
+    if (dropped) keepUnreadable(raw);
+    return records;
+  } catch {
+    keepUnreadable(raw);
     return [];
   }
 };
 
-export const saveRoster = (records: CharacterRecord[]): void => {
+// Returns false if the save failed (storage full or blocked), so the app can say so.
+export const saveRoster = (records: CharacterRecord[]): boolean => {
   try {
     localStorage.setItem(KEY, JSON.stringify(records));
+    return true;
   } catch {
-    /* storage full / unavailable — ignore for now */
+    return false;
   }
 };
 
 export const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
+
+// Brings any record from outside (a file, Drive, storage) into a shape the app can always render:
+// legacy migrations, then defaults for missing required fields, then a trial run of the rules engine.
+// Returns null if it still can't be derived, so one bad record can never break the app.
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+export const normalizeRecord = (raw: unknown): CharacterRecord | null => {
+  if (!isObj(raw) || typeof raw.name !== "string" || !Array.isArray(raw.levels) || raw.levels.length === 0) return null;
+  const blank = createBlankRecord(typeof raw.id === "string" && raw.id ? raw.id : genId(), raw.name);
+  const r = raw as unknown as CharacterRecord;
+  const filled: CharacterRecord = {
+    ...r,
+    schemaVersion: typeof r.schemaVersion === "number" ? r.schemaVersion : SCHEMA_VERSION,
+    id: blank.id,
+    identity: isObj(r.identity) ? r.identity : blank.identity,
+    race: typeof r.race === "string" ? r.race : blank.race,
+    class: typeof r.class === "string" ? r.class : blank.class,
+    selections: isObj(r.selections) ? (r.selections as Record<string, string>) : blank.selections,
+    backgrounds: Array.isArray(r.backgrounds) ? r.backgrounds : [],
+    pointBuy: isObj(r.pointBuy) ? r.pointBuy : blank.pointBuy,
+    kmAdjustments: Array.isArray(r.kmAdjustments) ? r.kmAdjustments : [],
+    inventory: Array.isArray(r.inventory) ? r.inventory : [],
+    vitalsState: isObj(r.vitalsState) ? r.vitalsState : {},
+  };
+  let rec: CharacterRecord;
+  try {
+    rec = migrateRecord(filled);
+    derive(rulesFor(rec), rec);
+  } catch {
+    return null;
+  }
+  return rec;
+};
 
 // A fresh, valid level-1 character to start a "create" flow from. The house-rules flag is seeded
 // from the app-level preference (the creator's toggle can still change it before saving).

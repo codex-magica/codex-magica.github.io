@@ -135,6 +135,8 @@ same on your phone, tablet and computer:
   made offline go up once you're back online.
 - If the same character was edited on two devices before they could sync, both versions are kept.
   Nothing is overwritten silently.
+- With daily backups on (the default), the last state of each day a character was edited, and its last
+  state before deletion, stay in your Drive too, and can be restored from the sync window.
 - Google's access for web apps runs out every hour. The app renews it with a quick hop through Google,
   shows a small notice before it does, and brings you back to the same place.
 - There's no account to create and no server of ours in between: the data goes straight from your browser
@@ -215,12 +217,14 @@ flowchart LR
 - **Installable and offline.** `vite-plugin-pwa` (Workbox) precaches the whole build, and the rules data
   is bundled with the code, so nothing needs the network after the first load. Updates are offered, never
   forced. An installed app can stay open for days, so it checks for a new version every hour.
-- **Sync without a server.** The browser talks to the Google Drive REST API directly and keeps one JSON
-  file in the player's app-data folder. Each round downloads, merges and uploads. The merge is three-way
-  per character against the last version both sides agreed on: deletions travel as tombstones, an edit
-  beats a deletion, and an edit on both sides keeps both versions. Drive has no conditional writes, so the
-  app re-checks the file version right before uploading and starts the round over if another device saved
-  in between. Tests simulate several devices against an in-memory Drive.
+- **Sync without a server.** The browser talks to the Google Drive REST API directly. Each device writes
+  only its own JSON file in the player's app-data folder and reads the others', so two devices can never
+  overwrite each other (Drive has no conditional writes). Every character carries a version vector, so
+  "replaced" and "edited in parallel" are told apart without trusting device clocks: an edit beats a
+  parallel deletion, and parallel edits keep both versions, resolved identically on every device. A failed or
+  damaged download never leads to an overwrite, and optional daily backups keep each day's last state and
+  the last state before a deletion. Randomized tests run several devices with concurrent rounds, failing
+  requests and skewed clocks, and check that they converge and lose nothing.
 - **Hourly tokens without hourly taps.** Browser-only Google sign-in gives a one-hour access token and no
   refresh token. Instead of asking for a tap every hour, the app renews it with a full-page round trip to
   Google's authorization endpoint (`prompt=none` with a `login_hint`) at moments when nothing can be lost:

@@ -93,6 +93,9 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
   vagy visszatérsz. Ami internet nélkül változott, az a kapcsolat helyreálltakor töltődik fel.
 - Ha ugyanazt a karaktert két eszközön is módosítottad, mielőtt szinkronizálódhattak volna, mindkét
   változat megmarad. Semmi sem íródik felül észrevétlenül.
+- A napi biztonsági másolat (alapból bekapcsolva) a Drive-on azt is megőrzi, milyen volt egy karakter
+  azoknak a napoknak a végén, amikor módosítottad, és hogy milyen volt törlés előtt. Ezeket a szinkron
+  ablakában állíthatod vissza.
 - A webes alkalmazások Google-hozzáférése óránként lejár. Az alkalmazás ezt egy gyors, Google-on keresztüli
   átirányítással megújítja: előtte egy kis értesítést mutat, utána pedig oda hoz vissza, ahol voltál.
 - Nem kell fiókot létrehoznod, és nincs köztes szerverünk: az adatok közvetlenül a böngésződből a

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Adatvédelem · Codex Magica</title>
 <meta name="robots" content="noindex">
+<link rel="icon" href="favicon.svg?v=4" type="image/svg+xml">
 <style>
   :root { --bg: #eceff3; --card: #fdfdfe; --fg: #2b3038; --muted: #5d6573; --rule: #c9ced6; --accent: #3e5a86; color-scheme: light; }
   @media (prefers-color-scheme: dark) { :root { --bg: #13171f; --card: #1c2129; --fg: #e1e5ea; --muted: #a3acb8; --rule: #3c4450; --accent: #a7c8ea; color-scheme: dark; } }
@@ -34,8 +35,10 @@
 
     <h2>Google Drive szinkron (ha bekapcsolod)</h2>
     <ul>
-      <li>A karakterek egy fájlban a saját Google Drive-od rejtett alkalmazásmappájába kerülnek. Ezt a mappát csak
-        ez az alkalmazás látja.</li>
+      <li>A karakterek a saját Google Drive-od rejtett alkalmazásmappájába kerülnek (eszközönként egy fájlba). Ezt a
+        mappát csak ez az alkalmazás látja.</li>
+      <li>Ha a napi biztonsági másolat be van kapcsolva, ugyanide kerülnek a karakterek korábbi napi állapotai és a
+        törlés előtti utolsó állapotuk is.</li>
       <li>A Drive-ra vonatkozó egyetlen engedély a <code>drive.appdata</code>. Ezzel az alkalmazás a Drive-od
         többi fájlját nem látja, nem olvassa és nem módosítja.</li>
       <li>Az e-mail-címedet is lekéri, de csak azért, hogy megmutassa, melyik fiókkal szinkronizál, és hogy a Google
@@ -43,10 +46,10 @@
       <li>A Google-hozzáférés kódja (token) legfeljebb egy óráig a böngésződben marad, kizárólag a szinkronhoz.
         Lejárta után az alkalmazás egy gyors, Google-on keresztüli átirányítással kér újat.</li>
       <li>Az adatok a böngésződ és a Google között közlekednek; harmadik félhez, így hozzánk sem jutnak el.</li>
-      <li>A szinkron a karakterlistán, a Google Drive gombbal kapcsolható ki. A hozzáférést a
+      <li>A szinkron a karakterlistán, a Google Drive gombbal kapcsolható ki; ez nem töröl semmit. A hozzáférést a
         <a href="https://myaccount.google.com/permissions" rel="noopener">Google-fiókod beállításaiban</a> is
-        visszavonhatod, a Drive-on tárolt példányt pedig a Google Drive beállításaiban, az „Alkalmazások
-        kezelése” résznél törölheted.</li>
+        visszavonhatod, a Drive-on tárolt adatokat (a biztonsági másolatokkal együtt) pedig a Google Drive
+        beállításaiban, az „Alkalmazások kezelése” résznél törölheted.</li>
     </ul>
     <p>A Google API-kból kapott adatokat az alkalmazás kizárólag a szinkronhoz használja, a
       <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API Services
@@ -68,8 +71,10 @@
 
     <h2>Google Drive sync (if you turn it on)</h2>
     <ul>
-      <li>Your characters are saved as one file in the hidden app-data folder of your own Google Drive, which only
-        this app can see.</li>
+      <li>Your characters are saved in the hidden app-data folder of your own Google Drive (one file per device),
+        which only this app can see.</li>
+      <li>If daily backups are on, earlier daily states of your characters, and their last state before deletion,
+        are kept in the same folder.</li>
       <li>Its only Drive permission is <code>drive.appdata</code>. It cannot see, read or change any other file in
         your Drive.</li>
       <li>It also reads your email address, only to show which account syncs and so that Google doesn't ask which
@@ -77,9 +82,9 @@
       <li>The Google access token stays in your browser for at most an hour, used only for syncing. When it
         expires, the app gets a new one with a quick redirect through Google.</li>
       <li>Data travels between your browser and Google only; it does not reach any third party, including us.</li>
-      <li>Turn sync off with the Google Drive button on the character list. You can also revoke access in your
+      <li>Turn sync off with the Google Drive button on the character list; that deletes nothing. You can also revoke access in your
         <a href="https://myaccount.google.com/permissions" rel="noopener">Google Account settings</a>, and delete
-        the copy in Drive under Google Drive settings → Manage apps.</li>
+        the data in Drive (backups included) under Google Drive settings → Manage apps.</li>
     </ul>
     <p>Codex Magica's use of information received from Google APIs is limited to syncing your characters and adheres
       to the <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API

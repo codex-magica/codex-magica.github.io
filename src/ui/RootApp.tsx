@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Box } from "@chakra-ui/react";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
@@ -11,8 +12,18 @@ import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { useDriveSync } from "../state/useDriveSync";
 import { ReturnContext, consumeRedirectResult } from "../state/googleDrive";
+import { TABS } from "./compendiumData";
 import { createBlankRecord } from "../state/storage";
 import { CharacterRecord } from "../model/character";
+
+// Shown while saving to this device fails (storage full or blocked), so nobody loses edits unawares.
+const SaveFailedBanner: React.FC = () => (
+  <Box role="alert" position="fixed" top="max(10px, env(safe-area-inset-top))" left="50%" transform="translateX(-50%)" zIndex={62} w="min(520px, calc(100% - 32px))"
+    px="16px" py="11px" borderRadius="12px" bg="sheet" border="1px solid" borderColor="warn" boxShadow="0 10px 30px rgba(0,0,0,.18)" fontFamily="system-ui" fontSize="13.5px" color="fg" lineHeight="1.45">
+    <b>Nem sikerült menteni ezen az eszközön.</b> Lehet, hogy megtelt a böngésző tárhelye. Amíg ez az üzenet látszik, a módosítások csak
+    addig maradnak meg, amíg az alkalmazás nyitva van: készíts biztonsági mentést a karakterlistán.
+  </Box>
+);
 
 // Top-level navigation: the roster is home; opening a character shows the sheet; create / edit /
 // level-up open the shared full-screen creator as an overlay. Characters persist to local storage
@@ -23,11 +34,13 @@ export const RootApp: React.FC = () => {
   // user was on (read once; later screens open normally)
   const [back] = useState<ReturnContext | null>(() => {
     const o = consumeRedirectResult();
-    return o.kind !== "none" ? o.ctx : null;
+    if (o.kind === "none" || !o.ctx) return null;
+    const compTab = o.ctx.compTab !== undefined && TABS[o.ctx.compTab] ? o.ctx.compTab : undefined; // a stale/odd value can't open an empty page
+    return { ...o.ctx, compTab };
   });
   const restore = useRef(back);
   const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">(() =>
-    back && (back.screen !== "sheet" || back.characterId) ? back.screen : "roster"
+    back && (back.screen !== "sheet" || (back.characterId && roster.get(back.characterId))) ? back.screen : "roster"
   );
   const [currentId, setCurrentId] = useState<string | null>(() => back?.characterId ?? null);
   useEffect(() => {
@@ -47,7 +60,7 @@ export const RootApp: React.FC = () => {
   };
   // optional Google Drive sync (absent without a client ID); may renew its token by a quick round trip
   // through Google, but only when the creator (unsaved edits) is closed
-  const drive = useDriveSync(roster, {
+  const drive = useDriveSync({
     safeToLeave: () => !creatorOpen.current,
     returnContext: () => ({ ...where.current, ...inner.current, scroll: captureScroll() }),
   });
@@ -65,6 +78,11 @@ export const RootApp: React.FC = () => {
   const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 
   const current = currentId ? roster.get(currentId) : undefined;
+  // the open character disappeared (deleted in another tab or on another device): back to the roster
+  useEffect(() => {
+    if (screen === "sheet" && !current) go("roster");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, current]);
 
   const editChar = (id: string) => {
     const r = roster.get(id);
@@ -139,6 +157,7 @@ export const RootApp: React.FC = () => {
         />
       )}
 
+      {roster.saveFailed && <SaveFailedBanner />}
       <DriveHopNotice hop={drive.hop} onCancel={drive.cancelHop} />
       <UpdateBanner />
     </>

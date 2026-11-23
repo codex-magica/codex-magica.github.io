@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RosterApi } from "./useRoster";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
+  BackupMeta,
   DriveAuthError,
   ReturnContext,
   beginSilentRenewal,
   consumeRedirectResult,
   driveSyncAvailable,
   fetchAccountEmail,
+  forgetToken,
   httpDrive,
   prepareSignIn,
   requestTokenInteractive,
@@ -14,18 +15,21 @@ import {
   signInReady,
   validToken,
 } from "./googleDrive";
-import { runSync } from "./driveSyncEngine";
-import { applyMerge } from "./driveMerge";
+import { BACKUP_FORMAT, SyncNewerVersionError, runSync } from "./driveSyncEngine";
+import { reconcile } from "./driveMerge";
+import { rosterStore } from "./rosterStore";
+import { deviceId } from "./versions";
+import { normalizeRecord, genId } from "./storage";
+import { CharacterRecord } from "../model/character";
 import {
   DriveSettings,
-  OFF_SETTINGS,
   clearDriveState,
+  loadBackedUp,
   loadDriveSettings,
-  loadSyncBase,
-  loadTombstones,
+  loadPublished,
   pendingChanges,
-  saveSyncBase,
-  saveTombstones,
+  saveBackedUp,
+  savePublished,
   updateDriveSettings,
 } from "./syncState";
 
@@ -40,7 +44,10 @@ import {
 //   A small notice announces it 3 seconds ahead ("Most ne" cancels). Never while a window is open, the
 //   creator is open or a field has focus, and at most once every 10 minutes.
 // - Only if Google says it needs the user (signed out, permission removed) does the footer ask for a
-//   tap; silent attempts then pause for 12 hours.
+//   tap; silent attempts then pause for 12 hours (1 hour after other errors).
+// - Every new token is checked against the account sync was set up with, so characters never go into
+//   another account's Drive.
+// - One round at a time, across tabs too (Web Locks where available).
 // Google's script is loaded only once the user opens the Drive window or has sync turned on.
 
 export type DriveStatus = "off" | "idle" | "syncing" | "needsTap" | "error";
@@ -53,16 +60,21 @@ export interface DriveSyncApi {
   status: DriveStatus;
   lastSyncAt: number | null;
   email: string | null;
+  backups: boolean; // daily backups in Drive
   pending: { count: number; oldest: number | null }; // local changes not yet in Drive
   note: string | null; // the last round's result or error, in Hungarian
   ready: boolean; // Google's sign-in is loaded, so a tap can open the popup
   prepare: () => void;
-  enable: () => void; // call from a tap
+  enable: (backups: boolean) => void; // call from a tap
   syncNow: () => void; // call from a tap
   disable: () => void;
+  setBackups: (on: boolean) => void;
   atRoster: () => void; // the user arrived at the roster: a safe moment to renew
   hop: DriveHop;
   cancelHop: () => void; // "Most ne" on the notice
+  listBackups: () => Promise<BackupMeta[]>; // needs a valid token (see connect)
+  restoreBackup: (b: BackupMeta) => Promise<CharacterRecord>; // adds it as a new character
+  connect: () => Promise<boolean>; // get a token from a tap, if there's none
 }
 
 export interface DriveSyncOptions {
@@ -74,23 +86,28 @@ const AUTO_DELAY_MS = 2000;
 const FOREGROUND_MIN_GAP_MS = 20_000;
 const SILENT_MIN_GAP_MS = 10 * 60_000;
 const SILENT_BLOCK_MS = 12 * 3600_000;
+const SILENT_BACKOFF_MS = 3600_000;
 export const HOP_NOTICE_MS = 3000; // the notice is shown this long before leaving for Google
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 const IDLE_HOP_MS = 60_000; // no touches for this long, with changes waiting: renew
 const IDLE_CHECK_MS = 10_000;
 const NEEDS_USER = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required", "access_denied", "drive permission not granted"]);
 
+class AccountMismatchError extends Error {}
+
 const errorNote = (e: unknown): string => {
+  if (e instanceof AccountMismatchError) return e.message;
+  if (e instanceof SyncNewerVersionError) return "A Drive-on egy újabb alkalmazásverzió adatai vannak. Frissítsd az alkalmazást (zárd be és nyisd meg újra), utána folytatódik a szinkron.";
   if (e instanceof DriveAuthError) {
     if (e.message === "popup closed") return "A Google-ablak bezárult, mielőtt engedélyt adtál volna.";
     if (e.message === "drive permission not granted") return "A Google Drive-hozzáférés nem lett engedélyezve. Próbáld újra, és hagyd bejelölve a Drive-ra vonatkozó engedélyt.";
     return "A Google-hozzáférés lejárt. Koppints a szinkronhoz.";
   }
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. A szinkron a következő alkalommal folytatódik.";
-  return "Nem sikerült elérni a Google Drive-ot. Később újrapróbálható.";
+  return "Nem sikerült elérni a Google Drive-ot. A szinkron később magától újrapróbálkozik.";
 };
 
-// The answer of a renewal round trip, read once at startup (index.tsx calls it before rendering).
+// The answer of a renewal round trip, read once at startup (before rendering).
 const initialOutcome = typeof window !== "undefined" ? consumeRedirectResult() : { kind: "none" as const };
 
 const safeDom = (): boolean => {
@@ -99,11 +116,23 @@ const safeDom = (): boolean => {
   return !(a instanceof HTMLInputElement || a instanceof HTMLTextAreaElement || (a instanceof HTMLElement && a.isContentEditable));
 };
 
-export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSyncApi {
+// One round at a time across this browser's tabs (where the browser supports Web Locks).
+const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
+  const locks = typeof navigator !== "undefined" ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
+  return locks?.request ? (locks.request("codex-magica-drive-sync", fn) as Promise<T>) : fn();
+};
+
+const store = rosterStore();
+const verifiedTokens = new Set<string>();
+
+export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const available = driveSyncAvailable();
+  const roster = useSyncExternalStore(store.subscribe, store.getState);
   const [settings, setSettings] = useState<DriveSettings>(() => {
-    // Google answered a renewal round trip with "needs the user": pause silent attempts for a while
-    if (initialOutcome.kind === "error" && NEEDS_USER.has(initialOutcome.error)) return updateDriveSettings({ silentBlockedUntil: Date.now() + SILENT_BLOCK_MS });
+    // Google answered a renewal round trip: "needs the user" pauses silent attempts for a while, other
+    // errors for an hour; a token lifts the pause
+    if (initialOutcome.kind === "error")
+      return updateDriveSettings({ silentBlockedUntil: Date.now() + (NEEDS_USER.has(initialOutcome.error) ? SILENT_BLOCK_MS : SILENT_BACKOFF_MS) });
     if (initialOutcome.kind === "token") return updateDriveSettings({ silentBlockedUntil: null });
     return loadDriveSettings();
   });
@@ -142,10 +171,20 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     );
   }, [available]);
 
-  const learnEmail = useCallback(
-    (token: string) => {
-      if (loadDriveSettings().email) return;
-      void fetchAccountEmail(token).then((email) => email && enabledRef.current && patchSettings({ email }));
+  // Every new token must belong to the account sync was set up with: otherwise the characters would
+  // merge into someone else's Drive. The first token sets the account.
+  const ensureAccount = useCallback(
+    async (token: string): Promise<void> => {
+      if (verifiedTokens.has(token)) return;
+      const email = await fetchAccountEmail(token);
+      if (!email) throw new Error("account check failed"); // network trouble: try again later
+      const expected = loadDriveSettings().email;
+      if (expected && expected.toLowerCase() !== email.toLowerCase()) {
+        forgetToken();
+        throw new AccountMismatchError(`Ezzel a Google-fiókkal jelentkeztél be: ${email}, de a szinkron ehhez a fiókhoz tartozik: ${expected}. Jelentkezz be azzal, vagy kapcsold ki, majd újra be a szinkront.`);
+      }
+      if (!expected) patchSettings({ email });
+      verifiedTokens.add(token);
     },
     [patchSettings]
   );
@@ -160,41 +199,46 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
       lastAttempt.current = Date.now();
       setStatus("syncing");
       try {
-        do {
-          again.current = false;
-          const startedAt = Date.now();
-          const out = await runSync(httpDrive(token), { local: roster.currentRecords(), tombstones: loadTombstones(), base: loadSyncBase(), fileId: loadDriveSettings().fileId });
-          if (!enabledRef.current) return; // turned off meanwhile: drop the result
-          const tombs = loadTombstones();
-          roster.applySync((current) => applyMerge(current, out.roster, tombs, startedAt));
-          saveSyncBase(out.base);
-          saveTombstones(Object.fromEntries(Object.entries(tombs).filter(([, ts]) => ts >= startedAt)));
-          patchSettings({ enabled: true, lastSyncAt: Date.now(), fileId: out.fileId });
-          setSyncTick((n) => n + 1);
-          if (hopRef.current === "backSyncing") {
-            setHop("backDone");
-            window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
-          }
-          setNote(
-            out.conflictCopies > 0
-              ? `${out.conflictCopies} karakter két eszközön is módosult. A másik változat külön karakterként került a listára („… (másik eszközről)”), hogy semmi ne vesszen el.`
-              : null
-          );
-        } while (again.current);
+        await ensureAccount(token);
+        await withSyncLock(async () => {
+          do {
+            again.current = false;
+            store.reload(); // the freshest saved state (another tab may have changed it)
+            const snapshot = store.getState();
+            const s = loadDriveSettings();
+            const out = await runSync(httpDrive(token), { records: snapshot.records, deletions: snapshot.deletions, device: deviceId(), backups: s.backups, backedUp: loadBackedUp() });
+            if (!enabledRef.current) return; // turned off meanwhile: drop the result
+            const next = reconcile(snapshot, store.getState(), out);
+            store.applySync(next.records, next.deletions);
+            savePublished(out.published);
+            saveBackedUp(out.backedUp);
+            patchSettings({ lastSyncAt: Date.now() });
+            setSyncTick((n) => n + 1);
+            if (out.conflictCopies > 0)
+              setNote(
+                `${out.conflictCopies} karakter két eszközön is módosult egyszerre. A másik változat külön karakterként került a listára („… (másik változat)”), hogy semmi ne vesszen el.`
+              );
+            else setNote((n) => (n && n.includes("(másik változat)") ? n : null)); // a conflict notice stays until the next one
+          } while (again.current);
+        });
+        if (hopRef.current === "backSyncing") {
+          setHop("backDone");
+          window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
+        }
         setStatus("idle");
       } catch (e) {
         if (hopRef.current === "backSyncing") setHop(null);
-        setStatus(e instanceof DriveAuthError ? "needsTap" : "error");
+        setStatus(e instanceof DriveAuthError || e instanceof AccountMismatchError ? "needsTap" : "error");
         setNote(errorNote(e));
       } finally {
         running.current = false;
       }
     },
-    [roster, patchSettings, setHop]
+    [ensureAccount, patchSettings, setHop]
   );
 
   // Renew by redirect when nothing would be lost and it isn't looping.
-  const canLeave = (): boolean => {
+  const canLeave = useCallback((): boolean => {
     const s = loadDriveSettings();
     const now = Date.now();
     return (
@@ -206,7 +250,7 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
       safeDom() &&
       optsRef.current.safeToLeave()
     );
-  };
+  }, []);
 
   // Sync without user interaction: with a valid token right away; otherwise renew by redirect if this
   // is a safe moment (allowRedirect), else wait for a tap.
@@ -215,7 +259,6 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
       if (!available || !enabledRef.current) return;
       const token = validToken();
       if (token) {
-        learnEmail(token);
         void round(token);
         return;
       }
@@ -231,14 +274,13 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
             if (beginSilentRenewal(optsRef.current.returnContext(), loadDriveSettings().email)) return; // the notice stays up while the page unloads
           }
           setHop(null);
-          setStatus((s) => (s === "syncing" ? s : validToken() ? s : "needsTap"));
+          setStatus((st) => (st === "syncing" ? st : validToken() ? st : "needsTap"));
         }, HOP_NOTICE_MS);
         return;
       }
-      setStatus((s) => (s === "syncing" ? s : "needsTap"));
+      setStatus((st) => (st === "syncing" ? st : "needsTap"));
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [available, round, learnEmail, patchSettings, setHop]
+    [available, round, canLeave, patchSettings, setHop]
   );
 
   const cancelHop = useCallback(() => {
@@ -249,19 +291,29 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     setStatus((s) => (s === "syncing" ? s : "needsTap"));
   }, [patchSettings, setHop]);
 
-  const interactive = (firstTime: boolean) => {
-    if (!signInReady()) {
-      prepare();
-      setNote("A Google-bejelentkezés még töltődik. Próbáld újra egy pillanat múlva.");
-      return;
-    }
+  // A token from a tap (the popup), with the account pre-filled.
+  const tokenFromTap = useCallback(
+    (firstTime: boolean): Promise<string> | null => {
+      if (!signInReady()) {
+        prepare();
+        setNote("A Google-bejelentkezés még töltődik. Próbáld újra egy pillanat múlva.");
+        return null;
+      }
+      return requestTokenInteractive(firstTime, loadDriveSettings().email);
+    },
+    [prepare]
+  );
+
+  const interactive = (firstTime: boolean, backups?: boolean) => {
     const token = !firstTime ? validToken() : null;
     if (token) return void round(token);
-    requestTokenInteractive(firstTime, loadDriveSettings().email).then(
+    const p = tokenFromTap(firstTime);
+    if (!p)
+      return;
+    p.then(
       (t) => {
         enabledRef.current = true;
-        patchSettings({ enabled: true, silentBlockedUntil: null });
-        learnEmail(t);
+        patchSettings({ enabled: true, silentBlockedUntil: null, ...(backups === undefined ? {} : { backups }) });
         void round(t);
       },
       (e) => {
@@ -277,7 +329,8 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     setHop(null);
     void revokeAccess();
     clearDriveState();
-    setSettings({ ...OFF_SETTINGS });
+    verifiedTokens.clear();
+    setSettings(loadDriveSettings());
     setStatus("off");
     setNote(null);
   };
@@ -291,11 +344,12 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
   }, []);
 
   // 2 seconds after local edits (no redirect: the user is in the middle of something)
+  const revision = roster.revision;
   useEffect(() => {
-    if (!available || !settings.enabled || roster.localRevision === 0) return;
+    if (!available || !settings.enabled || revision === 0) return;
     const t = window.setTimeout(() => trySilent(false), AUTO_DELAY_MS);
     return () => window.clearTimeout(t);
-  }, [roster.localRevision, available, settings.enabled, trySilent]);
+  }, [revision, available, settings.enabled, trySilent]);
 
   // leaving the app: upload right away while the token works; coming back: sync (and renew if needed)
   useEffect(() => {
@@ -303,19 +357,26 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
         const token = validToken();
-        if (token && pendingChanges(roster.currentRecords(), loadSyncBase(), loadTombstones()).count > 0) void round(token);
+        const st = store.getState();
+        if (token && pendingChanges(st.records, st.deletions, loadPublished()).count > 0) void round(token);
       } else if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) {
         trySilent(true);
       }
     };
     const onOnline = () => trySilent(false);
+    // back from Google through the back/forward cache: the page wasn't reloaded, so the notice is stale
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted && hopRef.current === "leaving") setHop(null);
+    };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("online", onOnline);
+    window.addEventListener("pageshow", onPageShow);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("online", onOnline);
+      window.removeEventListener("pageshow", onPageShow);
     };
-  }, [available, settings.enabled, trySilent, round, roster]);
+  }, [available, settings.enabled, trySilent, round, setHop]);
 
   // A screen left open for a long time (a sheet during a game): after a minute without touches, with
   // changes waiting and the token expired, renew so the changes reach Drive.
@@ -324,25 +385,73 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     const touched = () => {
       lastInput.current = Date.now();
     };
-    const opts = { capture: true, passive: true } as const;
+    const listenOpts = { capture: true, passive: true } as const;
     const kinds = ["pointerdown", "keydown", "wheel", "scroll", "touchstart"] as const;
-    kinds.forEach((k) => window.addEventListener(k, touched, opts));
+    kinds.forEach((k) => window.addEventListener(k, touched, listenOpts));
     const iv = window.setInterval(() => {
       if (hopRef.current || running.current || validToken() || document.visibilityState !== "visible") return;
       if (Date.now() - lastInput.current < IDLE_HOP_MS) return;
-      if (pendingChanges(roster.currentRecords(), loadSyncBase(), loadTombstones()).count === 0) return;
+      const st = store.getState();
+      if (pendingChanges(st.records, st.deletions, loadPublished()).count === 0) return;
       trySilent(true);
     }, IDLE_CHECK_MS);
     return () => {
-      kinds.forEach((k) => window.removeEventListener(k, touched, opts));
+      kinds.forEach((k) => window.removeEventListener(k, touched, listenOpts));
       window.clearInterval(iv);
     };
-  }, [available, settings.enabled, trySilent, roster]);
+  }, [available, settings.enabled, trySilent]);
 
-  useEffect(() => () => window.clearTimeout(hopTimer.current), []);
+  // unmount (and React's dev-mode remount): drop a pending hop so a remount can announce it again
+  useEffect(
+    () => () => {
+      window.clearTimeout(hopTimer.current);
+      hopTimer.current = undefined;
+      if (hopRef.current === "leaving") hopRef.current = null;
+    },
+    []
+  );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const pending = useMemo(() => pendingChanges(roster.records, loadSyncBase(), loadTombstones()), [roster.records, syncTick]);
+  const pending = useMemo(() => pendingChanges(roster.records, roster.deletions, loadPublished()), [roster.records, roster.deletions, syncTick]);
+
+  const listBackups = useCallback(async (): Promise<BackupMeta[]> => {
+    const token = validToken();
+    if (!token) throw new DriveAuthError("no token");
+    await ensureAccount(token);
+    return httpDrive(token).listBackups();
+  }, [ensureAccount]);
+
+  const restoreBackup = useCallback(
+    async (b: BackupMeta): Promise<CharacterRecord> => {
+      const token = validToken();
+      if (!token) throw new DriveAuthError("no token");
+      await ensureAccount(token);
+      const body = await httpDrive(token).readFile(b.id);
+      const data = "json" in body ? (body.json as { format?: string; record?: unknown }) : null;
+      const rec = data && data.format === BACKUP_FORMAT ? normalizeRecord({ ...(data.record as object), id: genId() }) : null;
+      if (!rec) throw new Error("unreadable backup");
+      const [y, m, d] = b.day.split("-");
+      const restored: CharacterRecord = { ...rec, id: genId(), name: `${rec.name} (${y}. ${m}. ${d}.)`, syncVc: undefined, updatedAt: undefined };
+      store.upsert(restored);
+      return restored;
+    },
+    [ensureAccount]
+  );
+
+  // From a tap: make sure there's a token (opens Google's popup if needed).
+  const connect = useCallback(async (): Promise<boolean> => {
+    if (validToken()) return true;
+    const p = tokenFromTap(false);
+    if (!p) return false;
+    try {
+      const t = await p;
+      await ensureAccount(t);
+      return true;
+    } catch (e) {
+      setNote(errorNote(e));
+      return false;
+    }
+  }, [tokenFromTap, ensureAccount]);
 
   return {
     available,
@@ -350,17 +459,22 @@ export function useDriveSync(roster: RosterApi, opts: DriveSyncOptions): DriveSy
     status: settings.enabled ? status : "off",
     lastSyncAt: settings.lastSyncAt,
     email: settings.email,
+    backups: settings.backups,
     pending: settings.enabled ? pending : { count: 0, oldest: null },
     note,
     ready,
     prepare,
-    enable: () => interactive(true),
+    enable: (backups: boolean) => interactive(true, backups),
     syncNow: () => interactive(false),
     disable,
+    setBackups: (on: boolean) => patchSettings({ backups: on }),
     atRoster: () => {
       if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) trySilent(true);
     },
     hop: settings.enabled ? hop : null,
     cancelHop,
+    listBackups,
+    restoreBackup,
+    connect,
   };
 }

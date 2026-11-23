@@ -9,6 +9,10 @@ const base = process.env.BASE_PATH || "/";
 // (see examples/aws-infra): a cached app would never reach the gate again.
 const disablePwa = process.env.DISABLE_PWA === "true";
 
+// Oldest browsers the build supports: the same floor the original app had (iOS/iPadOS 12.2, Safari 12,
+// so older iPads still at the table keep working). Newer JavaScript syntax is rewritten for them.
+const BROWSER_TARGET = ["es2018", "safari12", "ios12", "chrome80", "firefox78", "edge88"];
+
 export default defineConfig({
   base,
   plugins: [
@@ -52,6 +56,8 @@ export default defineConfig({
   server: { port: 3000 },
   preview: { port: 3000 },
   build: {
+    target: BROWSER_TARGET,
+    cssTarget: BROWSER_TARGET,
     outDir: "dist",
     // One ~760 kB (gzip) chunk, mostly the rules data every screen needs at startup; splitting it
     // wouldn't make the first paint faster, so only warn well above that.

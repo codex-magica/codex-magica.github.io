@@ -9,42 +9,61 @@ Without one, the app stays local-only and never contacts Google.
 
 ## How it works
 
-- The **Google Drive** button on the roster opens a short explanation and a **Bekapcsolás** (turn on)
-  button. Google's popup asks for one permission, `drive.appdata`: access to a hidden folder in the
-  user's Drive that only this app can see. It cannot read any other file.
-- The app keeps one file there, `codex-magica-roster.json`, with every character, its last-modified
-  time and deletions.
-- Each sync downloads the file, merges, and uploads the result. The merge is three-way per character
-  against the version both sides last agreed on: a change on one side is taken over, deletions
-  propagate, an edit beats a deletion, and if the same character was edited on two devices, both
-  versions are kept (the other one as "… (másik eszközről)").
-- Browser-only apps get a Google access token that lasts about an hour and no refresh token. While it
-  is valid, sync runs by itself 2 seconds after each edit, when the app goes to the background and when
-  it comes back.
-- **Renewal without a tap.** When the token has expired, the app renews it at safe moments with a quick
-  round trip through Google's authorization endpoint with `prompt=none` and `login_hint`:
-  - app start, coming back to the app, arriving at the roster;
-  - a minute without touches while changes are waiting (a sheet left open during a game).
+- The **Google Drive** button on the roster opens a short explanation, a switch for **daily backups** (on by
+  default) and a **Bekapcsolás** (turn on) button. Google's popup asks for `drive.appdata` (a hidden folder in
+  the user's Drive that only this app can see; it can't read any other file) and the email address.
+- **One file per device.** Each device keeps its own file in that folder (`codex-magica-sync.<device>.json`)
+  and is the only one that ever writes it, so two devices can never overwrite each other's work. A sync round
+  lists the folder, downloads the files that changed since last time, merges them with the roster on the
+  device, and writes the device's own file. A round where nothing changed costs one listing request.
+- **Version vectors, not clocks.** Every character carries a small per-device edit counter. Comparing two
+  versions tells exactly whether one replaced the other or whether they were edited in parallel, whatever the
+  devices' clocks say:
+  - one contains the other → the newer one;
+  - edited in parallel and one of them deleted → the edit wins;
+  - edited in parallel, same content → one version;
+  - edited in parallel, different content → **both are kept**: the one edited last keeps the character, the
+    other becomes "Név (másik változat)". Every device resolves it identically (the copy's id comes from its
+    content), so they converge without extra copies.
+- **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
+  download that isn't valid JSON is fetched again (a cut-off response reads fine the second time); a damaged
+  file of this device's own is kept aside (`kind=unreadable`) before it's rewritten; another device's damaged
+  file is left alone; entries that don't check out are skipped, not applied and not deleted; a file from a
+  newer app version stops the round with a "please update" note.
+- **Edits during a round** are kept: the result is reconciled with the roster as it is when the round ends.
+  An edit made from an older version than the one stored (the creator stayed open while a sync brought a newer
+  one) is saved alongside it as "(másik változat)" rather than over it.
+- **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
+  file can't bring a deleted character back.
+- **Daily backups** (if on): before Drive's copy of a character is replaced by an edit from a later day, or by a
+  deletion, the last state of that day is saved as its own file (`kind=backup`; created once, never modified).
+  Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
+  window lists them per character, deleted characters included; restoring adds the version as a new character
+  with the date in its name and never replaces anything.
+- **Timing.** While the token is valid, sync runs 2 seconds after an edit, when the app goes to the background
+  and when it comes back. One round at a time, across tabs too (Web Locks); other tabs' changes arrive through
+  the `storage` event.
+- **Renewal without a tap.** Browser-only apps get a one-hour token and no refresh token. When it has expired,
+  the app renews it at safe moments (app start, coming back to the app, arriving at the roster, or a minute
+  without touches while changes are waiting) with a round trip through Google's authorization endpoint with
+  `prompt=none` and `login_hint`. A small notice announces it 3 seconds ahead ("Most ne" cancels for 10
+  minutes), and the app comes back to the same screen, tab and scroll position. Never while a window or the
+  character creator is open or a text field has focus, and at most once every 10 minutes.
+- Only if Google answers that it needs the user (signed out, permission removed) does the footer ask for a
+  tap; silent attempts then pause for 12 hours (1 hour after other errors). The tap's popup has the account
+  pre-filled.
+- **Account check.** Every new token is checked against the account sync was set up with; a different
+  account is refused with an explanation, so characters never merge into someone else's Drive.
+- **Kikapcsolás** (turn off) revokes the token. Nothing is deleted: the characters stay on the device, and the
+  files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
 
-  A small card announces it 3 seconds ahead ("Most ne" cancels it for 10 minutes), and after the round
-  trip says "Szinkronizálva". The app lands back on the same screen, sheet or compendium tab and scroll
-  position. It never leaves while a window or the character creator is open or a text field has focus
-  (checked again when the 3 seconds are up), and at most once every 10 minutes. This works as long as
-  the user's Google session is alive, which is usually weeks.
-- Only if Google answers that it needs the user (signed out, permission removed) does the footer ask
-  for a tap on **Google Drive**; silent attempts then pause for 12 hours. The tap's popup has the
-  account pre-filled, so it usually just closes by itself.
-- A dot on the button shows changes waiting for upload, and if this device holds changes for more than
-  three hours without syncing, the roster says so before you continue on another device.
-- The permission screen also asks for the user's email address. It is used only to show which account
-  syncs and to pre-fill it, so Google's account chooser never appears.
-- **Kikapcsolás** (turn off) revokes the token. The characters on the device stay; the copy in Drive can
-  be deleted under Drive → Settings → Manage apps.
-
-Code: `src/state/googleDrive.ts` (sign-in, renewal by redirect and Drive calls), `driveMerge.ts` (the merge),
-`driveSyncEngine.ts` (one sync round), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`,
-`DriveHopNotice.tsx` (the card around the round trip), `scrollMemory.ts` (scroll positions across it).
-Tests: `src/state/driveSync.test.ts` simulates several devices against an in-memory Drive.
+Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `versions.ts` (version
+vectors), `driveMerge.ts` (the merge, conflict resolution, backup selection, reconciling), `driveSyncEngine.ts`
+(one round: reads, backups, write), `googleDrive.ts` (sign-in, renewal by redirect, Drive calls),
+`useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`, `scrollMemory.ts`.
+Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
+including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
+and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
 
 ## Setting it up
 

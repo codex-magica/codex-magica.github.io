@@ -1,54 +1,110 @@
-// One sync round with Google Drive: download the file, merge, upload the result.
-//
-// Drive has no conditional writes for file contents, so a write that races another device's write
-// is detected instead: right before uploading we re-read the file's version, and if it moved since
-// we downloaded it, the round starts over with the newer file (up to three times).
+// One sync round with Google Drive: read every device's file, merge, keep backups, write this device's
+// file. Nothing in Drive is ever replaced unless it was read successfully first:
+//   - any failed download stops the round (it's retried next time); nothing is written
+//   - a file that isn't valid JSON is downloaded once more (a cut-off download reads fine the second
+//     time); if it's really damaged and it's this device's own file, a copy is kept aside before the
+//     file is rewritten; another device's damaged file is left alone
+//   - a file from a newer version of the app stops the round: this version must not misread it
+//   - backups are written before this device's file, so a version is never replaced before its backup
+//     exists
 
 import { CharacterRecord } from "../model/character";
-import { DriveTransport } from "./googleDrive";
-import { MergeResult, mergeWithCloud, parseCloudFile } from "./driveMerge";
-import { SyncBase, Tombstones } from "./syncState";
+import { DriveFileMeta, DriveTransport, FileBody, fitBytes } from "./googleDrive";
+import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping, versionKey } from "./driveMerge";
+import { Deletions } from "./rosterStore";
+import { Published } from "./syncState";
+
+export class SyncNewerVersionError extends Error {}
+
+export const BACKUP_FORMAT = "codex-magica-snapshot";
 
 export interface SyncInput {
-  local: CharacterRecord[];
-  tombstones: Tombstones;
-  base: SyncBase;
-  fileId: string | null;
+  records: CharacterRecord[];
+  deletions: Deletions;
+  device: string;
+  backups: boolean;
+  backedUp: Set<string>; // "id:fingerprint" of versions already backed up
 }
 export interface SyncOutput {
-  roster: CharacterRecord[];
-  base: SyncBase;
-  fileId: string;
+  records: CharacterRecord[];
+  deletions: Deletions;
+  published: Published;
+  backedUp: Set<string>;
   pulled: number;
   conflictCopies: number;
   uploaded: boolean;
+  skippedFiles: number; // other devices' files that couldn't be read (left alone)
 }
 
-export class SyncRaceError extends Error {}
+// Downloaded files by id and version: a round where nothing changed costs one listing.
+const sharedCache = new Map<string, { version: string; parsed: ParsedFile; raw?: string }>();
 
-export async function runSync(drive: DriveTransport, input: SyncInput, now: () => number = Date.now): Promise<SyncOutput> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const remote = await drive.find(input.fileId);
-    const merged: MergeResult = mergeWithCloud(input.local, input.tombstones, remote ? parseCloudFile(remote.content) : null, input.base, now());
-    let fileId = remote?.id ?? null;
-    if (merged.uploadNeeded || !remote) {
-      if (remote) {
-        const current = await drive.version(remote.id);
-        if (current !== null && current !== remote.version) continue; // another device saved meanwhile
-        if (current === null) fileId = (await drive.create(merged.file)).id; // file vanished: recreate
-        else await drive.update(remote.id, merged.file);
-      } else {
-        fileId = (await drive.create(merged.file)).id;
-      }
+const byCreated = (a: DriveFileMeta, b: DriveFileMeta) => (a.createdTime < b.createdTime ? -1 : a.createdTime > b.createdTime ? 1 : a.id < b.id ? -1 : 1);
+
+type Cache = Map<string, { version: string; parsed: ParsedFile; raw?: string }>;
+const read = async (drive: DriveTransport, f: DriveFileMeta, cache: Cache): Promise<{ parsed: ParsedFile; raw?: string }> => {
+  const hit = cache.get(f.id);
+  if (hit && hit.version === f.version) return hit;
+  let body: FileBody = await drive.readFile(f.id);
+  if ("raw" in body) body = await drive.readFile(f.id);
+  const parsed: ParsedFile = "json" in body ? parseDeviceFile(body.json) : { ok: false, reason: "unreadable" };
+  // keep the original text of anything unreadable, so it can be set aside intact
+  const out = { parsed, raw: parsed.ok ? undefined : "raw" in body ? body.raw : JSON.stringify(body.json) };
+  cache.set(f.id, { version: f.version, ...out });
+  return out;
+};
+
+export const backupFileName = (c: BackupCandidate): string => `codex-magica-backup.${c.id}.${dayOf(c.version.t)}.${c.version.h}.json`;
+
+export async function runSync(drive: DriveTransport, input: SyncInput, now: () => number = Date.now, cache: Cache = sharedCache): Promise<SyncOutput> {
+  const files = await drive.listSyncFiles();
+  const own = files.filter((f) => f.device === input.device).sort(byCreated)[0] ?? null;
+
+  const sources = [];
+  let ownPrevious = null;
+  let ownUnreadable: string | null = null;
+  let skippedFiles = 0;
+  for (const f of files) {
+    const { parsed, raw } = await read(drive, f, cache);
+    if (!parsed.ok && parsed.reason === "newer") throw new SyncNewerVersionError(`sync file version ${parsed.version}`);
+    if (!parsed.ok) {
+      if (f.id === own?.id) ownUnreadable = raw ?? "";
+      else skippedFiles++;
+      continue;
     }
-    return {
-      roster: merged.roster,
-      base: merged.base,
-      fileId: fileId!,
-      pulled: merged.pulled,
-      conflictCopies: merged.conflictCopies,
-      uploaded: merged.uploadNeeded || !remote,
-    };
+    sources.push(parsed.versions);
+    if (f.id === own?.id) ownPrevious = parsed.versions;
   }
-  throw new SyncRaceError("Drive kept changing during sync");
+
+  const result = mergeRound({ records: input.records, deletions: input.deletions }, sources, ownPrevious, input.device, now(), input.backups);
+
+  // backups first: nothing gets replaced in Drive before its backup exists
+  const backedUp = new Set(input.backedUp);
+  for (const c of result.backups) {
+    const key = `${c.id}:${c.version.h}`;
+    if (backedUp.has(key)) continue;
+    const name = backupFileName(c);
+    if (!(await drive.backupExists(name))) {
+      const props = { char: c.id, day: dayOf(c.version.t), reason: c.reason, name: fitBytes(c.version.record!.name, 110) };
+      await drive.createBackup(name, props, { format: BACKUP_FORMAT, version: 1, savedAt: now(), reason: c.reason, day: props.day, record: stripBookkeeping(c.version.record!) });
+    }
+    backedUp.add(key);
+  }
+
+  let uploaded = false;
+  if (ownUnreadable !== null) await drive.keepUnreadable(`codex-magica-unreadable.${input.device}.${now()}.txt`, ownUnreadable);
+  if (result.publishNeeded || ownUnreadable !== null) {
+    if (own) {
+      const { version } = await drive.updateFile(own.id, result.file);
+      cache.set(own.id, { version, parsed: parseDeviceFile(result.file) });
+    } else {
+      const created = await drive.createSyncFile(input.device, result.file);
+      cache.set(created.id, { version: created.version, parsed: parseDeviceFile(result.file) });
+    }
+    uploaded = true;
+  }
+
+  const published: Published = {};
+  for (const [id, e] of Object.entries(result.file.characters)) published[id] = versionKey(e);
+  return { records: result.records, deletions: result.deletions, published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, uploaded, skippedFiles };
 }

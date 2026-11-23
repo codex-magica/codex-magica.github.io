@@ -7,7 +7,8 @@
 //   added as a separate copy. Nothing on the device is ever overwritten.
 
 import { CharacterRecord } from "../model/character";
-import { genId, migrateRecord } from "./storage";
+import { genId, normalizeRecord } from "./storage";
+import { contentHash } from "./recordHash";
 
 export const BACKUP_FORMAT = "codex-magica-backup";
 
@@ -18,15 +19,11 @@ interface BackupFile {
   characters: CharacterRecord[];
 }
 
-// `updatedAt` is local bookkeeping; it's meaningless in a file and must not make copies look different.
+// `updatedAt` and `syncVc` are local bookkeeping; they're meaningless in a file and must not make copies
+// look different.
 const withoutStamp = (record: CharacterRecord): CharacterRecord => {
-  const { updatedAt, ...rest } = record;
+  const { updatedAt: _t, syncVc: _v, ...rest } = record;
   return rest;
-};
-
-const isRecordShape = (raw: unknown): raw is CharacterRecord => {
-  const r = raw as CharacterRecord | null;
-  return !!r && typeof r === "object" && typeof r.name === "string" && Array.isArray(r.levels);
 };
 
 const isBackup = (raw: unknown): raw is BackupFile => {
@@ -103,6 +100,7 @@ export const exportBackupFile = async (records: CharacterRecord[]): Promise<bool
 export interface ImportResult {
   add: CharacterRecord[]; // ready to upsert
   skipped: number; // already on this device, unchanged
+  invalid: number; // entries that couldn't be read (damaged or not a character)
   kind: "character" | "backup";
 }
 
@@ -115,20 +113,26 @@ export const parseImportFile = (text: string, existing: CharacterRecord[]): Impo
   }
 
   if (isBackup(data)) {
-    const have = new Map(existing.map((r) => [r.id, JSON.stringify(withoutStamp(r))]));
+    const have = new Map(existing.map((r) => [r.id, contentHash(r)]));
     const add: CharacterRecord[] = [];
     let skipped = 0;
+    let invalid = 0;
     for (const raw of data.characters) {
-      if (!isRecordShape(raw)) continue;
-      const rec = migrateRecord(withoutStamp(raw));
-      const current = have.get(rec.id);
-      if (current === undefined) add.push(rec);
-      else if (current === JSON.stringify(rec)) skipped++;
-      else add.push({ ...rec, id: genId() }); // differs from the local one: keep both
+      const rec = normalizeRecord(raw);
+      if (!rec || typeof (raw as CharacterRecord).id !== "string") {
+        invalid++;
+        continue;
+      }
+      const clean = withoutStamp(rec);
+      const current = have.get(clean.id);
+      if (current === undefined) add.push(clean);
+      else if (current === contentHash(clean)) skipped++;
+      else add.push({ ...clean, id: genId() }); // differs from the local one: keep both
     }
-    return { add, skipped, kind: "backup" };
+    return { add, skipped, invalid, kind: "backup" };
   }
 
-  if (isRecordShape(data)) return { add: [migrateRecord({ ...withoutStamp(data), id: genId() })], skipped: 0, kind: "character" };
+  const rec = normalizeRecord(data);
+  if (rec) return { add: [{ ...withoutStamp(rec), id: genId() }], skipped: 0, invalid: 0, kind: "character" };
   return null;
 };

@@ -41,10 +41,10 @@ code {
    across browsers: viewport units resolve against the real viewport, and position:fixed descendants
    (modals, the creator) anchor to #root's box, which visually equals the screen. The transform is
    applied even at scale 1 so fixed-positioning semantics don't flip at the breakpoint.
-   Media queries still see the real viewport, so the md (1200px) breakpoint is unaffected. */
+   Media queries still see the real viewport, so the md (1200px) breakpoint is unaffected.
+   The scale itself (1.1 from 1680px, 1.2 from 2200px) is set in index.tsx: the build would rewrite
+   CSS media queries into a syntax that Safari before 16.4 can't read. */
 :root { --app-zoom: 1; }
-@media (min-width: 1680px) { :root { --app-zoom: 1.1; } }
-@media (min-width: 2200px) { :root { --app-zoom: 1.2; } }
 
 body {
   overflow: hidden;
