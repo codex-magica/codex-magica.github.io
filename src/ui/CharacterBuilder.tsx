@@ -2,9 +2,9 @@ import React, { useMemo, useState } from "react";
 import { Box, Heading, HStack, Input, Switch, Text, VStack } from "@chakra-ui/react";
 import { ConfirmModal } from "./ConfirmModal";
 import { CharacterBuilderApi } from "../state/useCharacterBuilder";
-import { emptyLevel } from "../model/character";
+import { LevelRecord, emptyLevel } from "../model/character";
 import { derive } from "../engine/derive";
-import { isHomebrew, rulesFor } from "../model/rulesVariants";
+import { DroppedPurchase, isHomebrew, rulesFor, switchSkillRework } from "../model/rulesVariants";
 import { RACES } from "../model/races";
 import { CLASSES } from "../model/classes";
 import { activeChoices, defaultSelections, ChoiceDef } from "../model/choices";
@@ -73,6 +73,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const [pendingClass, setPendingClass] = useState<string | null>(null); // class change awaiting hard confirm
   const [pendingCustomClass, setPendingCustomClass] = useState<ClassDef | null>(null); // custom-class switch awaiting confirm
   const [pendingRace, setPendingRace] = useState<string | null>(null); // race change awaiting hard confirm
+  const [pendingRework, setPendingRework] = useState<{ on: boolean; levels: LevelRecord[]; dropped: DroppedPurchase[] } | null>(null); // house-rule switch that removes purchases
   const [picker, setPicker] = useState<"race" | "class" | null>(null); // open race/class browser modal
   const [specChoice, setSpecChoice] = useState<ChoiceDef | null>(null); // open specialization browser modal
   const [customClassOpen, setCustomClassOpen] = useState(false); // open the custom-class builder modal
@@ -123,16 +124,12 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const choiceList = klass ? activeChoices(klass.choices, record.selections) : [];
   const raceAllowed = klass ? klass.allowedRaces.indexOf(record.race) >= 0 : true;
 
-  // House rule (skill rework): set at creation only. Flipping mid-creation prunes purchases that name
-  // skills absent from the target catalog (e.g. Veszélyérzék ↔ Éberség), or priced the other way there
-  // (Mászás is a % skill in the book and a fok skill in the house rules: 18% must not become fok 18).
+  // House rule (skill rework): set at creation only. Purchases the other catalog lacks or prices
+  // differently are removed (see switchSkillRework); when there are any, the player confirms first.
   const setSkillRework = (on: boolean) => {
-    const current = rulesFor(record);
-    const target = rulesFor({ houseRules: { skillRework: on } });
-    const pct = (def: { cost: unknown } | undefined) => def?.cost === "percentage";
-    const keeps = (skill: string) => !!target.skills[skill] && pct(target.skills[skill]) === pct(current.skills[skill]);
-    const levels = record.levels.map((l) => ({ ...l, skillPurchases: l.skillPurchases.filter((p) => keeps(p.skill)) }));
-    update({ houseRules: { ...record.houseRules, skillRework: on }, levels });
+    const sw = switchSkillRework(record, on);
+    if (sw.dropped.length) setPendingRework({ on, ...sw });
+    else update({ houseRules: { ...record.houseRules, skillRework: on } });
   };
   const showHomebrewToggle = mode === "create";
 
@@ -415,6 +412,24 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           képességeket, tulajdonság-maximumokat és bónuszokat. A magasabb szinteken elköltött pontok
           érvénytelenné válhatnak: a fölöslegessé vált vásárlások automatikusan törlődnek, a
           tulajdonság-pontokat pedig újra az új maximumokhoz kell igazítani. Folytatod?
+        </ConfirmModal>
+      )}
+
+      {pendingRework && (
+        <ConfirmModal title={pendingRework.on ? "Házi szabály bekapcsolása" : "Házi szabály kikapcsolása"} confirmLabel="Váltás"
+          onConfirm={() => { update({ houseRules: { ...record.houseRules, skillRework: pendingRework.on }, levels: pendingRework.levels }); setPendingRework(null); }}
+          onClose={() => setPendingRework(null)}>
+          {pendingRework.on ? "A házi szabályban" : "A könyv szabályai szerint"} ezek a képzettségek másképp
+          működnek, ezért a megvásárlásuk törlődik, és a rájuk költött pontokat újra elköltheted:
+          <Box as="ul" pl="20px" my="8px">
+            {pendingRework.dropped.map((d, i) => (
+              <li key={i}>
+                <b>{d.skill}{d.subtype ? ` (${d.subtype})` : ""}</b> {d.to}{d.percent ? "%" : ". fok"}
+                {record.levels.length > 1 ? ` · ${d.level}. szint` : ""}
+              </li>
+            ))}
+          </Box>
+          Folytatod?
         </ConfirmModal>
       )}
     </Box>

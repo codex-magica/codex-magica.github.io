@@ -5,7 +5,7 @@
 import { derive } from "./derive";
 import { skillKpCost } from "./skillCost";
 import { validateRules } from "../model/validateRules";
-import { homebrewProse, rulesHomebrew } from "../model/rulesVariants";
+import { homebrewProse, rulesHomebrew, switchSkillRework } from "../model/rulesVariants";
 import { pctToFok } from "../model/homebrew/skillRework";
 import { RULES } from "../model/rulesDb";
 import { CharacterRecord, SCHEMA_VERSION } from "../model/character";
@@ -196,5 +196,32 @@ describe("a purchase at a level the skill can't have", () => {
     const d = derive(rulesHomebrew(), rec);
     expect(d.pools.kapBalanceByLevel.every(Number.isFinite)).toBe(true);
     expect(d.diagnostics.some((x) => x.message.includes("Mászás: 18. fok nem lehetséges"))).toBe(true);
+  });
+});
+
+describe("switching the house rule at creation", () => {
+  const lvl = (skillPurchases: { skill: string; to: number }[]) => [{ level: 1, allocations: [], skillPurchases, hmAssignments: [], statIncreases: [] }];
+  test("on: removes % skills and merged skills, keeps the rest, and lists what went", () => {
+    const rec = base({ houseRules: undefined, levels: lvl([{ skill: "Mászás", to: 18 }, { skill: "Veszélyérzék", to: 12 }, { skill: "Úszás", to: 2 }]) });
+    const sw = switchSkillRework(rec, true);
+    expect(sw.levels[0].skillPurchases.map((p) => p.skill)).toEqual(["Úszás"]);
+    expect(sw.dropped).toEqual([
+      { level: 1, skill: "Mászás", subtype: undefined, to: 18, percent: true },
+      { level: 1, skill: "Veszélyérzék", subtype: undefined, to: 12, percent: true },
+    ]);
+    const d = derive(rulesHomebrew(), { ...rec, houseRules: { skillRework: true }, levels: sw.levels });
+    expect(d.pools.kapBalanceByLevel.every(Number.isFinite)).toBe(true);
+  });
+  test("off: removes reworked skills and Éberség", () => {
+    const rec = base({ levels: lvl([{ skill: "Mászás", to: 2 }, { skill: "Éberség", to: 1 }, { skill: "Úszás", to: 2 }]) });
+    const sw = switchSkillRework(rec, false);
+    expect(sw.levels[0].skillPurchases.map((p) => p.skill)).toEqual(["Úszás"]);
+    expect(sw.dropped.map((x) => x.skill)).toEqual(["Mászás", "Éberség"]);
+  });
+  test("nothing affected: nothing dropped, levels untouched", () => {
+    const rec = base({ houseRules: undefined, levels: lvl([{ skill: "Úszás", to: 2 }]) });
+    const sw = switchSkillRework(rec, true);
+    expect(sw.dropped).toEqual([]);
+    expect(sw.levels[0]).toBe(rec.levels[0]);
   });
 });
