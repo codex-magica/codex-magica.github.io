@@ -235,11 +235,9 @@ flowchart LR
 
 ### 4 · Hosting
 
-The app is a static, offline-capable build (a service worker precaches everything), so it can be hosted
-anywhere; see [Use it](#use-it). The setup that ran our group's private instance
-is kept as a documented example in [`examples/aws-infra/`](examples/aws-infra): S3 + CloudFront, a
-Lambda@Edge function that only lets in allowlisted Google accounts (verified Firebase ID tokens), a
-standalone login page, and a CodePipeline that deploys on every push. All of it is Terraform.
+The app is a static, offline-capable build (a service worker precaches everything), so any static host
+works. This repository deploys itself to GitHub Pages with a GitHub Actions workflow, and a fork can do the
+same in a few clicks; see [Use it](#use-it).
 
 ## Use it
 
@@ -318,7 +316,6 @@ src/
 └── fonts/           Crimson Pro, plus a few symbols from EB Garamond (OFL)
 source_material/
 └── build/           the PDF → Markdown pipeline: scripts and agent instructions
-examples/aws-infra/  example hosting: Terraform, Lambda@Edge Google sign-in gate, login page
 docs/                design notes, pipeline write-up, README assets
 ```
 
@@ -329,8 +326,7 @@ docs/                design notes, pipeline write-up, README assets
 **App:** React 19 · TypeScript 7 · Chakra UI 2 · Emotion · Vite 8 · vite-plugin-pwa (Workbox)<br>
 **Storage:** localStorage · JSON import/export · optional Google Drive sync (Google Identity Services, Drive REST API, app-data folder)<br>
 **Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
-**Tooling:** Vitest · Oxlint · GitHub Actions<br>
-**Example hosting:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · Firebase Auth
+**Tooling:** Vitest · Oxlint · GitHub Actions
 
 ## Credits & license
 

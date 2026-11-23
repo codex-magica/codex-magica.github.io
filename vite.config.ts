@@ -1,14 +1,10 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vitest/config";
-import type { Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA, type ManifestOptions } from "vite-plugin-pwa";
 
 // Hosting under a subpath (GitHub Pages serves project sites at /<repo>/): set BASE_PATH=/<repo>/.
 const base = process.env.BASE_PATH || "/";
-// DISABLE_PWA=true builds without the service worker, for hosting behind a per-request auth gate
-// (see examples/aws-infra): a cached app would never reach the gate again.
-const disablePwa = process.env.DISABLE_PWA === "true";
 
 // Oldest browsers the build supports: the same floor the original app had (iOS/iPadOS 12.2, Safari 12,
 // so older iPads still at the table keep working). Newer JavaScript syntax is rewritten for them.
@@ -31,17 +27,6 @@ const manifest: Partial<ManifestOptions> = {
   ],
 };
 
-// Without the service worker (DISABLE_PWA) the PWA plugin emits no manifest either; ship it anyway, so the
-// app still installs with its name and icons.
-const staticManifest: Plugin = {
-  name: "codex-magica-static-manifest",
-  apply: "build",
-  generateBundle() {
-    this.emitFile({ type: "asset", fileName: "manifest.webmanifest", source: JSON.stringify(manifest) });
-  },
-  transformIndexHtml: () => [{ tag: "link", attrs: { rel: "manifest", href: `${base}manifest.webmanifest` }, injectTo: "head" }],
-};
-
 export default defineConfig({
   base,
   plugins: [
@@ -50,7 +35,6 @@ export default defineConfig({
     // opens with no connection at the table. New versions are announced in-app (UpdateBanner),
     // never applied mid-session behind the user's back.
     VitePWA({
-      disable: disablePwa,
       registerType: "prompt",
       manifest,
       workbox: {
@@ -63,7 +47,6 @@ export default defineConfig({
         ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
       },
     }),
-    ...(disablePwa ? [staticManifest] : []),
   ],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

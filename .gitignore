@@ -18,12 +18,6 @@
 .env.test.local
 .env.production.local
 
-/examples/aws-infra/.terraform
-/examples/aws-infra/.terraform.lock.hcl
-/examples/aws-infra/build
-/examples/aws-infra/terraform.tfvars
-/examples/aws-infra/backend.hcl
-
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
