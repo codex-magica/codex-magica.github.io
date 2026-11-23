@@ -10,12 +10,15 @@
 **A digital compendium and character sheet for _M.A.G.U.S._, the classic Hungarian tabletop RPG,<br>
 built from a scanned copy of the _Új Törvénykönyv_ rulebook.**
 
-**English** · [Magyar](README.hu.md)
+Runs in the browser · installs to the home screen · works offline · optional sync through your own Google Drive
+
+[**Open the app**](https://marcigo36.github.io/codex-magica/) · **English** · [Magyar](README.hu.md)
 
 [![CI](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![PWA: works offline](https://img.shields.io/badge/PWA-works_offline-5A0FC8?logo=pwa&logoColor=white)
 [![Code license: MIT](https://img.shields.io/badge/code-MIT-6E7781)](LICENSE)
 
 </div>
@@ -42,6 +45,7 @@ Codex Magica turns the book into:
 - 📖 **A searchable compendium**: every skill, spell, prayer, psi discipline, weapon, armor and poison, each with its rules text, plus character-creation tables for attributes, races, classes and backgrounds.
 - 🧙 **A guided character builder**: race, class, school, backgrounds, point-buy, per-level skill purchases and level-ups, with the book's costs and prerequisites enforced. It works just as well for the game master's NPCs as for player characters.
 - 📜 **A live character sheet for the table**: hit points and pain points, mana, conditions, weapons and armor, companions. It works on a phone, an iPad or a desktop.
+- 📱 **An app you can take anywhere**: it installs to the home screen without an app store, works offline, and can keep your characters in sync across devices through your own Google Drive.
 
 It covers 12 classes, 6 races, 83 skills, 636 spells, prayers and psi disciplines, 83 weapons and 21 armors
 and shields. The UI is in Hungarian, like the game.
@@ -104,15 +108,41 @@ level. Each level is stored as its own entry, so you can go back and edit an ear
 and modifiers, custom abilities with their own rules text, and an optional house-rule variant of the
 skill system, fixed per character.
 
+## At the table, on any device
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mobile-dark.webp">
   <img src="docs/assets/mobile-light.webp" alt="The character sheet on a phone, split into swipeable pages">
 </picture>
 
-**Phone, tablet and desktop, online or not.** On a phone the sheet becomes swipeable pages; on an iPad or
-desktop it spreads into columns. It installs to the home screen and works offline at the table. Light and
-dark themes; characters stay on the device, with one-tap backups, or sync between devices through the
-player's own Google Drive.
+On a phone the sheet becomes swipeable pages; on an iPad or a desktop it spreads into columns. There are
+light and dark themes.
+
+**Install it like an app.** There's no app store involved: open the site and add it to your home screen
+([how](#use-it)). It then starts full screen with its own icon, like any other app.
+
+**Works offline.** The first visit stores the whole app on the device, the complete compendium included
+(under 3 MB). After that the sheet, the builder and the compendium all work without a connection, so a
+game room with no signal is fine. When a new version is published, the app downloads it in the background
+and offers to switch. It never reloads by itself, so a half-built character can't be lost.
+
+**Your characters on every device.** Turn on **Google Drive** on the roster, and your characters stay the
+same on your phone, tablet and computer:
+
+- The only Drive access the app asks for is a hidden folder that only this app can see. It can't see any
+  of your other files. Google also shares your email address, so the app can show which account syncs.
+- Changes sync a few seconds after you make them, when you leave the app and when you come back. Changes
+  made offline go up once you're back online.
+- If the same character was edited on two devices before they could sync, both versions are kept.
+  Nothing is overwritten silently.
+- Google's access for web apps runs out every hour. The app renews it with a quick hop through Google,
+  shows a small notice before it does, and brings you back to the same place.
+- There's no account to create and no server of ours in between: the data goes straight from your browser
+  to your Drive. See the [privacy notice](https://marcigo36.github.io/codex-magica/privacy.html).
+
+**Your data stays with you.** Without sync, characters live only in the browser on your device. A backup
+of all of them is one tap away, and the file can go straight to iCloud Drive, Google Drive or Files.
+Importing never overwrites anything, and single characters can be exported to share with someone.
 
 ## How it was built
 
@@ -170,16 +200,36 @@ flowchart LR
   number fails CI. A `validateRules` test checks that the rules data is internally consistent.
 - **House rules as data variants.** Each character is fixed to a rules variant at creation; the
   homebrew skill rework is a transform over the base rules, not a fork of the code.
-- **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema
-  migrations run on load so old saves keep working, and a character can be exported to and imported from
-  a JSON file.
-- **Optional sync without a server.** Players can sync through their own Google Drive: the browser
-  writes one file to the hidden app-data folder of their Drive, so the data never passes through a
-  server of ours. Merging is three-way per character against the last synced version, deletions travel
-  as tombstones, and when the same character was edited on two devices both versions are kept. Setup:
-  [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
-### 3 · Hosting
+### 3 · An app without a server
+
+```mermaid
+flowchart LR
+    A["Phone<br/>browser storage"] <-->|"sync"| D[("Player's Google Drive<br/>hidden app-data folder")]
+    D <-->|"sync"| B["iPad<br/>browser storage"]
+```
+
+- **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema
+  migrations run on load so old saves keep working, the app asks the browser for persistent storage, and
+  characters can be exported to and imported from JSON files.
+- **Installable and offline.** `vite-plugin-pwa` (Workbox) precaches the whole build, and the rules data
+  is bundled with the code, so nothing needs the network after the first load. Updates are offered, never
+  forced. An installed app can stay open for days, so it checks for a new version every hour.
+- **Sync without a server.** The browser talks to the Google Drive REST API directly and keeps one JSON
+  file in the player's app-data folder. Each round downloads, merges and uploads. The merge is three-way
+  per character against the last version both sides agreed on: deletions travel as tombstones, an edit
+  beats a deletion, and an edit on both sides keeps both versions. Drive has no conditional writes, so the
+  app re-checks the file version right before uploading and starts the round over if another device saved
+  in between. Tests simulate several devices against an in-memory Drive.
+- **Hourly tokens without hourly taps.** Browser-only Google sign-in gives a one-hour access token and no
+  refresh token. Instead of asking for a tap every hour, the app renews it with a full-page round trip to
+  Google's authorization endpoint (`prompt=none` with a `login_hint`) at moments when nothing can be lost:
+  at start, when coming back to the app, or after a minute without touches while changes are waiting, and
+  never while a dialog or the editor is open. It returns to the same screen, tab and scroll position.
+  Setup and details: [docs/google-drive-sync.md](docs/google-drive-sync.md); the options weighed, from
+  refresh-token proxies to native apps: [docs/google-drive-sync-renewal-plan.md](docs/google-drive-sync-renewal-plan.md).
+
+### 4 · Hosting
 
 The app is a static, offline-capable build (a service worker precaches everything), so it can be hosted
 anywhere; see [Use it](#use-it). The setup that ran our group's private instance
@@ -188,6 +238,25 @@ Lambda@Edge function that only lets in allowlisted Google accounts (verified Fir
 standalone login page, and a CodePipeline that deploys on every push. All of it is Terraform.
 
 ## Use it
+
+**Open it.** Go to **[marcigo36.github.io/codex-magica](https://marcigo36.github.io/codex-magica/)**. It
+runs in any current browser, and there's nothing to sign up for.
+
+**Add it to your home screen.**
+
+| Device | How |
+|---|---|
+| iPhone, iPad | in Safari: **Share → Add to Home Screen** |
+| Android | in Chrome: **⋮ → Install app** (or **Add to Home screen**) |
+| Computer | in Chrome or Edge: the install icon at the right end of the address bar; in Safari on a Mac: **File → Add to Dock** |
+
+Installing also makes the browser more likely to keep the app's storage for good, Safari especially.
+
+**Sync or back up.** To use your characters on more than one device, tap **Google Drive** on the roster
+and turn it on. Either way, tap **Biztonsági mentés** (backup) now and then. On a phone or tablet it opens
+the share sheet, so the file can go straight to iCloud Drive, Google Drive or Files. **Importálás fájlból**
+(import) restores it on the same or another device, and never overwrites anything. Single characters can
+be sent to someone the same way: character menu → **Exportálás fájlba** (export).
 
 **Host your own copy (free, a few clicks).**
 
@@ -198,19 +267,9 @@ standalone login page, and a CodePipeline that deploys on every push. All of it 
   also set the variable `BASE_PATH` = `/`.
 - **Cloudflare Pages, Netlify, or any static host** (these also work with private repositories): build
   command `npm run build`, output folder `dist`.
-
-**Install it.** Open the site, then on iPad/iPhone use Safari's **Share → Add to Home Screen**, on Android
-Chrome's **Install app**. It then opens like an app and works without a connection. When a new version is
-deployed, the app offers to update; it never reloads on its own.
-
-**Keep your characters safe.** There's no account and no server: characters live in the browser on your
-device. To use them on several devices, turn on **Google Drive** on the roster: the characters then sync
-through a hidden folder in your own Google Drive (available when the site was built with a Google client
-ID, see [docs/google-drive-sync.md](docs/google-drive-sync.md)). Either way, use **Biztonsági mentés** (backup) on the roster now and then; on a phone or tablet it opens the
-share sheet, so the file can go straight to iCloud Drive, Google Drive or Files. **Importálás fájlból**
-restores it, on the same or another device, and never overwrites anything. Single characters can be sent
-to someone else the same way (character menu → **Exportálás fájlba**). The app also asks the browser to
-keep its storage permanently; installing it to the home screen helps with that on Safari.
+- **Google Drive sync** needs a Google OAuth client ID of your own. It's free and takes about fifteen
+  minutes: [docs/google-drive-sync.md](docs/google-drive-sync.md). Without one, your copy simply has no
+  sync button, and everything else works the same.
 
 ## Found a mistake?
 
@@ -238,7 +297,8 @@ npm run dev          # http://localhost:3000
 | `npm run build` | Production build into `dist/` (`npm run preview` serves it) |
 
 The service worker is only active in production builds (`npm run build && npm run preview`), so the dev
-server always serves fresh code.
+server always serves fresh code. To try Google Drive sync locally, put your client ID in `.env.local` as
+`VITE_GOOGLE_CLIENT_ID` ([setup](docs/google-drive-sync.md)).
 
 <details>
 <summary><b>Project structure</b></summary>
@@ -263,7 +323,7 @@ docs/                design notes, pipeline write-up, README assets
 ## Tech stack
 
 **App:** React 19 · TypeScript 7 · Chakra UI 2 · Emotion · Vite 8 · vite-plugin-pwa (Workbox)<br>
-**Storage:** localStorage · JSON import/export · optional Google Drive sync (Google Identity Services, Drive app-data folder)<br>
+**Storage:** localStorage · JSON import/export · optional Google Drive sync (Google Identity Services, Drive REST API, app-data folder)<br>
 **Pipeline:** tesseract (`hun`) · ImageMagick · LLM agents (Claude Haiku for prose, Sonnet for tables)<br>
 **Tooling:** Vitest · Oxlint · GitHub Actions<br>
 **Example hosting:** Terraform · AWS S3 · CloudFront · Lambda@Edge · CodePipeline / CodeBuild · Firebase Auth
