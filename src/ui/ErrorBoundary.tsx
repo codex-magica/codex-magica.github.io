@@ -17,6 +17,30 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
     console.error(error);
   }
 
+  // A fixed version of the app may already be waiting (installed by the service worker, but not active
+  // while this page is open): switch to it, then reload.
+  private reload = () => {
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.location.reload();
+    };
+    try {
+      const sw = navigator.serviceWorker;
+      if (!sw) return go();
+      sw.getRegistration().then((r) => {
+        const waiting = r?.waiting;
+        if (!waiting) return go();
+        sw.addEventListener("controllerchange", go);
+        waiting.postMessage({ type: "SKIP_WAITING" });
+        window.setTimeout(go, 3000);
+      }, go);
+    } catch {
+      go();
+    }
+  };
+
   private saveAll = () => {
     try {
       void exportBackupFile(rosterStore().getState().records);
@@ -34,25 +58,48 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
     if (!this.state.error) return this.props.children;
     if (this.props.fallback) return this.props.fallback(this.state.error);
     const btn = { as: "button" as const, type: "button" as const, px: "16px", py: "10px", borderRadius: "9px", fontWeight: 700, fontSize: "15px", border: "1px solid" };
+    let unsaved = false; // saving to this device was failing: the latest edits exist only in memory
+    try {
+      unsaved = rosterStore().getState().saveFailed;
+    } catch {
+      /* the store itself is broken */
+    }
+    const primary = { borderColor: "accent", bg: "accentSoft", color: "accentTx" };
+    const secondary = { borderColor: "hair", color: "fg" };
     return (
       <Box minH="100%" display="flex" alignItems="center" justifyContent="center" p="24px" bg="page" color="fg">
         <Box maxW="440px" fontFamily="system-ui">
           <Heading fontSize="22px" mb="10px">
             Hiba történt
           </Heading>
-          <Text fontSize="15px" lineHeight="1.55" mb="8px">
-            A karaktereid nem vesztek el: minden módosítás azonnal mentődik ezen az eszközön. Töltsd újra az alkalmazást.
-          </Text>
-          <Text fontSize="14px" color="muted" lineHeight="1.55" mb="16px">
-            Ha a hiba újra előjön, mentsd el a karaktereidet egy fájlba, és jelezd a hibát a projekt GitHub-oldalán.
-          </Text>
+          {unsaved ? (
+            <Text fontSize="15px" lineHeight="1.55" mb="16px">
+              A legutóbbi módosításaidat nem sikerült elmenteni ezen az eszközön. Mielőtt újratöltöd az alkalmazást, mentsd el a karaktereidet fájlba, különben ezek a módosítások elvesznek.
+            </Text>
+          ) : (
+            <>
+              <Text fontSize="15px" lineHeight="1.55" mb="8px">
+                A karaktereid nem vesztek el: minden módosítás azonnal mentődik ezen az eszközön. Töltsd újra az alkalmazást.
+              </Text>
+              <Text fontSize="14px" color="muted" lineHeight="1.55" mb="16px">
+                Ha a hiba újra előjön, mentsd el a karaktereidet egy fájlba, és jelezd a hibát a projekt GitHub-oldalán.
+              </Text>
+            </>
+          )}
           <Box display="flex" gap="10px" flexWrap="wrap" mb="16px">
-            <Box {...btn} onClick={() => window.location.reload()} borderColor="accent" bg="accentSoft" color="accentTx">
+            {unsaved && (
+              <Box {...btn} {...primary} onClick={this.saveAll}>
+                Karakterek mentése fájlba
+              </Box>
+            )}
+            <Box {...btn} {...(unsaved ? secondary : primary)} onClick={this.reload}>
               Újratöltés
             </Box>
-            <Box {...btn} onClick={this.saveAll} borderColor="hair" color="fg">
-              Karakterek mentése fájlba
-            </Box>
+            {!unsaved && (
+              <Box {...btn} {...secondary} onClick={this.saveAll}>
+                Karakterek mentése fájlba
+              </Box>
+            )}
           </Box>
           <Text fontSize="12px" color="fgFaint" wordBreak="break-word">
             {String(this.state.error.message || this.state.error).slice(0, 300)}

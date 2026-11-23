@@ -50,12 +50,14 @@ export const VitalsCard: React.FC<{
   // Tapping a row opens the condition card (view / edit / toggle / delete live there); keyed by id
   // so the modal follows live edits to the same condition.
   const [viewingId, setViewingId] = useState<string | null>(null);
+  // (a condition deleted on another device while its card was open: the card closes, and the sheet must
+  // not think an editor is still open, so the draft below follows `viewing`, not `viewingId`)
   const viewing = conditions.find((c) => c.id === viewingId);
   // The header pencil flips the list into edit mode: add / delete / drag-reorder appear only there,
   // so the resting rows stay clean.
   const [editMode, setEditMode] = useState(false);
   const [removing, setRemoving] = useState<CharacterCondition | null>(null);
-  useDraftWhile(editing !== null || adding || viewingId !== null);
+  useDraftWhile(editing !== null || adding || viewing !== undefined);
   return (
     <>
       <Card>

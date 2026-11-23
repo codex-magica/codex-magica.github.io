@@ -22,10 +22,15 @@ export const CompanionsCard: React.FC<{ companions: Companion[]; onSet: (compani
   // The header pencil flips the list into edit mode: add / delete / drag-reorder appear only there.
   const [editMode, setEditMode] = useState(false);
   const [removing, setRemoving] = useState<Companion | null>(null);
-  useDraftWhile(adding || editing !== null || pad !== null);
-
+  
   const patch = (id: string, p: Partial<Companion>) => onSet(companions.map((c) => (c.id === id ? { ...c, ...p } : c)));
+  // the open window saves the whole companion; if a sync removed it meanwhile (deleted on another
+  // device), the edits bring it back instead of going nowhere
+  const saveEdited = (c: Companion) => onSet(companions.some((x) => x.id === c.id) ? companions.map((x) => (x.id === c.id ? c : x)) : [...companions, c]);
+  // (a companion deleted on another device while its pad was open: the pad closes, and the draft below
+  // follows the shown pad, not the `pad` state, so the sheet doesn't think an editor is still open)
   const padCompanion = pad ? companions.find((c) => c.id === pad.id) : undefined;
+  useDraftWhile(adding || editing !== null || padCompanion !== undefined);
 
   return (
     <>
@@ -93,7 +98,7 @@ export const CompanionsCard: React.FC<{ companions: Companion[]; onSet: (compani
         </ConfirmModal>
       )}
       {editing && (
-        <CompanionModal companion={editing} onSave={(c) => patch(c.id, c)}
+        <CompanionModal companion={editing} onSave={saveEdited}
           onDelete={() => onSet(companions.filter((x) => x.id !== editing.id))} onClose={() => setEditing(null)} />
       )}
       {padCompanion && pad && (

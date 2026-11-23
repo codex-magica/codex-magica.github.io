@@ -20,12 +20,15 @@ export const ScrollX: React.FC<{ children: React.ReactNode }> = ({ children }) =
     };
     update();
     el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    // ResizeObserver: Safari 13.1+; older browsers fall back to window resizes
+    const ro = typeof ResizeObserver === "function" ? new ResizeObserver(update) : null;
+    ro?.observe(el);
+    if (el.firstElementChild) ro?.observe(el.firstElementChild);
+    if (!ro) window.addEventListener("resize", update);
     return () => {
       el.removeEventListener("scroll", update);
-      ro.disconnect();
+      ro?.disconnect();
+      window.removeEventListener("resize", update);
     };
   }, []);
 

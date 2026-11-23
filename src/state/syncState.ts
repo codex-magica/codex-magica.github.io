@@ -11,7 +11,7 @@ import { contentHash } from "./recordHash";
 import { Deletions } from "./rosterStore";
 import { vcKey } from "./versions";
 
-const SETTINGS_KEY = "magus.driveSync.v1";
+export const SETTINGS_KEY = "magus.driveSync.v1";
 const PUBLISHED_KEY = "magus.drivePublished.v2";
 const BACKED_UP_KEY = "magus.driveBackedUp.v1";
 const NONCES_KEY = "magus.driveNonces.v1";

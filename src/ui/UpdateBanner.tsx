@@ -7,8 +7,9 @@ const CHECK_EVERY_MS = 60 * 60 * 1000;
 // A new version has been downloaded in the background by the service worker. The app never reloads
 // on its own (a character half-built in the editor would be lost): the user picks the moment.
 // Rendered inside #root like every other overlay, so the desktop UI scaling applies to it too.
-// `paused`: held back while the creator is open (reloading would drop the half-built character) or the
-// Drive notice uses the same spot; it shows again afterwards.
+// `paused`: held back while the creator is open (reloading would drop the half-built character), while
+// saving to this device fails (the latest edits exist only in memory), or while the Drive notice uses the
+// same spot; it shows again afterwards.
 export const UpdateBanner: React.FC<{ paused?: boolean }> = ({ paused = false }) => {
   const {
     needRefresh: [needRefresh, setNeedRefresh],

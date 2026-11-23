@@ -25,7 +25,9 @@ const InventoryQtyModal: React.FC<{ name: string; qty: number; onApply: (n: numb
 };
 
 // Free-text equipment list. View mode renders each line; a line starting with a number turns that
-// number into a button that opens the quantity calculator. The edit button (top-left) swaps in a textarea.
+// number into a button that opens the quantity calculator. The edit button (top-left) swaps in a textarea,
+// which saves as you type (like the companion and condition windows): leaving the sheet without closing
+// the editor loses nothing.
 export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void }> = ({ text, onSet }) => {
   const [draft, setDraft] = useState<string | null>(null);
   useDraftWhile(draft !== null);
@@ -47,10 +49,10 @@ export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void 
         <HStack spacing="9px" pb="6px" mb="6px" borderBottom="1px solid" borderColor="rule" align="center" justify="space-between">
           <Heading as="h2" fontSize={FS_SEC} fontWeight={700} color="fg">Felszerelés</Heading>
           <PanelEditButton editing={editing} label="Felszerelés szerkesztése"
-            onToggle={() => { if (editing) { onSet(draft!); setDraft(null); } else setDraft(text); }} />
+            onToggle={() => setDraft(editing ? null : text)} />
         </HStack>
         {editing ? (
-          <Textarea value={draft ?? ""} onChange={(e) => setDraft(e.target.value)} onBlur={() => draft != null && onSet(draft)} autoFocus rows={Math.max(MIN_LINES, lines.length + 1)}
+          <Textarea value={draft ?? ""} onChange={(e) => { setDraft(e.target.value); onSet(e.target.value); }} autoFocus rows={Math.max(MIN_LINES, lines.length + 1)}
             placeholder={"Soronként egy tárgy.\nSzám az elején = mennyiség, pl. „5 fáklya”."}
             bg="fieldBg" borderColor="fieldBd" color="fg" fontSize={FS} lineHeight="1.55" focusBorderColor="accent" resize="vertical" />
         ) : (

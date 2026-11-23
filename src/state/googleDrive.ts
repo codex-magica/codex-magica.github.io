@@ -22,6 +22,9 @@ const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 const SCOPES = `${SCOPE} openid email`;
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const RETURN_KEY = "magus.driveReturn.v1";
+const NO_ANSWER_MS = 2 * 60_000; // a round trip with prompt=none takes seconds
+const STALE_ANSWER_MS = 30 * 60_000;
+const REQUEST_TIMEOUT_MS = 60_000;
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const TOKEN_KEY = "magus.driveToken.v1";
 
@@ -80,6 +83,7 @@ interface StoredToken {
 export const validToken = (): string | null => {
   try {
     const t = JSON.parse(localStorage.getItem(TOKEN_KEY) ?? "null") as StoredToken | null;
+    if (t && typeof t.exp === "number" && t.exp <= Date.now()) localStorage.removeItem(TOKEN_KEY); // expired: don't keep it around
     return t && typeof t.token === "string" && t.exp > Date.now() + 60_000 ? t.token : null;
   } catch {
     return null;
@@ -92,8 +96,11 @@ const storeToken = (token: string, expiresIn: number) => {
     /* ignore */
   }
 };
-export const forgetToken = (): void => {
+// `only`: forget the stored token only if it's this one (a late answer to an old token mustn't throw
+// away a newer one, e.g. after sync was turned off and on again with another account)
+export const forgetToken = (only?: string): void => {
   try {
+    if (only !== undefined && (JSON.parse(localStorage.getItem(TOKEN_KEY) ?? "null") as StoredToken | null)?.token !== only) return;
     localStorage.removeItem(TOKEN_KEY);
   } catch {
     /* ignore */
@@ -181,7 +188,9 @@ export const redirectUri = (): string => `${window.location.origin}${import.meta
 
 // Returns false (and stays) if the round trip can't be made safely.
 export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null): boolean => {
-  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const state = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
   try {
     localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx } satisfies PendingRedirect));
   } catch {
@@ -208,7 +217,22 @@ let outcome: RedirectOutcome | null = null;
 export const consumeRedirectResult = (): RedirectOutcome => {
   if (outcome) return outcome;
   outcome = { kind: "none" };
-  if (typeof window === "undefined" || !window.location.hash.includes("state=")) return outcome;
+  if (typeof window === "undefined") return outcome;
+  if (!window.location.hash.includes("state=")) {
+    // We left for Google a while ago but came back without an answer (Google showed its own error page,
+    // the network failed, or the user went back): count it as an error, so it isn't retried right away,
+    // and return to where the player was. A fresh entry may belong to another tab that is on its way.
+    try {
+      const pending = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
+      if (pending && Date.now() - pending.at > NO_ANSWER_MS) {
+        localStorage.removeItem(RETURN_KEY);
+        outcome = { kind: "error", error: "no answer", ctx: pending.ctx ?? null };
+      }
+    } catch {
+      /* ignore */
+    }
+    return outcome;
+  }
   const params = new URLSearchParams(window.location.hash.slice(1));
   let saved: PendingRedirect | null = null;
   try {
@@ -218,7 +242,7 @@ export const consumeRedirectResult = (): RedirectOutcome => {
     saved = null;
   }
   window.history.replaceState(null, "", window.location.pathname + window.location.search);
-  if (!saved || params.get("state") !== saved.state) return outcome; // not ours: ignore
+  if (!saved || params.get("state") !== saved.state || Date.now() - saved.at > STALE_ANSWER_MS) return outcome; // not ours (or ancient): ignore
   const token = params.get("access_token");
   const granted = (params.get("scope") ?? "").split(" ");
   if (token && granted.includes(SCOPE)) {
@@ -295,9 +319,13 @@ export const fitBytes = (s: string, max: number): string => {
 
 export const httpDrive = (token: string): DriveTransport => {
   const call = async (url: string, init: RequestInit = {}): Promise<Response> => {
-    const res = await fetch(url, { ...init, headers: { Authorization: `Bearer ${token}`, ...(init.headers as Record<string, string> | undefined) } });
+    // a stalled request would hold up every later sync round: give up after a minute (the timer also
+    // covers reading the body; aborting a finished request does nothing)
+    const ctl = typeof AbortController === "function" ? new AbortController() : null;
+    if (ctl) window.setTimeout(() => ctl.abort(), REQUEST_TIMEOUT_MS);
+    const res = await fetch(url, { ...init, signal: ctl?.signal, headers: { Authorization: `Bearer ${token}`, ...(init.headers as Record<string, string> | undefined) } });
     if (res.status === 401) {
-      forgetToken();
+      forgetToken(token);
       throw new DriveAuthError("token expired");
     }
     if (!res.ok) throw new Error(`Google Drive: HTTP ${res.status}`);

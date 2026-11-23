@@ -23,6 +23,7 @@ import { normalizeRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
   DriveSettings,
+  SETTINGS_KEY,
   clearDriveState,
   loadBackedUp,
   loadDriveSettings,
@@ -90,6 +91,7 @@ const FOREGROUND_MIN_GAP_MS = 20_000;
 const SILENT_MIN_GAP_MS = 10 * 60_000;
 const SILENT_BLOCK_MS = 12 * 3600_000;
 const SILENT_BACKOFF_MS = 3600_000;
+const RETRY_MS = 2000; // a round asked for while a failing one was running
 export const HOP_NOTICE_MS = 3000; // the notice is shown this long before leaving for Google
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 const IDLE_HOP_MS = 60_000; // no touches for this long, with changes waiting: renew
@@ -97,6 +99,8 @@ const IDLE_CHECK_MS = 10_000;
 const NEEDS_USER = new Set(["login_required", "interaction_required", "consent_required", "account_selection_required", "access_denied", "drive permission not granted"]);
 
 class AccountMismatchError extends Error {}
+
+class SupersededError extends Error {}
 
 const errorNote = (e: unknown): string => {
   if (e instanceof AccountMismatchError) return e.message;
@@ -147,6 +151,8 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const [syncTick, setSyncTick] = useState(0);
   const running = useRef(false);
   const again = useRef(false);
+  const generation = useRef(0); // bumped when sync is turned off: a round from before must not touch anything
+  const roundRef = useRef<(token: string) => Promise<void>>(async () => {});
   const lastAttempt = useRef(0);
   const enabledRef = useRef(settings.enabled);
   enabledRef.current = settings.enabled;
@@ -177,13 +183,14 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   // Every new token must belong to the account sync was set up with: otherwise the characters would
   // merge into someone else's Drive. The first token sets the account.
   const ensureAccount = useCallback(
-    async (token: string): Promise<void> => {
+    async (token: string, current: () => boolean = () => true): Promise<void> => {
       if (verifiedTokens.has(token)) return;
       const email = await fetchAccountEmail(token);
       if (!email) throw new Error("account check failed"); // network trouble: try again later
+      if (!current()) throw new SupersededError(); // sync was turned off (or on again) meanwhile
       const expected = loadDriveSettings().email;
       if (expected && expected.toLowerCase() !== email.toLowerCase()) {
-        forgetToken();
+        forgetToken(token);
         throw new AccountMismatchError(`Ezzel a Google-fiókkal jelentkeztél be: ${email}, de a szinkron ehhez a fiókhoz tartozik: ${expected}. Jelentkezz be azzal, vagy kapcsold ki, majd újra be a szinkront.`);
       }
       if (!expected) patchSettings({ email });
@@ -200,11 +207,14 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       }
       running.current = true;
       lastAttempt.current = Date.now();
+      const gen = generation.current;
+      const current = () => generation.current === gen && enabledRef.current;
       setStatus("syncing");
       try {
-        await ensureAccount(token);
+        await ensureAccount(token, current);
         await withSyncLock(async () => {
           do {
+            if (!current()) return;
             again.current = false;
             store.reload(); // the freshest saved state (another tab may have changed it)
             const s = loadDriveSettings();
@@ -227,7 +237,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
               savePublished({});
               out = await run();
             }
-            if (!enabledRef.current) return; // turned off meanwhile: drop the result
+            if (!current()) return; // turned off meanwhile: drop the result
             const next = reconcile(snapshot, store.getState(), out);
             store.applySync(next.records, next.deletions);
             savePublished(out.published);
@@ -241,21 +251,37 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             else setNote((n) => (n && n.includes("(másik változat)") ? n : null)); // a conflict notice stays until the next one
           } while (again.current);
         });
-        if (hopRef.current === "backSyncing") {
-          setHop("backDone");
-          window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
+        if (current()) {
+          if (hopRef.current === "backSyncing") {
+            setHop("backDone");
+            window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
+          }
+          setStatus("idle");
         }
-        setStatus("idle");
       } catch (e) {
-        if (hopRef.current === "backSyncing") setHop(null);
-        setStatus(e instanceof DriveAuthError || e instanceof AccountMismatchError ? "needsTap" : "error");
-        setNote(errorNote(e));
+        if (current()) {
+          if (hopRef.current === "backSyncing") setHop(null);
+          setStatus(e instanceof DriveAuthError || e instanceof AccountMismatchError ? "needsTap" : "error");
+          setNote(errorNote(e));
+          // a different account answers the renewal: don't make the round trip every 10 minutes
+          if (e instanceof AccountMismatchError) patchSettings({ silentBlockedUntil: Date.now() + SILENT_BLOCK_MS });
+        }
       } finally {
         running.current = false;
+      }
+      // something asked for a round while this one ran, and this one stopped early (an error, or sync was
+      // turned off and on): run it now, with whatever token is current
+      if (again.current) {
+        again.current = false;
+        window.setTimeout(() => {
+          const t = validToken();
+          if (t && enabledRef.current) void roundRef.current(t);
+        }, RETRY_MS);
       }
     },
     [ensureAccount, patchSettings, setHop]
   );
+  roundRef.current = round;
 
   // Renew by redirect when nothing would be lost and it isn't looping.
   const canLeave = useCallback((): boolean => {
@@ -346,6 +372,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
 
   const disable = () => {
     enabledRef.current = false;
+    generation.current++;
     window.clearTimeout(hopTimer.current);
     setHop(null);
     void revokeAccess();
@@ -425,6 +452,29 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     };
   }, [available, settings.enabled, trySilent]);
 
+  // sync turned off (or on) in another tab
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== SETTINGS_KEY) return;
+      const next = loadDriveSettings();
+      if (enabledRef.current && !next.enabled) {
+        enabledRef.current = false;
+        generation.current++;
+        window.clearTimeout(hopTimer.current);
+        setHop(null);
+        verifiedTokens.clear();
+        setStatus("off");
+        setNote(null);
+      } else if (!enabledRef.current && next.enabled) {
+        enabledRef.current = true;
+        setStatus(validToken() ? "idle" : "needsTap");
+      }
+      setSettings(next);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [setHop]);
+
   // unmount (and React's dev-mode remount): drop a pending hop so a remount can announce it again
   useEffect(
     () => () => {
@@ -470,12 +520,13 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     try {
       const t = await p;
       await ensureAccount(t);
+      trySilent(false); // changes may be waiting for this token
       return true;
     } catch (e) {
       setNote(errorNote(e));
       return false;
     }
-  }, [tokenFromTap, ensureAccount]);
+  }, [tokenFromTap, ensureAccount, trySilent]);
 
   return {
     available,
