@@ -80,7 +80,7 @@ with costs, casting times and durations, and each one's full description one cli
   <img src="docs/assets/search-light.webp" alt="Command palette search for 'sárkány' listing spells and psi disciplines">
 </picture>
 
-**Search.** A <kbd>⌘K</kbd> palette searches every spell, skill and item, and you
+**Search.** A <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> palette searches every spell, skill and item, and you
 don't need to type the accents: `tuzgolyo` finds _Tűzgolyó_.
 </td>
 <td width="50%" valign="top">
@@ -115,8 +115,8 @@ skill system, fixed per character.
   <img src="docs/assets/mobile-light.webp" alt="The character sheet on a phone, split into swipeable pages">
 </picture>
 
-On a phone the sheet becomes swipeable pages; on an iPad or a desktop it spreads into columns. There are
-light and dark themes.
+On a phone the sheet becomes swipeable pages; on an iPad or a desktop it spreads into columns. It's dark by
+default, with a light theme a tap away.
 
 **Install it like an app.** There's no app store involved: open the site and add it to your home screen
 ([how](#use-it)). It then starts full screen with its own icon, like any other app.
@@ -195,8 +195,8 @@ flowchart LR
 - **A character is a ledger, not a stat block.** The record stores decisions: race, class, point-buy,
   and per level the skill purchases, combat-value points and resource buys. `derive()` replays the
   ledger into a full sheet every time, so editing a past level or levelling up is just another replay.
-- **The engine is a pure, total function.** It never throws. Bad input shows up as diagnostics the builder can show.
-  Derived values carry their **provenance** (which attribute, class, item or adjustment contributed what), and that powers the "explain this number" modals.
+- **The engine is a pure function.** Rule problems in a build (a missing prerequisite, an overspent level)
+  come back as diagnostics the builder can show, not as errors. Derived values carry their **provenance** (which attribute, class, item or adjustment contributed what), and that powers the "explain this number" modals.
 - **Golden snapshot tests pin the rules.** Representative characters (a barbarian warrior, a Domvik
   priest, a Doran wizard, an elf bard) are derived in full and snapshotted, so a refactor that changes a
   number fails CI. A `validateRules` test checks that the rules data is internally consistent.
@@ -279,8 +279,8 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
 
 The text comes from OCR of a low-quality scan and was proofread by hand, but errors can remain. If you spot
 a typo, a wrong table value or a rule the app calculates differently from the book, please
-[open an issue](https://github.com/marcigo36/codex-magica/issues) with the page or chapter and what the
-book says. Pull requests are welcome too.
+[open an issue](https://github.com/marcigo36/codex-magica/issues/new/choose) (there's a form for it) with the
+page or chapter and what the book says. Pull requests are welcome too.
 
 ## Getting started (development)
 

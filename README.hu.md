@@ -14,6 +14,9 @@ Böngészőben fut · telepíthető a kezdőképernyőre · internet nélkül is
 [**Az alkalmazás megnyitása**](https://marcigo36.github.io/codex-magica/) · [English](README.md) · **Magyar**
 
 [![CI](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/marcigo36/codex-magica/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
 ![PWA: internet nélkül is](https://img.shields.io/badge/PWA-internet_n%C3%A9lk%C3%BCl_is-5A0FC8?logo=pwa&logoColor=white)
 [![Kód licenc: MIT](https://img.shields.io/badge/k%C3%B3d-MIT-6E7781)](LICENSE)
 
@@ -49,11 +52,14 @@ Ezekre készült ez az alkalmazás:
 - 📱 **Bárhová magaddal viheted:** alkalmazásbolt nélkül telepíthető a kezdőképernyőre, internet nélkül is
   működik, és a saját Google Drive-odon keresztül minden eszközödön ugyanazok a karakterek.
 
+Benne van 12 kaszt, 6 faj, 83 képzettség, 636 varázslat, ima és pszi diszciplína, 83 fegyver, valamint
+21 vért és pajzs.
+
 ## Amit tud
 
 - **Értékek levezetése:** bármelyik számra (TÉ, VÉ, KÉ, MME…) koppintva látod, mi
   mennyivel járul hozzá: tulajdonságok, HM, fegyver, képzettség, KM-módosítás.
-- **Gyorskereső (<kbd>⌘K</kbd>)** az összes varázslatra, képzettségre és tárgyra. Ékezetek nélkül is
+- **Gyorskereső (<kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>)** az összes varázslatra, képzettségre és tárgyra. Ékezetek nélkül is
   működik: a `tuzgolyo` megtalálja a _Tűzgolyót_.
 - **Olvasó nézet:** a mágia- és képzettség-fejezetek táblázat helyett folyó szövegként, a könyv
   sorrendjében is olvashatók, követő tartalomjegyzékkel.
@@ -70,8 +76,8 @@ Ezekre készült ez az alkalmazás:
   <img src="docs/assets/mobile-light.webp" alt="A karakterlap telefonon, lapozható oldalakra bontva">
 </picture>
 
-Telefonon a karakterlap lapozható oldalakra bomlik, iPaden és gépen oszlopokba rendeződik. Van világos és
-sötét téma is.
+Telefonon a karakterlap lapozható oldalakra bomlik, iPaden és gépen oszlopokba rendeződik. Alapból sötét,
+de egy koppintással világosra váltható.
 
 **Alkalmazásként telepíthető.** Alkalmazásbolt nem kell hozzá: nyisd meg az oldalt, és add hozzá a
 kezdőképernyőhöz ([így](#hogyan-használhatod)). Ezután teljes képernyőn, saját ikonnal indul, mint
@@ -133,8 +139,8 @@ fork beállításaiban válaszd a **Pages → Source: GitHub Actions** lehetős�
 `DEPLOY_PAGES` = `true` Actions-változót, majd az Actions fülön futtasd le egyszer a **Deploy to GitHub
 Pages** workflow-t. Ezután minden módosítás után magától frissül a
 `https://<felhasználóneved>.github.io/codex-magica/` oldal. Saját domainhez a `BASE_PATH` változót is
-állítsd `/`-re, a `SITE_URL`-t pedig a címedre (a linkelőnézetekhez). (Cloudflare Pages vagy Netlify is jó: build parancs `npm run build`, mappa `dist`.) A
-Google Drive-szinkronhoz saját Google OAuth-ügyfélazonosító kell. Ingyenes, és nagyjából negyedóra alatt
+állítsd `/`-re, a `SITE_URL`-t pedig a címedre (a linkelőnézetekhez). Cloudflare Pages vagy Netlify is jó:
+build parancs `npm run build`, mappa `dist`. A Google Drive-szinkronhoz saját Google OAuth-ügyfélazonosító kell. Ingyenes, és nagyjából negyedóra alatt
 beállítható: [docs/google-drive-sync.md](docs/google-drive-sync.md) (angolul). Enélkül a saját példányodban
 egyszerűen nincs szinkron gomb, minden más ugyanúgy működik.
 
@@ -153,10 +159,10 @@ szerver mindig a friss kódot adja. A Google Drive-szinkron helyi kipróbálás�
 
 ## Hibát találtál?
 
-A szöveg egy rossz minőségű szkennelésből, OCR-rel készült, és bár alaposan át lett olvasva, maradhattak
+A szöveg egy rossz minőségű szkennelésből, OCR-rel készült, és bár kézzel alaposan átnéztük, maradhattak
 benne hibák. Ha elírást, hibás táblázatértéket vagy rosszul számolt szabályt találsz, nyiss egy
-[issue-t](https://github.com/marcigo36/codex-magica/issues). Írd meg az oldalszámot vagy a fejezetet, és
-azt, hogy mi szerepel a könyvben. Pull requestet is szívesen fogadunk.
+[issue-t](https://github.com/marcigo36/codex-magica/issues/new/choose) (van hozzá űrlap). Írd meg az
+oldalszámot vagy a fejezetet, és azt, hogy mi szerepel a könyvben. Pull requestet is szívesen fogadunk.
 
 ## Hogyan készült?
 
@@ -165,9 +171,10 @@ nyelvi modellek a szerkezetet és a táblázatokat, utána pedig rengeteg kézi 
 részletek angolul, a [fő README-ben](README.md#how-it-was-built) és a
 [folyamat leírásában](docs/pdf-pipeline.md) olvashatók.
 
-Az alkalmazásnak nincs saját szervere. A szabályokat egy tisztán számoló motor alkalmazza a karakter
-szintenkénti döntéseire, a karakterek a böngészőben tárolódnak, a szinkron pedig közvetlenül a játékos
-Google Drive-jával kommunikál, karakterenkénti háromutas összefésüléssel. Erről is a
+Az alkalmazásnak nincs saját szervere. A karakterlap minden értékét egy szabálymotor számolja ki újra a
+karakter szintenkénti döntéseiből, a karakterek a böngészőben tárolódnak, a szinkron pedig közvetlenül a
+játékos Google Drive-jával dolgozik: minden eszköz a saját fájljába ír, és verzióvektorok döntik el, mi
+melyik változat folytatása, így semmi sem íródik felül észrevétlenül. Erről is a
 [fő README-ben](README.md#3--an-app-without-a-server) lehet bővebben olvasni.
 
 ## Köszönet és jogok
@@ -175,8 +182,8 @@ Google Drive-jával kommunikál, karakterenkénti háromutas összefésüléssel
 A repóban található **forráskód** [MIT licenc](LICENSE) alatt szabadon felhasználható.
 
 A **M.A.G.U.S. tartalom**, valamint a játék nevei és fogalmai **nem** tartoznak e licenc alá, azok a
-jogosultak szellemi tulajdonát képezik. Az `src/data/` mappában lévő szabályadatok a szabálykönyvből lettek
-átírva és újrarendezve ehhez a projekthez, így **származékos művek**: a képzettségek, varázslatok, imák,
+jogosultak szellemi tulajdonát képezik. Az `src/data/` mappában lévő szabályadatokat a szabálykönyvből írtuk
+át és rendeztük újra ehhez a projekthez, így **származékos művek**: a képzettségek, varázslatok, imák,
 pszi diszciplínák és mágiaiskolák, a fegyverek, vértek, tárgyak, mérgek és harci helyzetek leírásait és
 szabályszövegét tartalmazzák, továbbá (az `src/model/` mappában) a fajok és kasztok képességeinek, a
 tulajdonságoknak és a harcértékeknek rövid leírását. A könyv többi része, például a bevezető és a
