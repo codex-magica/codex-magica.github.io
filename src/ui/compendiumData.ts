@@ -28,8 +28,9 @@ import { magicRules6 } from "../data/magicRules6";
 import { magicRules7 } from "../data/magicRules7";
 import { SKILLS, SkillDef } from "../model/skills";
 import { homebrewProse, rulesHomebrew } from "../model/rulesVariants";
+import { creationBlocks, creationIntro } from "./compendiumCharacter";
 
-export interface TableCol { label: string; align?: "center" | "right" }
+export interface TableCol { label: string; align?: "left" | "center" | "right"; grow?: number /* fr share of the width (default 1) */ }
 export interface TableRow {
   name: string;
   cells: string[];
@@ -39,16 +40,25 @@ export interface TableRow {
   note?: string; // no per-column values — this note spans the value columns instead ("Lásd a leírást!")
   weapon?: { kind: "melee" | "ranged"; damage: string; range?: string; ke?: number; te?: number; ve?: number; ce?: number };
 }
-export interface TableBlock { title: string; nameLabel: string; columns: TableCol[]; rows: TableRow[]; footer?: string }
+export interface TableBlock {
+  title: string;
+  nameLabel: string;
+  columns: TableCol[];
+  rows: TableRow[];
+  footer?: string;
+  dense?: boolean; // cram the columns on desktop (like the weapons tab) instead of scrolling sideways
+}
 
 // ── the tab registry ──────────────────────────────────────────────────────────
 // ONE entry per compendium tab (the index in this array IS the tab id). Nav grouping, search glyphs,
 // rules prose, intros and layout quirks all live here — adding or reordering a tab means editing this
-// array only. The rulebook chapters (Markdown pages) follow at indices >= TABS.length (Compendium.tsx).
+// array only. New tabs go at the END (search results and open tabs refer to the index); `lead` puts a
+// tab at the top of the sidebar regardless of its index.
 export interface TabDef {
   name: string;
   group: "Harc" | "Mágia" | "Felszerelés" | null; // sidebar section; null = standalone top-level item
-  glyph: "book" | "spark" | "sword" | "shield" | "burst" | "coin" | "drop"; // search-result icon family
+  glyph: "book" | "spark" | "sword" | "shield" | "burst" | "coin" | "drop" | "person"; // search-result icon family
+  lead?: boolean; // listed first in the sidebar, above the other standalone tabs
   special?: "skills"; // tab 0 renders the skill catalog from the model, not TableBlocks
   rules?: SchoolRules; // magic-school rules prose (chapter-level + per-block)
   headingRules?: string; // chapter-level rules for non-school tabs (skills, poisons)
@@ -74,6 +84,7 @@ export const TABS: TabDef[] = [
   { name: "Harci helyzetek", group: "Harc", glyph: "burst", layout: "narrow", intro: combatSituationsIntro },
   { name: "Tárgyak és árak", group: "Felszerelés", glyph: "coin", layout: "masonry", intro: mundaneItemsIntro, searchValue: (r) => r.cells[0] },
   { name: "Mérgek", group: "Felszerelés", glyph: "drop", layout: "narrow", intro: poisonsIntro, headingRules: poisonRules, searchValue: (r, block) => (block === "Példamérgek" ? r.cells[4] : undefined) },
+  { name: "Karakteralkotás", group: null, lead: true, glyph: "person", intro: creationIntro },
 ];
 
 const arr = (d: string | string[]): string[] => (Array.isArray(d) ? d : [d]);
@@ -367,6 +378,8 @@ function buildTabBlocks(tab: number): TableBlock[] {
           })),
         },
       ];
+    case 13: // Karakteralkotás (tulajdonságok, fajok, kasztok, hátterek, pontelosztás) — generated from the rules model
+      return creationBlocks();
     default:
       return [];
   }

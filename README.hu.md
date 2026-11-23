@@ -36,7 +36,8 @@ szkennelt PDF-ből. Emiatt három dolog volt a kelleténél nehezebb:
 Ezekre készült ez az alkalmazás:
 
 - 📖 **Kompendium:** az összes képzettség, varázslat, ima, pszi diszciplína, fegyver, vért és méreg
-  kereshetően, mindegyik a szabályszövegével.
+  kereshetően, mindegyik a szabályszövegével, valamint a karakteralkotás táblázatai (tulajdonságok,
+  fajok, kasztok, hátterek).
 - 🧙 **Karakteralkotó:** faj, kaszt, iskola, hátterek, pontvásárlás, szintenkénti képzettségvásárlás és
   szintlépés. A KAP-költségeket, a tulajdonság-előfeltételeket és a kaszt által adott képzettségeket a
   program számolja. A KM ugyanígy használhatja a mesélői karakterek (NJK-k) elkészítéséhez.
@@ -122,7 +123,7 @@ jogosultak szellemi tulajdonát képezik. Az `src/data/` mappában lévő szabá
 pszi diszciplínák és mágiaiskolák, a fegyverek, vértek, tárgyak, mérgek és harci helyzetek leírásait és
 szabályszövegét tartalmazzák, továbbá (az `src/model/` mappában) a fajok és kasztok képességeinek, a
 tulajdonságoknak és a harcértékeknek rövid leírását. A könyv többi része, például a bevezető és a
-karakteralkotás fejezete, a kasztfejezetek szövege, a világleírás, az istenek, a bestiárium és a
+karakteralkotás fejezetének szövege, a kasztfejezetek szövege, a világleírás, az istenek, a bestiárium és a
 varázstárgyak, nincs benne.
 
 A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos M.A.G.U.S.-termék: nem a

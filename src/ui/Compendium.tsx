@@ -14,19 +14,6 @@ import { OpenBookIcon } from "./icons";
 import { SKILLS, SkillDef } from "../model/skills";
 import { rulesHomebrew } from "../model/rulesVariants";
 import { SKILL_CATEGORIES } from "../model/common";
-// Optional rulebook chapters shown via the Markdown renderer; tab indices start right after the data
-// tabs. The full book text is NOT distributed with this repository: drop your own copy of these chapters
-// into src/book/ (see src/book/README.md) and the tabs appear; without them they're simply absent.
-const CHAPTER_BASE = TABS.length;
-const bookChapters = import.meta.glob<string>("../book/0[12]-*.md", { query: "?raw", import: "default", eager: true });
-const chapterMd = (file: string): string | undefined => bookChapters[`../book/${file}`];
-const CHAPTERS = [
-  { name: "Bevezető", file: "01-bevezeto.md" },
-  { name: "Karakteralkotás", file: "02-karakteralkotas.md" },
-].flatMap((c) => {
-  const md = chapterMd(c.file);
-  return md ? [{ name: c.name, md }] : [];
-});
 
 interface Props {
   compTab: number;
@@ -198,8 +185,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
     });
   }, [compTab, pendingTick]);
 
-  const chapter = compTab >= CHAPTER_BASE ? CHAPTERS[compTab - CHAPTER_BASE] : null;
-  const tab = chapter ? undefined : TABS[compTab];
+  const tab = TABS[compTab];
   const title = tab?.name ?? "";
   const isSkills = tab?.special === "skills";
   const blocks: TableBlock[] = isSkills || !tab ? [] : tabBlocks(compTab);
@@ -283,7 +269,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
     const showTitle = block.title !== title; // a lone block titled like the page heading needs no repeat
     const grid = dense
       ? `minmax(82px, 1.3fr) ${block.columns.map(() => "minmax(0, 1fr)").join(" ")}`
-      : `minmax(140px, 1.6fr) ${block.columns.map(() => "minmax(58px, 1fr)").join(" ")}`;
+      : `minmax(140px, 1.6fr) ${block.columns.map((c) => `minmax(58px, ${c.grow ?? 1}fr)`).join(" ")}`;
     const gap = dense ? "4px" : "8px";
     const px = dense ? { base: "8px", md: "10px" } : PAD;
     const hSize = dense ? "9px" : "10.5px";
@@ -368,10 +354,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".16em" textTransform="uppercase" color="fgFaint">Kompendium</Text>
         <Heading as="p" fontSize="21px" fontStyle="italic" fontWeight={600} color="fg" lineHeight="1.1">Tartalom</Heading>
       </Box>
-      {CHAPTERS.map((c, i) => (
-        <NavItem key={i} active={compTab === CHAPTER_BASE + i} onClick={() => go(CHAPTER_BASE + i)}>{c.name}</NavItem>
-      ))}
-      {TABS.map((t, i) => (t.group == null ? navTab(t, i) : null))}
+      {TABS.map((t, i) => (t.group == null && t.lead ? navTab(t, i) : null))}
+      {TABS.map((t, i) => (t.group == null && !t.lead ? navTab(t, i) : null))}
       {NAV_GROUPS.map((g) => (
         <React.Fragment key={g}>
           <NavSection>{g}</NavSection>
@@ -403,7 +387,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       )}
       {onSetHomebrew && homebrew && (
         <Text mt="6px" fontFamily="system-ui" fontSize="10.5px" color="fgFaint" lineHeight="1.5">
-          Képzettség-átdolgozás: százalékos képzettségek fokban, összevonás Éberséggé. Új karakterek alapból ezt kapják.
+          Képzettség-átdolgozás: a százalékos képzettségek is fokokban mérnek, három észlelő képzettség Éberséggé olvad össze. Az új karakterek alapesetben ezzel készülnek.
         </Text>
       )}
     </>
@@ -451,9 +435,6 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       {/* Content */}
       <Box ref={contentRef} flex="1 1 auto" minH={0} overflowY="auto">
       <Box maxW={{ base: "100%", md: "1040px" }} mx="auto" px={{ base: "16px", md: "20px" }} pt={{ base: "26px", md: "24px" }} pb="90px">
-        {chapter ? (
-        <Box maxW="780px" mx="auto"><Markdown source={chapter.md} /></Box>
-        ) : (
         <>
         {/* reader/table toggle lives in the floating button (always reachable); this row keeps only
             the title + the rules launcher */}
@@ -464,8 +445,8 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
         {/* also on phones — where hover cues don't exist, this line is the only hint that rows open */}
         <Text fontFamily="system-ui" fontSize="12.5px" color="fgFaint" textAlign="center" mb="20px" px="10px">
           {reader && readerable
-            ? "Olvasó nézet — a fejezet folyamatosan, a könyv sorrendjében"
-            : "Kompendium · szabálykönyvi referencia — válassz egy elemet a részletekért"}
+            ? "Olvasónézet: a fejezet folyamatos szövegként, a könyv sorrendjében"
+            : "Kompendium · egy sorra kattintva megnyílik a részletes leírás"}
         </Text>
         {tab?.intro && !(reader && readerable) && (
           <Text fontSize="13.5px" lineHeight="1.65" color="muted" textAlign="center" maxW="680px" mx="auto" mb="24px">
@@ -544,25 +525,24 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
           <Box display="flex" flexDirection="column" gap="22px" maxW={tab?.layout === "narrow" ? "760px" : undefined} mx="auto" w="100%">
             {/* the dense (crammed no-scroll) weapons mode only works with desktop widths — on
                 mobile it falls back to the normal horizontally scrollable layout */}
-            {blocks.map((b) => renderBlock(b, tab?.layout === "dense" && !isMobile))}
+            {blocks.map((b) => renderBlock(b, (tab?.layout === "dense" || !!b.dense) && !isMobile))}
           </Box>
         )}
         </>
-        )}
       </Box>
       {/* Floating reader/table toggle — pinned to the content's bottom-right so the mode is always
           switchable, no scroll back to the heading chip. Only on the schools (readerable) tabs. */}
       {readerable && (
         <Box as="button" type="button" onClick={toggleReader}
-          title={reader ? "Vissza a táblázathoz" : "Olvasó nézet — folyamatos olvasás"}
-          aria-label={reader ? "Táblázat nézet" : "Olvasó nézet"}
+          title={reader ? "Vissza a táblázathoz" : "Olvasónézet: a fejezet folyamatos szövegként"}
+          aria-label={reader ? "Táblázatos nézet" : "Olvasónézet"}
           position="fixed" zIndex={20}
           right={{ base: "16px", md: "24px" }} bottom="max(20px, env(safe-area-inset-bottom))"
           display="inline-flex" alignItems="center" gap="7px" h="42px" px="15px" borderRadius="999px"
           bg="accent" color="white" border="1px solid" borderColor="accent" boxShadow="0 6px 20px rgba(0,0,0,.28)"
           fontFamily="system-ui" fontSize="13px" fontWeight={700} _hover={{ opacity: 0.92 }} _active={{ transform: "translateY(1px)" }}>
           {reader ? <OpenBookIcon size={14} /> : ReaderIcon}
-          {reader ? "Táblázat" : "Olvasó nézet"}
+          {reader ? "Táblázat" : "Olvasónézet"}
         </Box>
       )}
       </Box>

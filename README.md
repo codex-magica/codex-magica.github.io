@@ -39,7 +39,7 @@ PDF**. That made three things harder than they should be:
 
 Codex Magica turns the book into:
 
-- 📖 **A searchable compendium**: every skill, spell, prayer, psi discipline, weapon, armor and poison, each with its rules text.
+- 📖 **A searchable compendium**: every skill, spell, prayer, psi discipline, weapon, armor and poison, each with its rules text, plus character-creation tables for attributes, races, classes and backgrounds.
 - 🧙 **A guided character builder**: race, class, school, backgrounds, point-buy, per-level skill purchases and level-ups, with the book's costs and prerequisites enforced. It works just as well for the game master's NPCs as for player characters.
 - 📜 **A live character sheet for the table**: hit points and pain points, mana, conditions, weapons and armor, companions. It works on a phone, an iPad or a desktop.
 
@@ -240,7 +240,7 @@ src/
 ├── engine/          derive(): the pure rules engine, in phases, with golden tests
 ├── model/           rules model: classes, races, skills, effects DSL, house-rule variants
 ├── data/            typed rules data transcribed from the book (spells, weapons, armor…)
-├── book/            not distributed: optional local copy of two rulebook chapters
+├── book/            not distributed: local output of the PDF pipeline (the app does not read it)
 ├── state/           roster storage (localStorage), migrations, import/export
 ├── ui/              React + Chakra UI screens: welcome, sheet, builder, compendium
 └── fonts/           Crimson Pro (OFL)
@@ -269,8 +269,8 @@ rights holders, as do the game's names and terms. The rules data in `src/data/` 
 restructured from the rulebook for this project, so it is a **derivative work**. It contains
 the descriptions and rules text of skills, spells, prayers, psi disciplines and the magic schools,
 weapons, armor, items, poisons and combat situations, plus short descriptions of class and race
-abilities, attributes and combat values (in `src/model/`). The rest of the book, including the
-introduction and character-creation chapters, the class chapters' prose, the world and lore, the gods,
+abilities, attributes and combat values (in `src/model/`). The rest of the book, including the text of
+the introduction and character-creation chapters, the class chapters' prose, the world and lore, the gods,
 the bestiary and the magic items, is not included.
 
 Codex Magica is an independent, non-commercial fan project and not an official M.A.G.U.S. product: it is

@@ -3,47 +3,10 @@ import { Box, Heading, HStack, Text, VStack } from "@chakra-ui/react";
 import { RACES, RACE_NAMES } from "../model/races";
 import { CLASSES, CLASS_NAMES, ClassDef } from "../model/classes";
 import { ChoiceDef, OptionDef } from "../model/choices";
-import { GrantEntry } from "../model/effects";
+import { summarize } from "./grantSummary";
 import { STAT_KEYS, STAT_SHORT } from "../model/attributes";
 import { ModalShell } from "./Modal";
 import { AbilityChips } from "./AbilityChips";
-
-// Bucket grant effects into readable groups for the detail pane.
-const summarize = (entries: GrantEntry[]) => {
-  const b = { backgrounds: [] as string[], skills: [] as string[], teaches: [] as { skill: string; level: number }[], allows: [] as string[], tags: [] as { name: string; atLevel?: number }[], combat: [] as string[], other: [] as string[], specials: [] as string[], forbidden: [] as string[] };
-  // A skill/branch label: "minden képzettség" | "<Kategória> (kat.)" | "<Skill>" | "<Skill> (<altípus>)".
-  const catName = (e: { skill?: string; subtype?: string; category?: string; allSkills?: boolean }) =>
-    e.allSkills ? "minden képzettség" : e.category ? `${e.category} (kat.)` : `${e.skill ?? ""}${e.subtype ? ` (${e.subtype})` : ""}`;
-  for (const { effect: e, atLevel } of entries) {
-    switch (e.kind) {
-      case "grantBackground": b.backgrounds.push(e.background); break;
-      case "grantSkill": b.skills.push(`${e.skill}${e.subtype ? ` (${e.subtype})` : ""} ${e.level}. fok`); break;
-      case "grantSkillPercent": b.skills.push(`${e.skill} ${e.percent}%`); break;
-      case "grantSkillChoice": b.skills.push(`${e.skill} (${e.label}) ${e.level}. fok`); break; // választható fegyver stb.
-      case "allowSkill": b.allows.push(`${e.skill}${e.subtype ? ` (${e.subtype})` : ""}`); break;
-      case "teachingDiscount": {
-        const nm = catName(e);
-        if (!nm) break;
-        if (atLevel != null && atLevel > 1) b.specials.push(`${atLevel}. szinttől: ${nm} (${e.uptoLevel}. fokig)`);
-        else b.teaches.push({ skill: nm, level: e.uptoLevel });
-        break;
-      }
-      case "skillCostMultiplier": b.specials.push(`${catName(e)} ×${e.factor} Kp`); break;
-      case "forbidSkill": b.forbidden.push(catName(e)); break;
-      case "maxSkillFok": b.specials.push(`${catName(e)} max ${e.fok}. fok`); break;
-      case "classCostDelta": b.specials.push(`Iskolaköltség ${e.amount > 0 ? "+" : ""}${e.amount} KAP`); break;
-      case "tag": b.tags.push({ name: e.tag, atLevel: atLevel != null && atLevel > 1 ? atLevel : undefined }); break;
-      case "combatBonus": b.combat.push(`${e.channel} +${e.amount}`); break;
-      case "statBonus": b.other.push(`${e.stat} +${e.amount}`); break;
-      case "poolAccess": b.other.push(`${e.pool} elérés`); break;
-      case "grantPoolFromStat": b.other.push(`${e.pool} = ${e.stat}`); break;
-      case "grantEquipment": b.other.push(e.item); break;
-      case "restriction": b.other.push(e.text); break;
-      default: break;
-    }
-  }
-  return b;
-};
 
 const Section: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <Box mb="12px">

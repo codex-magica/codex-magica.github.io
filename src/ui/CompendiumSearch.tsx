@@ -115,6 +115,7 @@ const glyphPath: Record<string, React.ReactNode> = {
   burst: <><path d="M12 5v3M12 16v3M5 12h3M16 12h3M7 7l2 2M15 15l2 2M17 7l-2 2M9 15l-2 2" /></>,
   coin: <><circle cx="12" cy="12" r="8" /><path d="M12 8.5v7M9.5 10.5c0-1 1-1.7 2.5-1.7s2.5.7 2.5 1.6c0 2.4-5 1.6-5 3.9 0 1 1 1.7 2.5 1.7s2.5-.7 2.5-1.6" /></>,
   drop: <><path d="M12 3.5s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" /></>,
+  person: <><circle cx="12" cy="8" r="3.6" /><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6" /></>,
 };
 const tabGlyph = (tab: number) => TABS[tab]?.glyph ?? "book";
 

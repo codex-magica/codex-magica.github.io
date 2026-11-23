@@ -17,11 +17,11 @@ That content is:
 | everywhere | The names, terms and game mechanics of M.A.G.U.S. |
 
 **The full rulebook text is not distributed.** Neither the scanned book nor the OCR output or the generated
-per-page/per-chapter Markdown is in this repository or its history. The rest of the book (the
+per-page/per-chapter Markdown is in this repository or its history. The rest of the book (the text of the
 introduction and character-creation chapters, the class chapters' prose, the world and lore, the gods, the
-bestiary, the magic items and so on) is not included in any form. The pipeline scripts in
-`source_material/build/` are included so it can be run on your own copy, and `src/book/` can hold a local,
-gitignored copy of two chapters (see [`src/book/README.md`](src/book/README.md)).
+bestiary, the magic items and so on) is not included. The pipeline scripts in `source_material/build/` are
+included so it can be run on your own copy; its chapter output goes to the gitignored `src/book/` folder
+(see [`src/book/README.md`](src/book/README.md)), which the app does not read.
 
 No illustrations, cover art or page layout from the printed book are included.
 
