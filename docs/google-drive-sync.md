@@ -78,6 +78,21 @@ Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices again
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
 
+## Why this approach
+
+Browser-only apps get a one-hour access token and no refresh token (a refresh token needs the client
+secret, so a server). The options weighed:
+
+| Option | Tap needed | Server | Catch |
+|---|---|---|---|
+| Popup each time the token expires | after each hour | none | a tap prompt |
+| Redirect with `prompt=none` (chosen) | no, while the Google session lives | none | a quick hop through Google about once an hour of use; Google calls this flow legacy (if it's ever switched off, the app falls back to the tap) |
+| A small token helper on the same domain (e.g. a Cloudflare Pages Function) | no | tiny, holds no character data | a piece of infrastructure to run |
+| Firebase | no | yours | players' data in your project and quota |
+
+A native app would renew silently, but only for itself: tokens stay on the device, so it wouldn't help the
+web app.
+
 ## Setting it up
 
 You need a Google account and about fifteen minutes. The steps use the Google Cloud console

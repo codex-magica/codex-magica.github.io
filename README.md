@@ -230,8 +230,7 @@ flowchart LR
   Google's authorization endpoint (`prompt=none` with a `login_hint`) at moments when nothing can be lost:
   at start, when coming back to the app, or after a minute without touches while changes are waiting, and
   never while a dialog or the editor is open. It returns to the same screen, tab and scroll position.
-  Setup and details: [docs/google-drive-sync.md](docs/google-drive-sync.md); the options weighed, from
-  refresh-token proxies to native apps: [docs/google-drive-sync-renewal-plan.md](docs/google-drive-sync-renewal-plan.md).
+  Setup, details and the options weighed: [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
 ### 4 · Hosting
 
@@ -316,7 +315,7 @@ src/
 └── fonts/           Crimson Pro, plus a few symbols from EB Garamond (OFL)
 source_material/
 └── build/           the PDF → Markdown pipeline: scripts and agent instructions
-docs/                design notes, pipeline write-up, README assets
+docs/                Drive sync and PDF pipeline write-ups, icon sources, README screenshots
 ```
 
 </details>
