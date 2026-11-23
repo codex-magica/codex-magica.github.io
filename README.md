@@ -155,6 +155,7 @@ dense stat tables. I tried several approaches before settling on a hybrid pipeli
 [`source_material/build/`](source_material/build)):
 
 ```mermaid
+%%{init: {"theme": "base", "fontFamily": "Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Helvetica, Arial, sans-serif", "fontSize": "14px", "primaryColor": "#232a35", "primaryTextColor": "#f2ede3", "primaryBorderColor": "#b19869", "lineColor": "#8b93a1", "textColor": "#f2ede3", "edgeLabelBackground": "#232a35"}}}%%
 flowchart LR
     PDF["Scanned PDF<br/>514 pages"] --> PREP["Deskew + normalize<br/>(ImageMagick)"]
     PREP --> OCR["tesseract -l hun<br/>prose = ground truth"]
@@ -164,6 +165,10 @@ flowchart LR
     PROSE --> MD["Markdown<br/>514 pages"]
     TABLES --> MD
     MD --> CH["Chapters<br/>proofread by hand"]
+    classDef input fill:#b19869,stroke:#8a744a,color:#1c2129
+    classDef key fill:#3e5a86,stroke:#a7c8ea,color:#ffffff
+    class PDF input
+    class CH key
 ```
 
 **Lessons from the pipeline:**
@@ -186,10 +191,15 @@ detail.
 ### 2 · From text to a rules engine
 
 ```mermaid
+%%{init: {"theme": "base", "fontFamily": "Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Helvetica, Arial, sans-serif", "fontSize": "14px", "primaryColor": "#232a35", "primaryTextColor": "#f2ede3", "primaryBorderColor": "#b19869", "lineColor": "#8b93a1", "textColor": "#f2ede3", "edgeLabelBackground": "#232a35"}}}%%
 flowchart LR
     DATA["Typed rules data<br/>transcribed from the book"] --> ENGINE["derive(rules, record)<br/>pure function"]
     REC["Character record<br/>per-level ledger"] --> ENGINE
     ENGINE --> SHEET["Sheet · builder · compendium<br/>values + provenance + diagnostics"]
+    classDef input fill:#b19869,stroke:#8a744a,color:#1c2129
+    classDef key fill:#3e5a86,stroke:#a7c8ea,color:#ffffff
+    class DATA,REC input
+    class ENGINE key
 ```
 
 - **A character is a ledger, not a stat block.** The record stores decisions: race, class, point-buy,
@@ -206,9 +216,13 @@ flowchart LR
 ### 3 · An app without a server
 
 ```mermaid
+%%{init: {"theme": "base", "fontFamily": "Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Helvetica, Arial, sans-serif", "fontSize": "14px", "primaryColor": "#232a35", "primaryTextColor": "#f2ede3", "primaryBorderColor": "#b19869", "lineColor": "#8b93a1", "textColor": "#f2ede3", "edgeLabelBackground": "#232a35"}}}%%
 flowchart LR
     A["Phone<br/>browser storage"] <-->|"sync"| D[("Player's Google Drive<br/>hidden app-data folder")]
     D <-->|"sync"| B["iPad<br/>browser storage"]
+    classDef input fill:#b19869,stroke:#8a744a,color:#1c2129
+    classDef key fill:#3e5a86,stroke:#a7c8ea,color:#ffffff
+    class D key
 ```
 
 - **Local-first.** There's no backend and no account. Characters live in `localStorage`, schema
