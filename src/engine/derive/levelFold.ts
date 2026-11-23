@@ -76,6 +76,12 @@ function applySkillPurchases(ctx: DeriveCtx, L: number, lvlRec: LevelRecord): vo
     const key = sp.id != null ? `var:${sp.id}` : skillKey(sp.skill, origOf(ctx, sp.skill, sp.subtype));
     const cur = owned[key];
     const isPct = def.cost === "percentage";
+    // a level the skill can't have (a hand-edited file, or a purchase from the other rules variant where
+    // the skill is priced the other way): skipped, so it can't break the point totals
+    if (!Number.isFinite(sp.to) || (isPct ? sp.to < 0 || sp.to > 100 : sp.to < 1 || sp.to > 5)) {
+      diag("warn", `${sp.skill}: ${sp.to}${isPct ? "%" : ". fok"} nem lehetséges, ez a vásárlás nem számít bele.`, L);
+      continue;
+    }
     // A two-tier specific (Fegyverhasználat weapon) inherits its parent CATEGORY's fok as its floor;
     // otherwise `from` is whatever is already owned unless explicitly given.
     const parentFok = sp.parent != null ? owned[skillKey(sp.skill, origOf(ctx, sp.skill, sp.parent))]?.fok ?? 0 : undefined;

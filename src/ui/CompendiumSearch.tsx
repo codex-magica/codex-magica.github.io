@@ -257,7 +257,7 @@ export const SearchPalette: React.FC<{
           <Flex display={{ base: "none", md: "flex" }} align="center" gap="5px"><Kbd>↵</Kbd><Text fontFamily="system-ui" fontSize="11px" color="fgFaint">megnyitás</Text></Flex>
           <Text display={{ base: "block", md: "none" }} fontFamily="system-ui" fontSize="11px" color="fgFaint">Kompendium-kereső</Text>
           {!short && hits.length > 0 && (
-            <Text ml="auto" fontFamily="system-ui" fontSize="11px" color="fgFaint">{hits.length} találat</Text>
+            <Text ml="auto" fontFamily="system-ui" fontSize="11px" color="fgFaint">{hits.length >= 60 ? "Az első 60 találat" : `${hits.length} találat`}</Text>
           )}
         </Flex>
       </Box>

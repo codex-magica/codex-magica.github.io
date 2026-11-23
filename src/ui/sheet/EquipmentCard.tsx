@@ -37,9 +37,14 @@ export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void 
   const empty = lines.every((l) => !l.trim());
   const MIN_LINES = 8; // keep a notebook-page height even when near-empty
 
-  const setLineQty = (idx: number, n: number) => {
+  // The pad remembers the line it was opened for; if the text changed meanwhile (a sync), find that item
+  // again by name, and do nothing if it's gone.
+  const setLineQty = (idx: number, name: string, n: number) => {
     const ls = text.split("\n");
-    ls[idx] = ls[idx].replace(/^(\s*)\d+/, `$1${Math.max(0, n)}`);
+    const item = (l: string | undefined) => l?.match(/^\s*\d+(.*)$/)?.[1].trim();
+    const at = item(ls[idx]) === name ? idx : ls.findIndex((l) => item(l) === name);
+    if (at < 0) return;
+    ls[at] = ls[at].replace(/^(\s*)\d+/, `$1${Math.max(0, n)}`);
     onSet(ls.join("\n"));
   };
 
@@ -80,7 +85,7 @@ export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void 
         )}
       </Card>
       {qtyEdit && (
-        <InventoryQtyModal name={qtyEdit.name} qty={qtyEdit.qty} onApply={(n) => { setLineQty(qtyEdit.idx, n); setQtyEdit(null); }} onClose={() => setQtyEdit(null)} />
+        <InventoryQtyModal name={qtyEdit.name} qty={qtyEdit.qty} onApply={(n) => { setLineQty(qtyEdit.idx, qtyEdit.name, n); setQtyEdit(null); }} onClose={() => setQtyEdit(null)} />
       )}
     </>
   );

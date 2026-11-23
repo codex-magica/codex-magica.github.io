@@ -42,3 +42,10 @@ test("garbage and unrelated JSON are rejected; malformed backup entries are skip
   const r = parseImportFile(JSON.stringify({ format: BACKUP_FORMAT, version: 1, characters: [{ nope: 1 }, rec("a", "Anna")] }), [])!;
   expect(r.add.map((x) => x.id)).toEqual(["a"]);
 });
+
+test("the same id twice in one file: identical entries count once, different ones are both kept", () => {
+  const r = parseImportFile(backupOf(rec("a", "Anna"), rec("a", "Anna"), rec("a", "Anna (más)")), [])!;
+  expect(r.add.map((x) => x.name)).toEqual(["Anna", "Anna (más)"]);
+  expect(new Set(r.add.map((x) => x.id)).size).toBe(2);
+  expect(r.skipped).toBe(1);
+});

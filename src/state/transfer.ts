@@ -126,9 +126,12 @@ export const parseImportFile = (text: string, existing: CharacterRecord[]): Impo
       // keep ids, so restoring twice is a no-op; an odd or missing one gets a fresh id
       const clean = withoutStamp(isSafeId((raw as CharacterRecord).id) ? rec : { ...rec, id: genId() });
       const current = have.get(clean.id);
-      if (current === undefined) add.push(clean);
-      else if (current === contentHash(clean)) skipped++;
-      else add.push({ ...clean, id: genId() }); // differs from the local one: keep both
+      const kept = current === undefined ? clean : current === contentHash(clean) ? null : { ...clean, id: genId() }; // differs: keep both
+      if (!kept) skipped++;
+      else {
+        add.push(kept);
+        have.set(kept.id, contentHash(kept)); // the same id twice in one file: the second is compared to the first
+      }
     }
     return { add, skipped, invalid, kind: "backup" };
   }

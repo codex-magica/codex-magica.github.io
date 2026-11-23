@@ -124,10 +124,14 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
   const raceAllowed = klass ? klass.allowedRaces.indexOf(record.race) >= 0 : true;
 
   // House rule (skill rework): set at creation only. Flipping mid-creation prunes purchases that name
-  // skills absent from the target catalog (e.g. Veszélyérzék ↔ Éberség) so no orphan entries linger.
+  // skills absent from the target catalog (e.g. Veszélyérzék ↔ Éberség), or priced the other way there
+  // (Mászás is a % skill in the book and a fok skill in the house rules: 18% must not become fok 18).
   const setSkillRework = (on: boolean) => {
+    const current = rulesFor(record);
     const target = rulesFor({ houseRules: { skillRework: on } });
-    const levels = record.levels.map((l) => ({ ...l, skillPurchases: l.skillPurchases.filter((p) => target.skills[p.skill]) }));
+    const pct = (def: { cost: unknown } | undefined) => def?.cost === "percentage";
+    const keeps = (skill: string) => !!target.skills[skill] && pct(target.skills[skill]) === pct(current.skills[skill]);
+    const levels = record.levels.map((l) => ({ ...l, skillPurchases: l.skillPurchases.filter((p) => keeps(p.skill)) }));
     update({ houseRules: { ...record.houseRules, skillRework: on }, levels });
   };
   const showHomebrewToggle = mode === "create";

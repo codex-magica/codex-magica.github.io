@@ -188,3 +188,13 @@ test("golden: homebrew Harcművész Nisen-nid-to (Éberség granted+taught, Más
   });
   expect(derive(HB, rec)).toMatchSnapshot();
 });
+
+describe("a purchase at a level the skill can't have", () => {
+  // e.g. Mászás 18% bought under the book rules, then the house rule switched on (a fok skill there)
+  test("is skipped with a warning, and the totals stay numbers", () => {
+    const rec = base({ levels: [{ level: 1, allocations: [], skillPurchases: [{ skill: "Mászás", to: 18 }], hmAssignments: [], statIncreases: [] }] });
+    const d = derive(rulesHomebrew(), rec);
+    expect(d.pools.kapBalanceByLevel.every(Number.isFinite)).toBe(true);
+    expect(d.diagnostics.some((x) => x.message.includes("Mászás: 18. fok nem lehetséges"))).toBe(true);
+  });
+});
