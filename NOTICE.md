@@ -2,8 +2,9 @@
 
 ## M.A.G.U.S. game content
 
-**Codex Magica is an unofficial, non-commercial fan project.** It is not affiliated with, endorsed by or
-sponsored by the owners of the M.A.G.U.S. trademarks, or by the authors or publishers of the books.
+**Codex Magica is an independent, non-commercial fan project.** It is not an official M.A.G.U.S. product:
+it is not published or endorsed by the owners of the M.A.G.U.S. trademarks or by the authors or publishers
+of the books, and they are not responsible for its content.
 
 The software in this repository is open source under the [MIT License](LICENSE). The game content it
 presents is **not** covered by that license and remains the property of its respective rights holders.
@@ -41,13 +42,13 @@ If you hold rights to any of this material and would like something changed or r
 [open an issue](https://github.com/marcigo36/codex-magica/issues) or contact the maintainer through
 GitHub. Requests will be handled promptly.
 
-> **Magyarul:** A Codex Magica nem hivatalos, nem kereskedelmi célú rajongói projekt. Nem áll
-> kapcsolatban a M.A.G.U.S. védjegyek tulajdonosaival, sem a könyvek szerzőivel vagy kiadóival, és ők nem
-> is támogatják. A forráskód MIT licenc alatt szabadon felhasználható. A szabálykönyvből átvett és
-> újrarendezett adatok (származékos művek), valamint a játék nevei és fogalmai nem tartoznak e licenc
-> alá, azok a mindenkori jogtulajdonosokat illetik. A szabálykönyv teljes szövegét a repó nem
-> tartalmazza, ahogy a könyv illusztrációit és tördelését sem. Ha jogtulajdonosként bármit
-> módosítanál vagy eltávolíttatnál, nyiss egy issue-t, és hamar intézzük.
+> **Magyarul:** A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos
+> M.A.G.U.S.-kiadvány: nem a védjegyek tulajdonosai, illetve a könyvek szerzői vagy kiadói adták ki, és a
+> tartalmáért nem ők felelnek. A forráskód MIT licenc alatt szabadon felhasználható. A szabálykönyvből
+> átvett és újrarendezett adatok (származékos művek), valamint a játék nevei és fogalmai nem tartoznak e
+> licenc alá, azok a jogosultak szellemi tulajdonát képezik. A szabálykönyv teljes szövegét a repó nem
+> tartalmazza, ahogy a könyv illusztrációit és tördelését sem. Ha jogosultként bármit módosíttatnál vagy
+> eltávolíttatnál, nyiss egy issue-t, és hamar intézzük.
 
 ## Fonts
 

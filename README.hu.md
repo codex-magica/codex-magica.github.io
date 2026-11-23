@@ -117,7 +117,7 @@ részletek angolul, a [fő README-ben](README.md#how-it-was-built) és a
 A repóban található **forráskód** [MIT licenc](LICENSE) alatt szabadon felhasználható.
 
 A **M.A.G.U.S. tartalom**, valamint a játék nevei és fogalmai **nem** tartoznak e licenc alá, azok a
-mindenkori jogtulajdonosokat illetik. Az `src/data/` mappában lévő szabályadatok a szabálykönyvből lettek
+jogosultak szellemi tulajdonát képezik. Az `src/data/` mappában lévő szabályadatok a szabálykönyvből lettek
 átírva és újrarendezve ehhez a projekthez, így **származékos művek**: a képzettségek, varázslatok, imák,
 pszi diszciplínák és mágiaiskolák, a fegyverek, vértek, tárgyak, mérgek és harci helyzetek leírásait és
 szabályszövegét tartalmazzák, továbbá (az `src/model/` mappában) a fajok és kasztok képességeinek, a
@@ -125,9 +125,9 @@ tulajdonságoknak és a harcértékeknek rövid leírását. A könyv többi ré
 karakteralkotás fejezete, a kasztfejezetek szövege, a világleírás, az istenek, a bestiárium és a
 varázstárgyak, nincs benne.
 
-A Codex Magica nem hivatalos, nem kereskedelmi célú rajongói projekt, amely nem áll kapcsolatban a
-jogtulajdonosokkal, és ők nem is támogatják. A könyv eredeti közreműködőinek listája a
-[NOTICE.md](NOTICE.md) fájlban található. Ha jogtulajdonosként bármit módosítanál vagy eltávolíttatnál,
+A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos M.A.G.U.S.-kiadvány: nem a
+jogosultak adták ki, és a tartalmáért nem ők felelnek. A könyv eredeti közreműködőinek listája a
+[NOTICE.md](NOTICE.md) fájlban található. Ha jogosultként bármit módosíttatnál vagy eltávolíttatnál,
 nyiss egy [issue-t](https://github.com/marcigo36/codex-magica/issues).
 
 <div align="center">

@@ -15,13 +15,13 @@ export const CreditsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       <Heading fontSize="22px" fontWeight={700} color="fg" mb="12px">A Codex Magicáról</Heading>
 
       <Text fontSize="15px" color="fg" lineHeight="1.6" mb="12px">
-        A Codex Magica <b>nem hivatalos, nem kereskedelmi célú rajongói projekt</b>: játékosok készítették
-        játékosoknak. Nem áll kapcsolatban a M.A.G.U.S. védjegyek tulajdonosaival, sem a könyvek szerzőivel vagy
-        kiadóival, és ők nem is támogatják.
+        A Codex Magica <b>független, nem kereskedelmi célú rajongói projekt</b>: játékosok készítették
+        játékosoknak. Nem hivatalos M.A.G.U.S.-kiadvány: nem a védjegyek tulajdonosai, illetve a könyvek szerzői
+        vagy kiadói adták ki, és a tartalmáért nem ők felelnek.
       </Text>
       <Text fontSize="15px" color="fg" lineHeight="1.6" mb="14px">
         A szabályok, képzettségek, varázslatok és a többi játékadat a <i>M.A.G.U.S. Új Törvénykönyv</i> (Tuan
-        Kiadó, 2007) alapján készült, és a jogtulajdonosokat illeti.
+        Kiadó, 2007) alapján készült; ezek a jogosultak szellemi tulajdonát képezik.
       </Text>
 
       <Box borderTop="1px solid" borderBottom="1px solid" borderColor="rule" py="10px" mb="14px">
@@ -40,7 +40,7 @@ export const CreditsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         <Box as="a" href={REPO_URL} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
           projekt oldalán
         </Box>{" "}
-        olvashatók. Ha jogtulajdonosként bármit módosítanál vagy eltávolíttatnál, nyiss ott egy issue-t, és hamar
+        olvashatók. Ha jogosultként bármit módosíttatnál vagy eltávolíttatnál, nyiss ott egy issue-t, és hamar
         intézzük.
       </Text>
     </Box>

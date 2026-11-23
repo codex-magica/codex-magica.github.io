@@ -273,10 +273,10 @@ abilities, attributes and combat values (in `src/model/`). The rest of the book,
 introduction and character-creation chapters, the class chapters' prose, the world and lore, the gods,
 the bestiary and the magic items, is not included.
 
-Codex Magica is an unofficial, non-commercial fan project, not affiliated with or endorsed by the rights
-holders. The book's original credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this
-material and would like something changed or removed, please
-[open an issue](https://github.com/marcigo36/codex-magica/issues).
+Codex Magica is an independent, non-commercial fan project and not an official M.A.G.U.S. product: it is
+not published or endorsed by the rights holders, who are not responsible for its content. The book's original
+credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this material and would like
+something changed or removed, please [open an issue](https://github.com/marcigo36/codex-magica/issues).
 
 The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro) (SIL OFL 1.1). The icons are
 from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons).
