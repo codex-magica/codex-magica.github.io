@@ -174,7 +174,7 @@ export const WeaponModal: React.FC<{ weapon: WeaponModalState; onClose: () => vo
           )}
           {!isMelee && (
             <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" textAlign="center" mt="7px">
-              A találathoz d100 ≥ {minRoll} dobás kell (CÉ + dobás ≥ célpont VÉ).
+              A találathoz k100 ≥ {minRoll} dobás kell (CÉ + dobás ≥ célpont VÉ).
             </Text>
           )}
 

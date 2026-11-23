@@ -272,7 +272,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
                   <Box minW={0}>
                     <Text fontSize="14px" color="fg">Képzettség-átdolgozás</Text>
                     <Text fontFamily="system-ui" fontSize="11px" color="fgFaint" lineHeight="1.4">
-                      Százalékos képzettségek fokossá alakítva · Rejtekhelykutatás + Csapdakeresés + Veszélyérzék → Éberség
+                      Százalékos képzettségek fokokra átírva · Rejtekhelykutatás + Csapdakeresés + Veszélyérzék → Éberség
                     </Text>
                   </Box>
                 </HStack>,

@@ -30,7 +30,7 @@ export function applyBaseStats(ctx: DeriveCtx): void {
     }
   }
   if (baseBudget !== POINT_BUY_TOTAL) {
-    diag("warn", `Az alappontok összege ${baseBudget}, a szükséges ${POINT_BUY_TOTAL} (faji max alatti rész).`);
+    diag("warn", `Az alappontok összege ${baseBudget}, de ${POINT_BUY_TOTAL} kell (a faji maximumig elosztva).`);
   }
 
   // Seed the fold's effective stats from the final base, and record the base provenance.

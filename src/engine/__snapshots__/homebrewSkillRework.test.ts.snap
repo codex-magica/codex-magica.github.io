@@ -33,7 +33,7 @@ Object {
   "diagnostics": Array [
     Object {
       "atLevel": undefined,
-      "message": "Az alappontok összege 137, a szükséges 135 (faji max alatti rész).",
+      "message": "Az alappontok összege 137, de 135 kell (a faji maximumig elosztva).",
       "severity": "warn",
     },
     Object {
@@ -7715,7 +7715,7 @@ Object {
   "diagnostics": Array [
     Object {
       "atLevel": undefined,
-      "message": "Az alappontok összege 139, a szükséges 135 (faji max alatti rész).",
+      "message": "Az alappontok összege 139, de 135 kell (a faji maximumig elosztva).",
       "severity": "warn",
     },
     Object {

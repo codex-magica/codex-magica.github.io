@@ -59,11 +59,11 @@ function applySkillPurchases(ctx: DeriveCtx, L: number, lvlRec: LevelRecord): vo
     if (sp.to > grantedFok) {
       for (const r of def.hardReq) {
         if (maxFok(ctx, r.skill) < sp.to)
-          diag("warn", `${sp.skill} ${sp.to}. fok: erős előfeltétel «${r.skill}» legalább ${sp.to}. fok.`, L);
+          diag("warn", `${sp.skill} ${sp.to}. fokához «${r.skill}» legalább ${sp.to}. foka kell (erős előfeltétel).`, L);
       }
       for (const r of def.softReq) {
         if (maxFok(ctx, r.skill) < sp.to - 1)
-          diag("warn", `${sp.skill} ${sp.to}. fok: gyenge előfeltétel «${r.skill}» legalább ${sp.to - 1}. fok.`, L);
+          diag("warn", `${sp.skill} ${sp.to}. fokához «${r.skill}» legalább ${sp.to - 1}. foka kell (gyenge előfeltétel).`, L);
       }
     }
     // A user-added branch (sp.id) is keyed by its id so it forms its own instance and never collides
@@ -84,7 +84,7 @@ function applySkillPurchases(ctx: DeriveCtx, L: number, lvlRec: LevelRecord): vo
     // to a concrete weapon for higher foks.
     const lvl0 = def.branch?.[0];
     if (lvl0?.branchAbove != null && sp.parent == null && lvl0.options?.some((o) => o.name === effSub) && sp.to > lvl0.branchAbove)
-      diag("warn", `${sp.skill} (${effSub}): a kategória legfeljebb ${lvl0.branchAbove}. fok — a magasabb fokhoz konkrét fegyvert kell választani.`, L);
+      diag("warn", `${sp.skill} (${effSub}): kategóriaként legfeljebb ${lvl0.branchAbove}. fokig tanulható, a magasabb fokhoz konkrét fegyvert kell választani.`, L);
     // A non-variant purchase that doesn't raise the fok is a phantom (e.g. an earlier level now reaches
     // it) — flag it for pruning and SKIP it: applying it would wrongly LOWER the skill to its stale
     // target (raise L1 to 5 while L2 still says "to 4" → fok must stay 5 until the prune removes it).

@@ -52,7 +52,7 @@ Object {
   "diagnostics": Array [
     Object {
       "atLevel": undefined,
-      "message": "Az alappontok összege 138, a szükséges 135 (faji max alatti rész).",
+      "message": "Az alappontok összege 138, de 135 kell (a faji maximumig elosztva).",
       "severity": "warn",
     },
     Object {
@@ -8161,7 +8161,7 @@ Object {
   "diagnostics": Array [
     Object {
       "atLevel": undefined,
-      "message": "Az alappontok összege 141, a szükséges 135 (faji max alatti rész).",
+      "message": "Az alappontok összege 141, de 135 kell (a faji maximumig elosztva).",
       "severity": "warn",
     },
     Object {
@@ -8171,7 +8171,7 @@ Object {
     },
     Object {
       "atLevel": 1,
-      "message": "Vallásismeret 4. fok: erős előfeltétel «Kultúra» legalább 4. fok.",
+      "message": "Vallásismeret 4. fokához «Kultúra» legalább 4. foka kell (erős előfeltétel).",
       "severity": "warn",
     },
     Object {
@@ -8181,7 +8181,7 @@ Object {
     },
     Object {
       "atLevel": undefined,
-      "message": "«Vallásismeret» — kötelező altípust választani.",
+      "message": "«Vallásismeret»: altípust kell választani.",
       "severity": "warn",
     },
   ],
@@ -16054,7 +16054,7 @@ Object {
     },
     Object {
       "atLevel": 1,
-      "message": "KM: Történetjutalom: szintenkénti erőforrás (Fp) KM-kiigazításként nem támogatott.",
+      "message": "KM: Történetjutalom: szintenkénti erőforrás (Fp) KM-kiigazításként nem adható meg.",
       "severity": "warn",
     },
   ],
@@ -23296,7 +23296,7 @@ Object {
   "diagnostics": Array [
     Object {
       "atLevel": undefined,
-      "message": "Az alappontok összege 140, a szükséges 135 (faji max alatti rész).",
+      "message": "Az alappontok összege 140, de 135 kell (a faji maximumig elosztva).",
       "severity": "warn",
     },
     Object {
@@ -23306,7 +23306,7 @@ Object {
     },
     Object {
       "atLevel": undefined,
-      "message": "«Ősi nyelv» — kötelező altípust választani.",
+      "message": "«Ősi nyelv»: altípust kell választani.",
       "severity": "warn",
     },
   ],

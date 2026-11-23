@@ -91,7 +91,7 @@ export const CustomClassModal: React.FC<{ initial?: ClassDef; onSave: (def: Clas
         </HStack>
 
         <Box fontSize={FS_SUB} fontWeight={700} color="muted" pb="3px" mb="9px" borderBottom="1px solid" borderColor="hair">
-          Kapott képzettségek és bónuszok — oktatók, szinthez kötött sorok
+          Kapott képzettségek és bónuszok: oktatás, szinthez kötött sorok
         </Box>
         {rows.map((r) => (
           <RowEditor key={r.id} row={r} onChange={(p) => patch(r.id, p)} onRemove={() => remove(r.id)} />

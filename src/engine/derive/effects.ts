@@ -86,11 +86,11 @@ export const applyEffect = (ctx: DeriveCtx, e: Effect, source: string, level: nu
       ctx.money += e.amount;
       break;
     case "resourcePerLevel":
-      if (late) diag("warn", `${source}: szintenkénti erőforrás (${e.resource}) KM-kiigazításként nem támogatott.`, level);
+      if (late) diag("warn", `${source}: szintenkénti erőforrás (${e.resource}) KM-kiigazításként nem adható meg.`, level);
       else ctx.staticPerLevel.push({ resource: e.resource, amount: e.amount, fromLevel: level });
       break;
     case "derivedPerLevel":
-      if (late) diag("warn", `${source}: szintenkénti bónusz (${e.target}) KM-kiigazításként nem támogatott.`, level);
+      if (late) diag("warn", `${source}: szintenkénti bónusz (${e.target}) KM-kiigazításként nem adható meg.`, level);
       else ctx.staticDerivedPerLevel.push({ target: e.target, amount: e.amount, fromLevel: level });
       break;
     case "restriction":

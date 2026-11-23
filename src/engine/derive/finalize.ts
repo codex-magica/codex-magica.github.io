@@ -83,7 +83,7 @@ export function finalize(ctx: DeriveCtx): DerivedCharacter {
   for (const k of Object.keys(owned)) {
     const o = owned[k];
     if ((fixedSubtypesOf(db.skills[o.skill])?.length ?? 0) > 0 && !o.subtype)
-      diag("warn", `«${o.skill}» — kötelező altípust választani.`);
+      diag("warn", `«${o.skill}»: altípust kell választani.`);
   }
 
   const skills: OwnedSkill[] = Object.keys(owned).map((k) => {

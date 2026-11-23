@@ -87,7 +87,7 @@ export const PointBuyPanel: React.FC<Props> = ({ level, record, derived, onHm, o
         const v = hmOf(c);
         return buyRow(
           c,
-          <Box as="button" type="button" onClick={() => setCombatInfo(c)} title="Hogyan számolódik?" textAlign="left" _hover={{ color: "accentTx", textDecoration: "underline" }}>
+          <Box as="button" type="button" onClick={() => setCombatInfo(c)} title="Miből adódik?" textAlign="left" _hover={{ color: "accentTx", textDecoration: "underline" }}>
             {c} <Text as="span" color="fgFaint">(= {derived.combat[c]})</Text>
           </Box>,
           v,

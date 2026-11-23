@@ -107,7 +107,7 @@ const KmRowEditor: React.FC<{ adj: Adjustment; onChange: (patch: Partial<Adjustm
         <DeleteButton onClick={onRemove} />
       </HStack>
       {row.kind === "tag" && (
-        <Textarea {...field} mt="7px" rows={3} resize="vertical" value={row.rulesText} placeholder="leírás / szabályszöveg… (ettől lesz megnyitható a lapon)"
+        <Textarea {...field} mt="7px" rows={3} resize="vertical" value={row.rulesText} placeholder="leírás / szabályszöveg… (ha kitöltöd, a lapon megnyitható lesz)"
           onChange={(e) => setRow({ rulesText: e.target.value })} />
       )}
     </Box>

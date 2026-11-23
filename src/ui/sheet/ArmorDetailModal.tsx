@@ -59,12 +59,12 @@ export const ArmorDetailModal: React.FC<{
             ]} />
             {(armorUse.sfe !== armorUse.baseSfe || armorUse.mgt !== armorUse.baseMgt) && (
               <Text fontFamily="ui" fontSize="12px" color="accentTx" mt="8px" sx={{ fontVariantNumeric: "tabular-nums" }}>
-                Alapérték: SFÉ {armorUse.baseSfe} · MGT {signedNum(armorUse.baseMgt)} — a Vértviselet {armorUse.fok}. fok módosítja.
+                Alapérték: SFÉ {armorUse.baseSfe} · MGT {signedNum(armorUse.baseMgt)} — a Vértviselet {armorUse.fok}. foka módosítja.
               </Text>
             )}
             {armorUse.untrained && (
               <Text fontFamily="ui" fontSize="12px" color="bad" mt="8px">
-                Nincs meg a viseléséhez szükséges Vértviselet fok ({armorUse.category === "Rugalmas nehézvért" ? "1." : "2."}) —
+                Hiányzik a viseléséhez szükséges Vértviselet ({armorUse.category === "Rugalmas nehézvért" ? "1." : "2."} fok) —
                 a képzetlen fegyverforgatás levonásai sújtják, és csak Állóképességnyi körig bírja.
               </Text>
             )}

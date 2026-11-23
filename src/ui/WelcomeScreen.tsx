@@ -137,8 +137,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
           <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
           <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
-            Válassz egy hőst a folytatáshoz, vagy teremts újat. A karaktereid helyben, ezen az eszközön
-            tárolódnak.
+            Válassz egy hőst a folytatáshoz, vagy teremts újat. A karaktereidet ez az eszköz tárolja, a
+            böngészőben.
           </Text>
         </Box>
 
@@ -218,7 +218,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         {records.length > 0 && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
             {lastBackupAt === null ? "Még nem készült biztonsági mentés." : `Utolsó biztonsági mentés: ${daysAgo(lastBackupAt, now)}.`}
-            {backupStale && " A karakterek csak ebben a böngészőben vannak — érdemes menteni."}
+            {backupStale && " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes menteni."}
           </Text>
         )}
         <input

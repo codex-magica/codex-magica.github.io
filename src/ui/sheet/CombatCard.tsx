@@ -138,7 +138,7 @@ export const CombatCard: React.FC<{
                   as: "button" as const,
                   type: "button",
                   onClick: t.onClick,
-                  title: t.icon ? (activeRow?.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági harc kalkulátor") : "Hogyan számolódik?",
+                  title: t.icon ? (activeRow?.use.kind === "melee" ? "Közelharci kalkulátor" : "Távolsági harc kalkulátor") : "Miből adódik?",
                   _hover: { borderColor: "accent" },
                 }
               : {})}
@@ -159,7 +159,7 @@ export const CombatCard: React.FC<{
         <Text color="fg" fontSize={FS}>Mágiaellenállás</Text>
         <HStack gap="12px" flexShrink={0}>
           {(["MME", "AME"] as const).map((k) => (
-            <Box key={k} as="button" type="button" onClick={() => onCombatInfo(k)} title="Hogyan számolódik?"
+            <Box key={k} as="button" type="button" onClick={() => onCombatInfo(k)} title="Miből adódik?"
               display="flex" alignItems="baseline" gap="5px" px="4px" mx="-4px" borderRadius="5px" _hover={{ bg: "accentSoft" }}>
               <Text fontFamily="ui" fontSize="10.5px" fontWeight={700} letterSpacing=".04em" color="muted">{k}</Text>
               <ValNum sx={{ fontVariantNumeric: "tabular-nums", ...INFO_UL }}>{derived.derived[k]}</ValNum>
@@ -168,7 +168,7 @@ export const CombatCard: React.FC<{
         </HStack>
       </Box>
       {derived.derived.Sebzésbónusz > 0 && (
-        <Box as="button" type="button" w="100%" textAlign="left" onClick={() => onCombatInfo("Sebzésbónusz")} title="Hogyan számolódik?"
+        <Box as="button" type="button" w="100%" textAlign="left" onClick={() => onCombatInfo("Sebzésbónusz")} title="Miből adódik?"
           {...rowProps} display="flex" justifyContent="space-between" gap="14px" _hover={{ bg: "accentSoft", borderRadius: "7px" }}>
           <Text color="fg" fontSize={FS}>Sebzésbónusz</Text>
           <ValNum sx={{ fontVariantNumeric: "tabular-nums", ...INFO_UL }}>{`+${derived.derived.Sebzésbónusz}`}</ValNum>

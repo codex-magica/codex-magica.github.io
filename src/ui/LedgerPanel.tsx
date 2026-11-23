@@ -135,7 +135,7 @@ export const LedgerPanel: React.FC<{ record: CharacterRecord; derived: DerivedCh
         </Box>
       </HStack>
       <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mb={2} lineHeight="1.5">
-        A teljes építésnapló, tárolási sorrendben — a sorrend számít.
+        Minden döntés a rögzítés sorrendjében. A sorrend számít: befolyásolja az eredményt.
       </Text>
 
       {raw ? (

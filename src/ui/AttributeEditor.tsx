@@ -62,7 +62,7 @@ export const AttributeEditor: React.FC<Props> = ({ record, derived, onChange, on
         </Text>
       </HStack>
       <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mb={3} lineHeight="1.5">
-        Az <b>Érték</b> a 135 alappontból nő (a faji maximumig); a <b>Max (Adottság)</b> a felső határt a faji
+        Az <b>Érték</b> a 135 alappontból emelhető, a faji maximumig; a <b>Max (Adottság)</b> a felső határt a faji
         maximum fölé emeli (legfeljebb {ATTR_MAX}-ig), pontonként 1 KAP-ért, és a tényleges értéket is növeli.
       </Text>
 

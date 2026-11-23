@@ -192,12 +192,12 @@ export const DetailModal: React.FC<Props> = ({ modal, onClose }) => {
           </Text>
           {modal.onReader && (
             <Box as="button" type="button" onClick={() => { modal.onReader!(); onClose(); }}
-              title="Olvasó nézet — folyamatos olvasás a fejezetben" aria-label="Olvasó nézet"
+              title="Olvasónézet: a fejezet folyamatos szövegként" aria-label="Olvasónézet"
               h="30px" px="10px" flexShrink={0} borderRadius="8px" border="1px solid" borderColor="fieldBd" bg="fieldBg"
               color="accentTx" display="inline-flex" alignItems="center" gap="6px" fontFamily="system-ui" fontSize="12px" fontWeight={700}
               _hover={{ borderColor: "accent", bg: "accentSoft" }}>
               <OpenBookIcon size={12} />
-              <Box as="span" display={{ base: "none", md: "inline" }}>Olvasó nézet</Box>
+              <Box as="span" display={{ base: "none", md: "inline" }}>Olvasónézet</Box>
             </Box>
           )}
           {modal.nav && <StepBtn dir="next" onClick={modal.nav.onNext} />}

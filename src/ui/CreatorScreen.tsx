@@ -16,9 +16,9 @@ const BackArrow = (
 
 const headerFor = (mode: CreatorMode, r: CharacterRecord) => {
   const lvl = r.levels.length;
-  if (mode === "create") return { title: "Új karakter", sub: "Karakteralkotó · 1. szint", primary: "Karakter létrehozása", primaryShort: "Létrehozás", commitAnyway: "Létrehozás így is" };
-  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szintlépés véglegesítése", primaryShort: "Véglegesítés", commitAnyway: "Véglegesítés így is" };
-  return { title: "Karakter szerkesztése", sub: `${r.name} · ${r.race} ${r.class} · ${lvl}. szint`, primary: "Mentés", primaryShort: "Mentés", commitAnyway: "Mentés így is" };
+  if (mode === "create") return { title: "Új karakter", sub: "Karakteralkotó · 1. szint", primary: "Karakter létrehozása", primaryShort: "Létrehozás", commitAnyway: "Létrehozás mindenképp" };
+  if (mode === "levelup") return { title: "Szintlépés", sub: `${lvl - 1}. szint → ${lvl}. szint`, primary: "Szintlépés véglegesítése", primaryShort: "Véglegesítés", commitAnyway: "Véglegesítés mindenképp" };
+  return { title: "Karakter szerkesztése", sub: `${r.name} · ${r.race} ${r.class} · ${lvl}. szint`, primary: "Mentés", primaryShort: "Mentés", commitAnyway: "Mentés mindenképp" };
 };
 
 // One full-screen creator used for create / edit / level-up — only the header text and the primary
