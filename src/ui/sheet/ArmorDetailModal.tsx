@@ -113,7 +113,7 @@ export const ArmorDetailModal: React.FC<{
       {confirmRemove && (
         <ConfirmModal title={armorUse ? "Vért eltávolítása" : "Pajzs eltávolítása"} confirmLabel="Eltávolítás"
           onConfirm={() => { onRemove(); onClose(); }} onClose={() => setConfirmRemove(false)}>
-          Biztosan eltávolítod a(z) <b>{name}</b> {armorUse ? "vértet" : "pajzsot"} a lapról? Ha csak ideiglenesen nem viseled, elég a sorára koppintva levenned — úgy a lapon marad.
+          Biztosan eltávolítod a(z) <b>{name}</b> {armorUse ? "vértet" : "pajzsot"} a lapról? Ha csak ideiglenesen nem viseled, elég a sorára kattintva levenned — úgy a lapon marad.
         </ConfirmModal>
       )}
     </ModalShell>

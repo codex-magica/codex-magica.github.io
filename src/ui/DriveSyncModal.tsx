@@ -32,8 +32,8 @@ export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = fal
   if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
   // changes stuck on this device for hours: say so before the user picks up another device
   if (drive.status !== "idle" && drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
-    return `Ezen az eszközön vannak még fel nem töltött módosítások (${drive.pending.count}). Koppints ${button}, mielőtt másik eszközön folytatod.`;
-  if (drive.status === "needsTap") return `Google Drive: a következő szinkronhoz koppints ${button}.`;
+    return `Ezen az eszközön vannak még fel nem töltött módosítások (${drive.pending.count}). Kattints ${button}, mielőtt másik eszközön folytatod.`;
+  if (drive.status === "needsTap") return `Google Drive: a következő szinkronhoz kattints ${button}.`;
   if (drive.status === "error") return "Google Drive: a legutóbbi szinkron nem sikerült.";
   return drive.lastSyncAt ? `Google Drive: szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.` : "Google Drive: bekapcsolva.";
 };

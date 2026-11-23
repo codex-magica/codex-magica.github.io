@@ -108,7 +108,7 @@ const errorNote = (e: unknown): string => {
   if (e instanceof DriveAuthError) {
     if (e.message === "popup closed") return "A Google-ablak bezárult, mielőtt engedélyt adtál volna.";
     if (e.message === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és hagyd bejelölve a Drive-ra vonatkozó engedélyt.";
-    return "A Google-hozzáférés lejárt. Koppints a szinkronhoz.";
+    return "A Google-hozzáférés lejárt. Kattints a szinkronhoz.";
   }
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. A szinkron a következő alkalommal folytatódik.";
   return "Nem sikerült elérni a Google Drive-ot. Később magától újra megpróbálja.";
@@ -145,7 +145,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   });
   const [status, setStatus] = useState<DriveStatus>(() => (settings.enabled ? (validToken() ? "idle" : "needsTap") : "off"));
   const [note, setNote] = useState<string | null>(() =>
-    initialOutcome.kind === "error" && NEEDS_USER.has(initialOutcome.error) ? "Kijelentkeztél a Google-fiókodból, vagy a Google újra engedélyt kér. Koppints a szinkronhoz." : null
+    initialOutcome.kind === "error" && NEEDS_USER.has(initialOutcome.error) ? "Kijelentkeztél a Google-fiókodból, vagy a Google újra engedélyt kér. Kattints a szinkronhoz." : null
   );
   const [ready, setReady] = useState(false);
   const [syncTick, setSyncTick] = useState(0);

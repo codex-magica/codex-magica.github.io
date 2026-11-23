@@ -57,7 +57,7 @@ Benne van 12 kaszt, 6 faj, 83 képzettség, 636 varázslat, ima és pszi diszcip
 
 ## Amit tud
 
-- **Értékek levezetése:** bármelyik számra (TÉ, VÉ, KÉ, MME…) koppintva látod, mi
+- **Értékek levezetése:** bármelyik számra (TÉ, VÉ, KÉ, MME…) kattintva látod, mi
   mennyivel járul hozzá: tulajdonságok, HM, fegyver, képzettség, KM-módosítás.
 - **Gyorskereső (<kbd>⌘K</kbd> / <kbd>Ctrl K</kbd>)** az összes varázslatra, képzettségre és tárgyra. Ékezetek nélkül is
   működik: a `tuzgolyo` megtalálja a _Tűzgolyót_.
@@ -77,7 +77,7 @@ Benne van 12 kaszt, 6 faj, 83 képzettség, 636 varázslat, ima és pszi diszcip
 </picture>
 
 Telefonon a karakterlap lapozható oldalakra bomlik, iPaden és gépen oszlopokba rendeződik. Alapból sötét,
-de egy koppintással világosra váltható.
+de egy kattintással világosra váltható.
 
 **Alkalmazásként telepíthető.** Alkalmazásbolt nem kell hozzá: nyisd meg az oldalt, és add hozzá a
 kezdőképernyőhöz ([így](#hogyan-használhatod)). Ezután teljes képernyőn, saját ikonnal indul, mint
@@ -108,7 +108,7 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
   Drive-odra kerülnek. Részletek az [adatvédelmi tájékoztatóban](https://codex-magica.github.io/codex-magica/privacy.html).
 
 **Az adataid nálad maradnak.** Szinkron nélkül a karakterek csak az eszközöd böngészőjében vannak. Az
-összes karakterről egy koppintással mentés készíthető, és a fájl egyenesen iCloud Drive-ba, Google
+összes karakterről egy kattintással mentés készíthető, és a fájl egyenesen iCloud Drive-ba, Google
 Drive-ba vagy a Fájlokba mehet. Az importálás sosem ír felül semmit, egy-egy karakter pedig exportálható és
 elküldhető másnak.
 
@@ -127,7 +127,7 @@ oldalt. Bármelyik mai böngészőben fut, és nem kell hozzá regisztrálni.
 
 A telepítés abban is segít, hogy a böngésző tartósan megőrizze az alkalmazás adatait, különösen Safariban.
 
-**Szinkron vagy mentés.** Ha több eszközön is használnád a karaktereidet, koppints a karakterlistán a
+**Szinkron vagy mentés.** Ha több eszközön is használnád a karaktereidet, kattints a karakterlistán a
 **Google Drive** gombra, és kapcsold be a szinkront. Emellett is érdemes időnként megnyomni a **Biztonsági
 mentés** gombot: telefonon és tableten a megosztás menü nyílik meg, így a fájl egyenesen iCloud Drive-ba,
 Google Drive-ba vagy a Fájlokba mehet. Az **Importálás fájlból** gombbal visszaállítható, akár másik

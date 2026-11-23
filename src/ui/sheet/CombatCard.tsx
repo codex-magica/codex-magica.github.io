@@ -335,7 +335,7 @@ export const CombatCard: React.FC<{
         <ConfirmModal title={removingGear === "armor" ? "Vért eltávolítása" : "Pajzs eltávolítása"} confirmLabel="Eltávolítás"
           onConfirm={() => { (removingGear === "armor" ? onSetArmor : onSetShield)(null); setRemovingGear(null); }}
           onClose={() => setRemovingGear(null)}>
-          Biztosan eltávolítod a(z) <b>{removingGear === "armor" ? derived.armorUse?.armor.name : derived.shieldUse?.shield.name}</b> {removingGear === "armor" ? "vértet" : "pajzsot"} a lapról? Ha csak ideiglenesen nem viseled, elég a sorára koppintva levenned — úgy a lapon marad.
+          Biztosan eltávolítod a(z) <b>{removingGear === "armor" ? derived.armorUse?.armor.name : derived.shieldUse?.shield.name}</b> {removingGear === "armor" ? "vértet" : "pajzsot"} a lapról? Ha csak ideiglenesen nem viseled, elég a sorára kattintva levenned — úgy a lapon marad.
         </ConfirmModal>
       )}
     </Card>
