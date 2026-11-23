@@ -40,6 +40,9 @@ export default defineConfig({
         globIgnores: ["**/*-dev.*"],
         // the main chunk (~2.4 MB, mostly rules data) is above Workbox's 2 MiB default
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        // index.html versions its icon URLs (?v=N) to bust Safari's favicon cache; serve them from the
+        // precache anyway, so they still load offline
+        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
       },
     }),
   ],
