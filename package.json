@@ -19,9 +19,7 @@
     "tabletop-rpg",
     "rpg-tool",
     "hungarian",
-    "pwa",
-    "offline-first",
-    "ocr"
+    "pwa"
   ],
   "engines": {
     "node": ">=22.12"
