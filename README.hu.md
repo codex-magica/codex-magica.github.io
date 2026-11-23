@@ -125,7 +125,7 @@ tulajdonságoknak és a harcértékeknek rövid leírását. A könyv többi ré
 karakteralkotás fejezete, a kasztfejezetek szövege, a világleírás, az istenek, a bestiárium és a
 varázstárgyak, nincs benne.
 
-A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos M.A.G.U.S.-kiadvány: nem a
+A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos M.A.G.U.S.-termék: nem a
 jogosultak adták ki, és a tartalmáért nem ők felelnek. A könyv eredeti közreműködőinek listája a
 [NOTICE.md](NOTICE.md) fájlban található. Ha jogosultként bármit módosíttatnál vagy eltávolíttatnál,
 nyiss egy [issue-t](https://github.com/marcigo36/codex-magica/issues).

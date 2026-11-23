@@ -16,7 +16,7 @@ export const CreditsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
       <Text fontSize={{ base: "14px", md: "15px" }} color="fg" lineHeight="1.55" mb="10px">
         A Codex Magica <b>független, nem kereskedelmi célú rajongói projekt</b>: játékosok készítették
-        játékosoknak. Nem hivatalos M.A.G.U.S.-kiadvány: nem a védjegyek tulajdonosai, illetve a könyvek szerzői
+        játékosoknak. Nem hivatalos M.A.G.U.S.-termék: nem a védjegyek tulajdonosai, illetve a könyvek szerzői
         vagy kiadói adták ki, és a tartalmáért nem ők felelnek.
       </Text>
       <Text fontSize={{ base: "14px", md: "15px" }} color="fg" lineHeight="1.55" mb="12px">

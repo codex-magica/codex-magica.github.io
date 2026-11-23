@@ -43,7 +43,7 @@ If you hold rights to any of this material and would like something changed or r
 GitHub. Requests will be handled promptly.
 
 > **Magyarul:** A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos
-> M.A.G.U.S.-kiadvány: nem a védjegyek tulajdonosai, illetve a könyvek szerzői vagy kiadói adták ki, és a
+> M.A.G.U.S.-termék: nem a védjegyek tulajdonosai, illetve a könyvek szerzői vagy kiadói adták ki, és a
 > tartalmáért nem ők felelnek. A forráskód MIT licenc alatt szabadon felhasználható. A szabálykönyvből
 > átvett és újrarendezett adatok (származékos művek), valamint a játék nevei és fogalmai nem tartoznak e
 > licenc alá, azok a jogosultak szellemi tulajdonát képezik. A szabálykönyv teljes szövegét a repó nem
