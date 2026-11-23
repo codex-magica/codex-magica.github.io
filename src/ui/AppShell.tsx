@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DraftContext } from "./sheet/draftContext";
 import { Box, Flex, HStack, IconButton, Spacer, Text } from "@chakra-ui/react";
 import { EditIcon, ArrowUpIcon, ArrowBackIcon } from "@chakra-ui/icons";
@@ -48,7 +48,9 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   // While an editor with a draft is open, changes are saved against the character as it was when it
   // opened (see sheet/draftContext.ts); otherwise against what's on screen now.
   const recordRef = useRef(record);
-  recordRef.current = record;
+  useLayoutEffect(() => {
+    recordRef.current = record; // before the editors' effects run (layout effects come first)
+  });
   const drafts = useRef(0);
   const draftBase = useRef<CharacterRecord | null>(null);
   const openDraft = useCallback(() => {

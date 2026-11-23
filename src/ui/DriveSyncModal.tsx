@@ -83,14 +83,21 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
   const [busy, setBusy] = useState<string | null>(null);
   const { listBackups } = drive;
 
-  const load = useCallback((showLoading = true) => {
-    if (showLoading) setState({ kind: "loading" });
-    listBackups().then(
-      (items) => setState({ kind: "list", items }),
-      (e) => setState({ kind: e instanceof DriveAuthError ? "needsTap" : "error" })
-    );
-  }, [listBackups]);
-  useEffect(() => load(false), [load]); // starts in "loading" already
+  const fetchList = useCallback(
+    () =>
+      listBackups().then(
+        (items) => setState({ kind: "list", items }),
+        (e) => setState({ kind: e instanceof DriveAuthError ? "needsTap" : "error" })
+      ),
+    [listBackups]
+  );
+  useEffect(() => {
+    void fetchList(); // the view starts in "loading"
+  }, [fetchList]);
+  const load = () => {
+    setState({ kind: "loading" });
+    void fetchList();
+  };
 
   const restore = (b: BackupMeta) => {
     setBusy(b.id);
@@ -114,7 +121,7 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
     return (
       <Box fontFamily="system-ui" fontSize="14px" color="muted">
         <Text mb="10px">Nem sikerült betölteni a biztonsági másolatokat. Van internetkapcsolat?</Text>
-        <Box {...btn} fontSize="14px" onClick={() => load()} border="1px solid" borderColor="hair" color="fg">
+        <Box {...btn} fontSize="14px" onClick={load} border="1px solid" borderColor="hair" color="fg">
           Újra
         </Box>
       </Box>
