@@ -1,5 +1,8 @@
 import { fileURLToPath, URL } from "node:url";
+import { readdirSync, rmSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { defineConfig } from "vitest/config";
+import type { Plugin, ResolvedConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA, type ManifestOptions } from "vite-plugin-pwa";
 
@@ -27,10 +30,27 @@ const manifest: Partial<ManifestOptions> = {
   ],
 };
 
+// The DEV-badged icons (public/*-dev.*) are only for the local dev server; Vite copies all of public/
+// into the build, so they're removed from the output afterwards.
+const dropDevIcons = (): Plugin => {
+  let outDir = "";
+  return {
+    name: "codex-magica-drop-dev-icons",
+    apply: "build",
+    configResolved(config: ResolvedConfig) {
+      outDir = resolve(config.root, config.build.outDir);
+    },
+    closeBundle() {
+      for (const f of readdirSync(outDir)) if (/-dev\./.test(f)) rmSync(join(outDir, f));
+    },
+  };
+};
+
 export default defineConfig({
   base,
   plugins: [
     react(),
+    dropDevIcons(),
     // Installable, offline-capable app: the service worker precaches the whole build, so the app
     // opens with no connection at the table. New versions are announced in-app (UpdateBanner),
     // never applied mid-session behind the user's back.
