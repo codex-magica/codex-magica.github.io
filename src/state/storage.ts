@@ -38,7 +38,11 @@ const renameSub = <T extends { skill: string; subtype?: string }>(x: T): T => {
   return next ? { ...x, subtype: next } : x;
 };
 
-// Legacy migrations applied on load. Path choices are matched by the trigger LABEL, so a renamed
+// Legacy migrations applied on load. A new migration changes stored content without an edit, so it must
+// come with a new Drive sync file version (driveMerge.SYNC_VERSION): older app versions then stop syncing
+// until they update, instead of seeing every migrated character as a parallel edit.
+//
+// Path choices are matched by the trigger LABEL, so a renamed
 // trigger ("Pszi út" → "Pszi fa") must be remapped or old records lose their committed choice.
 export const migrateRecord = (r: CharacterRecord): CharacterRecord => {
   let out = r;
@@ -72,10 +76,28 @@ export const migrateRecord = (r: CharacterRecord): CharacterRecord => {
 // First run starts empty (the demo seed lives on only as the derive.test.ts golden fixture);
 // the welcome screen's empty state points at "Új karakter".
 // If the saved roster can't be read, it's kept aside under another key before anything new is saved
-// over it, so a bug or a damaged write never costs the characters.
+// over it, so a bug or a damaged write never costs the characters. The roster screen offers these for
+// download. At most a few are kept (they count against the browser's storage limit).
+const UNREADABLE_PREFIX = `${KEY}.unreadable.`;
+const UNREADABLE_MAX = 3;
+export const unreadableKeys = (): string[] => {
+  const out: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(UNREADABLE_PREFIX)) out.push(k);
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return out.sort();
+};
 const keepUnreadable = (raw: string) => {
   try {
-    localStorage.setItem(`${KEY}.unreadable.${Date.now()}`, raw);
+    const existing = unreadableKeys();
+    if (existing.some((k) => localStorage.getItem(k) === raw)) return; // already kept
+    for (const k of existing.slice(0, Math.max(0, existing.length - UNREADABLE_MAX + 1))) localStorage.removeItem(k);
+    localStorage.setItem(`${UNREADABLE_PREFIX}${Date.now()}`, raw);
   } catch {
     /* storage full: nothing more we can do here */
   }
@@ -95,7 +117,7 @@ export const loadRoster = (): CharacterRecord[] => {
     const records: CharacterRecord[] = [];
     let dropped = false;
     for (const r of parsed) {
-      const rec = r && typeof r === "object" && typeof (r as CharacterRecord).id === "string" ? normalizeRecord(r) : null;
+      const rec = r && typeof r === "object" && typeof (r as CharacterRecord).id === "string" ? repairRecord(r) : null;
       if (rec) records.push(rec);
       else dropped = true;
     }
@@ -119,11 +141,15 @@ export const saveRoster = (records: CharacterRecord[]): boolean => {
 
 export const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
-// Brings any record from outside (a file, Drive, storage) into a shape the app can always render:
-// legacy migrations, then defaults for missing required fields, then a trial run of the rules engine.
-// Returns null if it still can't be derived, so one bad record can never break the app.
+// Record ids travel into Drive file names and properties: keep them short and plain.
+export const isSafeId = (id: unknown): id is string => typeof id === "string" && /^[A-Za-z0-9_~-]{1,64}$/.test(id);
+
+// Brings a record from storage or Drive into a shape the app can work with: legacy migrations and
+// defaults for missing required fields. It never rejects a record just because the rules engine can't
+// compute it today (that may be a bug fixed tomorrow); the screens guard against that instead. Returns
+// null only for something that isn't a character at all.
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
-export const normalizeRecord = (raw: unknown): CharacterRecord | null => {
+export const repairRecord = (raw: unknown): CharacterRecord | null => {
   if (!isObj(raw) || typeof raw.name !== "string" || !Array.isArray(raw.levels) || raw.levels.length === 0) return null;
   const blank = createBlankRecord(typeof raw.id === "string" && raw.id ? raw.id : genId(), raw.name);
   const r = raw as unknown as CharacterRecord;
@@ -141,14 +167,28 @@ export const normalizeRecord = (raw: unknown): CharacterRecord | null => {
     inventory: Array.isArray(r.inventory) ? r.inventory : [],
     vitalsState: isObj(r.vitalsState) ? r.vitalsState : {},
   };
-  let rec: CharacterRecord;
   try {
-    rec = migrateRecord(filled);
-    derive(rulesFor(rec), rec);
+    return migrateRecord(filled);
   } catch {
-    return null;
+    return filled;
   }
-  return rec;
+};
+
+// Can the rules engine compute this record?
+export const derivable = (rec: CharacterRecord): boolean => {
+  try {
+    derive(rulesFor(rec), rec);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// For records coming in from a file: repaired, and accepted only if the app can actually show them
+// (the file stays with the user either way).
+export const normalizeRecord = (raw: unknown): CharacterRecord | null => {
+  const rec = repairRecord(raw);
+  return rec && derivable(rec) ? rec : null;
 };
 
 // A fresh, valid level-1 character to start a "create" flow from. The house-rules flag is seeded

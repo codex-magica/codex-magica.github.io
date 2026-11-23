@@ -16,7 +16,7 @@
 // Versions that can't be read are never applied and never deleted: they stay in their file.
 
 import { CharacterRecord } from "../model/character";
-import { normalizeRecord } from "./storage";
+import { repairRecord } from "./storage";
 import { contentHash } from "./recordHash";
 import { Deletions, conflictCopyName } from "./rosterStore";
 import { VersionVector, dominatedBy, isVersionVector, join, vcKey } from "./versions";
@@ -45,12 +45,19 @@ export interface DeviceFile {
   version: typeof SYNC_VERSION;
   device: string;
   savedAt: number;
-  characters: Record<string, FileEntry>;
+  nonce: string; // a random mark per write: a device recognises its own writes by it
+  characters: Record<string, FileEntry | unknown>;
 }
 
 export type ParsedFile =
-  | { ok: true; device: string; versions: Map<string, Version>; skipped: number }
+  | { ok: true; device: string; nonce: string | null; versions: Map<string, Version>; opaque: Record<string, unknown>; skipped: number }
   | { ok: false; reason: "newer" | "unreadable"; version?: number };
+
+// The first version of the sync kept ONE shared file of this name (no version vectors). It is read as one
+// more source, with its characters given a lineage of their own, so nothing in it is lost or silently
+// overridden; its deletions aren't applied.
+export const LEGACY_FILE_NAME = "codex-magica-roster.json";
+const LEGACY_VC = { legacy: 1 };
 
 export const versionKey = (v: Pick<Version, "vc" | "h">): string => `${vcKey(v.vc)}|${v.h}`;
 
@@ -63,32 +70,37 @@ export const localVersions = (records: CharacterRecord[], deletions: Deletions):
   return out;
 };
 
-// Reads one device file. Entries that don't check out are skipped (and left alone in their file).
+// Reads one device file. Records are only repaired, never judged by the rules engine (a version the
+// engine can't compute today is still somebody's data). Entries that don't check out at all are skipped
+// here and kept verbatim (`opaque`), so this device's own file never loses them when it's rewritten.
 export const parseDeviceFile = (raw: unknown): ParsedFile => {
-  const f = raw as Partial<DeviceFile> | null;
+  const f = raw as Partial<DeviceFile> & { characters?: Record<string, unknown> } | null;
   if (!f || typeof f !== "object" || f.format !== SYNC_FORMAT || typeof f.version !== "number") return { ok: false, reason: "unreadable" };
   if (f.version > SYNC_VERSION) return { ok: false, reason: "newer", version: f.version };
-  if (typeof f.device !== "string" || !f.characters || typeof f.characters !== "object") return { ok: false, reason: "unreadable" };
+  if (!f.characters || typeof f.characters !== "object") return { ok: false, reason: "unreadable" };
+  const legacy = (f.version as number) === 1;
+  if (!legacy && typeof f.device !== "string") return { ok: false, reason: "unreadable" };
   const versions = new Map<string, Version>();
+  const opaque: Record<string, unknown> = {};
   let skipped = 0;
-  for (const [id, e] of Object.entries(f.characters as Record<string, FileEntry>)) {
-    if (!e || typeof e !== "object" || typeof e.t !== "number" || !isVersionVector(e.vc)) {
+  for (const [id, raw] of Object.entries(f.characters)) {
+    const e = raw as (FileEntry & { updatedAt?: number }) | null;
+    const t = legacy ? e?.updatedAt : e?.t;
+    const vc = legacy ? LEGACY_VC : e?.vc;
+    const rec = e && !e.deleted ? repairRecord({ ...(e.record as object), id }) : null;
+    if (!e || typeof e !== "object" || typeof t !== "number" || !isVersionVector(vc) || (!e.deleted && !rec)) {
       skipped++;
+      opaque[id] = raw;
       continue;
     }
     if (e.deleted) {
-      versions.set(id, { id, t: e.t, vc: e.vc, h: DELETED });
+      if (!legacy) versions.set(id, { id, t, vc, h: DELETED });
       continue;
     }
-    const rec = normalizeRecord({ ...(e.record as object), id });
-    if (!rec) {
-      skipped++;
-      continue;
-    }
-    const record = { ...rec, id, updatedAt: e.t, syncVc: e.vc };
-    versions.set(id, { id, t: e.t, vc: e.vc, h: contentHash(record), record });
+    const record = { ...rec!, id, updatedAt: t, syncVc: vc };
+    versions.set(id, { id, t, vc, h: contentHash(record), record });
   }
-  return { ok: true, device: f.device, versions, skipped };
+  return { ok: true, device: legacy ? "" : f.device!, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque, skipped };
 };
 
 export const copyId = (id: string, loser: Version): string => `${id}~${loser.h.slice(0, 10)}`;
@@ -126,6 +138,7 @@ export interface RoundResult {
   deletions: Deletions;
   file: DeviceFile;
   publishNeeded: boolean;
+  published: Record<string, string>; // id → version key of what the file holds
   pulled: number; // characters changed here because of another device
   conflictCopies: number; // parallel edits kept as a second character
   backups: BackupCandidate[];
@@ -143,36 +156,61 @@ const canonical = (m: Map<string, Version>): string =>
     .map((v) => `${v.id}=${versionKey(v)}@${v.t}`)
     .join("\n");
 
+// Resolves all known versions of one character: versions contained in another are dropped first (so the
+// order the files arrive in can't matter), then the remaining parallel ones are merged in a fixed order.
+const resolve = (versions: Version[]): { version: Version; copies: Version[] } => {
+  const distinct = [...new Map(versions.map((v) => [versionKey(v), v])).values()];
+  const maximal = distinct.filter((v) => !distinct.some((u) => u !== v && vcKey(u.vc) !== vcKey(v.vc) && dominatedBy(v.vc, u.vc)));
+  maximal.sort((x, y) => (versionKey(x) < versionKey(y) ? -1 : versionKey(x) > versionKey(y) ? 1 : 0));
+  let acc = maximal[0];
+  const copies: Version[] = [];
+  for (const v of maximal.slice(1)) {
+    const r = combine(acc, v);
+    acc = r.version;
+    if (r.copy) copies.push(r.copy);
+  }
+  return { version: acc, copies };
+};
+
 export function mergeRound(
   local: { records: CharacterRecord[]; deletions: Deletions },
   sources: Map<string, Version>[], // every readable device file, this device's previous one included
   ownPrevious: Map<string, Version> | null,
   device: string,
   now: number,
-  backups: boolean
+  backups: boolean,
+  nonce = "",
+  ownOpaque: Record<string, unknown> = {} // entries of this device's previous file that couldn't be read
 ): RoundResult {
   const mine = localVersions(local.records, local.deletions);
-  const acc = new Map(mine);
-  const queue: Version[] = [];
-  const seen = new Map<string, Map<string, Version>>(); // every distinct version of each id, for backups
+  const groups = new Map<string, Version[]>(); // every known version of each id
+  const add = (v: Version) => groups.set(v.id, [...(groups.get(v.id) ?? []), v]);
+  mine.forEach(add);
+  for (const src of sources) src.forEach(add);
+  // a deletion not yet in Drive still knows the last state: a candidate for the "before deletion" backup
+  const lastStates: Version[] = [];
+  for (const [id, d] of Object.entries(local.deletions))
+    if (d.last) lastStates.push({ id, t: d.last.updatedAt ?? d.t, vc: d.last.syncVc ?? {}, h: contentHash(d.last), record: d.last });
 
-  const note = (v: Version) => {
+  const acc = new Map<string, Version>();
+  const pending = [...groups.keys()];
+  for (let guard = 0; pending.length && guard < 10_000; guard++) {
+    const id = pending.shift()!;
+    const { version, copies } = resolve(groups.get(id)!);
+    acc.set(id, version);
+    // conflict copies are characters too (another device may already have the same one)
+    for (const c of copies) {
+      const known = groups.get(c.id) ?? [];
+      if (known.some((k) => versionKey(k) === versionKey(c))) continue;
+      add(c);
+      if (!pending.includes(c.id)) pending.push(c.id);
+    }
+  }
+  const seen = new Map<string, Map<string, Version>>(); // every distinct version of each id, for backups
+  for (const v of [...[...groups.values()].flat(), ...lastStates]) {
     if (!seen.has(v.id)) seen.set(v.id, new Map());
     seen.get(v.id)!.set(versionKey(v), v);
-  };
-  const add = (v: Version) => {
-    note(v);
-    const cur = acc.get(v.id);
-    if (!cur) return void acc.set(v.id, v);
-    const { version, copy } = combine(cur, v);
-    acc.set(v.id, version);
-    if (copy) queue.push(copy);
-  };
-
-  mine.forEach(note);
-  for (const src of sources) src.forEach(add);
-  // conflict copies are characters too: merge them in the same way (another device may already have one)
-  for (let guard = 0; queue.length && guard < 10_000; guard++) add(queue.shift()!);
+  }
 
   // the new roster here: this device's order first, characters new to it after, oldest first
   const order = new Map(local.records.map((r, i) => [r.id, i]));
@@ -193,29 +231,34 @@ export function mergeRound(
     } else if (before.h !== v.h) pulled++;
   }
 
-  // Daily backups: a version of a character that gets replaced by one from a later day, or by a deletion,
+  // Daily backups: a version of a character that gets replaced by one from another day, or by a deletion,
   // is kept (the last state of each day the character was edited, and the last state before deleting it).
   // Only the LAST state counts: older versions still sitting in other devices' files are skipped when a
   // later one (of the same day, for the daily rule) replaced them too.
   const backupList: BackupCandidate[] = [];
   if (backups)
     for (const [id, versions] of seen) {
-      const latest = acc.get(id)!;
+      const latest = acc.get(id);
+      if (!latest) continue;
       const deleted = latest.h === DELETED;
       const replaced = [...versions.values()].filter(
-        (v) => v.record && versionKey(v) !== versionKey(latest) && dominatedBy(v.vc, latest.vc) && (deleted || (dayOf(latest.t) > dayOf(v.t) && v.h !== latest.h))
+        (v) => v.record && versionKey(v) !== versionKey(latest) && dominatedBy(v.vc, latest.vc) && (deleted || (dayOf(latest.t) !== dayOf(v.t) && v.h !== latest.h))
       );
       const lastOfItsDay = (v: Version) =>
         !replaced.some((u) => u !== v && vcKey(u.vc) !== vcKey(v.vc) && dominatedBy(v.vc, u.vc) && (deleted || dayOf(u.t) === dayOf(v.t)));
       for (const v of replaced) if (lastOfItsDay(v)) backupList.push({ id, version: v, reason: deleted ? "deleted" : "daily" });
     }
 
-  const characters: Record<string, FileEntry> = {};
+  const characters: Record<string, FileEntry | unknown> = {};
+  // carried over untouched: this device's file never drops what it couldn't read
+  for (const [id, raw] of Object.entries(ownOpaque)) if (!acc.has(id)) characters[id] = raw;
   for (const v of acc.values())
     characters[v.id] = v.h === DELETED ? { t: v.t, vc: v.vc, h: DELETED, deleted: true } : { t: v.t, vc: v.vc, h: v.h, record: stripBookkeeping(v.record!) };
   const publishNeeded = !ownPrevious || canonical(ownPrevious) !== canonical(acc);
 
-  return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, characters }, publishNeeded, pulled, conflictCopies, backups: backupList };
+  const published: Record<string, string> = {};
+  for (const v of acc.values()) published[v.id] = versionKey(v);
+  return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, nonce, characters }, publishNeeded, published, pulled, conflictCopies, backups: backupList };
 }
 
 export const stripBookkeeping = (r: CharacterRecord): CharacterRecord => {

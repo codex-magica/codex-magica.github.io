@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useDraftWhile } from "./draftContext";
 import { Box, Heading, HStack, Text, Textarea } from "@chakra-ui/react";
 import { NumPadDialog } from "./NumPadDialog";
 import { Card, FS, FS_SEC, PanelEditButton } from "./primitives";
@@ -27,6 +28,7 @@ const InventoryQtyModal: React.FC<{ name: string; qty: number; onApply: (n: numb
 // number into a button that opens the quantity calculator. The edit button (top-left) swaps in a textarea.
 export const EquipmentCard: React.FC<{ text: string; onSet: (t: string) => void }> = ({ text, onSet }) => {
   const [draft, setDraft] = useState<string | null>(null);
+  useDraftWhile(draft !== null);
   const [qtyEdit, setQtyEdit] = useState<{ idx: number; name: string; qty: number } | null>(null);
   const editing = draft !== null;
   const lines = text.split("\n");

@@ -331,7 +331,11 @@ export const httpDrive = (token: string): DriveTransport => {
   type Props = { appProperties?: Record<string, string> };
   return {
     async listSyncFiles() {
-      const files = await list<{ id: string; version: string; createdTime: string } & Props>("appProperties has { key='kind' and value='sync' } and trashed=false", "id,version,createdTime,appProperties");
+      // the device files, plus the single shared file of the first sync version if it's still there
+      const files = await list<{ id: string; version: string; createdTime: string } & Props>(
+        "(appProperties has { key='kind' and value='sync' } or name='codex-magica-roster.json') and trashed=false",
+        "id,version,createdTime,appProperties"
+      );
       return files.map((f) => ({ id: f.id, version: f.version, createdTime: f.createdTime, device: f.appProperties?.device ?? "" }));
     },
     async readFile(id) {
@@ -351,7 +355,8 @@ export const httpDrive = (token: string): DriveTransport => {
       return json(await call(`${UPLOAD}/${id}?uploadType=media&fields=version`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) }));
     },
     async backupExists(name) {
-      const files = await json<{ files?: unknown[] }>(await call(`${API}?spaces=appDataFolder&pageSize=1&q=${encodeURIComponent(`name='${name}' and trashed=false`)}&fields=files(id)`));
+      const q = `name='${name.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}' and trashed=false`;
+      const files = await json<{ files?: unknown[] }>(await call(`${API}?spaces=appDataFolder&pageSize=1&q=${encodeURIComponent(q)}&fields=files(id)`));
       return (files.files ?? []).length > 0;
     },
     async createBackup(name, props, content) {

@@ -1,11 +1,27 @@
+// The rules engine can be made to fail for one character (a future engine bug), to check that such a
+// character is never lost.
+vi.mock("../engine/derive", async (orig) => {
+  const m = (await orig()) as Record<string, unknown>;
+  const real = m.derive as (...a: unknown[]) => unknown;
+  return {
+    ...m,
+    derive: (rules: unknown, rec: { name?: string }) => {
+      const broken = (globalThis as { __breakDerive?: string | null }).__breakDerive;
+      if (broken && rec?.name === broken) throw new Error("engine regression");
+      return real(rules, rec);
+    },
+  };
+});
+const breakDerive = (name: string | null) => ((globalThis as { __breakDerive?: string | null }).__breakDerive = name);
+
 // Google Drive sync: full rounds between simulated devices against an in-memory Drive (no network),
 // with failure injection, interleaved concurrent rounds, skewed clocks and edits during rounds.
 // Each device has its own localStorage and device id and uses the real roster store.
 import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
 import { BackupMeta, DriveFileMeta, DriveTransport, FileBody } from "./googleDrive";
-import { combine, localVersions, parseDeviceFile, reconcile } from "./driveMerge";
-import { SyncNewerVersionError, runSync } from "./driveSyncEngine";
+import { Version, combine, localVersions, mergeRound, parseDeviceFile, reconcile } from "./driveMerge";
+import { DeviceIdClashError, SyncNewerVersionError, runSync } from "./driveSyncEngine";
 import { RosterStore, conflictCopyName, createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
 import { setDeviceIdForTests } from "./versions";
@@ -80,7 +96,7 @@ class FakeDrive implements DriveTransport {
   }
   async listSyncFiles() {
     await this.step("list");
-    return [...this.files.entries()].filter(([, f]) => f.props.kind === "sync").map(([id]) => this.meta(id));
+    return [...this.files.entries()].filter(([, f]) => f.props.kind === "sync" || f.name === "codex-magica-roster.json").map(([id]) => this.meta(id));
   }
   async readFile(id: string): Promise<FileBody> {
     await this.step("read");
@@ -148,9 +164,11 @@ let worldTime = Date.UTC(2026, 10, 20, 9, 0, 0);
 class Device {
   storage = new MemStorage();
   store: RosterStore;
+  backups = true;
   cache = new Map();
   published = {};
   backedUp = new Set<string>();
+  nonces: string[] = [];
   constructor(
     public id: string,
     public skew = 0
@@ -180,7 +198,7 @@ class Device {
   edit(id: string, token: string, rename?: string) {
     this.run(() => {
       const r = this.records().find((x) => x.id === id);
-      if (r) this.store.upsert({ ...r, inventoryText: `${r.inventoryText ?? ""}\n${token}`, ...(rename ? { name: rename } : {}) });
+      if (r) this.store.upsert({ ...r, inventoryText: `${r.inventoryText ?? ""}\n${token}`, ...(rename ? { name: rename } : {}) }, r);
     });
   }
   remove(id: string) {
@@ -203,9 +221,28 @@ class Device {
         return prevOnOp?.(op);
       };
     try {
-      const out = await runSync(drive, { records: snapshot.records, deletions: snapshot.deletions, device: this.id, backups: true, backedUp: this.backedUp }, this.now, this.cache);
+      let snap = snapshot;
+      const go = () => {
+        snap = this.store.getState();
+        const input = { records: snap.records, deletions: snap.deletions, device: this.id, backups: this.backups, backedUp: this.backedUp, ourNonces: this.nonces, rememberNonce: (n: string) => this.nonces.push(n) };
+        return runSync(drive, input, this.now, this.cache);
+      };
+      let out;
+      try {
+        out = await go();
+      } catch (e) {
+        if (!(e instanceof DeviceIdClashError)) throw e;
+        // what useDriveSync does: a fresh id, this device's versions relabelled, sync again
+        const old = this.id;
+        this.id = `${old}x${Math.floor(Math.random() * 1e6)}`;
+        this.run(() => this.store.relabelDevice(old, this.id));
+        this.nonces = [];
+        this.published = {};
+        out = await go();
+      }
+      const snapshotUsed = snap;
       this.run(() => {
-        const next = reconcile(snapshot, this.store.getState(), out);
+        const next = reconcile(snapshotUsed, this.store.getState(), out);
         this.store.applySync(next.records, next.deletions);
       });
       this.published = out.published;
@@ -653,13 +690,13 @@ describe("Google Drive sync: daily backups", () => {
   test("backups off: none are made", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
+    a.backups = false;
     const al = a.create("Aldar");
-    const s0 = a.store.getState();
-    await runSync(drive, { records: s0.records, deletions: s0.deletions, device: "deva", backups: false, backedUp: new Set() }, a.now, a.cache);
+    await a.sync(drive);
     later(DAY);
     a.edit(al.id, "x");
-    const s1 = a.store.getState();
-    await runSync(drive, { records: s1.records, deletions: s1.deletions, device: "deva", backups: false, backedUp: new Set() }, a.now, a.cache);
+    a.remove(a.create("Brenna").id);
+    await a.sync(drive);
     expect(drive.backups()).toHaveLength(0);
   });
 });
@@ -703,7 +740,7 @@ describe("Google Drive sync: building blocks", () => {
     const al = d.create("Aldar");
     const openedInCreator = d.records().find((x) => x.id === al.id)!;
     d.edit(al.id, "synced-meanwhile", "Aldar (newer)");
-    d.run(() => d.store.upsert({ ...openedInCreator, name: "Aldar (from creator)" }));
+    d.run(() => d.store.upsert({ ...openedInCreator, name: "Aldar (from creator)" }, openedInCreator));
     expect(d.records().map((x) => x.name).sort()).toEqual([conflictCopyName("Aldar (newer)"), "Aldar (from creator)"].sort());
   });
 
@@ -723,6 +760,202 @@ describe("Google Drive sync: building blocks", () => {
   test("local versions include deletions", () => {
     const v = localVersions([{ ...defaultRecord, id: "a", syncVc: { d: 1 } }], { b: { t: 5, vc: { d: 2 } } });
     expect([...v.keys()].sort()).toEqual(["a", "b"]);
+  });
+});
+
+// ── found by an independent review: each of these lost data before it was fixed ──────────────────
+describe("Google Drive sync: review findings", () => {
+  afterEach(() => breakDerive(null));
+  const reopen = (d: Device) => {
+    d.cache = new Map();
+    d.store = d.run(() => createRosterStore()); // a fresh page load (an app update is one)
+  };
+
+  test("a character the rules engine can't compute (a future engine bug) is never dropped, anywhere", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const al = a.create("Aldar");
+    const br = a.create("Brenna");
+    await a.sync(drive);
+    await b.sync(drive);
+    later(DAY);
+    a.edit(al.id, "day2");
+    await a.sync(drive);
+    await b.sync(drive);
+    breakDerive("Aldar"); // an update breaks the engine for Aldar
+    reopen(a);
+    reopen(b);
+    later();
+    a.edit(br.id, "x");
+    await a.sync(drive);
+    await b.sync(drive);
+    breakDerive(null); // the next update fixes it
+    later();
+    reopen(a);
+    reopen(b);
+    await a.sync(drive);
+    await b.sync(drive);
+    expect(tokensOf(a.byName("Aldar")!)).toContain("day2");
+    expect(tokensOf(b.byName("Aldar")!)).toContain("day2");
+    expect([...drive.files.values()].some((f) => f.props.kind === "sync" && f.body.includes("day2"))).toBe(true);
+  });
+
+  test("an old deletion marker from the first sync version never removes a live character", () => {
+    const d = new Device("deva");
+    const x = { ...defaultRecord, id: "c_x", name: "Visszaállított", updatedAt: Date.UTC(2026, 10, 20, 12) };
+    d.storage.setItem("magus.roster.v1", JSON.stringify([x]));
+    d.storage.setItem("magus.tombstones.v1", JSON.stringify({ c_x: Date.UTC(2026, 10, 20, 10), c_gone: 5 }));
+    d.store = d.run(() => createRosterStore());
+    expect(d.records().map((r) => r.name)).toEqual(["Visszaállított"]);
+    expect(Object.keys(d.store.getState().deletions)).toEqual(["c_gone"]); // a real old deletion still counts
+  });
+
+  test("storage full: the edit stays on screen and reaches Drive", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const al = a.create("Aldar");
+    await a.sync(drive);
+    const real = a.storage.setItem.bind(a.storage);
+    a.storage.setItem = (k: string, v: string) => {
+      if (k === "magus.roster.v1") throw new Error("QuotaExceededError");
+      real(k, v);
+    };
+    later();
+    a.edit(al.id, "while-full");
+    expect(a.store.getState().saveFailed).toBe(true);
+    await a.sync(drive);
+    expect(tokensOf(a.byName("Aldar")!)).toContain("while-full");
+    expect(drive.syncFileOf("deva")!.body).toContain("while-full");
+  });
+
+  test("an editor's draft saved after a sync brought another device's change keeps both", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const al = a.create("Aldar");
+    await a.sync(drive);
+    await b.sync(drive);
+    const openedWith = a.byName("Aldar")!; // the inventory editor opens
+    const draft = `${openedWith.inventoryText}\nA typed this`;
+    later();
+    b.edit(al.id, "B-edit");
+    await b.sync(drive);
+    await a.sync(drive); // pulled while the editor is open
+    a.run(() => a.store.upsert({ ...a.byName("Aldar")!, inventoryText: draft }, openedWith));
+    await a.sync(drive);
+    await b.sync(drive);
+    const all = b.records().flatMap(tokensOf);
+    expect(all).toContain("B-edit");
+    expect(all).toContain("A typed this");
+  });
+
+  test("two tabs: a tab that missed the other's changes can't drop or wipe them", async () => {
+    const drive = new FakeDrive();
+    const tab1 = new Device("deva");
+    const al = tab1.create("Aldar");
+    const br = tab1.create("Brenna");
+    await tab1.sync(drive);
+    const tab2 = new Device("deva");
+    tab2.storage = tab1.storage;
+    tab2.store = tab2.run(() => createRosterStore());
+    later();
+    tab1.edit(al.id, "tab1-a");
+    tab1.edit(al.id, "tab1-b");
+    tab1.edit(br.id, "tab1-brenna");
+    // tab2 never got the storage events and edits Aldar from what it still shows
+    const shown = tab2.store.getState().records.find((r) => r.id === al.id)!;
+    tab2.run(() => tab2.store.upsert({ ...shown, inventoryText: `${shown.inventoryText}\ntab2-edit` }, shown));
+    tab1.run(() => tab1.store.reload());
+    await tab1.sync(drive);
+    const tokens = tab1.records().flatMap(tokensOf);
+    expect(tokens).toEqual(expect.arrayContaining(["tab2-edit", "tab1-b", "tab1-brenna"]));
+  });
+
+  test("two devices with the same id (restored browser data) don't drop each other's edits", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const al = a.create("Aldar");
+    await a.sync(drive);
+    const clone = new Device("deva");
+    for (const [k, v] of a.storage.m) clone.storage.m.set(k, v);
+    clone.store = clone.run(() => createRosterStore());
+    clone.nonces = [...a.nonces];
+    later();
+    clone.edit(al.id, "on-the-clone");
+    a.edit(al.id, "on-a-1");
+    a.edit(al.id, "on-a-2");
+    await a.sync(drive);
+    await clone.sync(drive);
+    await a.sync(drive);
+    await clone.sync(drive);
+    const all = a.records().flatMap(tokensOf);
+    expect(all).toEqual(expect.arrayContaining(["on-the-clone", "on-a-2"]));
+    expect(clone.fingerprint()).toBe(a.fingerprint());
+  });
+
+  test("a device with a clock far ahead doesn't stop the daily backups", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const fut = new Device("devf", 365 * DAY);
+    const al = a.create("Aldar");
+    await a.sync(drive);
+    await fut.sync(drive);
+    fut.edit(al.id, "from-future");
+    await fut.sync(drive);
+    await a.sync(drive);
+    const before = drive.backups().length;
+    for (let d = 1; d <= 3; d++) {
+      later(DAY);
+      a.edit(al.id, `day${d}`);
+      await a.sync(drive);
+    }
+    expect(drive.backups().length - before).toBe(3);
+  });
+
+  test("an edit followed by a delete before the next sync still leaves a backup of the edit", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const al = a.create("Aldar");
+    await a.sync(drive);
+    later();
+    a.edit(al.id, "last-words");
+    a.remove(al.id);
+    await a.sync(drive);
+    const kept = drive.backups();
+    expect(kept).toHaveLength(1);
+    expect(JSON.parse(kept[0].body).record.inventoryText).toContain("last-words");
+    expect(a.store.getState().deletions[al.id].last).toBeUndefined(); // dropped once it's in Drive
+  });
+
+  test("the order files arrive in can't create a spurious copy of an older version", () => {
+    const base = { ...defaultRecord, id: "c1" };
+    const v = (inv: string, vc: Record<string, number>, t: number): Version => {
+      const record = { ...base, inventoryText: inv, syncVc: vc, updatedAt: t };
+      return { id: "c1", t, vc, h: contentHash(record), record };
+    };
+    const P = v("P", { a: 2 }, 20);
+    const Q = v("P\nQ", { a: 2, b: 1 }, 30); // continues P
+    const R = v("R", { a: 1, c: 1 }, 10); // parallel
+    const local = { records: [R.record!], deletions: {} };
+    const result = (srcs: Version[][]) =>
+      mergeRound(local, srcs.map((x) => new Map(x.map((y) => [y.id, y]))), null, "c", 0, false).records.map((r) => r.inventoryText).sort();
+    expect(result([[P], [Q]])).toEqual(result([[Q], [P]]));
+    expect(result([[P], [Q]])).toHaveLength(2); // Q and R; P is part of Q
+  });
+
+  test("characters from the first sync version's shared file are picked up", async () => {
+    const drive = new FakeDrive();
+    const legacyRec = { ...defaultRecord, id: "c_old", name: "Régi hős", inventoryText: "legacy" };
+    drive.files.set("legacy", { name: "codex-magica-roster.json", props: {}, body: JSON.stringify({ format: "codex-magica-sync", version: 1, savedAt: 1, characters: { c_old: { updatedAt: 5, record: legacyRec } } }), version: 1, created: 0 });
+    const a = new Device("deva");
+    await a.sync(drive);
+    expect(a.byName("Régi hős")).toBeDefined();
+    later();
+    a.remove(a.byName("Régi hős")!.id); // and deleting it sticks
+    await a.sync(drive);
+    await a.sync(drive);
+    expect(a.byName("Régi hős")).toBeUndefined();
   });
 });
 

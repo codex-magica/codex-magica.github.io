@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useDraftWhile } from "./draftContext";
 import { Box, Flex, Heading, HStack, Text } from "@chakra-ui/react";
 import { Companion, companionIconKey } from "../../model/companions";
 import { CompanionIcon } from "./animalIcons";
@@ -21,6 +22,7 @@ export const CompanionsCard: React.FC<{ companions: Companion[]; onSet: (compani
   // The header pencil flips the list into edit mode: add / delete / drag-reorder appear only there.
   const [editMode, setEditMode] = useState(false);
   const [removing, setRemoving] = useState<Companion | null>(null);
+  useDraftWhile(adding || editing !== null || pad !== null);
 
   const patch = (id: string, p: Partial<Companion>) => onSet(companions.map((c) => (c.id === id ? { ...c, ...p } : c)));
   const padCompanion = pad ? companions.find((c) => c.id === pad.id) : undefined;

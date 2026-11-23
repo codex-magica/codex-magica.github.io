@@ -32,6 +32,12 @@ export const contentHash = (record: CharacterRecord): string => {
 
 export const sameContent = (a: CharacterRecord, b: CharacterRecord): boolean => contentHash(a) === contentHash(b);
 
-// The edit stamp: never behind the version it was made from, even if this device's clock is behind
-// another device's. That keeps "newer" meaningful across devices with skewed clocks.
-export const nextStamp = (previous: number | undefined, now = Date.now()): number => Math.max(now, (previous ?? 0) + 1);
+// The edit stamp. Causality is the version vector's job; this time only orders parallel edits and dates
+// backups. It stays just ahead of the version it was made from when that one is a little in the future
+// (a slightly fast clock elsewhere), but a stamp far in the future (a badly wrong clock) is ignored, so it
+// can't freeze every later date on it.
+const FUTURE_TOLERANCE_MS = 3600_000;
+export const nextStamp = (previous: number | undefined, now = Date.now()): number => {
+  const prev = previous ?? 0;
+  return prev - now > FUTURE_TOLERANCE_MS ? now : Math.max(now, prev + 1);
+};

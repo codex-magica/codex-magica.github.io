@@ -12,6 +12,7 @@ import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
 import { rosterStore } from "../state/rosterStore";
+import { unreadableKeys } from "../state/storage";
 import { DriveSyncApi } from "../state/useDriveSync";
 import { CloudIcon, DriveSyncModal, driveStatusLine } from "./DriveSyncModal";
 
@@ -69,6 +70,22 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [importInfo, setImportInfo] = useState<string | null>(null);
   const [lastBackupAt, setLastBackupAt] = useState<number | null>(() => loadLastBackupAt());
   const [driveOpen, setDriveOpen] = useState(false);
+  // saved data the app couldn't read at some point, kept aside (see storage.ts): offer it, never drop it
+  const [aside, setAside] = useState(() => unreadableKeys());
+  const [asideSaved, setAsideSaved] = useState(false);
+  const saveAside = () => {
+    setAsideSaved(true);
+    for (const k of aside) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([localStorage.getItem(k) ?? ""], { type: "application/json" }));
+      a.download = `codex-magica-serult-mentes-${k.split(".").pop()}.json`;
+      a.click();
+    }
+  };
+  const dropAside = () => {
+    for (const k of aside) localStorage.removeItem(k);
+    setAside([]);
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hoverShadow = useParchmentHoverShadow();
   const [now] = useState(() => Date.now()); // render must stay pure: read the clock once per visit
@@ -244,6 +261,18 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
           <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
         </HStack>
+        {aside.length > 0 && (
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="warn" mt="8px" maxW="56ch" mx="auto">
+            Ezen az eszközön van egy korábbi mentés, amelyet az alkalmazás nem tudott beolvasni; félretette, hogy ne vesszen el.{" "}
+            <Box as="button" type="button" onClick={saveAside} textDecoration="underline" textUnderlineOffset="2px">Mentés fájlba</Box>
+            {asideSaved && (
+              <>
+                {" · "}
+                <Box as="button" type="button" onClick={dropAside} textDecoration="underline" textUnderlineOffset="2px">Törlés erről az eszközről</Box>
+              </>
+            )}
+          </Text>
+        )}
         {records.length > 0 && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
             {lastBackupAt === null ? "Még nem készült biztonsági mentés." : `Utolsó biztonsági mentés: ${daysAgo(lastBackupAt, now)}.`}

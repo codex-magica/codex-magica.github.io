@@ -31,12 +31,25 @@ Without one, the app stays local-only and never contacts Google.
   file is left alone; entries that don't check out are skipped, not applied and not deleted; a file from a
   newer app version stops the round with a "please update" note.
 - **Edits during a round** are kept: the result is reconciled with the roster as it is when the round ends.
-  An edit made from an older version than the one stored (the creator stayed open while a sync brought a newer
-  one) is saved alongside it as "(másik változat)" rather than over it.
+  Every edit carries the version it was started from (the creator, the sheet's equipment, companion and
+  condition editors); if the stored version changed since (a sync or another tab), the edit is saved
+  alongside it as "(másik változat)" rather than over it. Every change re-reads what's saved first, so a
+  stale tab can't overwrite another tab's work, and each device numbers its versions from one counter
+  shared by its tabs.
+- **Nothing is dropped for being unreadable.** Records from storage or Drive are only repaired, never
+  rejected because the rules engine can't compute them today (that may be a bug fixed tomorrow): the
+  screen shows "Ezt a karaktert most nem sikerült megnyitni" with export instead. Entries a device can't
+  parse at all stay in its file verbatim. Saved data that couldn't be read is kept aside and offered on
+  the roster for download.
+- **Storage full:** memory isn't replaced by the older saved state; the sync uploads from memory, so the
+  edit survives in Drive, and the renewal round trip waits.
+- **A cloned device** (browser data restored onto a second device) is noticed by the mark each write
+  leaves in the device file; it takes a new id and keeps its own edits as parallel versions.
 - **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
   file can't bring a deleted character back.
-- **Daily backups** (if on): before Drive's copy of a character is replaced by an edit from a later day, or by a
-  deletion, the last state of that day is saved as its own file (`kind=backup`; created once, never modified).
+- **Daily backups** (if on, a per-device setting): before Drive's copy of a character is replaced by an edit
+  from another day, or by a deletion, the last state of that day is saved as its own file (a deletion keeps
+  the last state on the device until it's in Drive, so an edit just before deleting is kept too) (`kind=backup`; created once, never modified).
   Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.

@@ -10,11 +10,14 @@
 
 import { CharacterRecord } from "../model/character";
 import { DriveFileMeta, DriveTransport, FileBody, fitBytes } from "./googleDrive";
-import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping, versionKey } from "./driveMerge";
+import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping } from "./driveMerge";
 import { Deletions } from "./rosterStore";
 import { Published } from "./syncState";
 
 export class SyncNewerVersionError extends Error {}
+// Another device is writing this device's file: two devices ended up with the same id (browser data
+// restored from a backup onto a second device). The caller takes a fresh id and syncs again.
+export class DeviceIdClashError extends Error {}
 
 export const BACKUP_FORMAT = "codex-magica-snapshot";
 
@@ -24,6 +27,8 @@ export interface SyncInput {
   device: string;
   backups: boolean;
   backedUp: Set<string>; // "id:fingerprint" of versions already backed up
+  ourNonces: string[]; // the marks this device wrote into its file recently
+  rememberNonce: (nonce: string) => void; // called (and must persist) before a write
 }
 export interface SyncOutput {
   records: CharacterRecord[];
@@ -36,7 +41,8 @@ export interface SyncOutput {
   skippedFiles: number; // other devices' files that couldn't be read (left alone)
 }
 
-// Downloaded files by id and version: a round where nothing changed costs one listing.
+// Downloaded files by id and version: a round where nothing changed costs one listing. Only files that
+// read fine are kept; an unreadable one is downloaded again next time.
 const sharedCache = new Map<string, { version: string; parsed: ParsedFile; raw?: string }>();
 
 const byCreated = (a: DriveFileMeta, b: DriveFileMeta) => (a.createdTime < b.createdTime ? -1 : a.createdTime > b.createdTime ? 1 : a.id < b.id ? -1 : 1);
@@ -50,11 +56,19 @@ const read = async (drive: DriveTransport, f: DriveFileMeta, cache: Cache): Prom
   const parsed: ParsedFile = "json" in body ? parseDeviceFile(body.json) : { ok: false, reason: "unreadable" };
   // keep the original text of anything unreadable, so it can be set aside intact
   const out = { parsed, raw: parsed.ok ? undefined : "raw" in body ? body.raw : JSON.stringify(body.json) };
-  cache.set(f.id, { version: f.version, ...out });
+  if (parsed.ok) cache.set(f.id, { version: f.version, ...out });
   return out;
 };
 
-export const backupFileName = (c: BackupCandidate): string => `codex-magica-backup.${c.id}.${dayOf(c.version.t)}.${c.version.h}.json`;
+// A backup's name depends only on the character and the version, so two devices (in any time zone)
+// keeping the same version find the same file instead of making a second one.
+const tag = (s: string) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
+  return (h >>> 0).toString(16).padStart(8, "0");
+};
+export const backupFileName = (c: BackupCandidate): string => `codex-magica-backup.${tag(c.id)}.${c.version.h}.json`;
+const newNonce = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 
 export async function runSync(drive: DriveTransport, input: SyncInput, now: () => number = Date.now, cache: Cache = sharedCache): Promise<SyncOutput> {
   const files = await drive.listSyncFiles();
@@ -62,6 +76,7 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
 
   const sources = [];
   let ownPrevious = null;
+  let ownOpaque: Record<string, unknown> = {};
   let ownUnreadable: string | null = null;
   let skippedFiles = 0;
   for (const f of files) {
@@ -72,11 +87,16 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
       else skippedFiles++;
       continue;
     }
+    if (f.id === own?.id) {
+      if (parsed.nonce && input.ourNonces.length > 0 && !input.ourNonces.includes(parsed.nonce)) throw new DeviceIdClashError("own file written elsewhere");
+      ownPrevious = parsed.versions;
+      ownOpaque = parsed.opaque;
+    }
     sources.push(parsed.versions);
-    if (f.id === own?.id) ownPrevious = parsed.versions;
   }
 
-  const result = mergeRound({ records: input.records, deletions: input.deletions }, sources, ownPrevious, input.device, now(), input.backups);
+  const nonce = newNonce();
+  const result = mergeRound({ records: input.records, deletions: input.deletions }, sources, ownPrevious, input.device, now(), input.backups, nonce, ownOpaque);
 
   // backups first: nothing gets replaced in Drive before its backup exists
   const backedUp = new Set(input.backedUp);
@@ -94,6 +114,7 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
   let uploaded = false;
   if (ownUnreadable !== null) await drive.keepUnreadable(`codex-magica-unreadable.${input.device}.${now()}.txt`, ownUnreadable);
   if (result.publishNeeded || ownUnreadable !== null) {
+    input.rememberNonce(nonce); // before writing: an answer lost on the way mustn't make it look foreign
     if (own) {
       const { version } = await drive.updateFile(own.id, result.file);
       cache.set(own.id, { version, parsed: parseDeviceFile(result.file) });
@@ -104,7 +125,6 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
     uploaded = true;
   }
 
-  const published: Published = {};
-  for (const [id, e] of Object.entries(result.file.characters)) published[id] = versionKey(e);
+  const published: Published = result.published;
   return { records: result.records, deletions: result.deletions, published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, uploaded, skippedFiles };
 }

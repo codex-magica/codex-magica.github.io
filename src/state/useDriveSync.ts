@@ -15,10 +15,10 @@ import {
   signInReady,
   validToken,
 } from "./googleDrive";
-import { BACKUP_FORMAT, SyncNewerVersionError, runSync } from "./driveSyncEngine";
+import { BACKUP_FORMAT, DeviceIdClashError, SyncNewerVersionError, runSync } from "./driveSyncEngine";
 import { reconcile } from "./driveMerge";
 import { rosterStore } from "./rosterStore";
-import { deviceId } from "./versions";
+import { deviceId, resetDeviceId } from "./versions";
 import { normalizeRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
@@ -27,7 +27,10 @@ import {
   loadBackedUp,
   loadDriveSettings,
   loadPublished,
+  loadNonces,
+  forgetNonces,
   pendingChanges,
+  rememberNonce,
   saveBackedUp,
   savePublished,
   updateDriveSettings,
@@ -204,9 +207,26 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
           do {
             again.current = false;
             store.reload(); // the freshest saved state (another tab may have changed it)
-            const snapshot = store.getState();
             const s = loadDriveSettings();
-            const out = await runSync(httpDrive(token), { records: snapshot.records, deletions: snapshot.deletions, device: deviceId(), backups: s.backups, backedUp: loadBackedUp() });
+            let snapshot = store.getState();
+            const run = () => {
+              snapshot = store.getState();
+              const input = { records: snapshot.records, deletions: snapshot.deletions, device: deviceId(), backups: s.backups, backedUp: loadBackedUp(), ourNonces: loadNonces(), rememberNonce };
+              return runSync(httpDrive(token), input);
+            };
+            let out;
+            try {
+              out = await run();
+            } catch (e) {
+              if (!(e instanceof DeviceIdClashError)) throw e;
+              // another device writes under this device's id: take a new one, keep this device's edits as
+              // its own, and sync again
+              const old = deviceId();
+              store.relabelDevice(old, resetDeviceId());
+              forgetNonces();
+              savePublished({});
+              out = await run();
+            }
             if (!enabledRef.current) return; // turned off meanwhile: drop the result
             const next = reconcile(snapshot, store.getState(), out);
             store.applySync(next.records, next.deletions);
@@ -244,6 +264,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     return (
       navigator.onLine !== false &&
       document.visibilityState !== "hidden" &&
+      !store.getState().saveFailed && // a reload would lose the edits only memory holds
       !running.current &&
       (s.silentBlockedUntil ?? 0) < now &&
       now - (s.lastSilentAt ?? 0) > SILENT_MIN_GAP_MS &&
@@ -359,14 +380,17 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         const token = validToken();
         const st = store.getState();
         if (token && pendingChanges(st.records, st.deletions, loadPublished()).count > 0) void round(token);
-      } else if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) {
-        trySilent(true);
+      } else {
+        store.reload(); // a frozen or cached page may have missed another tab's changes
+        if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) trySilent(true);
       }
     };
     const onOnline = () => trySilent(false);
     // back from Google through the back/forward cache: the page wasn't reloaded, so the notice is stale
     const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted && hopRef.current === "leaving") setHop(null);
+      if (!e.persisted) return;
+      store.reload();
+      if (hopRef.current === "leaving") setHop(null);
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("online", onOnline);

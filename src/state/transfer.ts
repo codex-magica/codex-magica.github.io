@@ -7,7 +7,7 @@
 //   added as a separate copy. Nothing on the device is ever overwritten.
 
 import { CharacterRecord } from "../model/character";
-import { genId, normalizeRecord } from "./storage";
+import { genId, isSafeId, normalizeRecord } from "./storage";
 import { contentHash } from "./recordHash";
 
 export const BACKUP_FORMAT = "codex-magica-backup";
@@ -119,11 +119,12 @@ export const parseImportFile = (text: string, existing: CharacterRecord[]): Impo
     let invalid = 0;
     for (const raw of data.characters) {
       const rec = normalizeRecord(raw);
-      if (!rec || typeof (raw as CharacterRecord).id !== "string") {
+      if (!rec) {
         invalid++;
         continue;
       }
-      const clean = withoutStamp(rec);
+      // keep ids, so restoring twice is a no-op; an odd or missing one gets a fresh id
+      const clean = withoutStamp(isSafeId((raw as CharacterRecord).id) ? rec : { ...rec, id: genId() });
       const current = have.get(clean.id);
       if (current === undefined) add.push(clean);
       else if (current === contentHash(clean)) skipped++;

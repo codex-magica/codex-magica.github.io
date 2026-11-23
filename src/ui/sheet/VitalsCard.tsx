@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useDraftWhile } from "./draftContext";
 import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import { CharacterCondition, VitalKey } from "../../model/character";
 import { VIT_TOKEN } from "../../model/vitals";
@@ -54,6 +55,7 @@ export const VitalsCard: React.FC<{
   // so the resting rows stay clean.
   const [editMode, setEditMode] = useState(false);
   const [removing, setRemoving] = useState<CharacterCondition | null>(null);
+  useDraftWhile(editing !== null || adding || viewingId !== null);
   return (
     <>
       <Card>

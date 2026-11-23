@@ -6,7 +6,7 @@ export interface RosterApi {
   records: CharacterRecord[];
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
   get: (id: string) => CharacterRecord | undefined;
-  upsert: (record: CharacterRecord) => void; // create or replace by id
+  upsert: (record: CharacterRecord, base?: CharacterRecord) => void; // create or replace by id; `base`: the version the edit started from
   remove: (id: string) => void;
   duplicate: (id: string) => void;
 }
@@ -22,7 +22,7 @@ const requestPersistentStorage = (): void => {
 };
 
 const store = rosterStore();
-const upsert = (r: CharacterRecord) => store.upsert(r);
+const upsert = (r: CharacterRecord, base?: CharacterRecord) => store.upsert(r, base);
 const remove = (id: string) => store.remove(id);
 const duplicate = (id: string) => store.duplicate(id);
 

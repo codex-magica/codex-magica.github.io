@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DraftContext } from "./sheet/draftContext";
 import { Box, Flex, HStack, IconButton, Spacer, Text } from "@chakra-ui/react";
 import { EditIcon, ArrowUpIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { CharacterSheet } from "./CharacterSheet";
@@ -17,7 +18,7 @@ interface AppShellProps {
   onBack: () => void; // back to the roster
   onEdit: () => void; // open the full-screen creator in edit mode
   onLevelup: () => void; // open it in level-up mode
-  onPatchRecord: (record: CharacterRecord) => void; // persist play-state edits (vitals…)
+  onPatchRecord: (record: CharacterRecord, base: CharacterRecord) => void; // persist play-state edits (vitals…); base = the version they were made from
   restore?: { view?: "sheet" | "compendium"; compTab?: number }; // back from a Google round trip
   onPlace?: (view: "sheet" | "compendium", compTab: number) => void; // where the user is, for that round trip
 }
@@ -44,22 +45,43 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   const [modal, setModal] = useState<ModalState | null>(null);
   const [weaponModal, setWeaponModal] = useState<WeaponModalState | null>(null);
 
+  // While an editor with a draft is open, changes are saved against the character as it was when it
+  // opened (see sheet/draftContext.ts); otherwise against what's on screen now.
+  const recordRef = useRef(record);
+  recordRef.current = record;
+  const drafts = useRef(0);
+  const draftBase = useRef<CharacterRecord | null>(null);
+  const openDraft = useCallback(() => {
+    if (drafts.current++ === 0) draftBase.current = recordRef.current;
+  }, []);
+  const closeDraft = useCallback(() => {
+    if (--drafts.current <= 0) {
+      drafts.current = 0;
+      draftBase.current = null;
+    }
+  }, []);
+  const draftApi = useMemo(() => ({ open: openDraft, close: closeDraft }), [openDraft, closeDraft]);
+  const patch = (next: CharacterRecord) => {
+    onPatchRecord(next, draftBase.current ?? record);
+    if (draftBase.current) draftBase.current = next; // the editor's own saves move its starting point along
+  };
+
   const derived = useMemo(() => derive(rulesFor(record), record), [record]);
   const subLine = `${record.name} · ${record.race} ${record.class} · ${record.levels.length}. szint${isHomebrew(record) ? " · házi szabály" : ""}`;
   const setVital = (key: VitalKey, value: number) =>
-    onPatchRecord({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
-  const setInventoryText = (text: string) => onPatchRecord({ ...record, inventoryText: text });
-  const setConditions = (conditions: CharacterCondition[]) => onPatchRecord({ ...record, conditions });
-  const setCompanions = (companions: Companion[]) => onPatchRecord({ ...record, companions });
+    patch({ ...record, vitalsState: { ...record.vitalsState, [key]: value } });
+  const setInventoryText = (text: string) => patch({ ...record, inventoryText: text });
+  const setConditions = (conditions: CharacterCondition[]) => patch({ ...record, conditions });
+  const setCompanions = (companions: Companion[]) => patch({ ...record, companions });
   // Unpinning the in-hand weapon also clears the selection (one atomic patch — two patches would race).
   const setWeapons = (weapons: string[]) =>
-    onPatchRecord({ ...record, weapons, activeWeapon: record.activeWeapon && weapons.includes(record.activeWeapon) ? record.activeWeapon : undefined });
-  const setActiveWeapon = (name: string | null) => onPatchRecord({ ...record, activeWeapon: name ?? undefined });
+    patch({ ...record, weapons, activeWeapon: record.activeWeapon && weapons.includes(record.activeWeapon) ? record.activeWeapon : undefined });
+  const setActiveWeapon = (name: string | null) => patch({ ...record, activeWeapon: name ?? undefined });
   // Picking or removing a piece also resets its worn flag — a fresh pick is equipped immediately.
-  const setArmor = (name: string | null) => onPatchRecord({ ...record, armor: name ?? undefined, armorActive: undefined });
-  const setShield = (name: string | null) => onPatchRecord({ ...record, shield: name ?? undefined, shieldActive: undefined });
-  const toggleArmorWorn = () => onPatchRecord({ ...record, armorActive: record.armorActive === false ? undefined : false });
-  const toggleShieldWorn = () => onPatchRecord({ ...record, shieldActive: record.shieldActive === false ? undefined : false });
+  const setArmor = (name: string | null) => patch({ ...record, armor: name ?? undefined, armorActive: undefined });
+  const setShield = (name: string | null) => patch({ ...record, shield: name ?? undefined, shieldActive: undefined });
+  const toggleArmorWorn = () => patch({ ...record, armorActive: record.armorActive === false ? undefined : false });
+  const toggleShieldWorn = () => patch({ ...record, shieldActive: record.shieldActive === false ? undefined : false });
 
   const isSheet = view === "sheet";
   const goComp = (tab?: number) => { setView("compendium"); if (tab != null) setCompTab(tab); setModal(null); };
@@ -84,6 +106,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
   );
 
   return (
+    <DraftContext.Provider value={draftApi}>
     <Flex direction="column" h="100%" overflow="hidden" bg="page" color="fg" fontFamily="'Crimson Pro', Georgia, serif">
       {/* Top app bar — on phones the compendium view hosts its own merged bar instead */}
       <Box display={{ base: isSheet ? "block" : "none", md: "block" }} flexShrink={0} bg="page" borderBottom="1px solid" borderColor="hair">
@@ -145,6 +168,7 @@ export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLe
       {/* Weapon attack calculator (key forces a fresh state per weapon) */}
       {weaponModal && <WeaponModal key={`${weaponModal.kind}:${weaponModal.name}`} weapon={weaponModal} onClose={() => setWeaponModal(null)} />}
     </Flex>
+    </DraftContext.Provider>
   );
 };
 

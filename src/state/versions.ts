@@ -11,6 +11,7 @@
 export type VersionVector = Record<string, number>;
 
 const DEVICE_KEY = "magus.deviceId.v1";
+const COUNTER_KEY = "magus.vcCounter.v1";
 let deviceIdCache: string | null = null;
 
 // This browser's id for the sync. Stable as long as the browser keeps the app's storage.
@@ -37,7 +38,38 @@ export const setDeviceIdForTests = (id: string | null): void => {
   deviceIdCache = id;
 };
 
-export const bump = (vc: VersionVector | undefined, device: string): VersionVector => ({ ...vc, [device]: (vc?.[device] ?? 0) + 1 });
+// A fresh id for this browser: used when another device turns out to be writing under the same id
+// (browser data restored from a backup onto a second device).
+export const resetDeviceId = (): string => {
+  deviceIdCache = null;
+  try {
+    localStorage.removeItem(DEVICE_KEY);
+    localStorage.removeItem(COUNTER_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+  return deviceId();
+};
+
+// One counter per device, shared by all its tabs (read and written in the same synchronous step), so a
+// device never gives two different versions the same number, even from two tabs.
+const nextCounter = (atLeast: number): number => {
+  let n = 0;
+  try {
+    n = Number(localStorage.getItem(COUNTER_KEY)) || 0;
+  } catch {
+    /* storage unavailable */
+  }
+  const next = Math.max(n, atLeast) + 1;
+  try {
+    localStorage.setItem(COUNTER_KEY, String(next));
+  } catch {
+    /* storage unavailable: the in-version count still increases */
+  }
+  return next;
+};
+
+export const bump = (vc: VersionVector | undefined, device: string): VersionVector => ({ ...vc, [device]: nextCounter(vc?.[device] ?? 0) });
 
 export const join = (a: VersionVector, b: VersionVector): VersionVector => {
   const out: VersionVector = { ...a };

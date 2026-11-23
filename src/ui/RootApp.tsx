@@ -6,6 +6,8 @@ import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
 import { UpdateBanner } from "./UpdateBanner";
 import { DriveHopNotice } from "./DriveHopNotice";
+import { CharacterTrouble, ErrorBoundary } from "./ErrorBoundary";
+import { exportRecordFile } from "../state/transfer";
 import { captureScroll, restoreScroll } from "./scrollMemory";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
@@ -89,7 +91,7 @@ export const RootApp: React.FC = () => {
     if (r) setCreator({ mode: "edit", record: r });
   };
   const commit = (rec: CharacterRecord) => {
-    roster.upsert(rec);
+    roster.upsert(rec, creator?.record); // saved against what the creator opened with
     if (creator?.mode === "create") {
       setCurrentId(rec.id); // new character → land on its sheet
       go("sheet");
@@ -100,6 +102,7 @@ export const RootApp: React.FC = () => {
   return (
     <>
       {screen === "sheet" && current ? (
+        <ErrorBoundary key={current.id} fallback={(error) => <CharacterTrouble error={error} onBack={() => go("roster")} onExport={() => void exportRecordFile(current)} />}>
         <AppShell
           record={current}
           restore={restore.current ?? undefined}
@@ -109,8 +112,9 @@ export const RootApp: React.FC = () => {
           onBack={() => go("roster")}
           onEdit={() => editChar(current.id)}
           onLevelup={() => setCreator({ mode: "levelup", record: current })}
-          onPatchRecord={roster.upsert}
+          onPatchRecord={(next, base) => roster.upsert(next, base)}
         />
+        </ErrorBoundary>
       ) : screen === "compendium" ? (
         <CompendiumScreen
           initialTab={restore.current?.compTab}
@@ -127,10 +131,10 @@ export const RootApp: React.FC = () => {
           onEdit={editChar}
           onDuplicate={roster.duplicate}
           onDelete={roster.remove}
-          onImport={(rs) => rs.forEach(roster.upsert)}
+          onImport={(rs) => rs.forEach((r) => roster.upsert(r))}
           onRename={(id, name) => {
             const r = roster.get(id);
-            if (r) roster.upsert({ ...r, name });
+            if (r) roster.upsert({ ...r, name }, r);
           }}
           onOpenCompendium={() => go("compendium")}
           onOpenCredits={() => setShowCredits(true)}
@@ -139,6 +143,11 @@ export const RootApp: React.FC = () => {
       )}
 
       {creator && (
+        <ErrorBoundary key={`${creator.mode}:${creator.record.id}:creator`} fallback={(error) => (
+          <Box position="fixed" inset={0} zIndex={40}>
+            <CharacterTrouble error={error} onBack={() => setCreator(null)} onExport={() => void exportRecordFile(creator.record)} />
+          </Box>
+        )}>
         <CreatorScreen
           key={`${creator.mode}:${creator.record.id}`}
           mode={creator.mode}
@@ -146,6 +155,7 @@ export const RootApp: React.FC = () => {
           onClose={() => setCreator(null)}
           onCommit={commit}
         />
+        </ErrorBoundary>
       )}
 
       {showCredits && (

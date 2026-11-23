@@ -14,6 +14,7 @@ import { vcKey } from "./versions";
 const SETTINGS_KEY = "magus.driveSync.v1";
 const PUBLISHED_KEY = "magus.drivePublished.v2";
 const BACKED_UP_KEY = "magus.driveBackedUp.v1";
+const NONCES_KEY = "magus.driveNonces.v1";
 const LEGACY_BASE_KEY = "magus.syncBase.v1"; // the first version of the sync; no longer used
 
 const write = (key: string, value: unknown): void => {
@@ -89,6 +90,11 @@ const BACKED_UP_MAX = 5000;
 export const loadBackedUp = (): Set<string> => new Set(read<string[]>(BACKED_UP_KEY, []));
 export const saveBackedUp = (s: Set<string>): void => write(BACKED_UP_KEY, [...s].slice(-BACKED_UP_MAX));
 
+// ── the marks this device wrote into its Drive file (to notice another device writing it) ──────────
+export const loadNonces = (): string[] => read<string[]>(NONCES_KEY, []);
+export const rememberNonce = (n: string): void => write(NONCES_KEY, [...loadNonces(), n].slice(-20));
+export const forgetNonces = (): void => write(NONCES_KEY, []);
+
 // Turning sync off forgets the pairing with Drive. The characters (and deletion markers) stay, and the
 // device keeps its id, so turning it back on later continues where it left off. The backups choice is
 // remembered for next time.
@@ -97,6 +103,8 @@ export const clearDriveState = (): void => {
   try {
     localStorage.removeItem(PUBLISHED_KEY);
     localStorage.removeItem(LEGACY_BASE_KEY);
+    localStorage.removeItem(BACKED_UP_KEY); // another account may be next: its backups are its own
+    localStorage.removeItem(NONCES_KEY);
   } catch {
     /* ignore */
   }
