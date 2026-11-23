@@ -1,0 +1,29 @@
+name: Jogtulajdonosi kérés (rights holder request)
+description: Ha jogosultként módosíttatnál vagy eltávolíttatnál valamit a projektből.
+labels: ["jogosult"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A Codex Magica független, nem kereskedelmi célú rajongói projekt; a M.A.G.U.S. tartalom a jogosultak szellemi
+        tulajdona. Kérésedet a lehető leghamarabb intézzük.
+        *Codex Magica is an independent, non-commercial fan project; the M.A.G.U.S. content remains the property of its
+        rights holders. We'll handle your request as soon as possible.*
+  - type: textarea
+    id: material
+    attributes:
+      label: Melyik tartalomról van szó? (which material)
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: Mit szeretnél? (what you would like)
+      description: Módosítás, eltávolítás, vagy más.
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Elérhetőség (optional contact)
+      description: Ha inkább máshol folytatnád, nem itt az issue-ban.

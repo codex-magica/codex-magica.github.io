@@ -38,7 +38,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
       <Box minH="100%" display="flex" alignItems="center" justifyContent="center" p="24px" bg="page" color="fg">
         <Box maxW="440px" fontFamily="system-ui">
           <Heading fontSize="22px" mb="10px">
-            Valami hiba történt
+            Hiba történt
           </Heading>
           <Text fontSize="15px" lineHeight="1.55" mb="8px">
             A karaktereid nem vesztek el: minden módosítás azonnal mentődik ezen az eszközön. Töltsd újra az alkalmazást.
@@ -74,7 +74,7 @@ export const CharacterTrouble: React.FC<{ onBack: () => void; onExport: () => vo
           Ezt a karaktert most nem sikerült megnyitni
         </Heading>
         <Text fontSize="15px" lineHeight="1.55" mb="8px">
-          A karakter adatai megvannak, semmi sem veszett el: csak a megjelenítése akadt el egy hibán.
+          A karakter adatai megvannak, semmi sem veszett el; csak a megjelenítésénél történt hiba.
         </Text>
         <Text fontSize="14px" color="muted" lineHeight="1.55" mb="16px">
           Exportáld fájlba, és jelezd a hibát a projekt GitHub-oldalán. A javított verzióban újra megnyílik.

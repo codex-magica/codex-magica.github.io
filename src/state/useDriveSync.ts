@@ -100,14 +100,14 @@ class AccountMismatchError extends Error {}
 
 const errorNote = (e: unknown): string => {
   if (e instanceof AccountMismatchError) return e.message;
-  if (e instanceof SyncNewerVersionError) return "A Drive-on egy újabb alkalmazásverzió adatai vannak. Frissítsd az alkalmazást (zárd be és nyisd meg újra), utána folytatódik a szinkron.";
+  if (e instanceof SyncNewerVersionError) return "A Drive-on lévő adatokat az alkalmazás egy újabb verziója mentette. Frissítsd az alkalmazást (zárd be, majd nyisd meg újra), és folytatódik a szinkron.";
   if (e instanceof DriveAuthError) {
     if (e.message === "popup closed") return "A Google-ablak bezárult, mielőtt engedélyt adtál volna.";
-    if (e.message === "drive permission not granted") return "A Google Drive-hozzáférés nem lett engedélyezve. Próbáld újra, és hagyd bejelölve a Drive-ra vonatkozó engedélyt.";
+    if (e.message === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és hagyd bejelölve a Drive-ra vonatkozó engedélyt.";
     return "A Google-hozzáférés lejárt. Koppints a szinkronhoz.";
   }
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. A szinkron a következő alkalommal folytatódik.";
-  return "Nem sikerült elérni a Google Drive-ot. A szinkron később magától újrapróbálkozik.";
+  return "Nem sikerült elérni a Google Drive-ot. Később magától újra megpróbálja.";
 };
 
 // The answer of a renewal round trip, read once at startup (before rendering).
@@ -236,7 +236,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             setSyncTick((n) => n + 1);
             if (out.conflictCopies > 0)
               setNote(
-                `${out.conflictCopies} karakter két eszközön is módosult egyszerre. A másik változat külön karakterként került a listára („… (másik változat)”), hogy semmi ne vesszen el.`
+                `${out.conflictCopies} karakter két eszközön is módosult, mielőtt szinkronizálódhatott volna. A másik változat külön karakterként került a listára („… (másik változat)”), hogy semmi ne vesszen el.`
               );
             else setNote((n) => (n && n.includes("(másik változat)") ? n : null)); // a conflict notice stays until the next one
           } while (again.current);

@@ -63,8 +63,8 @@ const BackupsChoice: React.FC<{ on: boolean; onChange: (on: boolean) => void }> 
         Napi biztonsági másolat a Drive-on
       </Text>
       <Text fontFamily="system-ui" fontSize="12.5px" color="muted" lineHeight="1.5">
-        Ha egy karaktert egy későbbi napon módosítasz, az előző napi állapota megmarad, törléskor pedig az utolsó. Bármikor
-        visszaállíthatod őket. A fájlok aprók, egyenként néhány kilobájtosak.
+        Ha egy karaktert egy későbbi napon módosítasz, megmarad az előző napi állapota, ha pedig törlöd, a törlés előtti
+        állapota. Bármikor visszaállíthatod őket. A fájlok aprók, egyenként néhány kilobájtosak.
       </Text>
     </Box>
     <Toggle on={on} onChange={onChange} label="Napi biztonsági másolat a Drive-on" />

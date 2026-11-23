@@ -22,8 +22,8 @@ import { CharacterRecord } from "../model/character";
 const SaveFailedBanner: React.FC = () => (
   <Box role="alert" position="fixed" top="max(10px, env(safe-area-inset-top))" left="50%" transform="translateX(-50%)" zIndex={62} w="min(520px, calc(100% - 32px))"
     px="16px" py="11px" borderRadius="12px" bg="sheet" border="1px solid" borderColor="warn" boxShadow="0 10px 30px rgba(0,0,0,.18)" fontFamily="system-ui" fontSize="13.5px" color="fg" lineHeight="1.45">
-    <b>Nem sikerült menteni ezen az eszközön.</b> Lehet, hogy megtelt a böngésző tárhelye. Amíg ez az üzenet látszik, a módosítások csak
-    addig maradnak meg, amíg az alkalmazás nyitva van: készíts biztonsági mentést a karakterlistán.
+    <b>Nem sikerült menteni ezen az eszközön.</b> Lehet, hogy megtelt a böngésző tárhelye. Amíg ez az üzenet látszik, az új
+    módosítások csak az alkalmazás bezárásáig maradnak meg, ezért készíts biztonsági mentést a karakterlistán.
   </Box>
 );
 

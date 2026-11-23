@@ -1,0 +1,30 @@
+name: Hiba a szabályokban vagy a szövegben (rules or text error)
+description: Elírás, hibás táblázatérték, vagy egy szabály, amit az alkalmazás másképp számol, mint a könyv.
+labels: ["szabály/szöveg"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Köszönjük! A szöveg egy rossz minőségű szkennelésből készült, ezért minden javítás sokat segít.
+        *Thanks! The text comes from OCR of a low-quality scan, so every correction helps.*
+  - type: input
+    id: where
+    attributes:
+      label: Hol? (where)
+      description: A könyv oldalszáma vagy fejezete, illetve a kompendium lapja és a sor neve.
+      placeholder: "pl. 214. oldal, Tűzmágia → Tűzgolyó"
+    validations:
+      required: true
+  - type: textarea
+    id: app
+    attributes:
+      label: Mi szerepel az alkalmazásban? (what the app shows)
+    validations:
+      required: true
+  - type: textarea
+    id: book
+    attributes:
+      label: Mi áll a könyvben? (what the book says)
+      description: Ha számolási hiba, írd le azt is, mennyinek kellene lennie, és miért.
+    validations:
+      required: true

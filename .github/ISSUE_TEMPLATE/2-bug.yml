@@ -1,0 +1,36 @@
+name: Alkalmazáshiba (app bug)
+description: Valami nem úgy működik, ahogy kellene.
+labels: ["hiba"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Mi történt? (what happened)
+      description: És mit vártál helyette?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Hogyan lehet előidézni? (steps to reproduce)
+      placeholder: |
+        1. Megnyitottam a karakterlapot…
+        2. …
+  - type: input
+    id: device
+    attributes:
+      label: Eszköz és böngésző (device and browser)
+      placeholder: "pl. iPad, kezdőképernyőről; Android, Chrome; Mac, Safari"
+  - type: dropdown
+    id: sync
+    attributes:
+      label: Be volt kapcsolva a Google Drive-szinkron? (was Drive sync on?)
+      options:
+        - Nem (no)
+        - Igen (yes)
+        - Nem tudom (don't know)
+  - type: markdown
+    attributes:
+      value: |
+        Ha egy karakterrel van gond, hozzá is csatolhatod az exportált fájlját (karakter menü → Exportálás fájlba).
+        Csak olyat csatolj, amit nyilvánosan is megosztanál: az issue-k mindenki számára láthatók.

@@ -123,7 +123,13 @@ const optionParas = (db: RulesDB, className: string): string[] => {
       const skills = ch.mode === "override" ? p.all.skills : p.own.skills;
       const parts = [
         skills.length ? `${ch.mode === "override" ? "kapott képzettségek" : "ezen felül"}: ${skills.join(", ")}` : "",
-        resets ? `tanít (a fenti lista helyett): ${p.own.teaches.length ? teachLine(p.own.teaches) : "semmit"}` : p.own.teaches.length ? `tanít még: ${teachLine(p.own.teaches)}` : "",
+        resets
+          ? p.own.teaches.length
+            ? `a fenti lista helyett tanít: ${teachLine(p.own.teaches)}`
+            : "a fenti listából nem tanít semmit"
+          : p.own.teaches.length
+            ? `tanít még: ${teachLine(p.own.teaches)}`
+            : "",
         ...p.own.specials.filter((x) => !x.startsWith("Iskolaköltség")),
         ...p.own.forbidden.map((x) => `nem tanulhatja: ${x}`),
         ...p.own.other,
@@ -196,7 +202,7 @@ export function creationBlocks(homebrew = false): TableBlock[] {
       title: "Kasztok",
       nameLabel: "Kaszt",
       columns: [{ label: "Költség" }, ...RACE_NAMES.map((r) => ({ label: r }))],
-      footer: `${COST_FOOTER} Ha egy iskola vagy rend módosítja a költséget, a tartomány látszik. ✓ = a faj választhatja a kasztot.`,
+      footer: `${COST_FOOTER} Ha egy iskola vagy rend módosítja a költséget, a Költség oszlop tartományt mutat. ✓ = a faj választhatja a kasztot.`,
       rows: CLASS_NAMES.filter((c) => db.classes[c]).map((c) => classRow(db, c)),
     },
     {

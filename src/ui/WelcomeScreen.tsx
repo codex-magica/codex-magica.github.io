@@ -105,10 +105,10 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       if (!result) return invalidFile();
       setImportError(null);
       onImport(result.add);
-      const damaged = result.invalid > 0 ? ` ${result.invalid} bejegyzés sérült volt, azt kihagytuk.` : "";
+      const damaged = result.invalid > 0 ? ` ${result.invalid} sérült bejegyzést kihagytunk.` : "";
       if (result.kind === "backup") {
         if (result.add.length > 0) setImportInfo(`${result.add.length} karakter visszaállítva${result.skipped > 0 ? `, ${result.skipped} már megvolt` : ""}.${damaged}`);
-        else if (result.skipped > 0) setImportInfo(`Nincs új karakter a mentésben: ${result.skipped === 1 ? "az egy karakter" : `mind a ${result.skipped}`} megvolt már.${damaged}`);
+        else if (result.skipped > 0) setImportInfo(`Nincs új karakter a mentésben: ${result.skipped === 1 ? "a benne lévő karakter" : `mind a ${result.skipped}`} megvolt már.${damaged}`);
         else setImportInfo(`A mentésben nem volt visszaállítható karakter.${damaged}`);
       } else {
         setImportInfo(null);
