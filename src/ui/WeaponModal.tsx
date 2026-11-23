@@ -59,12 +59,28 @@ const sign = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0"
 const num = (v: number | string) => (typeof v === "number" ? `${v}`.replace("-", "−") : v);
 
 // ── small building blocks ──
-const NumField: React.FC<{ label: string; value: number; onChange: (n: number) => void }> = ({ label, value, onChange }) => (
-  <Box flex="1" minW="64px">
-    <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="fgFaint" mb="3px">{label}</Text>
-    <Input {...FIELD_SX} size="sm" type="number" value={Number.isFinite(value) ? value : 0} onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)} sx={{ fontVariantNumeric: "tabular-nums" }} />
-  </Box>
-);
+// While typing, the field keeps its own text, so a minus sign (modifiers are often negative) or an empty
+// field can be typed without snapping to 0; the number updates whenever the text is one.
+const NumField: React.FC<{ label: string; value: number; onChange: (n: number) => void }> = ({ label, value, onChange }) => {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <Box flex="1" minW="64px">
+      <Text fontFamily="system-ui" fontSize="10px" fontWeight={700} letterSpacing=".1em" textTransform="uppercase" color="fgFaint" mb="3px">{label}</Text>
+      <Input {...FIELD_SX} size="sm" type="number" value={draft ?? (Number.isFinite(value) ? String(value) : "0")}
+        onFocus={() => setDraft(Number.isFinite(value) ? String(value) : "")}
+        onBlur={() => {
+          if (draft !== null && !Number.isFinite(parseInt(draft, 10))) onChange(0);
+          setDraft(null);
+        }}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          const n = parseInt(e.target.value, 10);
+          if (Number.isFinite(n)) onChange(n);
+        }}
+        sx={{ fontVariantNumeric: "tabular-nums" }} />
+    </Box>
+  );
+};
 
 const Dropdown: React.FC<{ label: string; options: [string, number][]; value: number; onChange: (n: number) => void }> = ({ label, options, value, onChange }) => (
   <Box>
