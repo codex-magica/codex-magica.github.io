@@ -328,7 +328,7 @@ const settle = async (drive: FakeDrive, ...devs: Device[]) => {
 };
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R1 a deletion that saw a merged version's content loses to it (deleted character comes back)", () => {
+describe("R1 a deletion that saw a merged version's content wins over it (the character doesn't come back)", () => {
   test("R1a after a conflict: the device whose version won deletes the character before pulling the merge", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -371,8 +371,8 @@ describe("R1 a deletion that saw a merged version's content loses to it (deleted
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R2 storage full: deleting a character saves the roster but not the deletion marker", () => {
-  test("R2 the deletion marker is never saved; after a reload the character comes back from Drive", async () => {
+describe("R2 storage full: deleting a character saves the roster and the deletion marker together", () => {
+  test("R2 what's saved fits together, and after a reload the character doesn't come back from Drive", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const qs = new QuotaStorage();
@@ -401,8 +401,8 @@ describe("R2 storage full: deleting a character saves the roster but not the del
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R3 a cloned device with a second tab: the other tab keeps the old device id", () => {
-  test("R3 an edit from the stale tab is numbered under the original device's id and silently superseded", async () => {
+describe("R3 a cloned device with a second tab: both tabs take the new device id", () => {
+  test("R3 an edit from the second tab is not numbered under the original device's id, and survives", async () => {
     const drive = new FakeDrive();
     const orig = new Device("devaaa");
     orig.storage.m.set("magus.deviceId.v1", "devaaa");
@@ -441,8 +441,8 @@ describe("R3 a cloned device with a second tab: the other tab keeps the old devi
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R4 an unreadable saved roster can't be kept aside when storage is (nearly) full", () => {
-  test("R4 the unreadable roster is overwritten by the next save", () => {
+describe("R4 an unreadable saved roster when storage is (nearly) full", () => {
+  test("R4 it isn't saved over, and it's offered for download", () => {
     const d = new Device("deva");
     const qs = new QuotaStorage();
     d.storage = qs;
@@ -461,8 +461,8 @@ describe("R4 an unreadable saved roster can't be kept aside when storage is (nea
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R5 a deletion confirmed after a sync brought a newer version deletes a version the player never saw", () => {
-  test("R5 the delete dialog was opened on v1; a round pulls b's edit; confirming deletes b's edit (backups off)", async () => {
+describe("R5 a deletion confirmed after a sync brought a newer version", () => {
+  test("R5 doesn't delete the version the player never saw (the dialog was opened on the older one)", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");

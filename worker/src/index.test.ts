@@ -151,12 +151,51 @@ describe("token service", () => {
     expect((await handle(post("/v1/token", { credential: old }), env({ BLOB_KEY: KEY2 }), g.doFetch)).status).toBe(401);
   });
 
-  test("revoke: the refresh token is revoked at Google", async () => {
+  test("revoke is not offered (turning sync off is device-only)", async () => {
     const credential = await sealCredential(env(), { rt: "rt-9", iat: 1 });
-    const g = google({ revoke: [200, {}] });
-    const res = await handle(post("/v1/revoke", { credential }), env(), g.doFetch);
-    expect(res.status).toBe(200);
-    expect(g.calls[0]).toEqual({ url: "https://oauth2.googleapis.com/revoke", form: { token: "rt-9" } });
+    const g = google();
+    expect((await handle(post("/v1/revoke", { credential }), env(), g.doFetch)).status).toBe(404);
+    expect(g.calls).toHaveLength(0);
+  });
+
+  test("health: a broken previous key counts as not configured (every renewal would fail)", async () => {
+    expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: "short" })))).configured).toBe(false);
+    expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: KEY2 })))).configured).toBe(true);
+  });
+
+  test("exchange: Google busy (429, 5xx) is a 502, so the app says to try again later", async () => {
+    for (const status of [429, 503]) {
+      const g = google({ exchange: [status, { error: "rate_limit_exceeded" }] });
+      expect((await handle(post("/v1/exchange", { code: "c", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch)).status).toBe(502);
+    }
+  });
+
+  test("exchange: no refresh token from Google means no credential", async () => {
+    const g = google({ exchange: [200, { access_token: "at-1", expires_in: 3599, scope: DRIVE }] });
+    const body = await json(await handle(post("/v1/exchange", { code: "c", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch));
+    expect(body.access_token).toBe("at-1");
+    expect(body.credential).toBeUndefined();
+  });
+
+  test("key rotation: a new refresh token under rotation is sealed with the new key and a fresh date", async () => {
+    const old = await sealCredential(env({ BLOB_KEY: KEY }), { rt: "rt-1", iat: 5 });
+    const g = google({ refresh: [200, { access_token: "at-4", scope: DRIVE, refresh_token: "rt-2" }] });
+    const body = await json(await handle(post("/v1/token", { credential: old }), env({ BLOB_KEY: KEY2, BLOB_KEY_PREVIOUS: KEY }), g.doFetch));
+    const fresh = await openCredential(env({ BLOB_KEY: KEY2 }), body.credential as string);
+    expect(fresh?.secret.rt).toBe("rt-2");
+    expect(fresh?.secret.iat).toBeGreaterThan(5);
+    expect(fresh?.stale).toBe(false);
+  });
+
+  test("rate limit: a refused address stops before the credential is looked at, and the 429 is readable by the app", async () => {
+    const credential = await sealCredential(env(), { rt: "rt-1", iat: 1 });
+    const seen: string[] = [];
+    const limiter = { limit: async ({ key }: { key: string }) => (seen.push(key), { success: false }) };
+    const res = await handle(post("/v1/token", { credential }), env({ LIMITER: limiter }), google().doFetch);
+    expect(res.status).toBe(429);
+    expect(seen).toEqual(["ip:1.2.3.4"]);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(APP);
+    expect(res.headers.get("Retry-After")).toBe("60");
   });
 
   test("rate limit: a refused request gets 429 before Google is asked", async () => {

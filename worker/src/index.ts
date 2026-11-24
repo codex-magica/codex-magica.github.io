@@ -3,14 +3,13 @@
 //
 // Browser apps get only one-hour access tokens from Google. A refresh token would last, but Google hands
 // it out only to a party that holds the OAuth client secret, and a secret can't be kept in a public web
-// app. So this Worker keeps the secret and does exactly two things for the app:
+// app. So this Worker keeps the secret and does two things for the app:
 //
 //   POST /v1/exchange  { code, code_verifier, redirect_uri }  the one-time code from Google's consent
 //                      screen → an access token, plus the refresh token encrypted into an opaque
 //                      "credential" that only this Worker can read
 //   POST /v1/token     { credential }  → a fresh access token
-//   POST /v1/revoke    { credential }  → the refresh token is revoked at Google (turning sync off)
-//   GET  /health
+//   GET  /health       whether it's set up (for checking a deployment)
 //
 // It stores nothing and logs nothing (see wrangler.toml): the credential lives on the player's device.
 // Browsers may call it only from the app's own origins (CORS); scripts outside a browser can claim any
@@ -152,6 +151,7 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
     let keyOk = false;
     try {
       await loadKey(env.BLOB_KEY ?? "");
+      if (env.BLOB_KEY_PREVIOUS) await loadKey(env.BLOB_KEY_PREVIOUS); // a broken one would fail every renewal
       keyOk = true;
     } catch {
       keyOk = false;
@@ -168,7 +168,7 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
   if (request.method !== "POST") return reply(405, { error: "method" }, h);
 
   const route = url.pathname;
-  if (route !== "/v1/exchange" && route !== "/v1/token" && route !== "/v1/revoke") return reply(404, { error: "not found" }, h);
+  if (route !== "/v1/exchange" && route !== "/v1/token") return reply(404, { error: "not found" }, h);
 
   if (Number(request.headers.get("Content-Length") ?? 0) > MAX_BODY) return reply(413, { error: "too large" }, h);
   const text = await request.text();
@@ -213,7 +213,8 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
         client_id: env.GOOGLE_CLIENT_ID,
         client_secret: env.GOOGLE_CLIENT_SECRET,
       });
-      if (g.status !== 200 || typeof g.body.access_token !== "string") return reply(g.status >= 500 ? 502 : 400, { error: typeof g.body.error === "string" ? g.body.error : "exchange failed" }, h);
+      // Google busy (5xx, 429): the app says "try again a bit later"; anything else is a refusal of the code
+      if (g.status !== 200 || typeof g.body.access_token !== "string") return reply(g.status >= 500 || g.status === 429 ? 502 : 400, { error: typeof g.body.error === "string" ? g.body.error : "exchange failed" }, h);
       const scope = typeof g.body.scope === "string" ? g.body.scope : "";
       const rt = typeof g.body.refresh_token === "string" ? g.body.refresh_token : null;
       // without the Drive permission (left unticked on Google's screen) the grant is useless: undo it
@@ -230,27 +231,22 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
     const opened = await openCredential(env, credential);
     if (!opened) return reply(401, { error: "invalid_credential" }, h);
 
-    if (route === "/v1/token") {
-      const g = await googlePost(doFetch, GOOGLE_TOKEN, {
-        grant_type: "refresh_token",
-        refresh_token: opened.secret.rt,
-        client_id: env.GOOGLE_CLIENT_ID,
-        client_secret: env.GOOGLE_CLIENT_SECRET,
-      });
-      if (g.status === 200 && typeof g.body.access_token === "string") {
-        // a new refresh token (rare), or one read with the previous key: hand back a fresh credential
-        const rt = typeof g.body.refresh_token === "string" ? g.body.refresh_token : null;
-        const renewed = rt || opened.stale ? await sealCredential(env, { rt: rt ?? opened.secret.rt, iat: rt ? Date.now() : opened.secret.iat }) : null;
-        return reply(200, tokenAnswer(g.body, renewed), h);
-      }
-      // the grant is gone (revoked, expired, password change…): the app must ask the user again
-      if (g.body.error === "invalid_grant") return reply(401, { error: "invalid_grant" }, h);
-      return reply(502, { error: "upstream" }, h);
+    // /v1/token
+    const g = await googlePost(doFetch, GOOGLE_TOKEN, {
+      grant_type: "refresh_token",
+      refresh_token: opened.secret.rt,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+    });
+    if (g.status === 200 && typeof g.body.access_token === "string") {
+      // a new refresh token (rare), or one read with the previous key: hand back a fresh credential
+      const rt = typeof g.body.refresh_token === "string" ? g.body.refresh_token : null;
+      const renewed = rt || opened.stale ? await sealCredential(env, { rt: rt ?? opened.secret.rt, iat: rt ? Date.now() : opened.secret.iat }) : null;
+      return reply(200, tokenAnswer(g.body, renewed), h);
     }
-
-    // /v1/revoke: best effort; already revoked counts as done
-    await googlePost(doFetch, GOOGLE_REVOKE, { token: opened.secret.rt });
-    return reply(200, { ok: true }, h);
+    // the grant is gone (revoked, expired, password change…): the app must ask the user again
+    if (g.body.error === "invalid_grant") return reply(401, { error: "invalid_grant" }, h);
+    return reply(502, { error: "upstream" }, h);
   } catch {
     // Google unreachable or slow: the app keeps its credential and tries again later
     return reply(502, { error: "upstream" }, h);

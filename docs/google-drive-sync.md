@@ -103,8 +103,8 @@ Without one, the app stays local-only and never contacts Google. The token servi
 - **Kikapcsolás** (turn off) affects that device only: it forgets the token and the credential there, and
   revokes nothing at Google, because revoking removes the whole permission and would disconnect the player's
   other devices too. To withdraw access everywhere, the player removes the app in their Google account
-  (myaccount.google.com/permissions); every device then gets `invalid_grant` and asks to reconnect. The
-  token service's `/v1/revoke` stays for a future "disconnect everywhere" option. Nothing is deleted: the
+  (myaccount.google.com/permissions); every device then gets `invalid_grant` and asks to reconnect.
+  Nothing is deleted: the
   characters stay on the device, and the files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
 
 Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `versions.ts` (version
@@ -115,6 +115,9 @@ Drive calls), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`, `Dr
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
+`src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
+cloned devices, deletions racing syncs), and `src/state/useDriveSync.test.ts` runs the real hook in several
+simulated tabs against a fake Google and token service (retries, renewals, the return from the consent page).
 
 ## Why this approach
 
@@ -130,7 +133,8 @@ secret, and a secret can't be kept in a public web app. The options weighed:
 | Firebase | none | yours | players' data in your project and quota |
 
 The token service keeps the refresh token inside the credential, encrypted, rather than in a database: there
-is nothing to breach on the server, and rotating its key cancels every credential at once. It answers only
+is nothing to breach on the server, and replacing its key without keeping the old one (`BLOB_KEY_PREVIOUS`)
+cancels every credential at once, should one ever leak. It answers only
 the app's own origins, and is rate-limited.
 
 A native app would renew silently, but only for itself: tokens stay on the device, so it wouldn't help the

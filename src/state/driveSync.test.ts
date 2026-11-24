@@ -1097,8 +1097,8 @@ async function realSync(dev: Device, drive: FakeDrive) {
   return out;
 }
 
-describe("review 2: nonces, tabs, conflicts, clones", () => {
-  test("P1 storage full: the nonce isn't saved, the next round takes the device for a clone", async () => {
+describe("nonces, tabs, conflicts, clones (earlier review findings)", () => {
+  test("storage full: an unsaved nonce doesn't make the next round take the device for a clone", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const qs = new QuotaStorage();
@@ -1131,7 +1131,7 @@ describe("review 2: nonces, tabs, conflicts, clones", () => {
     expect(b.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
   });
 
-  test("P2 Drive full (or any repeated update failure) for 20+ rounds: the remembered nonces roll over → false clash", async () => {
+  test("Drive full (any repeated update failure) for 20+ rounds: the remembered nonces don't roll over into a false clash", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -1162,7 +1162,7 @@ describe("review 2: nonces, tabs, conflicts, clones", () => {
     expect(b.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
   });
 
-  test("P3 two tabs: an edit in tab 2 whose storage event reaches tab 1 after its round's last response is overwritten", async () => {
+  test("two tabs: an edit in tab 2 that reaches tab 1 after its round's last response is kept", async () => {
     const drive = new FakeDrive();
     const tab1 = new Device("deva");
     const x = tab1.create("Xena");
@@ -1186,7 +1186,7 @@ describe("review 2: nonces, tabs, conflicts, clones", () => {
     expect(saved.flatMap(tokensOf)).toContain("tab2-edit");
   });
 
-  test("P4 after a conflict, the winning device's next edit (before it pulls the merge) makes a spurious copy of its own older version", async () => {
+  test("after a conflict, the winning device's next edit (before it pulls the merge) makes no copy of its own older version", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -1208,7 +1208,7 @@ describe("review 2: nonces, tabs, conflicts, clones", () => {
     expect(a.records()).toHaveLength(2); // Xena [B1,B2] and the A1 copy
   });
 
-  test("P5 a real clone: relabelling also hits versions the clone never touched → deletions by the original come back", async () => {
+  test("a real clone: relabelling leaves the versions the clone never touched, so the original's deletions stay", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const w = a.create("Wulf");
@@ -1243,7 +1243,7 @@ describe("review 2: storage full, and an edit before a losing deletion", () => {
     };
   };
 
-  test("P7 storage full → edit uploaded from memory → reload → next edit of that character silently supersedes it", async () => {
+  test("storage full: an edit uploaded from memory survives a reload and a later edit of that character", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -1266,7 +1266,7 @@ describe("review 2: storage full, and an edit before a losing deletion", () => {
     expect(all).toContain("c1-only-in-memory-and-drive");
   });
 
-  test("P7b same, second tab instead of a reload", async () => {
+  test("storage full: the same with a second tab instead of a reload", async () => {
     const drive = new FakeDrive();
     const tab1 = new Device("deva");
     const x = tab1.create("Xena");
@@ -1317,7 +1317,7 @@ describe("review 2: storage full, and an edit before a losing deletion", () => {
     expect(tab1.store.getState().saveFailed).toBe(false);
   });
 
-  test("P6 edit then delete on A, parallel edit on B: A's last edit is kept nowhere", async () => {
+  test("edit then delete on A, parallel edit on B: A's last edit is kept (in the roster or a backup)", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");

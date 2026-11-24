@@ -287,8 +287,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect([...(drives["x@test"]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes("Aragorn"))).toBe(true);
   });
 
-  // useDriveSync.ts:275-277 (retry branch keeps "syncing") + :312 (`st === "syncing" ? st : "needsTap"`)
-  test("stuck 'syncing': grant revoked, two tabs; the tab whose retry runs after the other tab forgot the credential stays 'syncing' forever", async () => {
+  test("grant revoked with two tabs open: the tab whose retry runs after the other forgot the credential asks to reconnect (not stuck on syncing)", async () => {
     enableWith("x@test", "at-1", "cred-x");
     // the player removed the app in their Google account: every token and the refresh grant are dead
     deadTokens.add("at-1");
@@ -311,8 +310,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(A.tab.api.status).toBe("needsTap");
   });
 
-  // useDriveSync.ts:271-281: no timer after a failed round; only the next edit/visibility/online event retries
-  test("no automatic retry: a transient Drive 503 leaves the edit un-uploaded while the app stays open", async () => {
+  test("a failed round (Drive 503) retries by itself and the edit reaches Drive while the app stays open", async () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();
     await settle(100);
@@ -327,8 +325,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.pending.count).toBe(0);
   });
 
-  // googleDrive.ts:162: the account check's fetch has no timeout, and it runs while `running` is held
-  test("a stalled account check (userinfo, no timeout) blocks every later round in the tab", async () => {
+  test("a hung account check times out and doesn't block later rounds", async () => {
     enableWith("x@test", "at-1", "cred-x");
     // hangs until aborted, as a real fetch would with its signal
     override = (url, init) =>
@@ -346,8 +343,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.pending.count).toBe(0);
   });
 
-  // useDriveSync.ts:365-378 vs googleDrive.ts:343-350: a renewal answered after "Kikapcsolás" stores its token
-  test("turning sync off during a renewal leaves a live access token on the device", async () => {
+  test("a renewal answered after turning sync off leaves no token on the device", async () => {
     enableWith("x@test", null, "cred-x");
     let answer!: () => void;
     tokenService = (path) =>
@@ -362,8 +358,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(ls.getItem(TOKEN_KEY)).toBeNull();
   });
 
-  // googleDrive.ts:361 accept() saves the credential BEFORE the account check (useDriveSync.ts:399-409)
-  test("reconnecting with the wrong account destroys the right account's still-valid credential", async () => {
+  test("reconnecting with the wrong account keeps the right account's credential", async () => {
     enableWith("x@test", null, "cred-x");
     ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&code=C1";
@@ -376,8 +371,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x");
   });
 
-  // useDriveSync.ts:224-250 + driveSyncEngine.ts:103,134,142: a round cut off by "Kikapcsolás" still writes nonces
-  test("a round still running at 'Kikapcsolás' writes its nonces after they were cleared → false device clash on another account", async () => {
+  test("a round still running when sync is turned off leaves no nonces behind (no false clone on another account)", async () => {
     // 1. this device synced with account Y once (its file is in Y's Drive), then sync was turned off
     enableWith("y@test", "y-1", "cred-y");
     let t = await openTab();
