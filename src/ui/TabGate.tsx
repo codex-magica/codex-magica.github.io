@@ -2,16 +2,20 @@ import React, { useEffect, useSyncExternalStore } from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { startActiveTab, subscribeTab, tabState, continueHere } from "../state/activeTab";
 import { rosterStore } from "../state/rosterStore";
+import { exportBackupFile } from "../state/transfer";
+
+const store = rosterStore();
 
 // Shows the app only in the tab that's in use (see activeTab.ts); other tabs get a short screen with a
 // button to continue there.
 export const TabGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const state = useSyncExternalStore(subscribeTab, tabState);
+  const roster = useSyncExternalStore(store.subscribe, store.getState);
   useEffect(() => startActiveTab(), []);
   // taken over while edits exist only in memory (storage full): park them, so they're back if the player
   // continues here again (this tab reloads then)
   useEffect(() => {
-    if (state === "elsewhere") rosterStore().parkUnsaved();
+    if (state === "elsewhere") store.parkUnsaved();
   }, [state]);
   if (state === "checking") return null;
   if (state === "active") return <>{children}</>;
@@ -25,8 +29,21 @@ export const TabGate: React.FC<{ children: React.ReactNode }> = ({ children }) =
           Egyszerre csak egy lapon használhatod, hogy a karaktereid ne keveredjenek össze. Ha inkább itt folytatnád, kattints a
           gombra; a másik lapon ekkor szünetel.
         </Text>
-        <Box as="button" type="button" onClick={continueHere} px="18px" py="10px" borderRadius="9px" fontWeight={700} fontSize="15px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-          Használat itt
+        {roster.saveFailed && (
+          // the latest edits exist only here (this tab couldn't save them): closing it would lose them
+          <Text fontSize="13.5px" color="warn" lineHeight="1.5" mb="14px">
+            Ezen a lapon vannak olyan módosítások, amelyeket nem sikerült elmenteni. Mielőtt bezárod, exportáld a karaktereidet.
+          </Text>
+        )}
+        <Box display="flex" gap="10px" justifyContent="center" flexWrap="wrap">
+          {roster.saveFailed && (
+            <Box as="button" type="button" onClick={() => void exportBackupFile(roster.records)} px="18px" py="10px" borderRadius="9px" fontWeight={700} fontSize="15px" border="1px solid" borderColor="warn" bg="warnSoft" color="fg">
+              Exportálás
+            </Box>
+          )}
+          <Box as="button" type="button" onClick={continueHere} px="18px" py="10px" borderRadius="9px" fontWeight={700} fontSize="15px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
+            Használat itt
+          </Box>
         </Box>
       </Box>
     </Box>

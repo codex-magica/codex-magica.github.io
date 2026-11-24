@@ -12,6 +12,8 @@
 // States: "checking" (for a moment at start), "active", "elsewhere" (another tab has it; `wasActive`:
 // this tab had it before, so its screens are stale and continuing here reloads the page).
 
+import { consumeRedirectResult } from "./googleDrive";
+
 export type TabState = "checking" | "active" | "elsewhere";
 
 const LOCK = "codex-magica-active-tab";
@@ -29,30 +31,47 @@ const lockManager = (): LockManager | null => {
   return locks?.request ? locks : null;
 };
 
-// Hold the lock until the page goes away; if another tab takes it over, this one steps back.
-const claim = (steal: boolean) => {
+// Hold the lock until the page is left (released then, so the next page in this tab, or a reload, finds
+// it free even if this one stays in the back/forward cache); if another tab takes it over, this one
+// steps back. A busy lock is tried again a few times before saying "another tab": the page this one
+// replaced (a reload, the way back from Google's consent page) may not have let go of it yet.
+let release: (() => void) | null = null;
+const claim = (steal: boolean, triesLeft = 4) => {
   const locks = lockManager();
   if (!locks) return set("active");
   locks
     .request(LOCK, steal ? { steal: true } : { ifAvailable: true }, (lock) => {
-      if (!lock) return set("elsewhere");
+      if (!lock) {
+        if (triesLeft > 0) setTimeout(() => claim(false, triesLeft - 1), 250);
+        else set("elsewhere");
+        return;
+      }
       set("active");
-      return new Promise<void>(() => {}); // held while this page lives
+      return new Promise<void>((done) => (release = done));
     })
-    .catch(() => set("elsewhere")); // taken over by another tab
+    .catch((e: unknown) => {
+      // taken over by another tab; anything else (the browser refusing locks, say, with site data
+      // blocked) mustn't lock the player out: run as if there were no Web Locks
+      set((e as { name?: string })?.name === "AbortError" ? "elsewhere" : "active");
+    });
 };
 
 let started = false;
 export const startActiveTab = (): void => {
   if (started) return;
   started = true;
-  claim(false);
+  // back from Google's consent page with its answer: this page is the one the player is using, whatever
+  // another tab did meanwhile
+  // (read through consumeRedirectResult: it has already taken the answer out of the address)
+  claim(consumeRedirectResult().kind === "code");
   // back through the back/forward cache: the page may be long out of date, and another tab may have
   // been used meanwhile: start over
-  if (typeof window !== "undefined")
+  if (typeof window !== "undefined") {
+    window.addEventListener("pagehide", () => release?.());
     window.addEventListener("pageshow", (e) => {
       if (e.persisted) window.location.reload();
     });
+  }
 };
 
 // "Használat itt": continue in this tab. A tab that was already in use before reloads, so nothing it

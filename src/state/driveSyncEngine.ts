@@ -42,6 +42,9 @@ export interface SyncInput {
   ourNonces: string[]; // the marks this device wrote into its file recently
   rememberNonce: (nonce: string) => void; // called (and must persist) before a write
   confirmNonce?: (nonce: string) => void; // the mark now in the file is ours (read back, or written)
+  // still wanted? Checked right before this device's file is written: a round no longer wanted (sync
+  // turned off, the app continued in another tab) writes nothing, so no mark of it lands unremembered
+  current?: () => boolean;
 }
 export interface SyncOutput {
   records: CharacterRecord[];
@@ -146,7 +149,7 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
 
   let uploaded = false;
   if (ownUnreadable !== null) await drive.keepUnreadable(`codex-magica-unreadable.${input.device}.${now()}.txt`, ownUnreadable);
-  if (result.publishNeeded || ownUnreadable !== null) {
+  if ((result.publishNeeded || ownUnreadable !== null) && (input.current?.() ?? true)) {
     input.rememberNonce(nonce); // before writing: an answer lost on the way mustn't make it look foreign
     if (own) {
       const { version } = await drive.updateFile(own.id, result.file);

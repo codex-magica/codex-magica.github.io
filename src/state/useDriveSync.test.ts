@@ -88,7 +88,7 @@ const R = vi.hoisted(() => {
       return get();
     },
   };
-  const mount = <T,>(fn: () => T): { readonly api: T } => {
+  const mount = <T,>(fn: () => T): { readonly api: T; unmount: () => void } => {
     const c: Comp = { slots: [], idx: 0, effects: [], out: undefined, scheduled: false, render: () => undefined };
     c.render = () => {
       cur = c;
@@ -107,6 +107,15 @@ const R = vi.hoisted(() => {
     return {
       get api() {
         return c.out as T;
+      },
+      // the component goes away (TabGate shows "open in another tab"): every effect's cleanup runs, and
+      // later state changes render nothing
+      unmount() {
+        c.render = () => undefined;
+        for (const s of c.slots) {
+          if (s && typeof s.cleanup === "function") s.cleanup();
+          if (s && typeof s.unsub === "function") s.unsub();
+        }
       },
     };
   };
@@ -675,5 +684,83 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
     await settle(100);
     expect(win.location.assign).not.toHaveBeenCalled();
     expect(tab.api.note?.text).toContain("Nincs internetkapcsolat");
+  });
+
+});
+
+// ── the app continued in another tab ("Használat itt"): the tab that stepped back does nothing more ──
+const syncFiles = (account: string) => [...(drives[account]?.values() ?? [])].filter((f) => f.props.kind === "sync");
+const settingsEvent = () => win.dispatchEvent(Object.assign(new Event("storage"), { key: SETTINGS_KEY })); // what the browser tells the other tab
+
+describe("taking over in another tab", () => {
+  test("while this tab finishes turning sync on: it saves the connection for the tab in use, which takes it from there", async () => {
+    codeReturn("S1"); // back from Google's page, turning sync on
+    let answer!: () => void;
+    tokenService = (path) =>
+      path === "/v1/exchange"
+        ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }))))
+        : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    const A = await openTab();
+    A.store.upsert(A.storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(100); // exchanging the code
+    A.tab.unmount(); // "Használat itt" in another tab
+    win.location.search = "";
+    const B = await openTab();
+    await settle(100);
+    expect(B.tab.api.enabled).toBe(false); // sync wasn't on yet when B started
+    const before = calls.length;
+    answer();
+    await settle(100);
+    const fromA = calls.slice(before).filter((c) => c.includes("googleapis.com/drive") || c.includes("upload/drive"));
+    expect(fromA).toHaveLength(0); // the stepped-back tab ran no round
+    expect(JSON.parse(ls.getItem(SETTINGS_KEY)!).enabled).toBe(true); // but the connection wasn't wasted
+    settingsEvent();
+    await settle(2500);
+    expect(B.tab.api.enabled).toBe(true);
+    expect(B.tab.api.status).toBe("idle");
+    expect(syncFiles("x@test").some((f) => f.body.includes("Aragorn"))).toBe(true);
+  });
+
+  test("while this tab finishes turning sync on and Drive is unreachable: it doesn't keep retrying in the background", async () => {
+    codeReturn("S1");
+    let answer!: () => void;
+    tokenService = (path) =>
+      path === "/v1/exchange"
+        ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }))))
+        : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    override = (url) => (url.startsWith("https://www.googleapis.com/drive/v3/files?") ? jsonRes(503, {}) : null);
+    const A = await openTab();
+    await settle(100);
+    A.tab.unmount();
+    answer();
+    await settle(100);
+    const n = calls.length;
+    await settle(60 * 60_000);
+    expect(calls.length).toBe(n);
+  });
+
+  test("in the middle of a round: that round writes nothing, and the tab in use keeps the device id and sends the edit", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const A = await openTab();
+    A.store.upsert(A.storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500); // first round: this device's file and mark exist
+    A.store.upsert({ ...A.store.getState().records[0], name: "Aragorn II" }, A.store.getState().records[0]);
+    const device = ls.getItem(DEVICE_KEY);
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    let holding = true;
+    override = (url) => (holding && url.startsWith("https://www.googleapis.com/drive/v3/files?") ? (held.then(() => null) as any) : null);
+    await settle(2500); // the next round waits on the listing...
+    A.tab.unmount(); // ...when "Használat itt" in another tab takes over
+    holding = false;
+    release();
+    await settle(100);
+    expect(syncFiles("x@test")[0].body).not.toContain("Aragorn II"); // the round that's no longer wanted wrote nothing
+    const B = await openTab();
+    await settle(100);
+    expect(B.tab.api.status).toBe("idle");
+    expect(ls.getItem(DEVICE_KEY)).toBe(device); // no false clone
+    expect(syncFiles("x@test")).toHaveLength(1);
+    expect(syncFiles("x@test")[0].body).toContain("Aragorn II"); // the tab in use sent it
   });
 });

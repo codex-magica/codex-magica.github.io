@@ -202,7 +202,6 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           <BackupsView drive={drive} records={records} />
         </Box>
         {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
-        {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
       {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
         <Box display="flex" justifyContent="flex-end" p="12px 22px 18px" borderTop="1px solid" borderColor="rule" mt="10px">
           <Box {...btn} onClick={() => setView("main")} border="1px solid" borderColor="hair" color="muted">
@@ -270,6 +269,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
       </Box>
 
       <Box borderTop="1px solid" borderColor="rule" pt="12px">
+      {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
       {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
       <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap="10px" p="0 22px 18px">
         {drive.enabled ? (

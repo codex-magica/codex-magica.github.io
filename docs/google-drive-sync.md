@@ -80,8 +80,11 @@ Without one, the app stays local-only and never contacts Google. The token servi
   with the date in its name and never replaces anything.
 - **One tab at a time.** The app runs in one browser tab at a time (`src/state/activeTab.ts`, a Web Lock
   held by the tab in use; another tab offers "Használat itt" to continue there, and a tab that was taken
-  over reloads when continued). Only the tab in use syncs. Saving stays safe across tabs regardless: every
-  change re-reads what's saved first.
+  over reloads when continued; the lock is let go when the page is left, a busy lock is tried again for a
+  moment before saying "another tab", and a return from Google's consent page takes it outright). Only the
+  tab in use syncs: a round in a tab that stepped back writes nothing to Drive, and that tab neither
+  retries nor turns sync on for itself (a connection it was finishing is saved for the tab in use, which
+  follows the setting). Saving stays safe across tabs regardless: every change re-reads what's saved first.
 - **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background (renewing the token
   if it ran out, so an edit made just before locking the phone still goes), when it comes back, and when
   the device is back online.

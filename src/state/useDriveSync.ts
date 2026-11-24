@@ -32,6 +32,7 @@ import { repairRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
   DriveSettings,
+  SETTINGS_KEY,
   clearDriveState,
   loadDriveSettings,
   loadPublished,
@@ -194,6 +195,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const running = useRef(false);
   const again = useRef(false);
   const generation = useRef(0); // bumped when sync is turned off: a round from before must not touch anything
+  const retired = useRef(false); // this tab stepped back (the app went on in another tab): nothing more from here
   const autoRef = useRef<() => Promise<void>>(async () => {});
   const authRetried = useRef(false); // a token Drive refused: renewed and retried once
   const statusRef = useRef<DriveStatus>(status);
@@ -233,7 +235,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     retryDelay.current = Math.min(delay * 2, RETRY_MAX_MS);
     retryTimer.current = setTimeout(() => {
       retryTimer.current = undefined;
-      if (generation.current === gen && enabledRef.current) void autoRef.current();
+      if (generation.current === gen && enabledRef.current && !retired.current) void autoRef.current();
     }, delay);
   }, []);
   const stopRetrying = useCallback(() => {
@@ -295,7 +297,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       running.current = true;
       lastAttempt.current = Date.now();
       const gen = generation.current;
-      const current = () => generation.current === gen && enabledRef.current;
+      const current = () => generation.current === gen && enabledRef.current && !retired.current;
       setStatus("syncing");
       try {
         await ensureAccount(token, current);
@@ -354,7 +356,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       if (again.current) {
         again.current = false;
         window.setTimeout(() => {
-          if (enabledRef.current) void autoRef.current();
+          if (enabledRef.current && !retired.current) void autoRef.current();
         }, RETRY_MS);
       }
     },
@@ -363,7 +365,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
 
   // Sync without user interaction, renewing the token quietly if there's a way to.
   const autoSync = useCallback(async () => {
-    if (!available || !enabledRef.current) return;
+    if (!available || !enabledRef.current || retired.current) return;
     let token: string | null;
     try {
       token = await getToken();
@@ -479,8 +481,8 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       };
       const turnOn = () => {
         if (!enabling) return;
-        enabledRef.current = true;
         patchSettings({ enabled: true, ...(o.backups === undefined ? {} : { backups: o.backups }) });
+        if (!retired.current) enabledRef.current = true; // (a tab that stepped back saves the connection, for the tab in use, and does no more)
       };
       let got: Connection;
       try {
@@ -538,13 +540,34 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   useEffect(() => {
     const gen = generation; // the refs themselves (they live as long as the component)
     const enabled = enabledRef;
+    const done = retired;
     enabled.current = loadDriveSettings().enabled;
+    done.current = false;
     return () => {
       gen.current++;
       enabled.current = false;
+      done.current = true;
       stopRetrying();
     };
   }, [stopRetrying]);
+
+  // Sync turned on or off elsewhere (a tab that was finishing turning it on when the app went on here):
+  // follow it.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== SETTINGS_KEY) return;
+      const next = loadDriveSettings();
+      if (enabledRef.current && !next.enabled) stopHere();
+      else if (!enabledRef.current && next.enabled) {
+        enabledRef.current = true;
+        setStatus(hasAccess() ? "idle" : "needsTap");
+        void autoRef.current();
+      }
+      setSettings(next);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [stopHere]);
 
   // app start: finish a return from Google's consent page, or sync (renewing quietly if needed)
   useEffect(() => {

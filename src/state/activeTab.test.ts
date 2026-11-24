@@ -20,6 +20,7 @@ const makeLocks = () => {
 
 const flush = async () => {
   for (let i = 0; i < 10; i++) await Promise.resolve();
+  await vi.advanceTimersByTimeAsync(1500); // a busy lock is tried again for about a second
 };
 const openTab = async () => {
   vi.resetModules();
@@ -31,10 +32,14 @@ const openTab = async () => {
 
 let reload: ReturnType<typeof vi.fn>;
 beforeEach(() => {
+  vi.useFakeTimers();
   reload = vi.fn();
   vi.stubGlobal("window", { addEventListener: vi.fn(), location: { reload } });
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe("one tab in use at a time", () => {
   test("the first tab is in use; a second one says the app is open elsewhere, without queueing for it", async () => {
@@ -62,6 +67,19 @@ describe("one tab in use at a time", () => {
   test("without Web Locks every tab is in use (as before)", async () => {
     vi.stubGlobal("navigator", {});
     expect((await openTab()).tabState()).toBe("active");
+    expect((await openTab()).tabState()).toBe("active");
+  });
+
+  test("a lock that's still busy for a moment (the page this one replaced hasn't let go yet) is tried again", async () => {
+    let busyFor = 2;
+    vi.stubGlobal("navigator", {
+      locks: { request: (_n: string, _o: object, cb: (lock: object | null) => unknown) => Promise.resolve(cb(busyFor-- > 0 ? null : {})) },
+    });
+    expect((await openTab()).tabState()).toBe("active");
+  });
+
+  test("a browser that refuses locks for another reason still runs the app", async () => {
+    vi.stubGlobal("navigator", { locks: { request: () => Promise.reject(new DOMException("blocked", "SecurityError")) } });
     expect((await openTab()).tabState()).toBe("active");
   });
 });

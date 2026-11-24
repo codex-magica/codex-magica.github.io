@@ -45,6 +45,7 @@ export async function syncRound({ store, drive, backups, current, now, cache }: 
         // reset and make this device's file look like a clone's later
         rememberNonce: (n: string) => void (current() && rememberNonce(n)),
         confirmNonce: (n: string) => void (current() && confirmNonce(n)),
+        current,
       },
       now,
       cache
