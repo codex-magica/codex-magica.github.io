@@ -74,7 +74,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
           </Heading>
           {unsaved ? (
             <Text fontSize="15px" lineHeight="1.55" mb="16px">
-              A legutóbbi módosításaidat nem sikerült elmenteni ezen az eszközön. Mielőtt újratöltöd az alkalmazást, mentsd el a karaktereidet fájlba, különben ezek a módosítások elvesznek.
+              A legutóbbi módosításaidat nem sikerült elmenteni ezen az eszközön. Mielőtt újratöltöd az alkalmazást, exportáld a karaktereidet, különben ezek a módosítások elvesznek.
             </Text>
           ) : (
             <>
@@ -89,7 +89,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
           <Box display="flex" gap="10px" flexWrap="wrap" mb="16px">
             {unsaved && (
               <Box {...btn} {...primary} onClick={this.saveAll}>
-                Karakterek mentése fájlba
+                Karakterek exportálása
               </Box>
             )}
             <Box {...btn} {...(unsaved ? secondary : primary)} onClick={this.reload}>
@@ -97,7 +97,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
             </Box>
             {!unsaved && (
               <Box {...btn} {...secondary} onClick={this.saveAll}>
-                Karakterek mentése fájlba
+                Karakterek exportálása
               </Box>
             )}
           </Box>

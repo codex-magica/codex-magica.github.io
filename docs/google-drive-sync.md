@@ -78,9 +78,13 @@ Without one, the app stays local-only and never contacts Google. The token servi
   Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.
-- **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background, when it comes back, and
-  when the device is back online. One round at a time, across tabs too (Web Locks); other tabs' changes
-  arrive through the `storage` event.
+- **One tab at a time.** The app runs in one browser tab at a time (`src/state/activeTab.ts`, a Web Lock
+  held by the tab in use; another tab offers "Használat itt" to continue there, and a tab that was taken
+  over reloads when continued). Only the tab in use syncs. Saving stays safe across tabs regardless: every
+  change re-reads what's saved first.
+- **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background (renewing the token
+  if it ran out, so an edit made just before locking the phone still goes), when it comes back, and when
+  the device is back online.
 - **Renewal.** Google's access tokens last an hour. Turning sync on uses the authorization-code flow
   (`access_type=offline`, `prompt=consent`, PKCE): the token service exchanges the code for an access token
   and a refresh token, and hands the refresh token back **encrypted** (AES-GCM, with a key only the service
@@ -92,9 +96,7 @@ Without one, the app stays local-only and never contacts Google. The token servi
 - **Retrying.** A round that fails for a passing reason (no network, Google or the token service busy) is
   tried again by itself after 30 seconds, then waiting twice as long each time, up to 15 minutes (and
   right away when the device comes back online or the app back to the foreground). Requests have time
-  limits (the account check too), and a tab that holds the sync lock for two minutes (frozen in the
-  background on a phone) has it taken over, so a hung request or a frozen tab can't stop sync. A change
-  saved by another tab that closed before its own round is sent by the tab that stays open.
+  limits (the account check too), so a hung request can't stop sync.
 - **Google storage full** (Drive answers `storageQuotaExceeded`): the player is told that their Google
   storage is full and only they can make room; rounds keep being retried (slowly), so sync goes on by
   itself afterwards.
@@ -111,7 +113,7 @@ Without one, the app stays local-only and never contacts Google. The token servi
   The answer is stored only after the account check (and not at all if the check fails on the network:
   the player tries again): if another account answers, nothing it gave is kept and the right account's
   credential stays (the other account's permission stays in that account, which may
-  sync a roster of its own elsewhere). If another tab turned sync off meanwhile, that wins.
+  sync a roster of its own elsewhere).
 - **Without a token service** the app uses Google's popup to sign in, and every expired token needs a tap
   ("Szinkronizálás most"). A silent renewal by redirect (`prompt=none`) was tried and dropped: Google keeps
   showing its consent screen to this kind of request, so it never succeeded.
@@ -124,17 +126,23 @@ Without one, the app stays local-only and never contacts Google. The token servi
   Nothing is deleted: the
   characters stay on the device, and the files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
 
-Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `versions.ts` (version
-vectors), `driveMerge.ts` (the merge, conflict resolution, backup selection, reconciling), `driveSyncEngine.ts`
-(one round: reads, backups, write), `googleDrive.ts` (sign-in, the consent round trip, token service calls,
-Drive calls), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`,
-`scrollMemory.ts`; the token service in `worker/src/index.ts` (tested in `worker/src/index.test.ts`).
+Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `storage.ts` (reading and
+saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflict resolution, backup
+selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, backups, write),
+`driveSyncRound.ts` (a round with this device's saved sync state, clone handling), `syncState.ts` (what's
+published, nonces, settings), `googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive
+calls), `useDriveSync.ts` (when to sync, what to tell the player), `driveStatus.ts` (the status texts),
+`activeTab.ts` (one tab at a time), `transfer.ts` (export and import files); `src/ui/DriveSyncModal.tsx`,
+`DriveHopNotice.tsx`, `TabGate.tsx`, `scrollMemory.ts`; the token service in `worker/src/index.ts` (tested in
+`worker/src/index.test.ts`).
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
 `src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
-cloned devices, deletions racing syncs), and `src/state/useDriveSync.test.ts` runs the real hook in several
-simulated tabs against a fake Google and token service (retries, renewals, the return from the consent page).
+cloned devices, deletions racing syncs), and `src/state/useDriveSync.test.ts` runs the real hook against a
+fake Google and token service (retries, renewals, the return from the consent page). They share the harness
+in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts` and `activeTab.test.ts`
+cover the Drive client, the status texts and the one-tab rule.
 
 ## Why this approach
 

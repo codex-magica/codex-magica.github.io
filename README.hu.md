@@ -100,8 +100,8 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
 - Ha ugyanazt a karaktert két eszközön is módosítottad, mielőtt szinkronizálódhattak volna, mindkét
   változat megmarad. Semmi sem íródik felül észrevétlenül.
 - A napi biztonsági másolat (alapból bekapcsolva) a Drive-on azt is megőrzi, milyen volt egy karakter
-  azoknak a napoknak a végén, amikor módosítottad, és hogy milyen volt törlés előtt. Ezeket a szinkron
-  ablakában állíthatod vissza.
+  azoknak a napoknak a végén, amikor módosítottad, és hogy milyen volt törlés előtt. Ezeket a Google
+  Drive ablakban állíthatod vissza.
 - A Google-nek eszközönként egyszer kell engedélyt adnod, utána az alkalmazás magától megújítja: nem kér
   óránként újra.
 - Nem kell fiókot létrehoznod, és a karaktereid közvetlenül a böngésződből a Drive-odra kerülnek. Egy apró

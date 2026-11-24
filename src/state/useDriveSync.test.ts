@@ -415,7 +415,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     await settle(100);
     expect(tab.api.note?.error).toBe(true);
     expect(tab.api.note?.text).toContain("nem fejeződött be");
-    expect(tab.api.connectIssue).toBeGreaterThan(0); // the window opens again to say so
+    expect(tab.api.connectProblem).toBe(true); // the window opens again to say so
     expect(JSON.parse(ls.getItem(RETURN_KEY)!)).toEqual(newer); // the other tab's answer can still land
     expect(calls.some((c) => c.includes("/v1/exchange"))).toBe(false);
   });
@@ -425,12 +425,12 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     win.location.search = "?state=S1&code=C1";
     tokenService = (path) => (path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: "openid email" }) : jsonRes(500, {}));
     const { tab } = await openTab();
-    expect(tab.api.connectIssue).toBe(0);
+    expect(tab.api.connectProblem).toBe(false);
     await settle(100);
     expect(tab.api.status).toBe("off");
     expect(tab.api.note?.error).toBe(true);
     expect(tab.api.note?.text).toContain("Drive");
-    expect(tab.api.connectIssue).toBeGreaterThan(0);
+    expect(tab.api.connectProblem).toBe(true);
   });
 
   test("retries wait 30 s, then twice as long each time; a success starts over; turning off stops them", async () => {
@@ -511,7 +511,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.status).toBe("off");
     expect(tab.api.note?.error).toBe(false);
     expect(tab.api.note?.text).toContain("nem adtál engedélyt");
-    expect(tab.api.connectIssue).toBeGreaterThan(0);
+    expect(tab.api.connectProblem).toBe(true);
   });
 
   test("storage full: the unsaved edits are parked for the trip to Google's page, and are back afterwards", async () => {
@@ -536,7 +536,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(ss.getItem("magus.unsavedRoster.v1")).toBeNull();
   });
 
-  test("storage full and nowhere to park the edits: it stays, and says to save a file first", async () => {
+  test("storage full and nowhere to park the edits: it stays, and says what helps", async () => {
     enableWith("x@test", null, null);
     const { tab, store, storage } = await openTab();
     await settle(100);
@@ -546,7 +546,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     tab.api.syncNow();
     await settle(100);
     expect(win.location.assign).not.toHaveBeenCalled();
-    expect(tab.api.note?.text).toContain("exportáld a karaktereidet");
+    expect(tab.api.note?.text).toContain("Exportáld a karaktereidet, törölj egy feleslegeset");
   });
 });
 
@@ -641,5 +641,36 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
     await settle(1000); // still before the 2-second timer (which a frozen page never reaches)
     expect(calls.some((c) => c.includes("/v1/token"))).toBe(true); // a renewal was at least attempted
     expect(syncFileHas("x@test", "Aragorn")).toBe(true);
+  });
+
+  test("after a failed return from Google the window shows once: once closed, it stays closed", async () => {
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    win.location.search = "?state=S1&error=access_denied";
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.connectProblem).toBe(true);
+    tab.api.ackConnectProblem(); // the player closed the window
+    await settle(0);
+    expect(tab.api.connectProblem).toBe(false); // the roster screen coming back doesn't reopen it
+  });
+
+  test("cancelling a reconnect says sync is still stopped (not that it didn't turn on)", async () => {
+    enableWith("x@test", null, null);
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    win.location.search = "?state=S1&error=access_denied";
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.note?.text).toContain("továbbra is áll");
+  });
+
+  test("offline, it doesn't leave for Google's page (the browser's error page, outside the app)", async () => {
+    enableWith("x@test", null, null);
+    vi.stubGlobal("navigator", { onLine: false });
+    const { tab } = await openTab();
+    await settle(100);
+    tab.api.syncNow();
+    await settle(100);
+    expect(win.location.assign).not.toHaveBeenCalled();
+    expect(tab.api.note?.text).toContain("Nincs internetkapcsolat");
   });
 });

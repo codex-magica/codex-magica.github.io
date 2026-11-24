@@ -40,7 +40,7 @@ const BackupsChoice: React.FC<{ on: boolean; onChange: (on: boolean) => void }> 
       </Text>
       <Text fontFamily="system-ui" fontSize="12.5px" color="muted" lineHeight="1.5">
         Amikor egy karaktert új napon módosítasz, az előző napi állapota megmarad; ha törlöd, a törlés előtti állapota.
-        Ezekből bármikor visszaállíthatod. A fájlok aprók, néhány kilobájtosak.
+        Ezekből bármikor visszaállíthatod a karaktert. A fájlok aprók, néhány kilobájtosak.
       </Text>
     </Box>
     <Toggle on={on} onChange={onChange} label="Napi biztonsági másolat a Drive-on" />
@@ -49,8 +49,8 @@ const BackupsChoice: React.FC<{ on: boolean; onChange: (on: boolean) => void }> 
 
 // The last error or notice, right above the buttons (always in view, next to what was just tapped).
 // Keyed by `seq` where it's used, so it appears again even when a retry ends with the same text.
-const NoteCallout: React.FC<{ note: DriveNote; mx?: string }> = ({ note, mx = "22px" }) => (
-  <Callout kind={note.error ? "warn" : "info"} mx={mx} mb="12px">
+const NoteCallout: React.FC<{ note: DriveNote; onDismiss?: () => void }> = ({ note, onDismiss }) => (
+  <Callout kind={note.error ? "warn" : "info"} mx="22px" mb="12px" actions={onDismiss ? [{ label: "Rendben", onClick: onDismiss }] : undefined}>
     {note.text}
   </Callout>
 );
@@ -97,7 +97,7 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
       <Box fontFamily="system-ui" fontSize="14px" color="muted">
         <Text mb="10px">A biztonsági másolatok betöltéséhez újra kapcsolódni kell a Google-hoz.</Text>
         <Box {...btn} fontSize="14px" onClick={() => void drive.connect().then((ok) => ok && load())} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-          Kapcsolódás
+          Újrakapcsolás
         </Box>
       </Box>
     );
@@ -113,7 +113,9 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
   if (state.items.length === 0)
     return (
       <Text fontFamily="system-ui" fontSize="14px" color="muted" lineHeight="1.55">
-        Még nincs biztonsági másolat. Akkor készül, amikor egy karaktert egy későbbi napon módosítasz, vagy amikor törölsz egyet.
+        {drive.backups
+          ? "Még nincs biztonsági másolat. Akkor készül, amikor egy karaktert egy későbbi napon módosítasz, vagy amikor törölsz egyet."
+          : "A napi biztonsági másolat ki van kapcsolva, ezért nem készült másolat."}
       </Text>
     );
 
@@ -169,13 +171,20 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
   );
 };
 
-export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[]; onClose: () => void }> = ({ drive, records, onClose }) => {
+export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[]; initialView?: "main" | "backups"; onClose: () => void }> = ({
+  drive,
+  records,
+  initialView = "main",
+  onClose,
+}) => {
   const { prepare } = drive;
   useEffect(() => prepare(), [prepare]); // without a token service: load Google's sign-in now, so the tap can open its popup
   const [now] = useState(() => Date.now());
   const [backupsChoice, setBackupsChoice] = useState(drive.backups);
-  const [view, setView] = useState<"main" | "backups">("main");
+  const [view, setView] = useState<"main" | "backups">(initialView);
   const [confirmOff, setConfirmOff] = useState(false);
+  const needs = driveAttention(drive, now, true);
+  const explained = !!drive.note?.error; // the box above the buttons says what's wrong: the status line just the facts
   // turning off while changes are still only here: say what that means first
   const turnOff = () => (drive.pending.count > 0 ? setConfirmOff(true) : drive.disable());
   const busy = drive.status === "syncing";
@@ -192,7 +201,9 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           </Heading>
           <BackupsView drive={drive} records={records} />
         </Box>
-        {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
+        {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
+        {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
+      {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
         <Box display="flex" justifyContent="flex-end" p="12px 22px 18px" borderTop="1px solid" borderColor="rule" mt="10px">
           <Box {...btn} onClick={() => setView("main")} border="1px solid" borderColor="hair" color="muted">
             Vissza
@@ -212,21 +223,20 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         </Heading>
         <Text fontSize={{ base: "14px", md: "15px" }} color="fg" lineHeight="1.55" mb="10px">
           A karaktereid a saját Google Drive-od egy rejtett mappájába kerülnek, amelyet csak ez az alkalmazás lát. Így
-          minden eszközödön, ahol ugyanazzal a Google-fiókkal bekapcsolod a szinkront, ugyanazok a karakterek lesznek.
+          minden eszközödön, ahol ugyanazzal a Google-fiókkal bekapcsolod a szinkront, ugyanazok a karakterek lesznek. Ha
+          ezen az eszközön már vannak karaktereid, azok is megmaradnak, és a többi mellé kerülnek.
         </Text>
         {!drive.enabled && (
         <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
           {drive.service ? (
             <>
-              Nincs külön fiók: a karaktereid csak a te Google-fiókodba kerülnek, más szerverre nem. Bekapcsoláskor a
-              Google oldalán egyszer engedélyt adsz (ha külön rákérdez, jelöld be a Google Drive-hozzáférést is), aztán
-              visszakerülsz ide, és onnantól az alkalmazás magától szinkronizál.
+              Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google oldalán egyszer engedélyt adsz (ha
+              kérdezi, jelöld be a Google Drive-hozzáférést is), utána visszajutsz ide, és az alkalmazás magától szinkronizál.
             </>
           ) : (
             <>
-              Nincs külön fiók és nincs saját szerverünk: az adatok a te Google-fiókodban maradnak. A Google egyszer, egy
-              felugró ablakban kér engedélyt. Utána az alkalmazás magától szinkronizál, de óránként egyszer kattintani
-              kell hozzá.
+              Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google egyszer, egy felugró ablakban kér
+              engedélyt. Utána az alkalmazás magától szinkronizál, de óránként egyszer kattintani kell hozzá.
             </>
           )}{" "}
           Részletek az{" "}
@@ -241,10 +251,10 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
 
         {drive.enabled && (
           <Box borderTop="1px solid" borderBottom="1px solid" borderColor="rule" py="10px" mb="12px" fontFamily="system-ui" fontSize="13px" color="muted" display="flex" flexDirection="column" gap="4px">
-            <Text color={driveAttention(drive, now, true) ? "warn" : undefined} fontWeight={driveAttention(drive, now, true) ? 600 : undefined}>
-              {driveStatusLine(drive, now, true)}
+            <Text color={needs && !explained ? "warn" : undefined} fontWeight={needs && !explained ? 600 : undefined}>
+              {driveStatusLine(drive, now, true, explained)}
             </Text>
-            {drive.pending.count > 0 && drive.status !== "syncing" && <Text color="accentTx">{drive.pending.count} karakter módosítása még nem került fel a Drive-ra.</Text>}
+            {!needs && drive.pending.count > 0 && drive.status !== "syncing" && <Text color="accentTx">{drive.pending.count} karakter módosítása még nem került fel a Drive-ra.</Text>}
             {drive.email && <Text color="fgFaint">Fiók: {drive.email}</Text>}
             <Box as="button" type="button" onClick={() => setView("backups")} alignSelf="flex-start" mt="4px" color="accentTx" fontWeight={600} textDecoration="underline" textUnderlineOffset="3px">
               Biztonsági másolatok megtekintése

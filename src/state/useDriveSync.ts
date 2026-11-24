@@ -66,19 +66,21 @@ export interface DriveSyncApi {
   email: string | null;
   backups: boolean; // daily backups in Drive
   pending: { count: number; oldest: number | null }; // local changes not yet in Drive
-  note: DriveNote | null; // the last result or error worth saying, in Hungarian
+  note: DriveNote | null; // the last error, or a notice about something just tapped, in Hungarian
+  notice: DriveNote | null; // what a sync round did that the player should know (copies, undone deletions), until dismissed
   ready: boolean; // a tap can start the sign-in now
   prepare: () => void;
   enable: (backups: boolean) => void; // call from a tap
   syncNow: () => void; // call from a tap
   disable: () => void;
   setBackups: (on: boolean) => void;
-  dismissNote: () => void; // the player read it
+  dismissNotice: () => void; // the player read it
   hop: DriveHop;
   dismissHop: () => void;
   needsUpdate: boolean; // Drive holds data from a newer app version: sync waits for this one to update
   driveFull: boolean; // the player's Google storage is full: sync waits for them to free some space
-  connectIssue: number; // bumped when coming back from Google's page went wrong: show the window with the note
+  connectProblem: boolean; // coming back from Google's page went wrong: show the window with the note, until it's closed
+  ackConnectProblem: () => void;
   listBackups: () => Promise<BackupMeta[]>;
   restoreBackup: (b: BackupMeta) => Promise<CharacterRecord>; // adds it as a new character
   connect: () => Promise<boolean>; // from a tap: make sure there's access (may leave for Google's page)
@@ -171,12 +173,22 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   );
   const [note, setNote] = useReducer(noteReducer, null, () =>
     available && initialOutcome.kind === "error"
-      ? { text: authNote(initialOutcome.error, service), error: initialOutcome.error !== "access_denied", seq: ++noteSeq } // cancelling isn't a failure
+      ? {
+          text:
+            initialOutcome.error === "access_denied" && loadDriveSettings().enabled
+              ? "Nem adtál engedélyt a Google oldalán, ezért a szinkron továbbra is áll. Bármikor újra megpróbálhatod." // a reconnect, cancelled
+              : authNote(initialOutcome.error, service),
+          error: initialOutcome.error !== "access_denied", // cancelling isn't a failure
+          seq: ++noteSeq,
+        }
       : null
   );
   // coming back from Google's page went wrong: the window was closed by the page change, so it's opened
   // again with the note (an error from the address counts from the start)
   const [connectIssue, setConnectIssue] = useState(() => (available && initialOutcome.kind === "error" ? 1 : 0));
+  const [connectAcked, setConnectAcked] = useState(0); // here, not in the roster screen: it outlives that screen
+  // what a round did that the player should know: its own slot, so a later error can't push it out unseen
+  const [notice, setNotice] = useState<DriveNote | null>(null);
   const [ready, setReady] = useState(service);
   const [syncTick, setSyncTick] = useState(0);
   const running = useRef(false);
@@ -257,7 +269,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       if (expected && expected.toLowerCase() !== email.toLowerCase()) {
         forgetToken(token);
         throw new AccountMismatchError(
-          `A szinkron ehhez a fiókhoz tartozik: ${expected}, de most ezzel jelentkeztél be: ${email}. Kattints az „Újrakapcsolás” gombra, és válaszd a(z) ${expected} fiókot. Ha mostantól a másik fiókot használnád, kapcsold ki a szinkront, majd kapcsold be újra.`
+          `Ezzel a fiókkal jelentkeztél be: ${email}, de a szinkron ehhez tartozik: ${expected}. Kattints az „Újrakapcsolás” gombra, és válaszd ezt: ${expected}. Ha inkább a másik fiókot használnád, kapcsold ki, majd kapcsold be újra a szinkront.`
         );
       }
       if (!expected) patchSettings({ email });
@@ -296,8 +308,8 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
           patchSettings({ lastSyncAt: Date.now() });
           setSyncTick((n) => n + 1);
           const told = roundNotice(out.copied, out.undeleted);
-          if (told) setNote({ info: told });
-          else setNote({ clearError: true }); // a notice stays until it's dismissed; an error is over
+          if (told) setNotice({ text: told, error: false, seq: ++noteSeq });
+          setNote({ clearError: true }); // an error is over
         } while (again.current);
         authRetried.current = false;
         if (current()) {
@@ -384,9 +396,15 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
 
   // With a token service: off to Google's consent page (turning sync on, or reconnecting).
   const leaveForGoogle = useCallback((backups?: boolean) => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setNote("Nincs internetkapcsolat. A Google-engedélyhez internet kell; próbáld újra, ha lesz.");
+      return;
+    }
     if (!store.parkUnsaved()) {
       // the latest edits exist only in memory and can't be parked for the page change: it would lose them
-      setNote("Ezen az eszközön most nem sikerül menteni, ezért ha átlépsz a Google oldalára, elvesznének a legutóbbi módosításaid. Előbb exportáld a karaktereidet a karakterlistán, utána újra megpróbálhatod.");
+      setNote(
+        "Most nem léphetsz át a Google oldalára: ezen az eszközön nem sikerül menteni (valószínűleg megtelt a tárhely), és elvesznének a legutóbbi módosításaid. Exportáld a karaktereidet, törölj egy feleslegeset, aztán próbáld újra."
+      );
       return;
     }
     void beginConnect(optsRef.current.returnContext(), loadDriveSettings().email, backups).then((r) => {
@@ -655,18 +673,20 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     backups: settings.backups,
     pending: settings.enabled ? pending : { count: 0, oldest: null },
     note,
+    notice: settings.enabled ? notice : null,
     ready,
     prepare,
     enable: (backups: boolean) => interactive(true, backups),
     syncNow: () => interactive(false),
     disable,
     setBackups: (on: boolean) => patchSettings({ backups: on }),
-    dismissNote: () => setNote(null),
+    dismissNotice: () => setNotice(null),
     hop,
     dismissHop: () => setHop(null),
     needsUpdate: settings.enabled && needsUpdate,
     driveFull: settings.enabled && driveFull,
-    connectIssue,
+    connectProblem: connectIssue > connectAcked,
+    ackConnectProblem: () => setConnectAcked(connectIssue),
     listBackups,
     restoreBackup,
     connect,

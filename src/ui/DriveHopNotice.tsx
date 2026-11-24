@@ -28,9 +28,9 @@ const Glyph: React.FC<{ phase: Exclude<DriveHop, null> }> = ({ phase }) => (
 );
 
 const COPY: Record<Exclude<DriveHop, null>, { title: string; body: string }> = {
-  backSyncing: { title: "Szinkronizálás…", body: "A karaktereid frissülnek a Google Drive-on." },
-  backDone: { title: "Szinkronizálva", body: "A karaktereid a Google Drive-on is naprakészek." },
-  lost: { title: "A Google Drive-szinkron leállt", body: "A karakterlistán, a Google Drive gombbal kapcsolhatod vissza. Addig a karaktereid ezen az eszközön megmaradnak." },
+  backSyncing: { title: "Szinkronizálás…", body: "A karaktereid szinkronizálódnak a Google Drive-val." },
+  backDone: { title: "Szinkronizálva", body: "A karaktereid naprakészek ezen az eszközön és a Google Drive-on is." },
+  lost: { title: "Leállt a Google Drive-szinkron", body: "A karakterlistán a Google Drive gombbal kapcsolhatod vissza. Addig is minden módosításod megmarad ezen az eszközön." },
 };
 
 const EXIT_MS = 220;

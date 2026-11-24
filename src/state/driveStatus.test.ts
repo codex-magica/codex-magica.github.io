@@ -1,5 +1,5 @@
 // The sync's status in words: what the roster and the sync window say.
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { driveAttention, driveStatusLine, roundNotice, syncedAgo } from "./driveStatus";
 import type { DriveSyncApi } from "./useDriveSync";
 
@@ -29,31 +29,45 @@ describe("sync status in words", () => {
     expect(driveStatusLine(drive({ status: "error" }), NOW)).toContain("magától újra megpróbálja");
   });
 
-  test("the permission is gone: reconnect, naming the right button for where it's shown", () => {
-    const d = drive({ status: "needsTap" });
-    expect(driveAttention(d, NOW)).toContain("a Google Drive gombra");
-    expect(driveAttention(d, NOW, true)).toContain("az „Újrakapcsolás” gombra");
-    expect(driveAttention(drive({ status: "needsTap", service: false }), NOW, true)).toContain("a „Szinkronizálás most” gombra");
+
+  test("the permission is gone: a reconnect, said once (the button next to it does it)", () => {
+    expect(driveAttention(drive({ status: "needsTap" }), NOW)).toEqual({ kind: "reconnect", text: "Google Drive: a szinkron leállt, mert megszűnt a Google-engedély." });
+    expect(driveAttention(drive({ status: "needsTap" }), NOW, true)?.text).toBe("A szinkron leállt, mert megszűnt a Google-engedély."); // no prefix inside the Google Drive window
+    expect(driveAttention(drive({ status: "needsTap", service: false }), NOW)?.kind).toBe("tap");
   });
 
-  test("an app update comes first", () => {
-    expect(driveAttention(drive({ status: "error", needsUpdate: true }), NOW)).toBe("Google Drive: a szinkron folytatásához frissítsd az alkalmazást.");
+  test("an app update comes first, and says where the button is", () => {
+    const a = driveAttention(drive({ status: "error", needsUpdate: true, driveFull: true }), NOW);
+    expect(a?.kind).toBe("update");
+    expect(a?.text).toContain("„Frissítés” gombbal");
   });
 
-  test("changes stuck on this device for hours are said, fresh ones aren't", () => {
-    expect(driveAttention(drive({ status: "error", pending: { count: 2, oldest: NOW - 4 * H } }), NOW)).toContain("2 karakter módosítása még csak ezen az eszközön van meg");
+  test("Google storage full", () => {
+    expect(driveAttention(drive({ status: "error", driveFull: true }), NOW)?.kind).toBe("full");
+  });
+
+  test("changes stuck on this device for hours are said (differently offline), fresh ones aren't", () => {
+    expect(driveAttention(drive({ status: "error", pending: { count: 2, oldest: NOW - 4 * H } }), NOW)?.text).toContain("2 karakter módosítása még csak ezen az eszközön van meg");
     expect(driveAttention(drive({ status: "error", pending: { count: 2, oldest: NOW - 1 * H } }), NOW)).toBeNull();
-    expect(driveAttention(drive({ status: "idle", pending: { count: 2, oldest: NOW - 4 * H } }), NOW)).toContain("még csak ezen az eszközön"); // idle but stuck: something's wrong
+    expect(driveAttention(drive({ status: "idle", pending: { count: 2, oldest: NOW - 4 * H } }), NOW)?.kind).toBe("stuck"); // idle but stuck: something's wrong
     expect(driveAttention(drive({ status: "syncing", pending: { count: 2, oldest: NOW - 4 * H } }), NOW)).toBeNull(); // going up right now
+    vi.stubGlobal("navigator", { onLine: false });
+    expect(driveAttention(drive({ status: "error", pending: { count: 2, oldest: NOW - 4 * H } }), NOW)?.kind).toBe("stuckOffline");
+    expect(driveStatusLine(drive({ status: "error" }), NOW)).toBe("Google Drive: nincs internet, a módosítások később kerülnek fel.");
+    vi.unstubAllGlobals();
   });
 
-  test("what a round did is named: copies and deletions that didn't hold", () => {
+  test("in the window, with the box explaining an error, the status line keeps to the facts", () => {
+    expect(driveStatusLine(drive({ status: "error" }), NOW, true, true)).toBe("Szinkronizálva 5 perce.");
+  });
+
+  test("what a round did is named: copies and deletions that came back", () => {
     expect(roundNotice([], [])).toBeNull();
-    expect(roundNotice(["Kael"], [])).toContain("„Kael” két eszközön is módosult egyszerre");
+    expect(roundNotice(["Kael"], [])).toContain("„Kael” két eszközön is módosult, mielőtt szinkronizálódott volna");
     expect(roundNotice(["Kael"], [])).toContain("„Kael (másik változat)”");
-    expect(roundNotice(["Kael", "Mira"], [])).toContain("2 karaktered két eszközön is módosult egyszerre: „Kael” és „Mira”");
+    expect(roundNotice(["Kael", "Mira"], [])).toContain("2 karaktered két eszközön is módosult, mielőtt szinkronizálódtak volna: „Kael” és „Mira”");
     expect(roundNotice(["A", "B", "C", "D", "E"], [])).toContain("„A”, „B”, „C” és még 2");
-    expect(roundNotice([], ["Kael"])).toBe("„Kael” törlése nem érvényesült, mert közben egy másik eszközön módosították. Ha nincs rá szükséged, töröld újra.");
-    expect(roundNotice(["Kael"], ["Mira"])).toMatch(/„Kael”.*„Mira” törlése/);
+    expect(roundNotice([], ["Kael"])).toBe("A törölt „Kael” visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.");
+    expect(roundNotice(["Kael"], ["Mira"])).toMatch(/„Kael”.*A törölt „Mira”/);
   });
 });

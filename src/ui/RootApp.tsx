@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, useColorMode } from "@chakra-ui/react";
+import { Box, Text, useColorMode } from "@chakra-ui/react";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { AppShell } from "./AppShell";
 import { CompendiumScreen } from "./CompendiumScreen";
@@ -7,7 +7,7 @@ import { CreatorScreen, CreatorMode } from "./CreatorScreen";
 import { UpdateBanner } from "./UpdateBanner";
 import { DriveHopNotice } from "./DriveHopNotice";
 import { CharacterTrouble, ErrorBoundary } from "./ErrorBoundary";
-import { exportRecordFile } from "../state/transfer";
+import { exportBackupFile, exportRecordFile } from "../state/transfer";
 import { captureScroll, restoreScroll } from "./scrollMemory";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
@@ -20,12 +20,18 @@ import { createBlankRecord } from "../state/storage";
 import { refreshStatusTint } from "./statusTint";
 import { CharacterRecord } from "../model/character";
 
-// Shown while saving to this device fails (storage full or blocked), so nobody loses edits unawares.
-const SaveFailedBanner: React.FC = () => (
-  <Box role="alert" position="fixed" top="max(10px, env(safe-area-inset-top))" left="50%" transform="translateX(-50%)" zIndex={62} w="min(520px, calc(100% - 32px))"
-    px="16px" py="11px" borderRadius="12px" bg="sheet" border="1px solid" borderColor="warn" boxShadow="0 10px 30px rgba(0,0,0,.18)" fontFamily="system-ui" fontSize="13.5px" color="fg" lineHeight="1.45">
-    <b>Nem sikerült menteni ezen az eszközön.</b> Lehet, hogy megtelt a böngésző tárhelye. Amíg ez az üzenet látszik, az új
-    módosítások csak az alkalmazás bezárásáig maradnak meg, ezért exportáld a karaktereidet a karakterlistán.
+// Shown while saving to this device fails (storage full or blocked), so nobody loses edits unawares. Below
+// the screens' top bar (never over their back button), with the way out right in it.
+const SaveFailedBanner: React.FC<{ onExport: () => void }> = ({ onExport }) => (
+  <Box role="alert" position="fixed" top="calc(max(10px, env(safe-area-inset-top)) + 58px)" left="50%" transform="translateX(-50%)" zIndex={62} w="min(520px, calc(100% - 32px))"
+    display="flex" alignItems="center" gap="12px" px="14px" py="10px" borderRadius="12px" bg="sheet" border="1px solid" borderColor="warn" boxShadow="0 10px 30px rgba(0,0,0,.18)"
+    fontFamily="system-ui" fontSize="13px" color="fg" lineHeight="1.4">
+    <Text flex="1">
+      <b>Nem sikerül menteni ezen az eszközön</b> (valószínűleg megtelt a böngésző tárhelye). Az új módosítások csak az alkalmazás bezárásáig maradnak meg.
+    </Text>
+    <Box as="button" type="button" onClick={onExport} flexShrink={0} px="11px" py="5px" borderRadius="8px" border="1px solid" borderColor="warn" bg="warnSoft" color="fg" fontSize="13px" fontWeight={700}>
+      Exportálás
+    </Box>
   </Box>
 );
 
@@ -79,6 +85,13 @@ export const RootApp: React.FC = () => {
   const drive = useDriveSync({
     returnContext: () => ({ ...where.current, ...inner.current, scroll: captureScroll() }),
   });
+  // "sync stopped" card: for the other screens; the roster says it at the top already (and seeing that
+  // counts as having seen it)
+  const hop = drive.hop === "lost" && screen === "roster" ? null : drive.hop;
+  const { hop: rawHop, dismissHop } = drive;
+  useEffect(() => {
+    if (rawHop === "lost" && screen === "roster") dismissHop();
+  }, [rawHop, screen, dismissHop]);
   // one-time "about & credits" notice on first launch; reopenable from the roster footer
   const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 
@@ -92,7 +105,7 @@ export const RootApp: React.FC = () => {
     if (screen === "sheet" && !current) {
       if (currentId && lastName.current)
         setRosterNotice(
-          `„${lastName.current}” karaktert közben törölték egy másik eszközön vagy lapon, ezért bezárult.` +
+          `„${lastName.current}” bezárult, mert közben törölték egy másik eszközön.` +
             (drive.enabled && drive.backups ? " Ha tévedés volt, a Google Drive ablakban, a biztonsági másolatok közül visszaállíthatod." : "")
         );
       go("roster");
@@ -183,9 +196,9 @@ export const RootApp: React.FC = () => {
         />
       )}
 
-      {roster.saveFailed && <SaveFailedBanner />}
-      <DriveHopNotice hop={drive.hop} onDismiss={drive.dismissHop} />
-      <UpdateBanner paused={creator !== null || drive.hop !== null} required={drive.needsUpdate} beforeReload={() => rosterStore().parkUnsaved()} />
+      {roster.saveFailed && <SaveFailedBanner onExport={() => void exportBackupFile(roster.records)} />}
+      <DriveHopNotice hop={hop} onDismiss={drive.dismissHop} />
+      <UpdateBanner paused={creator !== null || drive.hop === "backSyncing" || drive.hop === "backDone"} required={drive.needsUpdate} beforeReload={() => rosterStore().parkUnsaved()} />
     </>
   );
 };

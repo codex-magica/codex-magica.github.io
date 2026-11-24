@@ -14,31 +14,48 @@ export const syncedAgo = (ts: number, now: number): string => {
 
 const STALE_PENDING_MS = 3 * 3600_000;
 
-// What sync needs from the player, if anything (null: nothing, or sync is off): an app update, Google's
-// permission again, a tap (without a token service), or changes stuck on this device for hours (said
-// before the player picks up another device). On the roster the button to tap is "Google Drive"; inside
-// the window it's "Szinkronizálás most", or "Újrakapcsolás" when the permission has to be given again.
-export const driveAttention = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
+const online = (): boolean => typeof navigator === "undefined" || navigator.onLine !== false;
+// "Google Drive: …" on the roster; inside the Google Drive window the prefix would only repeat its title
+const say = (text: string, inWindow: boolean): string => (inWindow ? text[0].toUpperCase() + text.slice(1) : `Google Drive: ${text}`);
+
+// What sync needs from the player, if anything (null: nothing, or sync is off), and which kind, so the
+// button next to it can do it: an app update, Google storage full, Google's permission again, a tap
+// (without a token service), or changes stuck on this device for hours (said before the player picks up
+// another device).
+export type AttentionKind = "update" | "full" | "reconnect" | "tap" | "stuck" | "stuckOffline";
+export interface Attention {
+  kind: AttentionKind;
+  text: string;
+}
+export const driveAttention = (drive: DriveSyncApi, now: number, inWindow = false): Attention | null => {
   if (!drive.enabled || drive.status === "syncing") return null;
-  const reconnect = drive.service && drive.status === "needsTap";
-  const button = !inWindow ? "a Google Drive gombra" : reconnect ? "az „Újrakapcsolás” gombra" : "a „Szinkronizálás most” gombra";
-  if (drive.needsUpdate) return "Google Drive: a szinkron folytatásához frissítsd az alkalmazást.";
-  if (drive.driveFull) return "Google Drive: betelt a Google-tárhelyed, ezért a szinkron szünetel. Ha felszabadítasz helyet, magától folytatódik.";
-  if (reconnect) return `Google Drive: a szinkron leállt, újra engedélyt kell adnod. Kattints ${button}.`;
-  if (drive.status === "needsTap") return `Google Drive: a következő szinkronhoz kattints ${button}.`;
-  if (drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
-    return `${drive.pending.count} karakter módosítása még csak ezen az eszközön van meg. Mielőtt másik eszközön folytatod, kattints ${button}.`;
+  const a = (kind: AttentionKind, text: string): Attention => ({ kind, text: say(text, inWindow) });
+  if (drive.needsUpdate)
+    return a("update", "a szinkron folytatásához frissítsd az alkalmazást a lent megjelenő „Frissítés” gombbal. Ha nem látod, zárd be, és nyisd meg újra az alkalmazást.");
+  if (drive.driveFull) return a("full", "betelt a Google-tárhelyed, ezért a szinkron szünetel. Ha felszabadítasz helyet, magától folytatódik.");
+  if (drive.service && drive.status === "needsTap") return a("reconnect", "a szinkron leállt, mert megszűnt a Google-engedély.");
+  if (drive.status === "needsTap") return a("tap", "a következő szinkronhoz kattints a „Szinkronizálás most” gombra.");
+  if (drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS) {
+    const n = drive.pending.count;
+    return online()
+      ? a("stuck", `${n} karakter módosítása még csak ezen az eszközön van meg. Mielőtt másik eszközön folytatnád, kattints a „Szinkronizálás most” gombra.`)
+      : a("stuckOffline", `${n} karakter módosítása még csak ezen az eszközön van meg, mert nincs internet. Amint lesz, magától feltöltődik.`);
+  }
   return null;
 };
 
-// One-line status (null while sync is off): what needs the player, or how it's going.
-export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
+// One-line status (null while sync is off): what needs the player, or how it's going. `factsOnly`: just
+// when it last synced (the window says the rest in its own box).
+export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = false, factsOnly = false): string | null => {
   if (!drive.enabled) return null;
+  const synced = drive.lastSyncAt ? say(`szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.`, inWindow) : say("bekapcsolva.", inWindow);
+  if (factsOnly) return synced;
   if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
   const attention = driveAttention(drive, now, inWindow);
-  if (attention) return attention;
-  if (drive.status === "error") return "Google Drive: most nem érhető el, az alkalmazás magától újra megpróbálja.";
-  return drive.lastSyncAt ? `Google Drive: szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.` : "Google Drive: bekapcsolva.";
+  if (attention) return attention.text;
+  if (drive.status === "error")
+    return say(online() ? "most nem érhető el, az alkalmazás magától újra megpróbálja." : "nincs internet, a módosítások később kerülnek fel.", inWindow);
+  return synced;
 };
 
 // What a round did that the player should know about: characters kept twice (edited on two devices at
@@ -50,10 +67,10 @@ const quoted = (names: string[]): string => {
 export const roundNotice = (copied: string[], undeleted: string[]): string | null => {
   const parts: string[] = [];
   if (copied.length === 1)
-    parts.push(`${quoted(copied)} két eszközön is módosult egyszerre, ezért mindkét változata megmaradt: a másik „${copied[0]} (másik változat)” néven került a listára. Nézd át, és töröld, amelyikre nincs szükséged.`);
+    parts.push(`${quoted(copied)} két eszközön is módosult, mielőtt szinkronizálódott volna, ezért mindkét változata megmaradt. A másikat „${copied[0]} (másik változat)” néven találod a listán; nézd át, és töröld, amelyik nem kell.`);
   else if (copied.length > 1)
-    parts.push(`${copied.length} karaktered két eszközön is módosult egyszerre: ${quoted(copied)}. Mindegyiknek mindkét változata megmaradt, a másik „(másik változat)” jelöléssel került a listára. Nézd át őket, és töröld, amelyikre nincs szükséged.`);
-  if (undeleted.length === 1) parts.push(`${quoted(undeleted)} törlése nem érvényesült, mert közben egy másik eszközön módosították. Ha nincs rá szükséged, töröld újra.`);
-  else if (undeleted.length > 1) parts.push(`${quoted(undeleted)} törlése nem érvényesült, mert közben egy másik eszközön módosították őket. Ha nincs rájuk szükséged, töröld őket újra.`);
+    parts.push(`${copied.length} karaktered két eszközön is módosult, mielőtt szinkronizálódtak volna: ${quoted(copied)}. Mindegyiknek megmaradt mindkét változata; a másikat „(másik változat)” végződéssel találod a listán. Nézd át őket, és töröld, amelyik nem kell.`);
+  if (undeleted.length === 1) parts.push(`A törölt ${quoted(undeleted)} visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.`);
+  else if (undeleted.length > 1) parts.push(`A törölt ${quoted(undeleted)} visszakerültek a listára, mert közben egy másik eszközön módosították őket. Ha nem kellenek, töröld őket újra.`);
   return parts.length ? parts.join(" ") : null;
 };

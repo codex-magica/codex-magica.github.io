@@ -27,7 +27,7 @@ export const UpdateBanner: React.FC<{ paused?: boolean; required?: boolean; befo
   const [blocked, setBlocked] = useState(false);
   if (!needRefresh || paused || (later && !required)) return null;
   const text = blocked
-    ? "A frissítéshez előbb exportáld a karaktereidet: ezen az eszközön most nem sikerül menteni."
+    ? "Most nem frissíthetsz: nem sikerül menteni, és elvesznének a legutóbbi módosításaid. Exportáld a karaktereidet, törölj egy feleslegeset, aztán próbáld újra."
     : required
       ? "A szinkron folytatásához frissítsd az alkalmazást."
       : "Új verzió érhető el.";

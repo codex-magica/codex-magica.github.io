@@ -58,6 +58,11 @@ const saveJsonFile = async (fileName: string, data: unknown): Promise<boolean> =
   return true;
 };
 
+// Saved data the app couldn't read, kept aside (storage.unreadableKeys): one file with all of it, as it
+// was, for the player to keep or send with a bug report.
+export const exportUnreadableFile = (entries: Record<string, string>): Promise<boolean> =>
+  saveJsonFile(`codex-magica-felretett-adatok-${new Date().toISOString().slice(0, 10)}.json`, { format: "codex-magica-unreadable", savedAt: Date.now(), entries });
+
 const safeName = (name: string) => name.replace(/[^\p{L}\p{N} _-]/gu, "").trim() || "karakter";
 
 export const exportRecordFile = (record: CharacterRecord): Promise<boolean> =>

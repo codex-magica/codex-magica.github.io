@@ -10,13 +10,13 @@ import { FIELD_SX } from "./tokens";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
-import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
+import { exportBackupFile, exportRecordFile, exportUnreadableFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
 import { rosterStore } from "../state/rosterStore";
 import { unreadableKeys } from "../state/storage";
 import { DriveSyncApi } from "../state/useDriveSync";
 import { CloudIcon, DriveSyncModal } from "./DriveSyncModal";
-import { driveAttention, driveStatusLine } from "../state/driveStatus";
-import { Callout } from "./Callout";
+import { AttentionKind, driveAttention, driveStatusLine } from "../state/driveStatus";
+import { Callout, CalloutAction } from "./Callout";
 
 interface Props {
   records: CharacterRecord[];
@@ -77,26 +77,26 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [importInfo, setImportInfo] = useState<string | null>(null);
   const [lastBackupAt, setLastBackupAt] = useState<number | null>(() => loadLastBackupAt());
   const [driveOpenAsked, setDriveOpen] = useState(false);
+  const [driveView, setDriveView] = useState<"main" | "backups">("main");
   // back from Google's page and something went wrong: the window shows again, with what happened, until
   // it's closed
-  const [issueSeen, setIssueSeen] = useState(0);
-  const driveOpen = driveOpenAsked || drive.connectIssue > issueSeen;
+  const driveOpen = driveOpenAsked || drive.connectProblem;
+  const openDrive = (view: "main" | "backups" = "main") => {
+    setDriveView(view);
+    setDriveOpen(true);
+  };
   const closeDrive = () => {
     setDriveOpen(false);
-    setIssueSeen(drive.connectIssue);
+    drive.ackConnectProblem();
   };
   // saved data the app couldn't read at some point, kept aside (see storage.ts): offer it, never drop it
   const [aside, setAside] = useState(() => unreadableKeys());
   const [asideSaved, setAsideSaved] = useState(false);
   const [confirmDropAside, setConfirmDropAside] = useState(false);
   const saveAside = () => {
-    setAsideSaved(true);
-    for (const k of aside) {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([localStorage.getItem(k) ?? ""], { type: "application/json" }));
-      a.download = `codex-magica-serult-mentes-${k.split(".").pop()}.json`;
-      a.click();
-    }
+    const entries: Record<string, string> = {};
+    for (const k of aside) entries[k] = localStorage.getItem(k) ?? "";
+    void exportUnreadableFile(entries).then((saved) => saved && setAsideSaved(true));
   };
   const dropAside = () => {
     rosterStore().dropUnreadable(aside);
@@ -107,16 +107,31 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [now] = useState(() => Date.now()); // render must stay pure: read the clock once per visit
   // with Google Drive sync on, the characters are not "only in this browser" any more
   const backupStale = !drive.enabled && (lastBackupAt === null || now - lastBackupAt > BACKUP_STALE_DAYS * DAY_MS);
-  // what sync needs from the player is said at the top; the footer keeps the quiet status
+  // what sync needs from the player is said at the top, with a button that does it (the window opens
+  // too, so what happens next is in view); the footer keeps the quiet status
   const driveNeeds = driveAttention(drive, now);
   const driveLine = driveNeeds ? null : driveStatusLine(drive, now);
-  const driveNotice = drive.note && !drive.note.error ? drive.note : null; // a conflict copy, a deletion that didn't hold
+  const act = (label: string) => ({ label, onClick: () => (openDrive(), drive.syncNow()) });
+  const needsAction: Record<AttentionKind, CalloutAction[]> = {
+    update: [], // the update banner at the bottom has the button
+    full: [{ label: "Google-tárhely", onClick: () => window.open("https://one.google.com/storage", "_blank", "noopener") }],
+    reconnect: [act("Újrakapcsolás")],
+    tap: [act("Szinkronizálás most")],
+    stuck: [act("Szinkronizálás most")],
+    stuckOffline: [],
+  };
+  // things that happened, said once: one box, one "Rendben"
+  const infos = [notice, drive.notice?.text].filter((t): t is string => !!t);
+  const dismissInfos = () => {
+    onDismissNotice?.();
+    drive.dismissNotice();
+  };
 
   const handleImportFile = (file: File | undefined) => {
     if (!file) return;
     const invalidFile = () => {
       setImportInfo(null);
-      setImportError("Érvénytelen fájl — az alkalmazásból exportált karakter- vagy mentésfájl (.json) kell.");
+      setImportError("Ezt a fájlt nem lehet importálni: az alkalmazásból exportált .json fájl kell.");
     };
     if (file.size > 20 * 1024 * 1024) return invalidFile(); // far beyond any real roster
     void file.text().then((text) => {
@@ -124,13 +139,13 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       if (!result) return invalidFile();
       setImportError(null);
       onImport(result.add);
-      const damaged = result.invalid > 0 ? ` ${result.invalid} sérült bejegyzést kihagytunk.` : "";
+      const damaged = result.invalid > 0 ? ` ${result.invalid} sérült bejegyzés kimaradt.` : "";
       if (result.kind === "backup") {
         if (result.add.length > 0) setImportInfo(`${result.add.length} karakter visszaállítva${result.skipped > 0 ? `, ${result.skipped} már megvolt` : ""}.${damaged}`);
         else if (result.skipped > 0) setImportInfo(`Nincs új karakter a mentésben: ${result.skipped === 1 ? "a benne lévő karakter" : `mind a ${result.skipped}`} megvolt már.${damaged}`);
         else setImportInfo(`A mentésben nem volt visszaállítható karakter.${damaged}`);
       } else {
-        setImportInfo(null);
+        setImportInfo(result.add.length > 0 ? `„${result.add[0].name}” importálva, a lista végére került.` : null);
       }
     }, invalidFile);
   };
@@ -189,18 +204,37 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
           <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
             Válassz egy karaktert, vagy hozz létre egy újat.{" "}
-            {drive.enabled
+            {drive.enabled && !driveNeeds
               ? "A karaktereid ezen az eszközön tárolódnak, és a Google Drive-oddal is szinkronizálódnak."
               : "A karaktereid ezen az eszközön, a böngészőben tárolódnak."}
           </Text>
         </Box>
 
-        {(driveNeeds || notice || deleteNote || driveNotice) && (
+        {(driveNeeds || deleteNote || aside.length > 0 || infos.length > 0) && (
           <Box display="flex" flexDirection="column" gap="10px" mt={{ base: "-24px", md: "-16px" }} mb="22px" maxW="640px" mx="auto">
-            {driveNeeds && <Callout kind="warn" actions={[{ label: "Google Drive", onClick: () => setDriveOpen(true) }]}>{driveNeeds}</Callout>}
-            {notice && <Callout kind="info" actions={onDismissNotice ? [{ label: "Rendben", onClick: onDismissNotice }] : undefined}>{notice}</Callout>}
+            {driveNeeds && <Callout kind="warn" actions={needsAction[driveNeeds.kind]}>{driveNeeds.text}</Callout>}
             {deleteNote && <Callout kind="warn" actions={[{ label: "Rendben", onClick: () => setDeleteNote(null) }]}>{deleteNote}</Callout>}
-            {driveNotice && <Callout key={driveNotice.seq} kind="info" actions={[{ label: "Rendben", onClick: drive.dismissNote }]}>{driveNotice.text}</Callout>}
+            {aside.length > 0 && (
+              <Callout
+                kind="warn"
+                actions={[{ label: "Letöltés", onClick: saveAside }, ...(asideSaved ? [{ label: "Törlés erről az eszközről", onClick: () => setConfirmDropAside(true) }] : [])]}
+              >
+                Az alkalmazás ezen az eszközön olyan elmentett adatot talált, amelyet nem tudott beolvasni, ezért félretette. Töltsd le; ha
+                hiányzik egy karaktered, jelezd a projekt GitHub-oldalán, és csatold a fájlt.
+              </Callout>
+            )}
+            {infos.length > 0 && (
+              <Callout
+                key={drive.notice?.seq}
+                kind="info"
+                actions={[
+                  { label: "Rendben", onClick: dismissInfos },
+                  ...(notice && drive.enabled && drive.backups ? [{ label: "Biztonsági másolatok", onClick: () => openDrive("backups") }] : []),
+                ]}
+              >
+                {infos.join(" ")}
+              </Callout>
+            )}
           </Box>
         )}
 
@@ -277,11 +311,11 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           {drive.available && (
             <>
               <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
-              <Box as="button" type="button" onClick={() => setDriveOpen(true)} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
+              <Box as="button" type="button" onClick={() => openDrive()} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
                 color={drive.status === "needsTap" || drive.status === "error" ? "accentTx" : "muted"} fontWeight={drive.status === "needsTap" ? 700 : undefined}>
                 {CloudIcon}Google Drive
                 {drive.pending.count > 0 && drive.status !== "syncing" && (
-                  <Box as="span" role="img" aria-label={`${drive.pending.count} módosítás vár szinkronra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
+                  <Box as="span" role="img" aria-label={`${drive.pending.count} karakter módosítása még nem került fel a Drive-ra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
                 )}
               </Box>
             </>
@@ -289,23 +323,10 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
           <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
         </HStack>
-        {aside.length > 0 && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="warn" mt="8px" maxW="56ch" mx="auto">
-            Ezen az eszközön van egy korábbi mentés, amelyet az alkalmazás nem tudott beolvasni, ezért félretette. Mentsd el
-            fájlba; ha hiányzik egy karaktered, jelezd a projekt GitHub-oldalán, és csatold a fájlt.{" "}
-            <Box as="button" type="button" onClick={saveAside} textDecoration="underline" textUnderlineOffset="2px">Mentés fájlba</Box>
-            {asideSaved && (
-              <>
-                {" · "}
-                <Box as="button" type="button" onClick={() => setConfirmDropAside(true)} textDecoration="underline" textUnderlineOffset="2px">Törlés erről az eszközről</Box>
-              </>
-            )}
-          </Text>
-        )}
         {records.length > 0 && !drive.enabled && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
             {lastBackupAt === null ? "Még nem exportáltad a karaktereidet." : `Utolsó exportálás: ${daysAgo(lastBackupAt, now)}.`}
-            {backupStale && " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket."}
+            {backupStale && (drive.available ? " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket, vagy bekapcsolni a Google Drive-szinkront." : " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket.")}
           </Text>
         )}
         {driveLine && (
@@ -334,7 +355,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
 
       {confirmDropAside && (
         <ConfirmModal
-          title="Félretett mentés törlése"
+          title="Félretett adatok törlése"
           confirmLabel="Törlés"
           onConfirm={() => {
             setConfirmDropAside(false);
@@ -342,10 +363,10 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           }}
           onClose={() => setConfirmDropAside(false)}
         >
-          Csak akkor töröld, ha a fájl megvan a letöltéseid között. Ez nem vonható vissza.
+          Csak akkor töröld, ha a fájlt már letöltötted. Ez nem vonható vissza.
         </ConfirmModal>
       )}
-      {driveOpen && <DriveSyncModal drive={drive} records={records} onClose={closeDrive} />}
+      {driveOpen && <DriveSyncModal drive={drive} records={records} initialView={driveView} onClose={closeDrive} />}
 
       {menuView && !menuAsPopover && (
         <ModalShell onClose={() => setMenuId(null)} width="min(340px, 100%)" zIndex={40} overlayPad="28px">
@@ -371,12 +392,12 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           }}
           onClose={() => setConfirmDeleteId(null)}
         >
-          Biztosan törlöd <Text as="span" fontWeight={700} color="fg">{deleteView.name}</Text> karaktert?{" "}
+          Biztosan törlöd ezt a karaktert: <Text as="span" fontWeight={700} color="fg">{deleteView.name}</Text>?{" "}
           {!drive.enabled
             ? "Ez nem vonható vissza."
             : drive.backups
-              ? "A törlés minden szinkronizált eszközödre átterjed. Az utolsó állapota biztonsági másolatként megmarad a Drive-on, onnan visszaállítható."
-              : "A törlés minden szinkronizált eszközödre átterjed, és nem vonható vissza."}
+              ? "Minden eszközödről törlődik, ahol be van kapcsolva a szinkron. Az utolsó állapota biztonsági másolatként megmarad a Drive-on, és a Google Drive ablakban visszaállíthatod."
+              : "Minden eszközödről törlődik, ahol be van kapcsolva a szinkron, és nem vonható vissza."}
         </ConfirmModal>
       )}
 
