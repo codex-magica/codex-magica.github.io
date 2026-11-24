@@ -384,25 +384,6 @@ export const refreshAccess = (): Promise<string> => {
   return refreshing;
 };
 
-// Turning sync off: revoke at Google (the long-term grant with it) and forget everything here.
-export const revokeAccess = async (): Promise<void> => {
-  const token = validToken();
-  const credential = loadCredential();
-  forgetToken();
-  forgetCredential();
-  if (credential && tokenServiceAvailable()) {
-    await service("/v1/revoke", { credential }).catch(() => undefined); // offline: unused grants expire on their own
-    return;
-  }
-  if (!token) return;
-  try {
-    const oauth2 = await loadGoogleIdentity();
-    await new Promise<void>((done) => oauth2.revoke(token, () => done()));
-  } catch {
-    /* offline: the token simply expires on its own within the hour */
-  }
-};
-
 // ── Drive REST ────────────────────────────────────────────────────────────────────────────────────
 // Every file lives in the hidden app folder and is tagged with `appProperties`:
 //   kind=sync     one per device: that device's copy of the roster (only that device writes it)

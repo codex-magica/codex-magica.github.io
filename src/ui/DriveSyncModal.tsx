@@ -268,7 +268,8 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         {drive.enabled && (
           <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" lineHeight="1.5" mb="6px">
             Kikapcsoláskor semmi sem törlődik: a karakterek ezen az eszközön és a Drive-on is megmaradnak, a biztonsági
-            másolatokkal együtt. A Drive-on lévőket a Google Drive beállításaiban, az „Alkalmazások kezelése” résznél törölheted.
+            másolatokkal együtt. A kikapcsolás csak erre az eszközre vonatkozik, a többin a szinkron tovább működik.
+            A Drive-on lévőket a Google Drive beállításaiban, az „Alkalmazások kezelése” résznél törölheted.
           </Text>
         )}
       </Box>

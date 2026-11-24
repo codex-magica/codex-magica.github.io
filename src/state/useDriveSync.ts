@@ -17,7 +17,6 @@ import {
   prepareSignIn,
   refreshAccess,
   requestTokenInteractive,
-  revokeAccess,
   signInReady,
   tokenServiceAvailable,
   validToken,
@@ -367,7 +366,10 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     enabledRef.current = false;
     generation.current++;
     setHop(null);
-    void revokeAccess();
+    // This device only: the permission stays valid for the player's other devices (and in their Google
+    // account's list of connected apps, where it can be removed).
+    forgetToken();
+    forgetCredential();
     clearDriveState();
     verifiedTokens.clear();
     setSettings(loadDriveSettings());

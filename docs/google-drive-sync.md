@@ -85,10 +85,12 @@ Without one, the app stays local-only and never contacts Google. The token servi
   showing its consent screen to this kind of request, so it never succeeded.
 - **Account check.** Every new token is checked against the account sync was set up with; a different
   account is refused with an explanation, so characters never merge into someone else's Drive.
-- **Kikapcsolás** (turn off) revokes the app's permission at Google (through the token service, or Google's
-  library without one) and forgets the credential. Revoking removes the whole permission, so the player's
-  other devices are asked to reconnect. Nothing is deleted: the characters stay on the device, and the files
-  and backups stay in Drive (Drive → Settings → Manage apps can delete them).
+- **Kikapcsolás** (turn off) affects that device only: it forgets the token and the credential there, and
+  revokes nothing at Google, because revoking removes the whole permission and would disconnect the player's
+  other devices too. To withdraw access everywhere, the player removes the app in their Google account
+  (myaccount.google.com/permissions); every device then gets `invalid_grant` and asks to reconnect. The
+  token service's `/v1/revoke` stays for a future "disconnect everywhere" option. Nothing is deleted: the
+  characters stay on the device, and the files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
 
 Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `versions.ts` (version
 vectors), `driveMerge.ts` (the merge, conflict resolution, backup selection, reconciling), `driveSyncEngine.ts`
