@@ -1,0 +1,16 @@
+{
+  "name": "codex-magica-auth",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Token service for Codex Magica's Google Drive sync (Cloudflare Worker).",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "wrangler deploy --env=\"\"",
+    "deploy:dev": "wrangler deploy --env dev",
+    "dev": "wrangler dev --env dev --port 8787"
+  },
+  "devDependencies": {
+    "wrangler": "4.159.0"
+  }
+}

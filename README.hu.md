@@ -102,10 +102,11 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
 - A napi biztonsági másolat (alapból bekapcsolva) a Drive-on azt is megőrzi, milyen volt egy karakter
   azoknak a napoknak a végén, amikor módosítottad, és hogy milyen volt törlés előtt. Ezeket a szinkron
   ablakában állíthatod vissza.
-- A webes alkalmazások Google-hozzáférése óránként lejár. Az alkalmazás ezt egy gyors, Google-on keresztüli
-  átirányítással megújítja: előtte egy kis értesítést mutat, utána pedig oda hoz vissza, ahol voltál.
-- Nem kell fiókot létrehoznod, és nincs köztes szerverünk: az adatok közvetlenül a böngésződből a
-  Drive-odra kerülnek. Részletek az [adatvédelmi tájékoztatóban](https://codex-magica.github.io/privacy.html).
+- A Google-nek eszközönként egyszer kell engedélyt adnod, utána az alkalmazás magától megújítja: nem kér
+  óránként újra.
+- Nem kell fiókot létrehoznod, és a karaktereid közvetlenül a böngésződből a Drive-odra kerülnek. Egy apró
+  szolgáltatás csak a Google-hozzáférést újítja meg, a karaktereidet nem látja. Részletek az
+  [adatvédelmi tájékoztatóban](https://codex-magica.github.io/privacy.html).
 
 **Az adataid nálad maradnak.** Szinkron nélkül a karakterek csak az eszközöd böngészőjében vannak. Az
 összes karakterről egy kattintással mentés készíthető, és a fájl egyenesen iCloud Drive-ba, Google
@@ -142,7 +143,8 @@ Pages** workflow-t. Ezután minden módosítás után magától frissül a
 állítsd `/`-re, a `SITE_URL`-t pedig a címedre (a linkelőnézetekhez). Cloudflare Pages vagy Netlify is jó:
 build parancs `npm run build`, mappa `dist`. A Google Drive-szinkronhoz saját Google OAuth-ügyfélazonosító kell. Ingyenes, és nagyjából negyedóra alatt
 beállítható: [docs/google-drive-sync.md](docs/google-drive-sync.md) (angolul). Enélkül a saját példányodban
-egyszerűen nincs szinkron gomb, minden más ugyanúgy működik.
+egyszerűen nincs szinkron gomb, minden más ugyanúgy működik. A Google-hozzáférés megújításához egy ingyenes
+Cloudflare-függvény is kell (a leírás ugyanott); enélkül a szinkron óránként egy kattintást kér.
 
 **Saját gépen, fejlesztéshez.** [Node.js](https://nodejs.org) 22.12 vagy újabb kell:
 
@@ -171,7 +173,7 @@ nyelvi modellek a szerkezetet és a táblázatokat, utána pedig rengeteg kézi 
 részletek angolul, a [fő README-ben](README.md#how-it-was-built) és a
 [folyamat leírásában](docs/pdf-pipeline.md) olvashatók.
 
-Az alkalmazásnak nincs saját szervere. A karakterlap minden értékét egy szabálymotor számolja ki újra a
+Az alkalmazásnak nincs saját adatszervere. A karakterlap minden értékét egy szabálymotor számolja ki újra a
 karakter szintenkénti döntéseiből, a karakterek a böngészőben tárolódnak, a szinkron pedig közvetlenül a
 játékos Google Drive-jával dolgozik: minden eszköz a saját fájljába ír, és verzióvektorok döntik el, mi
 melyik változat folytatása, így semmi sem íródik felül észrevétlenül. Erről is a

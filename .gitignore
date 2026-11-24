@@ -43,3 +43,8 @@ yarn-error.log*
 
 # Python bytecode (docs/brand/build_icons.py)
 __pycache__/
+
+# token service (Cloudflare Worker): local secrets and wrangler's state
+worker/.dev.vars
+worker/node_modules/
+.wrangler/

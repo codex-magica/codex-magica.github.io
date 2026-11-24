@@ -1,0 +1,46 @@
+# Codex Magica token service (see src/index.ts and docs/google-drive-sync.md).
+#
+# Production deploys from GitHub Actions (.github/workflows/deploy-worker.yml); the dev copy, for
+# testing the app locally, is deployed by hand: npm run deploy:dev (in worker/)
+#
+# Secrets are set once per environment and never live in this repository:
+#   npx wrangler secret put GOOGLE_CLIENT_SECRET [--env dev]
+#   openssl rand -base64 32 | npx wrangler secret put BLOB_KEY [--env dev]
+
+name = "codex-magica-auth"
+send_metrics = false # no usage reporting from wrangler
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+preview_urls = false
+
+# No request logs: the requests carry credentials.
+[observability]
+enabled = false
+
+[vars]
+GOOGLE_CLIENT_ID = "40122543089-4kdbcbqjalmc62kmtar4bist3hb9puvi.apps.googleusercontent.com"
+ALLOWED_ORIGINS = "https://codex-magica.github.io"
+
+# 30 requests a minute per address and per credential: an app needs about one an hour.
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }
+
+[env.dev]
+name = "codex-magica-auth-dev"
+workers_dev = true
+preview_urls = false
+
+[env.dev.observability]
+enabled = false
+
+[env.dev.vars]
+GOOGLE_CLIENT_ID = "40122543089-bggtvm9i3vhb4caks73nk6rdsfluamid.apps.googleusercontent.com"
+ALLOWED_ORIGINS = "http://localhost:3000"
+
+[[env.dev.ratelimits]]
+name = "LIMITER"
+namespace_id = "1002"
+simple = { limit = 30, period = 60 }

@@ -30,8 +30,8 @@
     <p class="muted">Codex Magica · független, nem kereskedelmi célú rajongói alkalmazás a M.A.G.U.S. szerepjátékhoz</p>
 
     <h2>Mit tárol az alkalmazás, és hol?</h2>
-    <p>A karaktereidet a böngésződ tárolja, ezen az eszközön. Az alkalmazásnak nincs saját szervere, nem használ
-      analitikát, hirdetést vagy követő sütiket, és nem kér tőled fiókot.</p>
+    <p>A karaktereidet a böngésződ tárolja, ezen az eszközön. Az alkalmazás nem használ analitikát, hirdetést vagy
+      követő sütiket, és nem kér tőled fiókot.</p>
     <p>Az oldal a GitHub Pages-en fut. Mint minden tárhelyszolgáltató, a GitHub is látja a látogatók IP-címét, és
       naplózza az oldal forgalmát; erre a <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub
       adatvédelmi nyilatkozata</a> vonatkozik.</p>
@@ -46,11 +46,16 @@
         többi fájlját nem látja, nem olvassa és nem módosítja.</li>
       <li>Az e-mail-címedet is lekéri, de csak azért, hogy megmutassa, melyik fiókkal szinkronizál, és hogy a Google
         a következő bejelentkezéskor ne kérdezze meg újra, melyik fiókot használod. Ezen az eszközön tárolja.</li>
-      <li>A Google-hozzáférés kódja (token) legfeljebb egy óráig a böngésződben marad, kizárólag a szinkronhoz.
-        Lejárta után az alkalmazás egy gyors, Google-on keresztüli átirányítással kér újat.</li>
-      <li>Az adatok a böngésződ és a Google között közlekednek; harmadik félhez, így hozzánk sem jutnak el.</li>
+      <li>A bekapcsoláskor kapott tartós Google-engedélyt az alkalmazás titkosítva, ezen az eszközön tárolja. Ezzel kér
+        óránként új hozzáférési kódot (tokent) egy kis szolgáltatástól, amely a Cloudflare-en fut. Ez a szolgáltatás
+        csak a Google-lel váltja ki a kódot: a karaktereidet nem látja, semmit nem tárol, és a kéréseket nem naplózza.
+        A Cloudflare a működéshez kezeli a kérések technikai adatait, például az IP-címet; erre a
+        <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare adatvédelmi szabályzata</a> vonatkozik.</li>
+      <li>A hozzáférési kód legfeljebb egy óráig marad a böngésződben, kizárólag a szinkronhoz.</li>
+      <li>A karaktereid csak a böngésződ és a Google között közlekednek; harmadik félhez, így hozzánk sem jutnak el.</li>
       <li>A szinkron a karakterlistán, a Google Drive gombbal kapcsolható ki; ez nem töröl semmit. A kikapcsolás az
-        alkalmazás Google-hozzáférését is visszavonja, ezért a többi eszközödön a Google újra engedélyt kérhet. A hozzáférést a
+        alkalmazás Google-engedélyét is visszavonja, és a tartós engedélyt erről az eszközről is törli, ezért a többi
+        eszközödön a Google újra engedélyt kér. A hozzáférést a
         <a href="https://myaccount.google.com/permissions" rel="noopener">Google-fiókod beállításaiban</a> is
         visszavonhatod, a Drive-on tárolt adatokat (a biztonsági másolatokkal együtt) pedig a Google Drive
         beállításaiban, az „Alkalmazások kezelése” résznél törölheted.</li>
@@ -70,9 +75,9 @@
     <p class="muted">Codex Magica · an independent, non-commercial fan app for the M.A.G.U.S. role-playing game</p>
 
     <h2>What the app stores, and where</h2>
-    <p>Your characters are stored by your browser, on your device. The app has no server of its own, uses no
-      analytics, ads or tracking cookies, and asks for no account.</p>
-    <p>The site is hosted on GitHub Pages. Like any web server, GitHub sees visitors' IP addresses and logs requests;
+    <p>Your characters are stored by your browser, on your device. The app uses no analytics, ads or tracking
+      cookies, and asks for no account.</p>
+    <p>The site is hosted on GitHub Pages. Like any host, GitHub sees visitors' IP addresses and logs traffic;
       the <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub
       General Privacy Statement</a> applies to that.</p>
 
@@ -86,11 +91,16 @@
         your Drive.</li>
       <li>It also reads your email address, only to show which account syncs and so that Google doesn't ask which
         account to use next time. It is stored on this device.</li>
-      <li>The Google access token stays in your browser for at most an hour, used only for syncing. When it
-        expires, the app gets a new one with a quick redirect through Google.</li>
-      <li>Data travels between your browser and Google only; it does not reach any third party, including us.</li>
+      <li>The lasting Google permission you give when turning sync on is stored encrypted, on this device. With it, the
+        app gets a new access token every hour from a small service running on Cloudflare. That service only exchanges
+        the token with Google: it cannot see your characters, stores nothing and keeps no request logs. Cloudflare
+        processes the technical data of the requests, such as IP addresses, to run it; the
+        <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare Privacy Policy</a> applies to that.</li>
+      <li>The access token stays in your browser for at most an hour, used only for syncing.</li>
+      <li>Your characters travel between your browser and Google only; they do not reach any third party, including us.</li>
       <li>Turn sync off with the Google Drive button on the character list; that deletes nothing. Turning it off also
-        revokes the app's Google access, so sync on your other devices may ask for permission again. You can also revoke access in your
+        revokes the app's Google permission and deletes the stored permission from this device, so Google asks for
+        permission again on your other devices. You can also revoke access in your
         <a href="https://myaccount.google.com/permissions" rel="noopener">Google Account settings</a>, and delete
         the data in Drive (backups included) under Google Drive settings → Manage apps.</li>
     </ul>

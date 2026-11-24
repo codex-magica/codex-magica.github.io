@@ -40,8 +40,8 @@ export const RootApp: React.FC = () => {
       m.setAttribute("content", c);
     });
   }, [colorMode]);
-  // back from a Google Drive token renewal round trip: land on the screen, tab and scroll position the
-  // user was on (read once; later screens open normally)
+  // back from Google's consent page (turning Drive sync on, or reconnecting): land on the screen, tab
+  // and scroll position the user was on (read once; later screens open normally)
   const [back] = useState<ReturnContext | null>(() => {
     const o = consumeRedirectResult();
     if (o.kind === "none" || !o.ctx) return null;
@@ -60,30 +60,16 @@ export const RootApp: React.FC = () => {
   // where inside the current screen the user is (sheet or its compendium, compendium tab)
   const inner = useRef<{ view?: "sheet" | "compendium"; compTab?: number }>({});
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
-  const creatorOpen = useRef(false);
-  creatorOpen.current = creator !== null;
   const where = useRef({ screen, characterId: currentId });
   where.current = { screen, characterId: currentId };
   const go = (s: typeof screen) => {
     inner.current = {};
     setScreen(s);
   };
-  // optional Google Drive sync (absent without a client ID); may renew its token by a quick round trip
-  // through Google, but only when the creator (unsaved edits) is closed
+  // optional Google Drive sync (absent without a client ID)
   const drive = useDriveSync({
-    safeToLeave: () => !creatorOpen.current,
     returnContext: () => ({ ...where.current, ...inner.current, scroll: captureScroll() }),
   });
-  const { atRoster } = drive;
-  const firstScreen = useRef(true);
-  useEffect(() => {
-    if (firstScreen.current) {
-      firstScreen.current = false;
-      return;
-    }
-    if (screen === "roster") atRoster();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen]);
   // one-time "about & credits" notice on first launch; reopenable from the roster footer
   const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 
@@ -176,7 +162,7 @@ export const RootApp: React.FC = () => {
       )}
 
       {roster.saveFailed && <SaveFailedBanner />}
-      <DriveHopNotice hop={drive.hop} onCancel={drive.cancelHop} />
+      <DriveHopNotice hop={drive.hop} />
       <UpdateBanner paused={creator !== null || drive.hop !== null || roster.saveFailed} />
     </>
   );

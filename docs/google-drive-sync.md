@@ -1,17 +1,20 @@
 # Google Drive sync
 
 Players can keep their characters in sync across devices through **their own Google Drive**. The
-browser talks to Google directly; there is no server of ours in between, and nothing is stored anywhere
-except the player's device and their Drive.
+characters travel only between the browser and Google, and are stored nowhere except the player's devices
+and their Drive. A small token service (`worker/`, a Cloudflare Worker) renews the browser's Google access
+so sync never needs a tap; it sees tokens, never characters, and stores nothing.
 
 The feature appears only in builds made with a Google OAuth client ID (`VITE_GOOGLE_CLIENT_ID`).
-Without one, the app stays local-only and never contacts Google.
+Without one, the app stays local-only and never contacts Google. The token service is optional too
+(`VITE_TOKEN_SERVICE_URL`): without it, sync works the same but asks for a tap about once an hour.
 
 ## How it works
 
 - The **Google Drive** button on the roster opens a short explanation, a switch for **daily backups** (on by
-  default) and a **Bekapcsolás** (turn on) button. Google's popup asks for `drive.appdata` (a hidden folder in
-  the user's Drive that only this app can see; it can't read any other file) and the email address.
+  default) and a **Bekapcsolás** (turn on) button. It takes the player to Google's consent page and back to
+  the same screen. Google asks for `drive.appdata` (a hidden folder in the user's Drive that only this app can
+  see; it can't read any other file) and the email address. (Without a token service: Google's popup.)
 - **One file per device.** Each device keeps its own file in that folder (`codex-magica-sync.<device>.json`)
   and is the only one that ever writes it, so two devices can never overwrite each other's work. A sync round
   lists the folder, downloads the files that changed since last time, merges them with the roster on the
@@ -62,42 +65,54 @@ Without one, the app stays local-only and never contacts Google.
   Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.
-- **Timing.** While the token is valid, sync runs 2 seconds after an edit, when the app goes to the background
-  and when it comes back. One round at a time, across tabs too (Web Locks); other tabs' changes arrive through
-  the `storage` event.
-- **Renewal without a tap.** Browser-only apps get a one-hour token and no refresh token. When it has expired,
-  the app renews it at safe moments (app start, coming back to the app, arriving at the roster, or a minute
-  without touches while changes are waiting) with a round trip through Google's authorization endpoint with
-  `prompt=none` and `login_hint`. A small notice announces it 3 seconds ahead ("Most ne" cancels for 10
-  minutes), and the app comes back to the same screen, tab and scroll position. Never while a window or the
-  character creator is open or a text field has focus, and at most once every 10 minutes.
-- Only if Google answers that it needs the user (signed out, permission removed) does the footer ask for a
-  tap; silent attempts then pause for 12 hours (1 hour after other errors). The tap's popup has the account
-  pre-filled.
+- **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background, when it comes back, and
+  when the device is back online. One round at a time, across tabs too (Web Locks); other tabs' changes
+  arrive through the `storage` event.
+- **Renewal.** Google's access tokens last an hour. Turning sync on uses the authorization-code flow
+  (`access_type=offline`, `prompt=consent`, PKCE): the token service exchanges the code for an access token
+  and a refresh token, and hands the refresh token back **encrypted** (AES-GCM, with a key only the service
+  has) as an opaque credential, which stays on the device. When the access token runs out, the app sends the
+  credential to the service and gets a new access token: no popup, no redirect, no tap. A token Drive refuses
+  early is renewed and retried once. If the service is unreachable, the credential is kept and the next
+  round tries again.
+- **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
+  months, or sync turned off on another device) does the app ask the player to reconnect: the footer says so,
+  and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
+- **Without a token service** the app uses Google's popup to sign in, and every expired token needs a tap
+  ("Szinkronizálás most"). A silent renewal by redirect (`prompt=none`) was tried and dropped: Google keeps
+  showing its consent screen to this kind of request, so it never succeeded.
 - **Account check.** Every new token is checked against the account sync was set up with; a different
   account is refused with an explanation, so characters never merge into someone else's Drive.
-- **Kikapcsolás** (turn off) revokes the token. Nothing is deleted: the characters stay on the device, and the
-  files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
+- **Kikapcsolás** (turn off) revokes the app's permission at Google (through the token service, or Google's
+  library without one) and forgets the credential. Revoking removes the whole permission, so the player's
+  other devices are asked to reconnect. Nothing is deleted: the characters stay on the device, and the files
+  and backups stay in Drive (Drive → Settings → Manage apps can delete them).
 
 Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `versions.ts` (version
 vectors), `driveMerge.ts` (the merge, conflict resolution, backup selection, reconciling), `driveSyncEngine.ts`
-(one round: reads, backups, write), `googleDrive.ts` (sign-in, renewal by redirect, Drive calls),
-`useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`, `scrollMemory.ts`.
+(one round: reads, backups, write), `googleDrive.ts` (sign-in, the consent round trip, token service calls,
+Drive calls), `useDriveSync.ts` (when to sync), `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`,
+`scrollMemory.ts`; the token service in `worker/src/index.ts` (tested in `worker/src/index.test.ts`).
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
 
 ## Why this approach
 
-Browser-only apps get a one-hour access token and no refresh token (a refresh token needs the client
-secret, so a server). The options weighed:
+Browser-only apps get a one-hour access token and no refresh token: a refresh token needs the client
+secret, and a secret can't be kept in a public web app. The options weighed:
 
 | Option | Tap needed | Server | Catch |
 |---|---|---|---|
-| Popup each time the token expires | after each hour | none | a tap prompt |
-| Redirect with `prompt=none` (chosen) | no, while the Google session lives | none | a quick hop through Google about once an hour of use; Google calls this flow legacy (if it's ever switched off, the app falls back to the tap) |
-| A small token helper on the same domain (e.g. a Cloudflare Pages Function) | no | tiny, holds no character data | a piece of infrastructure to run |
-| Firebase | no | yours | players' data in your project and quota |
+| Popup each time the token expires (the fallback) | about once an hour | none | a tap prompt |
+| Redirect with `prompt=none` | would be none | none | doesn't work: Google answers `interaction_required` for this app every time |
+| The client secret in the app | none | none | anyone could use the app's identity; a copied refresh token would work for months; against Google's policy |
+| A stateless token service on Cloudflare Workers' free plan (chosen) | none | tiny, holds no data | a piece of infrastructure to run; it sees tokens in transit |
+| Firebase | none | yours | players' data in your project and quota |
+
+The token service keeps the refresh token inside the credential, encrypted, rather than in a database: there
+is nothing to breach on the server, and rotating its key cancels every credential at once. It answers only
+the app's own origins, and is rate-limited.
 
 A native app would renew silently, but only for itself: tokens stay on the device, so it wouldn't help the
 web app.
@@ -122,9 +137,10 @@ You need a Google account and about fifteen minutes. The steps use the Google Cl
 6. **Clients → Create client → Web application.** Under *Authorized JavaScript origins* add the site's
    origin, e.g. `https://<user>.github.io` (no path), and `http://localhost:3000` for local development.
    Under *Authorized redirect URIs* add the app's full address with a trailing slash, e.g.
-   `https://<user>.github.io/<repo>/` (and `http://localhost:3000/`): the token renewal round trip
-   returns there. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`). It is
-   not a secret: it only works from the origins listed here.
+   `https://<user>.github.io/<repo>/` (and `http://localhost:3000/`): the consent round trip returns
+   there. Copy the **Client ID** (it ends in `.apps.googleusercontent.com`). It is not a secret: it only
+   works from the origins listed here. For the token service you also need a **client secret**: on the
+   client's page, *Add secret*, and copy it right away (Google shows it only once).
 7. **Local development:** put it in `.env.local` (gitignored):
 
    ```sh
@@ -139,7 +155,41 @@ You need a Google account and about fifteen minutes. The steps use the Google Cl
 
 To open sync to everyone, set the publishing status to **In production** (Audience page). With only
 non-sensitive scopes this needs no review; Google may ask you to verify the domain in Search Console if
-you add a logo.
+you add a logo. In *Testing*, Google's long-term permissions expire after 7 days, so players would have to
+reconnect weekly.
+
+### The token service
+
+Optional, but without it sync asks for a tap about once an hour. Free on Cloudflare's Workers plan (no card).
+
+1. **Cloudflare account** (dash.cloudflare.com), free plan. Under *Workers & Pages* pick your
+   `*.workers.dev` subdomain.
+2. **Configure** `worker/wrangler.toml`: your client IDs in `GOOGLE_CLIENT_ID` (production and the `dev`
+   environment) and the app's origins in `ALLOWED_ORIGINS`.
+3. **Secrets**, once per environment, from `worker/` (log in first with `npx wrangler login`):
+
+   ```sh
+   npx wrangler secret put GOOGLE_CLIENT_SECRET --env=""        # paste the production client's secret
+   openssl rand -base64 32 | npx wrangler secret put BLOB_KEY --env=""
+   npx wrangler secret put GOOGLE_CLIENT_SECRET --env dev       # the dev client's secret
+   openssl rand -base64 32 | npx wrangler secret put BLOB_KEY --env dev
+   ```
+
+4. **Deploy:** `npm ci && npm run deploy` (production) and `npm run deploy:dev`, in `worker/`. Check
+   `https://<name>.<subdomain>.workers.dev/health`: it should say `"configured":true`.
+5. **The app:** set the repository variable `TOKEN_SERVICE_URL` to the production Worker's address (no
+   trailing slash), and for local development add `VITE_TOKEN_SERVICE_URL=` with the dev Worker's address
+   to `.env.local`.
+6. **Automatic deploys** (optional): a Cloudflare API token from the *Edit Cloudflare Workers* template as the
+   repository secret `CLOUDFLARE_API_TOKEN`, the account ID as the variable `CLOUDFLARE_ACCOUNT_ID`, and
+   `DEPLOY_WORKER=true`. `.github/workflows/deploy-worker.yml` then tests and deploys the Worker whenever
+   `worker/` changes on `main`.
+
+**Rules for changes:** the Worker must keep working with the app version players still have open (an
+installed app updates on its next start). Add to its API before the app uses the addition, and remove
+something only a release after the app stopped using it. Rotating `BLOB_KEY`: move the old key to
+`BLOB_KEY_PREVIOUS` and set a new one; credentials are re-encrypted as they are used. Dropping the previous
+key makes every device that hasn't renewed since reconnect once.
 
 ## Privacy
 

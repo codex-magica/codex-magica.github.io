@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
-import { DriveHop, HOP_NOTICE_MS } from "../state/useDriveSync";
+import { DriveHop } from "../state/useDriveSync";
 
-// The small card that announces the Google Drive token round trip a few seconds ahead, and confirms
-// the sync once the app is back. role="status", not a dialog: it must not count as an open window.
+// The small card that confirms the sync after coming back from Google's consent page (turning sync
+// on, or reconnecting). role="status", not a dialog: it must not count as an open window.
 
 const rise = keyframes`from { opacity: 0; transform: translate(-50%, 14px) scale(.97); } to { opacity: 1; transform: translate(-50%, 0) scale(1); }`;
 const sink = keyframes`from { opacity: 1; transform: translate(-50%, 0) scale(1); } to { opacity: 0; transform: translate(-50%, 10px) scale(.98); }`;
-const drain = keyframes`from { transform: scaleX(1); } to { transform: scaleX(0); }`;
 const float = keyframes`0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); }`;
-const halo = keyframes`0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.65); opacity: 0; }`;
 const spin = keyframes`to { transform: rotate(360deg); }`;
 const pop = keyframes`0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); }`;
 
@@ -27,7 +25,6 @@ const Glyph: React.FC<{ phase: Exclude<DriveHop, null> }> = ({ phase }) => (
 );
 
 const COPY: Record<Exclude<DriveHop, null>, { title: string; body: string }> = {
-  leaving: { title: "Google Drive-szinkron", body: "Egy pillanatra megnyílik a Google, aztán visszakerülsz ide." },
   backSyncing: { title: "Szinkronizálás…", body: "A karaktereid frissülnek a Google Drive-on." },
   backDone: { title: "Szinkronizálva", body: "A karaktereid a Google Drive-on is naprakészek." },
 };
@@ -35,7 +32,7 @@ const COPY: Record<Exclude<DriveHop, null>, { title: string; body: string }> = {
 const EXIT_MS = 220;
 const calm = { "@media (prefers-reduced-motion: reduce)": { animation: "none !important" } };
 
-export const DriveHopNotice: React.FC<{ hop: DriveHop; onCancel: () => void }> = ({ hop, onCancel }) => {
+export const DriveHopNotice: React.FC<{ hop: DriveHop }> = ({ hop }) => {
   // keep the last phase on screen while the card slides away
   const [shown, setShown] = useState<Exclude<DriveHop, null> | null>(hop);
   if (hop && hop !== shown) setShown(hop);
@@ -56,11 +53,8 @@ export const DriveHopNotice: React.FC<{ hop: DriveHop; onCancel: () => void }> =
       <Box position="relative" overflow="hidden" borderRadius="16px" bg="sheet" border="1px solid" borderColor="accentBd"
         boxShadow="0 18px 44px -12px rgba(20,30,50,.32), 0 2px 6px rgba(20,30,50,.08)">
         <Flex align="center" gap="14px" pl="14px" pr="12px" py="13px">
-          {/* the cloud, in a soft disc with a halo (leaving), a spinning ring (syncing) or a check (done) */}
+          {/* the cloud, in a soft disc with a spinning ring (syncing) or a check (done) */}
           <Box position="relative" flexShrink={0} w="42px" h="42px">
-            {shown === "leaving" && (
-              <Box position="absolute" inset={0} borderRadius="full" bg="accentSoft" sx={{ animation: `${halo} 1.6s ease-out infinite`, ...calm }} />
-            )}
             {busy && (
               <Box position="absolute" inset="-3px" borderRadius="full" border="2px solid transparent" borderTopColor="accent" borderRightColor="accent"
                 sx={{ animation: `${spin} .9s linear infinite`, ...calm }} />
@@ -75,18 +69,7 @@ export const DriveHopNotice: React.FC<{ hop: DriveHop; onCancel: () => void }> =
             <Text fontSize="14px" fontWeight={700} color="fg" lineHeight="1.3">{title}</Text>
             <Text fontSize="12.5px" color="muted" lineHeight="1.4" mt="2px">{body}</Text>
           </Box>
-          {shown === "leaving" && (
-            <Box as="button" type="button" onClick={onCancel} flexShrink={0} alignSelf="center" fontSize="13px" fontWeight={600} color="muted"
-              px="10px" py="6px" borderRadius="8px" _hover={{ bg: "accentSoft", color: "fg" }} _active={{ bg: "accentSoft" }}>
-              Most ne
-            </Box>
-          )}
         </Flex>
-        {/* time left before the hop */}
-        {shown === "leaving" && !leaving && (
-          <Box position="absolute" left={0} right={0} bottom={0} h="3px" bg="accent" opacity={0.75} transformOrigin="left"
-            sx={{ animation: `${drain} ${HOP_NOTICE_MS}ms linear both`, ...calm }} />
-        )}
       </Box>
     </Box>
   );

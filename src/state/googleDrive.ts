@@ -1,30 +1,36 @@
-// Google Drive access from the browser, with no server of our own.
+// Google Drive access from the browser.
 //
-// Sign-in uses Google Identity Services' token client: a Google popup asks once for the
-// `drive.appdata` permission (a hidden folder only this app can see in the user's own Drive), plus the
-// user's email (to show which account syncs and to skip Google's account chooser later). It returns an
-// access token that lasts about an hour; browser-only apps get no refresh token.
+// Turning sync on sends the player to Google's consent page (a full-page round trip, which works the
+// same in a browser tab and in an app installed to the home screen). Google returns a one-time code;
+// the app's token service (worker/, a small Cloudflare Worker that holds the OAuth client secret)
+// exchanges it for a one-hour access token plus an encrypted long-term credential, which stays on this
+// device. When the access token runs out, the app asks the token service for a new one with that
+// credential: no popup, no redirect, no tap. The token service stores nothing and never sees Drive data.
 //
-// Renewal without a tap: a popup needs a tap, but a page navigation doesn't. So at safe moments the app
-// navigates to Google's authorization endpoint with `prompt=none` and comes straight back with a new
-// token in the URL fragment, as long as the user's Google session is alive (usually weeks). Google calls
-// this endpoint legacy; if it ever stops working, the app falls back to the tap.
+// Without a token service configured (forks, local builds), sign-in falls back to Google Identity
+// Services' popup, and an expired token is renewed by a tap (browser apps get no long-term access on
+// their own).
 //
-// The token is kept in localStorage until it expires, so reloads within the hour don't ask again.
+// The access token is kept in localStorage until it expires, so reloads within the hour don't ask again.
 //
-// The OAuth client ID comes from VITE_GOOGLE_CLIENT_ID at build time. Without it the feature is
-// simply absent (forks and local builds stay local-only). See docs/google-drive-sync.md.
+// The OAuth client ID comes from VITE_GOOGLE_CLIENT_ID and the token service's address from
+// VITE_TOKEN_SERVICE_URL, both at build time. Without a client ID the feature is simply absent. See
+// docs/google-drive-sync.md.
 
 export const GOOGLE_CLIENT_ID: string = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() ?? "";
 export const driveSyncAvailable = (): boolean => GOOGLE_CLIENT_ID !== "";
+export const TOKEN_SERVICE: string = ((import.meta.env.VITE_TOKEN_SERVICE_URL as string | undefined)?.trim() ?? "").replace(/\/+$/, "");
+export const tokenServiceAvailable = (): boolean => TOKEN_SERVICE !== "";
 
 const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 const SCOPES = `${SCOPE} openid email`;
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
-const RETURN_KEY = "magus.driveReturn.v1";
-const NO_ANSWER_MS = 2 * 60_000; // a round trip with prompt=none takes seconds
+const RETURN_KEY = "magus.driveReturn.v2";
+const NO_ANSWER_MS = 10 * 60_000; // signing in and agreeing takes a minute or two at most
 const STALE_ANSWER_MS = 30 * 60_000;
 const REQUEST_TIMEOUT_MS = 60_000;
+const SERVICE_TIMEOUT_MS = 20_000;
+const CREDENTIAL_KEY = "magus.driveCredential.v1";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 const TOKEN_KEY = "magus.driveToken.v1";
 
@@ -159,7 +165,32 @@ export const fetchAccountEmail = async (token: string): Promise<string | null> =
   }
 };
 
-// ── renewal by redirect (no tap) ───────────────────────────────────────────────────────────────────
+// ── the long-term credential (only with a token service) ───────────────────────────────────────────
+// Opaque to the app: the refresh token, encrypted by the token service with a key only it has.
+const loadCredential = (): string | null => {
+  try {
+    return localStorage.getItem(CREDENTIAL_KEY);
+  } catch {
+    return null;
+  }
+};
+export const hasCredential = (): boolean => tokenServiceAvailable() && loadCredential() !== null;
+const saveCredential = (c: string) => {
+  try {
+    localStorage.setItem(CREDENTIAL_KEY, c);
+  } catch {
+    /* storage full: works for this hour; the next renewal will ask for a reconnect */
+  }
+};
+export const forgetCredential = (): void => {
+  try {
+    localStorage.removeItem(CREDENTIAL_KEY);
+  } catch {
+    /* ignore */
+  }
+};
+
+// ── the round trip to Google's consent page ─────────────────────────────────────────────────────────
 // Where the app was, so the round trip through Google lands the user back on the same screen.
 export interface ScrollMark {
   path: number[]; // child indexes from #root down to the scrolled element
@@ -177,32 +208,51 @@ interface PendingRedirect {
   state: string;
   at: number;
   ctx: ReturnContext;
+  verifier: string; // PKCE: proves the code is redeemed by whoever asked for it
+  backups?: boolean; // turning sync on: the daily backups choice made before leaving
 }
 export type RedirectOutcome =
   | { kind: "none" }
-  | { kind: "token"; ctx: ReturnContext }
+  | { kind: "code"; code: string; verifier: string; ctx: ReturnContext; backups?: boolean }
   | { kind: "error"; error: string; ctx: ReturnContext | null };
 
 // The app's own address, registered in the Google Cloud console as an authorized redirect URI.
 export const redirectUri = (): string => `${window.location.origin}${import.meta.env.BASE_URL}`;
 
-// Returns false (and stays) if the round trip can't be made safely.
-export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null): boolean => {
-  const bytes = new Uint8Array(16);
+const randomB64url = (n: number): string => {
+  const bytes = new Uint8Array(n);
   crypto.getRandomValues(bytes);
-  const state = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return b64url(bytes);
+};
+const b64url = (bytes: Uint8Array): string => {
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+
+// Off to Google's consent page (with the token service only). `backups` is passed when turning sync on.
+// Returns false (and stays) if the round trip can't be made safely.
+export const beginConnect = async (ctx: ReturnContext, loginHint: string | null, backups?: boolean): Promise<boolean> => {
+  if (!tokenServiceAvailable()) return false;
+  const state = randomB64url(16);
+  const verifier = randomB64url(32);
+  let challenge: string;
   try {
-    localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx } satisfies PendingRedirect));
+    challenge = b64url(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))));
+    localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx, verifier, ...(backups === undefined ? {} : { backups }) } satisfies PendingRedirect));
   } catch {
-    return false; // without storage we couldn't verify the answer: don't go
+    return false; // no crypto or no storage: we couldn't verify the answer, so don't go
   }
   const q = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri(),
-    response_type: "token",
+    response_type: "code",
     scope: SCOPES,
+    access_type: "offline", // the long-term part, which only the token service can use
+    prompt: "consent", // otherwise Google leaves out the long-term part when access was given before
     include_granted_scopes: "true",
-    prompt: "none",
+    code_challenge: challenge,
+    code_challenge_method: "S256",
     state,
   });
   if (loginHint) q.set("login_hint", loginHint);
@@ -210,18 +260,19 @@ export const beginSilentRenewal = (ctx: ReturnContext, loginHint: string | null)
   return true;
 };
 
-// Read Google's answer from the URL fragment once, at startup, before anything renders. The token is
-// accepted only if `state` matches the one saved before leaving, and the fragment is removed from the
-// address bar and history right away.
+// Read Google's answer from the address once, at startup, before anything renders. It is accepted
+// only if `state` matches the one saved before leaving, and the answer is removed from the address bar
+// and history right away.
 let outcome: RedirectOutcome | null = null;
 export const consumeRedirectResult = (): RedirectOutcome => {
   if (outcome) return outcome;
   outcome = { kind: "none" };
   if (typeof window === "undefined") return outcome;
-  if (!window.location.hash.includes("state=")) {
-    // We left for Google a while ago but came back without an answer (Google showed its own error page,
-    // the network failed, or the user went back): count it as an error, so it isn't retried right away,
-    // and return to where the player was. A fresh entry may belong to another tab that is on its way.
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("state")) {
+    // We left for Google a while ago but came back without an answer (the user went back, or Google
+    // showed its own error page): say so, and return to where the player was. A fresh entry may belong
+    // to another tab that is still on its way.
     try {
       const pending = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
       if (pending && Date.now() - pending.at > NO_ANSWER_MS) {
@@ -233,7 +284,6 @@ export const consumeRedirectResult = (): RedirectOutcome => {
     }
     return outcome;
   }
-  const params = new URLSearchParams(window.location.hash.slice(1));
   let saved: PendingRedirect | null = null;
   try {
     saved = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
@@ -241,22 +291,92 @@ export const consumeRedirectResult = (): RedirectOutcome => {
   } catch {
     saved = null;
   }
-  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  window.history.replaceState(null, "", window.location.pathname + window.location.hash);
   if (!saved || params.get("state") !== saved.state || Date.now() - saved.at > STALE_ANSWER_MS) return outcome; // not ours (or ancient): ignore
-  const token = params.get("access_token");
-  const granted = (params.get("scope") ?? "").split(" ");
-  if (token && granted.includes(SCOPE)) {
-    storeToken(token, Number(params.get("expires_in")) || 3600);
-    outcome = { kind: "token", ctx: saved.ctx };
-  } else {
-    outcome = { kind: "error", error: params.get("error") ?? (token ? "drive permission not granted" : "unknown"), ctx: saved.ctx };
-  }
+  const code = params.get("code");
+  outcome = code
+    ? { kind: "code", code, verifier: saved.verifier, ctx: saved.ctx, ...(saved.backups === undefined ? {} : { backups: saved.backups }) }
+    : { kind: "error", error: params.get("error") ?? "unknown", ctx: saved.ctx };
   return outcome;
 };
 
+// ── the token service ────────────────────────────────────────────────────────────────────────────────
+// Thrown when the token service can't be reached or is busy: the credential stays, and the next round
+// tries again.
+export class TokenServiceError extends Error {}
+
+const service = async (path: string, body: object): Promise<{ status: number; data: Record<string, unknown> }> => {
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? window.setTimeout(() => ctl.abort(), SERVICE_TIMEOUT_MS) : undefined;
+  try {
+    const res = await fetch(`${TOKEN_SERVICE}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl?.signal });
+    let data: Record<string, unknown> = {};
+    try {
+      data = (await res.json()) as Record<string, unknown>;
+    } catch {
+      /* not JSON */
+    }
+    return { status: res.status, data };
+  } catch {
+    throw new TokenServiceError("token service unreachable");
+  } finally {
+    window.clearTimeout(timer);
+  }
+};
+
+const accept = (data: Record<string, unknown>): string => {
+  const token = typeof data.access_token === "string" ? data.access_token : null;
+  if (!token) throw new TokenServiceError("no token");
+  storeToken(token, typeof data.expires_in === "number" ? data.expires_in : 3600);
+  if (typeof data.credential === "string") saveCredential(data.credential);
+  return token;
+};
+
+// After the consent page: the code becomes an access token and the long-term credential.
+export const exchangeCode = async (code: string, verifier: string): Promise<string> => {
+  const { status, data } = await service("/v1/exchange", { code, code_verifier: verifier, redirect_uri: redirectUri() });
+  if (status !== 200) {
+    if (status >= 500 || status === 429) throw new TokenServiceError(`exchange: HTTP ${status}`);
+    throw new DriveAuthError(typeof data.error === "string" ? data.error : "exchange failed");
+  }
+  // the Drive permission left unticked on Google's screen (the token service already undid the grant)
+  if (!(typeof data.scope === "string" && data.scope.split(" ").includes(SCOPE))) throw new DriveAuthError("drive permission not granted");
+  return accept(data);
+};
+
+// A fresh access token from the credential, without any UI. Concurrent callers share one request.
+let refreshing: Promise<string> | null = null;
+export const refreshAccess = (): Promise<string> => {
+  if (refreshing) return refreshing;
+  const credential = loadCredential();
+  if (!credential || !tokenServiceAvailable()) return Promise.reject(new DriveAuthError("no credential"));
+  refreshing = (async () => {
+    try {
+      const { status, data } = await service("/v1/token", { credential });
+      if (status === 200) return accept(data);
+      if (status === 401) {
+        // the grant is gone (revoked in the Google account, or unused for months): ask the user again
+        if (loadCredential() === credential) forgetCredential();
+        throw new DriveAuthError("credential revoked");
+      }
+      throw new TokenServiceError(`token: HTTP ${status}`);
+    } finally {
+      refreshing = null;
+    }
+  })();
+  return refreshing;
+};
+
+// Turning sync off: revoke at Google (the long-term grant with it) and forget everything here.
 export const revokeAccess = async (): Promise<void> => {
   const token = validToken();
+  const credential = loadCredential();
   forgetToken();
+  forgetCredential();
+  if (credential && tokenServiceAvailable()) {
+    await service("/v1/revoke", { credential }).catch(() => undefined); // offline: unused grants expire on their own
+    return;
+  }
   if (!token) return;
   try {
     const oauth2 = await loadGoogleIdentity();

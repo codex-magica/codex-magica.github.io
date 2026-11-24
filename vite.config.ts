@@ -87,7 +87,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "worker/src/**/*.test.ts"],
     // The golden snapshots were recorded under Jest 27; keep its serializer settings so they stay
     // byte-identical (a snapshot change must mean the rules changed, not the test runner).
     snapshotFormat: { escapeString: true, printBasicPrototype: true },

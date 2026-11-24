@@ -39,11 +39,9 @@ export interface DriveSettings {
   backups: boolean; // daily backups of every character in Drive (on by default)
   lastSyncAt: number | null;
   email: string | null; // the Google account that syncs (shown in the window; skips the account chooser)
-  lastSilentAt: number | null; // last renewal attempt by redirect (rate limit: no loops)
-  silentBlockedUntil: number | null; // after Google said "needs the user" (or kept failing), don't try silently until then
 }
 
-export const OFF_SETTINGS: DriveSettings = { enabled: false, backups: true, lastSyncAt: null, email: null, lastSilentAt: null, silentBlockedUntil: null };
+export const OFF_SETTINGS: DriveSettings = { enabled: false, backups: true, lastSyncAt: null, email: null };
 
 export const loadDriveSettings = (): DriveSettings => {
   const s = read<Record<string, unknown>>(SETTINGS_KEY, {});
@@ -53,8 +51,6 @@ export const loadDriveSettings = (): DriveSettings => {
     backups: s.backups !== false,
     lastSyncAt: num(s.lastSyncAt),
     email: typeof s.email === "string" ? s.email : null,
-    lastSilentAt: num(s.lastSilentAt),
-    silentBlockedUntil: num(s.silentBlockedUntil),
   };
 };
 export const saveDriveSettings = (s: DriveSettings): void => write(SETTINGS_KEY, s);

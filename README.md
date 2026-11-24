@@ -137,10 +137,10 @@ same on your phone, tablet and computer:
   Nothing is overwritten silently.
 - With daily backups on (the default), the last state of each day a character was edited, and its last
   state before deletion, stay in your Drive too, and can be restored from the sync window.
-- Google's access for web apps runs out every hour. The app renews it with a quick hop through Google,
-  shows a small notice before it does, and brings you back to the same place.
-- There's no account to create and no server of ours in between: the data goes straight from your browser
-  to your Drive. See the [privacy notice](https://codex-magica.github.io/privacy.html).
+- You give Google's permission once per device, and the app keeps it renewed by itself: no hourly prompts.
+- There's no account to create, and your characters go straight from your browser to your Drive. A tiny
+  service only renews Google's access and never sees them. See the
+  [privacy notice](https://codex-magica.github.io/privacy.html).
 
 **Your data stays with you.** Without sync, characters live only in the browser on your device. A backup
 of all of them is one tap away, and the file can go straight to iCloud Drive, Google Drive or Files.
@@ -228,7 +228,7 @@ flowchart LR
 - **Installable and offline.** `vite-plugin-pwa` (Workbox) precaches the whole build, and the rules data
   is bundled with the code, so nothing needs the network after the first load. Updates are offered, never
   forced. An installed app can stay open for days, so it checks for a new version every hour.
-- **Sync without a server.** The browser talks to the Google Drive REST API directly. Each device writes
+- **Sync without a backend.** The browser talks to the Google Drive REST API directly. Each device writes
   only its own JSON file in the player's app-data folder and reads the others', so two devices can never
   overwrite each other (Drive has no conditional writes). Every character carries a version vector, so
   "replaced" and "edited in parallel" are told apart without trusting device clocks: an edit beats a
@@ -236,12 +236,13 @@ flowchart LR
   damaged download never leads to an overwrite, and optional daily backups keep each day's last state and
   the last state before a deletion. Randomized tests run several devices with concurrent rounds, failing
   requests and skewed clocks, and check that they converge and lose nothing.
-- **Hourly tokens without hourly taps.** Browser-only Google sign-in gives a one-hour access token and no
-  refresh token. Instead of asking for a tap every hour, the app renews it with a full-page round trip to
-  Google's authorization endpoint (`prompt=none` with a `login_hint`) at moments when nothing can be lost:
-  at start, when coming back to the app, or after a minute without touches while changes are waiting, and
-  never while a dialog or the editor is open. It returns to the same screen, tab and scroll position.
-  Setup, details and the options weighed: [docs/google-drive-sync.md](docs/google-drive-sync.md).
+- **Hourly tokens without hourly taps.** Browser apps get one-hour Google access tokens, and the long-term
+  refresh token needs a client secret, which a public web app can't keep. A stateless Cloudflare Worker
+  (`worker/`, free plan) holds the secret: it turns the consent page's one-time code into an access token
+  plus the refresh token encrypted into an opaque credential, which stays on the device, and later turns that
+  credential into fresh access tokens. It stores nothing, logs nothing, answers only the app's origins, and
+  never sees Drive data. Without it, sync falls back to a tap about once an hour. Setup, details and the
+  options weighed: [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
 ### 4 · Hosting
 
@@ -281,7 +282,8 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
   command `npm run build`, output folder `dist`.
 - **Google Drive sync** needs a Google OAuth client ID of your own. It's free and takes about fifteen
   minutes: [docs/google-drive-sync.md](docs/google-drive-sync.md). Without one, your copy simply has no
-  sync button, and everything else works the same.
+  sync button, and everything else works the same. For sync without hourly taps, also deploy the token
+  service in `worker/` to Cloudflare's free plan (same doc); without it, sync asks for a tap about once an hour.
 
 ## Found a mistake?
 

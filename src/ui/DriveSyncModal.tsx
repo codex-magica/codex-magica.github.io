@@ -25,14 +25,16 @@ export const syncedAgo = (ts: number, now: number): string => {
 const STALE_PENDING_MS = 3 * 3600_000;
 
 // One-line status (null while sync is off). On the roster the button to tap is "Google Drive"; inside the
-// window it's "Szinkronizálás most".
+// window it's "Szinkronizálás most", or "Újrakapcsolás" when the Google permission has to be given again.
 export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
   if (!drive.enabled) return null;
-  const button = inWindow ? "a „Szinkronizálás most” gombra" : "a Google Drive gombra";
+  const reconnect = drive.service && drive.status === "needsTap";
+  const button = !inWindow ? "a Google Drive gombra" : reconnect ? "az „Újrakapcsolás” gombra" : "a „Szinkronizálás most” gombra";
   if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
   // changes stuck on this device for hours: say so before the user picks up another device
   if (drive.status !== "idle" && drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
     return `Ezen az eszközön vannak még fel nem töltött módosítások (${drive.pending.count}). Kattints ${button}, mielőtt másik eszközön folytatod.`;
+  if (reconnect) return `Google Drive: a kapcsolat megszakadt. Az újrakapcsoláshoz kattints ${button}.`;
   if (drive.status === "needsTap") return `Google Drive: a következő szinkronhoz kattints ${button}.`;
   if (drive.status === "error") return "Google Drive: a legutóbbi szinkron nem sikerült.";
   return drive.lastSyncAt ? `Google Drive: szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.` : "Google Drive: bekapcsolva.";
@@ -187,7 +189,7 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
 
 export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[]; onClose: () => void }> = ({ drive, records, onClose }) => {
   const { prepare } = drive;
-  useEffect(() => prepare(), [prepare]); // load Google's sign-in now, so the tap can open its popup
+  useEffect(() => prepare(), [prepare]); // without a token service: load Google's sign-in now, so the tap can open its popup
   const [now] = useState(() => Date.now());
   const [backupsChoice, setBackupsChoice] = useState(drive.backups);
   const [view, setView] = useState<"main" | "backups">("main");
@@ -227,9 +229,18 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           Így minden eszközödön ugyanazok a karakterek lesznek, ahol bekapcsolod a szinkront.
         </Text>
         <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
-          Nincs külön fiók és nincs saját szerverünk: az adatok a te Google-fiókodban maradnak. A Google egyszer, egy
-          felugró ablakban kér engedélyt. Utána az alkalmazás magától szinkronizál, és csak akkor kell újra
-          belépned, ha közben kijelentkezel a Google-fiókodból.
+          {drive.service ? (
+            <>
+              Nincs külön fiók: a karaktereid csak a te Google-fiókodba kerülnek, más szerverre nem. Bekapcsoláskor a
+              Google oldalán egyszer engedélyt adsz, aztán visszajössz ide, és onnantól az alkalmazás magától szinkronizál.
+            </>
+          ) : (
+            <>
+              Nincs külön fiók és nincs saját szerverünk: az adatok a te Google-fiókodban maradnak. A Google egyszer, egy
+              felugró ablakban kér engedélyt. Utána az alkalmazás magától szinkronizál, de óránként egyszer kattintani
+              kell hozzá.
+            </>
+          )}{" "}
           Részletek az{" "}
           <Box as="a" href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
             adatvédelmi tájékoztatóban
@@ -269,7 +280,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
               Kikapcsolás
             </Box>
             <Box {...btn} onClick={drive.syncNow} disabled={busy} opacity={busy ? 0.6 : 1} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-              {busy ? "Szinkronizálás…" : "Szinkronizálás most"}
+              {busy ? "Szinkronizálás…" : drive.service && drive.status === "needsTap" ? "Újrakapcsolás" : "Szinkronizálás most"}
             </Box>
           </>
         ) : (
