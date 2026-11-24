@@ -279,3 +279,63 @@ describe("storage full and long absences (second review)", () => {
     expect(backupBodies(drive).some((b) => tokensOf(b.record).includes("phone-last-edit"))).toBe(true);
   });
 });
+
+describe("saving when storage is full", () => {
+  test("nothing fits: what was saved before stays exactly as it was", () => {
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.storage = qs;
+    a.store = a.run(() => createRosterStore());
+    const x = a.create("Xena");
+    const before = { roster: qs.getItem("magus.roster.v1"), deletions: qs.getItem("magus.deletions.v1") };
+    qs.cap = qs.used(); // not a byte more
+    a.edit(x.id, "x".repeat(500));
+    expect(a.store.getState().saveFailed).toBe(true);
+    expect(qs.getItem("magus.roster.v1")).toBe(before.roster);
+    expect(qs.getItem("magus.deletions.v1")).toBe(before.deletions);
+    expect(tokensOf(a.records()[0]).some((t) => t.startsWith("xxx"))).toBe(true); // kept in memory
+  });
+
+  test("edits made while saving fails get a lineage of their own; once there's room, the device's own again", () => {
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.storage = qs;
+    a.store = a.run(() => createRosterStore());
+    const x = a.create("Xena");
+    qs.cap = qs.used();
+    a.edit(x.id, "y".repeat(400));
+    const unsaved = Object.keys(a.records()[0].syncVc ?? {});
+    expect(unsaved.some((k) => k.startsWith("deva.u"))).toBe(true);
+    qs.cap = Infinity;
+    later();
+    a.edit(x.id, "after"); // saved: memory and storage agree again
+    expect(a.store.getState().saveFailed).toBe(false);
+    later();
+    a.edit(x.id, "next");
+    const vc = a.records()[0].syncVc ?? {};
+    expect(vc.deva).toBeGreaterThan(1); // the next edit is the device's own again
+  });
+
+  test("an unreadable roster with no room to keep it aside: offered for download, then replaced by what could be read", () => {
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.storage = qs;
+    const good = { ...defaultRecord, id: "c_ok", name: "Megvan" };
+    const raw = JSON.stringify([good, { broken: true }]); // one record can't be read
+    qs.setItem("magus.roster.v1", raw);
+    qs.cap = qs.used() + 50; // no room for a copy
+    a.store = a.run(() => createRosterStore());
+    expect(a.records().map((r) => r.name)).toEqual(["Megvan"]);
+    const keys = a.run(() => unreadableKeys());
+    expect(keys).toEqual(["magus.roster.v1"]); // the roster itself is what's offered
+    a.edit("c_ok", "note");
+    expect(qs.getItem("magus.roster.v1")).toBe(raw); // not saved over
+    qs.cap = Infinity;
+    a.run(() => a.store.dropUnreadable(keys)); // downloaded, then "Törlés erről az eszközről"
+    expect(a.store.getState().saveFailed).toBe(false);
+    expect(a.run(() => unreadableKeys())).toEqual([]);
+    const saved = JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[];
+    expect(saved.map((r) => r.name)).toEqual(["Megvan"]);
+    expect(tokensOf(saved[0])).toContain("note");
+  });
+});

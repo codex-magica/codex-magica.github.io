@@ -49,13 +49,17 @@ Without one, the app stays local-only and never contacts Google. The token servi
   the roster for download; if there's no room to keep it aside, it stays where it is and nothing is saved
   over it until the player has downloaded and dropped it.
 - **Storage full:** memory isn't replaced by the older saved state; the sync uploads from memory, so the
-  edit survives in Drive, and neither the renewal round trip nor the update banner reloads the page. Edits
+  edit survives in Drive. Before the page is replaced (the round trip to Google's consent page, an app
+  update), memory is parked in the tab's session storage (separate room, survives the page change) and
+  merged back on the next start; if that isn't possible either, the page stays and the player is asked
+  to save a backup file first. Edits
   that exist only in memory get a lineage of their own, so an edit made later from the older saved state
   (after a reload, or in another tab) is parallel to them and both are kept; another tab's saved changes
   are merged into memory, not overwritten. A round's result is applied to what's saved at that moment.
   The roster and the deletion markers are saved so that they always fit together (a roster without a
   character whose marker isn't saved would get it back from Drive): both write orders are tried, then the
-  markers without the last states, and if nothing fits, what was saved before is put back.
+  markers without the last states (counted as saved unless sync still needs one for a backup), and if
+  nothing fits, what was saved before is put back.
 - **A cloned device** (browser data restored onto a second device) is noticed by the mark each write
   leaves in the device file. The last mark seen in the file is kept apart from recent attempts, so a run
   of failed writes can't make a device's own file look foreign. It takes a new id; its versions that were
@@ -68,8 +72,9 @@ Without one, the app stays local-only and never contacts Google. The token servi
   though the merge made their vectors look parallel.
 - **Daily backups** (if on, a per-device setting): before Drive's copy of a character is replaced by an edit
   from another day, or by a deletion, the last state of that day is saved as its own file (a deletion keeps
-  the last state on the device until it's in Drive, so an edit just before deleting is kept too, also when
-  a parallel edit elsewhere wins over the deletion) (`kind=backup`; created once, never modified).
+  the last state on the device until it's in Drive, however long that takes, so an edit just before
+  deleting is kept too, also when a parallel edit elsewhere wins over the deletion) (`kind=backup`; created
+  once, never modified).
   Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.
@@ -87,13 +92,25 @@ Without one, the app stays local-only and never contacts Google. The token servi
 - **Retrying.** A round that fails for a passing reason (no network, Google or the token service busy) is
   tried again by itself after 30 seconds, then waiting twice as long each time, up to 15 minutes (and
   right away when the device comes back online or the app back to the foreground). Requests have time
-  limits (the account check too), and waiting for another tab's round gives up after two minutes, so a
-  hung request or a frozen tab can't stop sync.
+  limits (the account check too), and a tab that holds the sync lock for two minutes (frozen in the
+  background on a phone) has it taken over, so a hung request or a frozen tab can't stop sync. A change
+  saved by another tab that closed before its own round is sent by the tab that stays open.
+- **Google storage full** (Drive answers `storageQuotaExceeded`): the player is told that their Google
+  storage is full and only they can make room; rounds keep being retried (slowly), so sync goes on by
+  itself afterwards.
+- **What the player is told, and where.** The roster says at the top what sync needs from the player
+  (reconnect, an app update, Google storage full, changes stuck on this device for hours), with a button
+  to the sync window, and names the characters a round kept twice ("(másik változat)") or brought back
+  after a deletion (an edit made elsewhere in parallel), until dismissed. The roster footer keeps the
+  quiet status. If Google's permission goes away while the player is elsewhere (a character sheet), a
+  card says so once on any screen. Coming back from Google's page with a problem reopens the sync window
+  with what happened.
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
-  months) does the app ask the player to reconnect: the footer says so,
+  months) does the app ask the player to reconnect: the roster says so,
   and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
-  The answer is stored only after the account check: if another account answers, nothing it gave is kept
-  and the right account's credential stays (the other account's permission stays in that account, which may
+  The answer is stored only after the account check (and not at all if the check fails on the network:
+  the player tries again): if another account answers, nothing it gave is kept and the right account's
+  credential stays (the other account's permission stays in that account, which may
   sync a roster of its own elsewhere). If another tab turned sync off meanwhile, that wins.
 - **Without a token service** the app uses Google's popup to sign in, and every expired token needs a tap
   ("Szinkronizálás most"). A silent renewal by redirect (`prompt=none`) was tried and dropped: Google keeps
