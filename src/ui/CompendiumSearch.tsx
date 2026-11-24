@@ -4,6 +4,7 @@ import { SearchIcon } from "@chakra-ui/icons";
 import { ModalState } from "./DetailModal";
 import { TABS, tabBlocks, skillModalBody, skillModalSub } from "./compendiumData";
 import { SKILLS } from "../model/skills";
+import { refreshStatusTint } from "./statusTint";
 import { rulesHomebrew } from "../model/rulesVariants";
 
 // ── Spotlight-style compendium search ──────────────────────────────────────────────────────────
@@ -193,6 +194,7 @@ export const SearchPalette: React.FC<{
 
   // a resumed search opens with the query selected — typing restarts, arrows/Enter continue
   useEffect(() => { inputRef.current?.select(); }, []);
+  useEffect(() => () => refreshStatusTint(), []); // closed: let iOS pick the status bar colour again
 
   const setQueryBoth = (q: string) => {
     setQuery(q);

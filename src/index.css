@@ -86,17 +86,28 @@ body {
    instant, solid tint). Without one it draws a soft fading haze over the top of the app instead. Our top
    bars scroll with their screens, so this strip gives iOS a solid colour to use: the top bar's own
    background (the `page` token, light/dark aware). It sits outside #root because #root's transform would
-   make it fixed relative to #root rather than the viewport, and it paints behind #root, so it is never
-   visible. This is observed Safari behaviour, not documented by Apple, so it may change. */
+   make it fixed relative to #root rather than the viewport.
+   It's in front of everything, modals included: Safari only looks at the frontmost element at the top
+   edge, and a modal's see-through dim there brought the haze back (on phones, where nothing covers the
+   whole top otherwise). Yet it paints nothing: its background is clipped to its text, and it has none;
+   Safari still takes the colour. While html[data-tint-refresh] is set (statusTint.ts) it's a pixel
+   taller, which makes Safari look again after an overlay closed or the colour mode changed.
+   This is observed Safari behaviour, not documented by Apple, so it may change. */
 #status-tint {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 12px;
-  z-index: 0;
+  z-index: 2147483647;
   pointer-events: none;
   background-color: var(--chakra-colors-page);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html[data-tint-refresh] #status-tint {
+  height: 13px;
 }
 /* the app shells fill #root with height:100% — the dynamic-viewport handling lives here once */
 @supports (height: 100dvh) {

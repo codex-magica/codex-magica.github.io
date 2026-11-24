@@ -14,6 +14,7 @@ import { OpenBookIcon } from "./icons";
 import { SKILLS, SkillDef } from "../model/skills";
 import { rulesHomebrew } from "../model/rulesVariants";
 import { SKILL_CATEGORIES } from "../model/common";
+import { refreshStatusTint } from "./statusTint";
 
 interface Props {
   compTab: number;
@@ -120,6 +121,12 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
   const [searchOpen, setSearchOpen] = useState(false);
   // mobile (< md): the sidebar becomes a slide-in drawer behind a header menu button
   const [navOpen, setNavOpen] = useState(false);
+  // the menu drawer (phones) closed: let iOS pick the status bar colour again (statusTint.ts)
+  const navWasOpen = useRef(false);
+  useEffect(() => {
+    if (navWasOpen.current && !navOpen) refreshStatusTint();
+    navWasOpen.current = navOpen;
+  }, [navOpen]);
   const isMobile = !useIsDesktop();
   const contentRef = useRef<HTMLDivElement>(null);
   // the query outlives a pick (reopening resumes the search) but a dismissal clears it; held in a

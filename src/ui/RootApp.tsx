@@ -16,6 +16,7 @@ import { useDriveSync } from "../state/useDriveSync";
 import { ReturnContext, consumeRedirectResult } from "../state/googleDrive";
 import { TABS } from "./compendiumData";
 import { createBlankRecord } from "../state/storage";
+import { refreshStatusTint } from "./statusTint";
 import { CharacterRecord } from "../model/character";
 
 // Shown while saving to this device fails (storage full or blocked), so nobody loses edits unawares.
@@ -39,7 +40,14 @@ export const RootApp: React.FC = () => {
     document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
       m.setAttribute("content", c);
     });
+    refreshStatusTint(); // the status bar strip's colour changed with the mode: make iOS look again
   }, [colorMode]);
+  // back through the back/forward cache, iOS may still show an old status bar colour
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => e.persisted && refreshStatusTint();
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
   // back from Google's consent page (turning Drive sync on, or reconnecting): land on the screen, tab
   // and scroll position the user was on (read once; later screens open normally)
   const [back] = useState<ReturnContext | null>(() => {

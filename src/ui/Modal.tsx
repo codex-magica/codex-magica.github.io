@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Box, BoxProps } from "@chakra-ui/react";
 import { ParchPanel } from "./ParchPanel";
+import { refreshStatusTint } from "./statusTint";
 
 // Shared modal scaffolding. Every dialog in the app is a fixed dimmed overlay holding a centred
 // ParchPanel; clicking the backdrop closes it, clicking the panel doesn't. Previously copy-pasted
@@ -25,6 +26,7 @@ export const useEscClose = (onClose: () => void) => {
       const i = escStack.indexOf(ref);
       if (i >= 0) escStack.splice(i, 1);
       window.removeEventListener("keydown", onKey);
+      refreshStatusTint(); // a layer closed: let iOS pick the status bar colour again
     };
   }, []);
 };
