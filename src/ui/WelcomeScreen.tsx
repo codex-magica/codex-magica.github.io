@@ -72,7 +72,15 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [importError, setImportError] = useState<string | null>(null);
   const [importInfo, setImportInfo] = useState<string | null>(null);
   const [lastBackupAt, setLastBackupAt] = useState<number | null>(() => loadLastBackupAt());
-  const [driveOpen, setDriveOpen] = useState(false);
+  const [driveOpenAsked, setDriveOpen] = useState(false);
+  // back from Google's page and something went wrong: the window shows again, with what happened, until
+  // it's closed
+  const [issueSeen, setIssueSeen] = useState(0);
+  const driveOpen = driveOpenAsked || drive.connectIssue > issueSeen;
+  const closeDrive = () => {
+    setDriveOpen(false);
+    setIssueSeen(drive.connectIssue);
+  };
   // saved data the app couldn't read at some point, kept aside (see storage.ts): offer it, never drop it
   const [aside, setAside] = useState(() => unreadableKeys());
   const [asideSaved, setAsideSaved] = useState(false);
@@ -290,7 +298,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           </Text>
         )}
         {driveLine && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={drive.status === "error" || driveLine.startsWith("Ezen az eszközön") ? "warn" : "fgFaint"} mt="4px" maxW="52ch" mx="auto">
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={drive.status === "error" || drive.status === "needsTap" || driveLine.startsWith("Ezen az eszközön") ? "warn" : "fgFaint"} mt="4px" maxW="52ch" mx="auto">
             {driveLine}
           </Text>
         )}
@@ -318,7 +326,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       </Box>
       </Box>
 
-      {driveOpen && <DriveSyncModal drive={drive} records={records} onClose={() => setDriveOpen(false)} />}
+      {driveOpen && <DriveSyncModal drive={drive} records={records} onClose={closeDrive} />}
 
       {menuView && !menuAsPopover && (
         <ModalShell onClose={() => setMenuId(null)} width="min(340px, 100%)" zIndex={40} overlayPad="28px">

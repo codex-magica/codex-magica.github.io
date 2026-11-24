@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import { ModalShell } from "./Modal";
-import { DriveSyncApi } from "../state/useDriveSync";
+import { DriveNote, DriveSyncApi } from "../state/useDriveSync";
 import { BackupMeta, DriveAuthError } from "../state/googleDrive";
 import { CharacterRecord } from "../model/character";
 
@@ -73,6 +74,33 @@ const BackupsChoice: React.FC<{ on: boolean; onChange: (on: boolean) => void }> 
   </Box>
 );
 
+const noteIn = keyframes`from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; }`;
+
+// The last error or notice, right above the buttons (always in view, next to what was just tapped).
+// Keyed by `seq`, so it appears again even when a retry ends with the same text: the tap did something.
+const NoteCallout: React.FC<{ note: DriveNote }> = ({ note }) => (
+  <Box role={note.error ? "alert" : "status"} display="flex" gap="10px" alignItems="flex-start" mx="22px" mb="12px" p="10px 12px"
+    borderRadius="10px" border="1px solid" borderColor={note.error ? "warn" : "accentBd"} bg={note.error ? "warnSoft" : "accentSoft"}
+    fontFamily="system-ui" fontSize="13.5px" color="fg" lineHeight="1.5" animation={`${noteIn} .2s ease`}>
+    <Box as="span" aria-hidden="true" flexShrink={0} mt="1px" color={note.error ? "warn" : "accentTx"} lineHeight={0}>
+      {note.error ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+      )}
+    </Box>
+    <Text>{note.text}</Text>
+  </Box>
+);
+
 const dayLabel = (day: string) => {
   const [y, m, d] = day.split("-");
   return `${y}. ${m}. ${d}.`;
@@ -122,7 +150,7 @@ const BackupsView: React.FC<{ drive: DriveSyncApi; records: CharacterRecord[] }>
   if (state.kind === "error")
     return (
       <Box fontFamily="system-ui" fontSize="14px" color="muted">
-        <Text mb="10px">Nem sikerült betölteni a biztonsági másolatokat. Van internetkapcsolat?</Text>
+        <Text mb="10px" color="warn">Nem sikerült betölteni a biztonsági másolatokat. Van internetkapcsolat?</Text>
         <Box {...btn} fontSize="14px" onClick={load} border="1px solid" borderColor="hair" color="fg">
           Újra
         </Box>
@@ -252,18 +280,15 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
 
         {drive.enabled && (
           <Box borderTop="1px solid" borderBottom="1px solid" borderColor="rule" py="10px" mb="12px" fontFamily="system-ui" fontSize="13px" color="muted" display="flex" flexDirection="column" gap="4px">
-            <Text>{driveStatusLine(drive, now, true)}</Text>
+            <Text color={drive.status === "error" || drive.status === "needsTap" ? "warn" : undefined} fontWeight={drive.status === "error" || drive.status === "needsTap" ? 600 : undefined}>
+              {driveStatusLine(drive, now, true)}
+            </Text>
             {drive.pending.count > 0 && drive.status !== "syncing" && <Text color="accentTx">{drive.pending.count} módosítás vár szinkronra.</Text>}
             {drive.email && <Text color="fgFaint">Fiók: {drive.email}</Text>}
             <Box as="button" type="button" onClick={() => setView("backups")} alignSelf="flex-start" mt="4px" color="accentTx" fontWeight={600} textDecoration="underline" textUnderlineOffset="3px">
               Biztonsági másolatok megtekintése
             </Box>
           </Box>
-        )}
-        {drive.note && (
-          <Text fontFamily="system-ui" fontSize="13px" color={drive.status === "error" || drive.status === "needsTap" ? "warn" : "muted"} lineHeight="1.5" mb="12px">
-            {drive.note}
-          </Text>
         )}
         {drive.enabled && (
           <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" lineHeight="1.5" mb="6px">
@@ -274,7 +299,9 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         )}
       </Box>
 
-      <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap="10px" p="12px 22px 18px" borderTop="1px solid" borderColor="rule">
+      <Box borderTop="1px solid" borderColor="rule" pt="12px">
+      {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
+      <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap="10px" p="0 22px 18px">
         {drive.enabled ? (
           <>
             <Box {...btn} onClick={drive.disable} border="1px solid" borderColor="hair" color="muted" mr="auto">
@@ -294,6 +321,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
             </Box>
           </>
         )}
+      </Box>
       </Box>
     </ModalShell>
   );

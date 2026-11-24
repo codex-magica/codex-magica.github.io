@@ -252,16 +252,27 @@ const b64url = (bytes: Uint8Array): string => {
 
 // Off to Google's consent page (with the token service only). `backups` is passed when turning sync on.
 // Returns false (and stays) if the round trip can't be made safely.
-export const beginConnect = async (ctx: ReturnContext, loginHint: string | null, backups?: boolean): Promise<boolean> => {
-  if (!tokenServiceAvailable()) return false;
-  const state = randomB64url(16);
-  const verifier = randomB64url(32);
+// Why leaving for Google didn't start: "insecure" (the page isn't on https, so the browser withholds the
+// cryptography the sign-in needs), "storage" (the sign-in couldn't be noted down for the return), or
+// "failed" (anything else).
+export type ConnectStartFailure = "insecure" | "storage" | "failed";
+export const beginConnect = async (ctx: ReturnContext, loginHint: string | null, backups?: boolean): Promise<true | ConnectStartFailure> => {
+  if (!tokenServiceAvailable()) return "failed";
+  if (typeof window !== "undefined" && window.isSecureContext === false) return "insecure";
+  let state: string;
+  let verifier: string;
   let challenge: string;
   try {
+    state = randomB64url(16);
+    verifier = randomB64url(32);
     challenge = b64url(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))));
+  } catch {
+    return "failed"; // no crypto: we couldn't verify the answer, so don't go
+  }
+  try {
     localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx, verifier, ...(backups === undefined ? {} : { backups }) } satisfies PendingRedirect));
   } catch {
-    return false; // no crypto or no storage: we couldn't verify the answer, so don't go
+    return "storage";
   }
   const q = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
@@ -310,12 +321,25 @@ export const consumeRedirectResult = (): RedirectOutcome => {
   let saved: PendingRedirect | null = null;
   try {
     saved = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
-    localStorage.removeItem(RETURN_KEY);
   } catch {
     saved = null;
   }
   window.history.replaceState(null, "", window.location.pathname + window.location.hash);
-  if (!saved || params.get("state") !== saved.state || Date.now() - saved.at > STALE_ANSWER_MS) return outcome; // not ours (or ancient): ignore
+  const ours = saved !== null && params.get("state") === saved.state;
+  const stale = saved !== null && Date.now() - saved.at > STALE_ANSWER_MS;
+  // only our own entry is removed: another tab's sign-in, started later, may still be on its way back
+  if (ours || stale)
+    try {
+      localStorage.removeItem(RETURN_KEY);
+    } catch {
+      /* ignore */
+    }
+  if (!saved || !ours || stale) {
+    // an answer that can't be used (another tab started a newer sign-in, or it took too long): say so
+    // rather than come back as if nothing had happened
+    outcome = { kind: "error", error: "no answer", ctx: saved && !stale ? saved.ctx : null };
+    return outcome;
+  }
   const code = params.get("code");
   outcome = code
     ? { kind: "code", code, verifier: saved.verifier, ctx: saved.ctx, ...(saved.backups === undefined ? {} : { backups: saved.backups }) }

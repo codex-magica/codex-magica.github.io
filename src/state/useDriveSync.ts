@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import {
   BackupMeta,
   Connection,
@@ -71,7 +71,7 @@ export interface DriveSyncApi {
   email: string | null;
   backups: boolean; // daily backups in Drive
   pending: { count: number; oldest: number | null }; // local changes not yet in Drive
-  note: string | null; // the last round's result or error, in Hungarian
+  note: DriveNote | null; // the last result or error worth saying, in Hungarian
   ready: boolean; // a tap can start the sign-in now
   prepare: () => void;
   enable: (backups: boolean) => void; // call from a tap
@@ -79,9 +79,19 @@ export interface DriveSyncApi {
   disable: () => void;
   setBackups: (on: boolean) => void;
   hop: DriveHop;
+  connectIssue: number; // bumped when coming back from Google's page went wrong: show the window with the note
   listBackups: () => Promise<BackupMeta[]>;
   restoreBackup: (b: BackupMeta) => Promise<CharacterRecord>; // adds it as a new character
   connect: () => Promise<boolean>; // from a tap: make sure there's access (may leave for Google's page)
+}
+
+// `error`: something failed (shown as a warning); otherwise information (a conflict copy was made).
+// `seq` changes with every new note, also when the same text comes again, so the window can show that
+// the last tap did something.
+export interface DriveNote {
+  text: string;
+  error: boolean;
+  seq: number;
 }
 
 export interface DriveSyncOptions {
@@ -99,6 +109,17 @@ const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 class AccountMismatchError extends Error {}
 
 class SupersededError extends Error {}
+
+// The note shown in the Drive window: a string is an error, { info } a notice, null clears it, and
+// { clearError } clears only an error. A new note always gets a new `seq` (see DriveNote).
+let noteSeq = 0;
+type NoteAction = string | null | { info: string } | { clearError: true };
+const noteReducer = (n: DriveNote | null, a: NoteAction): DriveNote | null => {
+  if (a === null) return null;
+  if (typeof a === "string") return { text: a, error: true, seq: ++noteSeq };
+  if ("info" in a) return { text: a.info, error: false, seq: ++noteSeq };
+  return n && !n.error ? n : null;
+};
 
 // The Hungarian note for an error, shown in the Drive window. `service`: reconnecting means Google's page.
 const errorNote = (e: unknown, service: boolean): string => {
@@ -156,7 +177,12 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const [status, setStatus] = useState<DriveStatus>(() =>
     back ? "syncing" : settings.enabled ? (validToken() || hasCredential() ? "idle" : "needsTap") : "off"
   );
-  const [note, setNote] = useState<string | null>(() => (available && initialOutcome.kind === "error" ? authNote(initialOutcome.error, service) : null));
+  const [note, setNote] = useReducer(noteReducer, null, () =>
+    available && initialOutcome.kind === "error" ? { text: authNote(initialOutcome.error, service), error: true, seq: ++noteSeq } : null
+  );
+  // coming back from Google's page went wrong: the window was closed by the page change, so it's opened
+  // again with the note (an error from the address counts from the start)
+  const [connectIssue, setConnectIssue] = useState(() => (available && initialOutcome.kind === "error" ? 1 : 0));
   const [ready, setReady] = useState(service);
   const [syncTick, setSyncTick] = useState(0);
   const running = useRef(false);
@@ -298,10 +324,10 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             patchSettings({ lastSyncAt: Date.now() });
             setSyncTick((n) => n + 1);
             if (out.conflictCopies > 0)
-              setNote(
-                `${out.conflictCopies} karakter két eszközön is módosult, mielőtt szinkronizálódhatott volna. A másik változat külön karakterként került a listára („… (másik változat)”), hogy semmi ne vesszen el.`
-              );
-            else setNote((n) => (n && n.includes("(másik változat)") ? n : null)); // a conflict notice stays until the next one
+              setNote({
+                info: `${out.conflictCopies} karakter két eszközön is módosult, mielőtt szinkronizálódhatott volna. A másik változat külön karakterként került a listára („… (másik változat)”), hogy semmi ne vesszen el.`,
+              });
+            else setNote({ clearError: true }); // a conflict notice stays; an error is over
           } while (again.current);
         });
         authRetried.current = false;
@@ -369,7 +395,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     (firstTime: boolean): Promise<string> | null => {
       if (!signInReady()) {
         prepare();
-        setNote("A Google-bejelentkezés még töltődik. Próbáld újra egy pillanat múlva.");
+        setNote({ info: "A Google-bejelentkezés még töltődik. Próbáld újra egy pillanat múlva." });
         return null;
       }
       return requestTokenInteractive(firstTime, loadDriveSettings().email);
@@ -384,8 +410,15 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       setNote("Előbb mentsd el a karaktereidet fájlba: ezen az eszközön most nem sikerül menteni, és a Google oldalára átlépve elvesznének a legutóbbi módosítások.");
       return;
     }
-    void beginConnect(optsRef.current.returnContext(), loadDriveSettings().email, backups).then((ok) => {
-      if (!ok) setNote("Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra.");
+    void beginConnect(optsRef.current.returnContext(), loadDriveSettings().email, backups).then((r) => {
+      if (r === true) return;
+      setNote(
+        r === "insecure"
+          ? "A Google-bejelentkezés csak biztonságos (https) kapcsolaton keresztül indul el. Nyisd meg az alkalmazást a szokásos címén."
+          : r === "storage"
+            ? "Nem sikerült elindítani a Google-bejelentkezést, mert ezen az eszközön betelt a tárhely. Mentsd el a karaktereidet fájlba, töröld, amire nincs szükséged, és próbáld újra."
+            : "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra."
+      );
     });
   }, []);
 
@@ -453,6 +486,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         setHop(null);
         setStatus(enabling ? "off" : "needsTap");
         setNote(connectNote(e, service));
+        setConnectIssue((n) => n + 1);
         return;
       }
       try {
@@ -464,6 +498,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
           // (the other account's permission stays in that account, which may sync a roster of its own)
           setStatus(enabling ? "off" : "needsTap");
           setNote(connectNote(e, service));
+          setConnectIssue((n) => n + 1);
           return;
         }
         if (droppedMeanwhile()) return;
@@ -473,6 +508,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         turnOn();
         setStatus("error");
         setNote(errorNote(e, service));
+        setConnectIssue((n) => n + 1);
         scheduleRetry();
         return;
       }
@@ -632,6 +668,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     disable,
     setBackups: (on: boolean) => patchSettings({ backups: on }),
     hop,
+    connectIssue,
     listBackups,
     restoreBackup,
     connect,

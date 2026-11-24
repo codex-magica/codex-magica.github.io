@@ -49,6 +49,17 @@ const R = vi.hoisted(() => {
     useRef(init: any) {
       return slot(() => ({ current: init }))[0];
     },
+    useReducer(reducer: (s: any, a: any) => any, arg: any, init?: (a: any) => any) {
+      const [s, c] = slot(() => ({ v: init ? init(arg) : arg, dispatch: null as null | ((a: any) => void) }));
+      s.dispatch ??= (a: any) => {
+        const nv = reducer(s.v, a);
+        if (!Object.is(nv, s.v)) {
+          s.v = nv;
+          schedule(c);
+        }
+      };
+      return [s.v, s.dispatch];
+    },
     useMemo(fn: () => any, deps: unknown[]) {
       const [s] = slot(() => ({ deps: undefined, v: undefined }));
       if (changed(s.deps, deps)) {
@@ -310,7 +321,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500);
     expect(tab.api.status).toBe("error");
-    expect(tab.api.note).toContain("Később magától újra megpróbálja"); // "it will retry by itself later"
+    expect(tab.api.note?.text).toContain("Később magától újra megpróbálja"); // "it will retry by itself later"
     fail = false;
     await settle(30 * 60_000); // half an hour, app open in the foreground, no further edits
     expect(tab.api.pending.count).toBe(0);
@@ -361,7 +372,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     const { tab } = await openTab();
     await settle(100);
     expect(tab.api.status).toBe("needsTap");
-    expect(tab.api.note).toContain("y@test");
+    expect(tab.api.note?.text).toContain("y@test");
     expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x");
   });
 
@@ -395,5 +406,31 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     await settle(2500);
     expect.soft(t.store.getState().records.map((r) => r.name)).toEqual(["Aragorn II"]);
     expect(ls.getItem(DEVICE_KEY)).toBe(device);
+  });
+
+  test("coming back from Google with an answer for an older sign-in (another tab started a newer one): said, and the newer one is kept", async () => {
+    const newer = { state: "S2", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "w".repeat(43) };
+    ls.setItem(RETURN_KEY, JSON.stringify(newer));
+    win.location.search = "?state=S1&code=C1"; // this tab's sign-in, overwritten by the other tab's
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.note?.error).toBe(true);
+    expect(tab.api.note?.text).toContain("nem fejeződött be");
+    expect(tab.api.connectIssue).toBeGreaterThan(0); // the window opens again to say so
+    expect(JSON.parse(ls.getItem(RETURN_KEY)!)).toEqual(newer); // the other tab's answer can still land
+    expect(calls.some((c) => c.includes("/v1/exchange"))).toBe(false);
+  });
+
+  test("a failed return from Google (permission refused) reopens the window with the reason", async () => {
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    win.location.search = "?state=S1&code=C1";
+    tokenService = (path) => (path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: "openid email" }) : jsonRes(500, {}));
+    const { tab } = await openTab();
+    expect(tab.api.connectIssue).toBe(0);
+    await settle(100);
+    expect(tab.api.status).toBe("off");
+    expect(tab.api.note?.error).toBe(true);
+    expect(tab.api.note?.text).toContain("Drive");
+    expect(tab.api.connectIssue).toBeGreaterThan(0);
   });
 });
