@@ -478,6 +478,11 @@ export const fitBytes = (s: string, max: number): string => {
   return out + "…";
 };
 
+// The player's Google storage is full: nothing more can be written until they free some space (Drive,
+// Gmail and Photos share it). Not a passing failure, so it's said as such; rounds keep being retried
+// (slowly), so sync goes on by itself once there's room.
+export class DriveFullError extends Error {}
+
 export const httpDrive = (token: string): DriveTransport => {
   const call = async (url: string, init: RequestInit = {}): Promise<Response> => {
     // a stalled request would hold up every later sync round: give up after a minute (the timer also
@@ -489,7 +494,17 @@ export const httpDrive = (token: string): DriveTransport => {
       forgetToken(token);
       throw new DriveAuthError("token expired");
     }
-    if (!res.ok) throw new Error(`Google Drive: HTTP ${res.status}`);
+    if (!res.ok) {
+      let reason = "";
+      try {
+        const body = (await res.json()) as { error?: { errors?: { reason?: string }[] } };
+        reason = body.error?.errors?.map((e) => e.reason ?? "").join(" ") ?? "";
+      } catch {
+        /* no readable body */
+      }
+      if (reason.includes("storageQuotaExceeded")) throw new DriveFullError("Google Drive: storage full");
+      throw new Error(`Google Drive: HTTP ${res.status}${reason ? ` (${reason})` : ""}`);
+    }
     return res;
   };
   const json = async <T,>(res: Response): Promise<T> => (await res.json()) as T;

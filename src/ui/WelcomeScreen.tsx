@@ -14,7 +14,8 @@ import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile }
 import { rosterStore } from "../state/rosterStore";
 import { unreadableKeys } from "../state/storage";
 import { DriveSyncApi } from "../state/useDriveSync";
-import { CloudIcon, DriveSyncModal, driveAttention, driveStatusLine } from "./DriveSyncModal";
+import { CloudIcon, DriveSyncModal } from "./DriveSyncModal";
+import { driveAttention, driveStatusLine } from "../state/driveStatus";
 import { Callout } from "./Callout";
 
 interface Props {

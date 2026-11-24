@@ -3,7 +3,7 @@
 import { CharacterRecord } from "../model/character";
 import { createRosterStore } from "./rosterStore";
 import { unreadableKeys } from "./storage";
-import { Device, FakeDrive, MemStorage, QuotaStorage, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
+import { DAY, Device, FakeDrive, MemStorage, QuotaStorage, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
 import { defaultRecord } from "./defaultRecord";
 
 setupSyncHarness();
@@ -204,5 +204,78 @@ describe("a new device id taken in one tab", () => {
     expect(fresh).not.toBe(old);
     expect(tab2.deviceId()).toBe(fresh);
     expect(tab2.bump({}, tab2.deviceId())).toEqual({ [fresh]: expect.any(Number) });
+  });
+});
+
+const backupBodies = (drive: FakeDrive) => drive.backups().map((f) => JSON.parse(f.body) as { record: CharacterRecord; reason: string });
+
+describe("storage full and long absences (second review)", () => {
+  test("storage full, sync off: after a deletion that only fit without its backup copy, later saves count as saved", () => {
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.storage = qs;
+    a.store = a.run(() => createRosterStore());
+    const x = a.create("Xena");
+    const w = a.create("Wulf");
+    a.create("Yorick");
+    qs.cap = qs.used() + 40; // full: the last save that grew failed (that's when players start deleting)
+    later();
+    expect(a.remove(x.id)).toBe(true);
+    // the roster and the marker were saved (only the backup copy of Xena's last state didn't fit)
+    const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, { last?: unknown }>;
+    expect(savedDeletions[x.id]).toBeDefined();
+    later();
+    a.edit(w.id, "w1"); // an ordinary edit that fits
+    const savedW = (JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[]).find((r) => r.id === w.id)!;
+    expect(tokensOf(savedW)).toContain("w1"); // it IS saved...
+    // ...but the app keeps saying "Nem sikerült menteni" (banner, update banner held back, Drive connect
+    // refused unless a backup file is exported), and numbers every edit under the "unsaved" lineage
+    expect.soft(Object.keys(savedW.syncVc ?? {}).some((k) => k.includes(".u"))).toBe(false);
+    expect(a.store.getState().saveFailed).toBe(false);
+  });
+
+  test("a device not opened for two months keeps the state before a deletion until it's in Drive, so its last edit is backed up when a parallel edit wins", async () => {
+    const drive = new FakeDrive();
+    const phone = new Device("phone");
+    phone.storage.setItem("magus.driveSync.v1", JSON.stringify({ enabled: true, backups: true, lastSyncAt: null, email: null }));
+    const laptop = new Device("laptop");
+    const x = phone.create("Xena");
+    await realSync(phone, drive);
+    await realSync(laptop, drive);
+    later();
+    // on the phone, offline (or closed within 2 s): a last edit, then the character is deleted
+    phone.edit(x.id, "phone-last-edit");
+    phone.remove(x.id);
+    // meanwhile the laptop edits Xena (it never saw the deletion)
+    laptop.edit(x.id, "laptop-edit");
+    await realSync(laptop, drive);
+    // the phone app isn't opened for 61 days, then it is (a fresh page load) and syncs
+    later(61 * DAY);
+    phone.store = phone.run(() => createRosterStore());
+    await realSync(phone, drive);
+    const back = phone.byName("Xena");
+    expect.soft(back && tokensOf(back)).toContain("laptop-edit"); // the parallel edit wins (by design)
+    // docs: "a deletion keeps the last state on the device until it's in Drive, so an edit just before
+    // deleting is kept too, also when a parallel edit elsewhere wins over the deletion"
+    const kept = backupBodies(drive).some((b) => tokensOf(b.record).includes("phone-last-edit"));
+    expect(kept).toBe(true);
+  });
+
+  test("the same within 60 days keeps the phone's last edit as a backup", async () => {
+    const drive = new FakeDrive();
+    const phone = new Device("phone");
+    const laptop = new Device("laptop");
+    const x = phone.create("Xena");
+    await phone.sync(drive);
+    await laptop.sync(drive);
+    later();
+    phone.edit(x.id, "phone-last-edit");
+    phone.remove(x.id);
+    laptop.edit(x.id, "laptop-edit");
+    await laptop.sync(drive);
+    later(59 * DAY);
+    phone.store = phone.run(() => createRosterStore());
+    await phone.sync(drive);
+    expect(backupBodies(drive).some((b) => tokensOf(b.record).includes("phone-last-edit"))).toBe(true);
   });
 });

@@ -3,6 +3,7 @@ import {
   BackupMeta,
   Connection,
   DriveAuthError,
+  DriveFullError,
   RedirectOutcome,
   ReturnContext,
   TokenServiceError,
@@ -25,8 +26,8 @@ import {
 } from "./googleDrive";
 import { DRIVE_SNAPSHOT_FORMAT, SyncNewerVersionError } from "./driveSyncEngine";
 import { syncRound } from "./driveSyncRound";
+import { roundNotice } from "./driveStatus";
 import { rosterStore } from "./rosterStore";
-import { loadLastBackupAt } from "./transfer";
 import { repairRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
@@ -77,6 +78,7 @@ export interface DriveSyncApi {
   hop: DriveHop;
   dismissHop: () => void;
   needsUpdate: boolean; // Drive holds data from a newer app version: sync waits for this one to update
+  driveFull: boolean; // the player's Google storage is full: sync waits for them to free some space
   connectIssue: number; // bumped when coming back from Google's page went wrong: show the window with the note
   listBackups: () => Promise<BackupMeta[]>;
   restoreBackup: (b: BackupMeta) => Promise<CharacterRecord>; // adds it as a new character
@@ -101,7 +103,8 @@ const FOREGROUND_MIN_GAP_MS = 20_000;
 const RETRY_MS = 2000; // a round asked for while a failing one was running
 const RETRY_FIRST_MS = 30_000; // after a failed round (Drive or the token service unreachable): try again,
 const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
-const LOCK_WAIT_MS = 120_000; // another tab's round holding the lock this long (a frozen tab): give up, retry later
+const LOCK_WAIT_MS = 120_000; // another tab's round holding the lock this long (a frozen tab): take it over
+const LOCK_NAME = "codex-magica-drive-sync";
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 
 class AccountMismatchError extends Error {}
@@ -119,29 +122,14 @@ const noteReducer = (n: DriveNote | null, a: NoteAction): DriveNote | null => {
   return n && !n.error ? n : null;
 };
 
-// What a round did that the player should know about: characters kept twice (edited on two devices at
-// once) and deleted ones that came back (edited elsewhere meanwhile). Null if nothing.
-const quoted = (names: string[]): string => {
-  const q = names.slice(0, 3).map((n) => `„${n}”`);
-  return names.length > 3 ? `${q.join(", ")} és még ${names.length - 3}` : q.length > 1 ? `${q.slice(0, -1).join(", ")} és ${q[q.length - 1]}` : q[0];
-};
-export const roundNotice = (copied: string[], undeleted: string[]): string | null => {
-  const parts: string[] = [];
-  if (copied.length === 1)
-    parts.push(`${quoted(copied)} két eszközön is módosult egyszerre, ezért mindkét változata megmaradt: a másik „${copied[0]} (másik változat)” néven került a listára. Nézd át, és töröld, amelyikre nincs szükséged.`);
-  else if (copied.length > 1)
-    parts.push(`${copied.length} karaktered két eszközön is módosult egyszerre: ${quoted(copied)}. Mindegyiknek mindkét változata megmaradt, a másik „(másik változat)” jelöléssel került a listára. Nézd át őket, és töröld, amelyikre nincs szükséged.`);
-  if (undeleted.length === 1) parts.push(`${quoted(undeleted)} törlése nem érvényesült, mert közben egy másik eszközön módosították. Ha nincs rá szükséged, töröld újra.`);
-  else if (undeleted.length > 1) parts.push(`${quoted(undeleted)} törlése nem érvényesült, mert közben egy másik eszközön módosították őket. Ha nincs rájuk szükséged, töröld őket újra.`);
-  return parts.length ? parts.join(" ") : null;
-};
-
 // The Hungarian note for an error, shown in the Drive window. `service`: reconnecting means Google's page.
 const errorNote = (e: unknown, service: boolean): string => {
   if (e instanceof AccountMismatchError) return e.message;
   if (e instanceof SyncNewerVersionError)
     return "Egy másik eszközöd már az alkalmazás újabb verzióját használja. Kattints a lent megjelenő „Frissítés” gombra; ha nem látod, zárd be az alkalmazást, és nyisd meg újra.";
   if (e instanceof DriveAuthError) return authNote(e.message, service);
+  if (e instanceof DriveFullError)
+    return "Betelt a Google-tárhelyed, ezért a szinkron szünetel. Szabadíts fel helyet a Google-fiókodban (a Drive, a Gmail és a Fotók közösen használják); utána a szinkron magától folytatódik.";
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. Amint lesz, a szinkron magától folytatódik.";
   // Drive or the token service unreachable or busy: the same for the player
   return "Most nem érhető el a Google Drive. Az alkalmazás magától újra megpróbálja; a módosításaid addig is megmaradnak ezen az eszközön.";
@@ -173,28 +161,27 @@ const connectNote = (e: unknown, service: boolean): string => {
 const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
   const locks = typeof navigator !== "undefined" ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
   if (!locks?.request) return fn();
-  // a tab frozen mid-round (in the background on a phone) keeps the lock: don't wait for it forever
+  // A tab frozen mid-round (in the background on a phone) keeps the lock: after waiting this long, take it
+  // over. Should the frozen round wake up and finish later, that's safe: a round's result is applied to
+  // what's saved at its end, and the next round publishes again.
   const ctl = typeof AbortController === "function" ? new AbortController() : null;
   const timer = ctl ? setTimeout(() => ctl.abort(), LOCK_WAIT_MS) : undefined;
-  return (locks.request("codex-magica-drive-sync", ctl ? { signal: ctl.signal } : {}, () => {
+  const wait = locks.request(LOCK_NAME, ctl ? { signal: ctl.signal } : {}, () => {
     clearTimeout(timer);
     return fn();
-  }) as Promise<T>).finally(() => clearTimeout(timer));
+  }) as Promise<T>;
+  return wait
+    .catch((e: unknown) => {
+      if (!ctl?.signal.aborted || (e as { name?: string })?.name !== "AbortError") throw e;
+      return locks.request(LOCK_NAME, { steal: true }, fn) as Promise<T>;
+    })
+    .finally(() => clearTimeout(timer));
 };
 
 const store = rosterStore();
 // a token that still works, or a way to renew one quietly
 const hasAccess = (): boolean => validToken() !== null || hasCredential();
 
-// Saving fails (storage full), so the latest edits exist only in memory: a backup file saved after the
-// last of them holds everything, so leaving the page for Google's is safe then.
-const exportedSinceLastEdit = (): boolean => {
-  const at = loadLastBackupAt();
-  if (at === null) return false;
-  const st = store.getState();
-  const last = Math.max(0, ...st.records.map((r) => r.updatedAt ?? 0), ...Object.values(st.deletions).map((d) => d.t));
-  return at >= last;
-};
 const verifiedTokens = new Set<string>();
 
 export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
@@ -232,6 +219,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   optsRef.current = opts;
   const [hop, setHopState] = useState<DriveHop>(() => (back ? "backSyncing" : null));
   const [needsUpdate, setNeedsUpdate] = useState(false);
+  const [driveFull, setDriveFull] = useState(false);
   const hopRef = useRef(hop);
   const setHop = useCallback((h: DriveHop) => {
     hopRef.current = h;
@@ -287,7 +275,9 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       const email = await fetchAccountEmail(token);
       if (!email) throw new Error("account check failed"); // network trouble: try again later
       if (!current()) throw new SupersededError(); // sync was turned off (or on again) meanwhile
-      const expected = loadDriveSettings().email;
+      // the account sync is set up with (one left behind while sync is off doesn't count)
+      const s = loadDriveSettings();
+      const expected = s.enabled ? s.email : null;
       if (expected && expected.toLowerCase() !== email.toLowerCase()) {
         forgetToken(token);
         throw new AccountMismatchError(
@@ -339,6 +329,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         if (current()) {
           stopRetrying();
           setNeedsUpdate(false);
+          setDriveFull(false);
           if (hopRef.current === "backSyncing") {
             setHop("backDone");
             window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
@@ -356,6 +347,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             const tap = e instanceof DriveAuthError || e instanceof AccountMismatchError;
             if (tap) needTap();
             else setStatus("error");
+            setDriveFull(e instanceof DriveFullError);
             if (e instanceof SyncNewerVersionError) {
               setNeedsUpdate(true);
               // fetch the new version now, so the update banner can offer it
@@ -418,8 +410,8 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
 
   // With a token service: off to Google's consent page (turning sync on, or reconnecting).
   const leaveForGoogle = useCallback((backups?: boolean) => {
-    if (store.getState().saveFailed && !exportedSinceLastEdit()) {
-      // the latest edits exist only in memory: the page change would lose them, unless they're in a file
+    if (!store.parkUnsaved()) {
+      // the latest edits exist only in memory and can't be parked for the page change: it would lose them
       setNote("Ezen az eszközön most nem sikerül menteni, ezért ha átlépsz a Google oldalára, elvesznének a legutóbbi módosításaid. Előbb mentsd el a karaktereidet fájlba a karakterlistán, utána újra megpróbálhatod.");
       return;
     }
@@ -466,6 +458,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     stopRetrying();
     setHop(null);
     setNeedsUpdate(false);
+    setDriveFull(false);
     verifiedTokens.clear();
     setStatus("off");
     setNote(null);
@@ -509,7 +502,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         return;
       }
       try {
-        await ensureAccount(got.token);
+        await ensureAccount(got.token, () => enabling || loadDriveSettings().enabled);
       } catch (e) {
         setHop(null);
         if (e instanceof AccountMismatchError) {
@@ -521,8 +514,16 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
           return;
         }
         if (droppedMeanwhile()) return;
-        // network trouble checking the account: the connection itself is fine, so turn sync on; the next
-        // round checks the account again (every token is checked before Drive is touched)
+        if (!enabling) {
+          // reconnecting, and the account couldn't be checked: whoever answered can't replace the
+          // credential of the account sync belongs to on a guess
+          setStatus("needsTap");
+          setNote("Nem sikerült ellenőrizni, melyik Google-fiókkal jelentkeztél be. Próbáld újra az „Újrakapcsolás” gombbal.");
+          setConnectIssue((n) => n + 1);
+          return;
+        }
+        // turning sync on, and network trouble checking the account: the connection itself is fine, so
+        // turn sync on; the next round checks the account (and records it) before Drive is touched
         keepConnection(got);
         turnOn();
         setStatus("error");
@@ -562,6 +563,21 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     const t = window.setTimeout(() => void autoSync(), AUTO_DELAY_MS);
     return () => window.clearTimeout(t);
   }, [revision, available, settings.enabled, autoSync]);
+
+  // a change saved by another tab that hasn't reached Drive (that tab may have been closed before its own
+  // round): this tab sends it, 2 seconds later like an edit of its own
+  const { records, deletions } = roster;
+  const lastSeen = useRef({ records, deletions, revision });
+  useEffect(() => {
+    const before = lastSeen.current;
+    lastSeen.current = { records, deletions, revision };
+    if (before.records === records && before.deletions === deletions) return; // nothing new (app start included)
+    if (before.revision !== revision) return; // this tab's own edit: handled above
+    if (!available || !settings.enabled) return;
+    if (pendingChanges(records, deletions, loadPublished()).count === 0) return; // a round's own result, say
+    const t = window.setTimeout(() => void autoRef.current(), AUTO_DELAY_MS);
+    return () => window.clearTimeout(t);
+  }, [records, deletions, revision, available, settings.enabled]);
 
   // leaving the app: upload right away while the token works; coming back, or back online: sync
   useEffect(() => {
@@ -685,6 +701,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     hop,
     dismissHop: () => setHop(null),
     needsUpdate: settings.enabled && needsUpdate,
+    driveFull: settings.enabled && driveFull,
     connectIssue,
     listBackups,
     restoreBackup,

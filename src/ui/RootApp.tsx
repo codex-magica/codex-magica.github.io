@@ -13,6 +13,7 @@ import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { useDriveSync } from "../state/useDriveSync";
+import { rosterStore } from "../state/rosterStore";
 import { ReturnContext, consumeRedirectResult } from "../state/googleDrive";
 import { TABS } from "./compendiumData";
 import { createBlankRecord } from "../state/storage";
@@ -184,7 +185,7 @@ export const RootApp: React.FC = () => {
 
       {roster.saveFailed && <SaveFailedBanner />}
       <DriveHopNotice hop={drive.hop} onDismiss={drive.dismissHop} />
-      <UpdateBanner paused={creator !== null || drive.hop !== null || roster.saveFailed} required={drive.needsUpdate} />
+      <UpdateBanner paused={creator !== null || drive.hop !== null} required={drive.needsUpdate} beforeReload={() => rosterStore().parkUnsaved()} />
     </>
   );
 };

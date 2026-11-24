@@ -4,6 +4,7 @@ import { ModalShell } from "./Modal";
 import { Callout } from "./Callout";
 import { ConfirmModal } from "./ConfirmModal";
 import { DriveNote, DriveSyncApi } from "../state/useDriveSync";
+import { driveAttention, driveStatusLine } from "../state/driveStatus";
 import { BackupMeta, DriveAuthError } from "../state/googleDrive";
 import { CharacterRecord } from "../model/character";
 
@@ -12,45 +13,6 @@ export const CloudIcon = (
     <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
   </svg>
 );
-
-// "3 perce", "2 órája", "tegnap"… for the last successful sync
-export const syncedAgo = (ts: number, now: number): string => {
-  const min = Math.floor((now - ts) / 60_000);
-  if (min < 1) return "az imént";
-  if (min < 60) return `${min} perce`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h} órája`;
-  const d = Math.floor(h / 24);
-  return d === 1 ? "tegnap" : `${d} napja`;
-};
-
-const STALE_PENDING_MS = 3 * 3600_000;
-
-// What sync needs from the player, if anything (null: nothing, or sync is off): an app update, Google's
-// permission again, a tap (without a token service), or changes stuck on this device for hours (said
-// before the player picks up another device). On the roster the button to tap is "Google Drive"; inside
-// the window it's "Szinkronizálás most", or "Újrakapcsolás" when the permission has to be given again.
-export const driveAttention = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
-  if (!drive.enabled || drive.status === "syncing") return null;
-  const reconnect = drive.service && drive.status === "needsTap";
-  const button = !inWindow ? "a Google Drive gombra" : reconnect ? "az „Újrakapcsolás” gombra" : "a „Szinkronizálás most” gombra";
-  if (drive.needsUpdate) return "Google Drive: a szinkron folytatásához frissítsd az alkalmazást.";
-  if (reconnect) return `Google Drive: a szinkron leállt, újra engedélyt kell adnod. Kattints ${button}.`;
-  if (drive.status === "needsTap") return `Google Drive: a következő szinkronhoz kattints ${button}.`;
-  if (drive.status !== "idle" && drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
-    return `${drive.pending.count} karakter módosítása még csak ezen az eszközön van meg. Mielőtt másik eszközön folytatod, kattints ${button}.`;
-  return null;
-};
-
-// One-line status (null while sync is off): what needs the player, or how it's going.
-export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
-  if (!drive.enabled) return null;
-  if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
-  const attention = driveAttention(drive, now, inWindow);
-  if (attention) return attention;
-  if (drive.status === "error") return "Google Drive: most nem érhető el, az alkalmazás magától újra megpróbálja.";
-  return drive.lastSyncAt ? `Google Drive: szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.` : "Google Drive: bekapcsolva.";
-};
 
 const btn = {
   as: "button" as const,

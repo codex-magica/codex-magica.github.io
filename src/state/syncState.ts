@@ -8,7 +8,7 @@
 
 import { CharacterRecord } from "../model/character";
 import { contentHash } from "./recordHash";
-import { Deletions } from "./rosterStore";
+import type { Deletions } from "./rosterStore";
 import { DELETED_HASH, versionKeyOf } from "./versions";
 
 export const SETTINGS_KEY = "magus.driveSync.v1";
@@ -68,6 +68,11 @@ export const savePublished = (p: Published): void => write(PUBLISHED_KEY, p);
 // the same keys as driveMerge.versionKey, so what's published compares with what's here
 const recordKey = (r: CharacterRecord): string => versionKeyOf(r.syncVc ?? {}, contentHash(r));
 const deletionKey = (d: { vc: Record<string, number> }): string => versionKeyOf(d.vc, DELETED_HASH);
+
+// A deletion made here that sync still has to take to Drive (sync on, and Drive doesn't have it yet):
+// the deleted character's last state must stay until then, however long that takes, so it can be backed up.
+export const deletionAwaitsDrive = (id: string, d: { vc: Record<string, number> }): boolean =>
+  loadDriveSettings().enabled && loadPublished()[id] !== deletionKey(d);
 
 // Changes on this device not yet in its Drive file: edits, new characters and deletions. `oldest` is
 // when the oldest of them happened (for the "sync before switching devices" hint).

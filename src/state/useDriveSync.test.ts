@@ -117,10 +117,12 @@ vi.mock("react", () => ({ ...R.react, default: R.react }));
 // ── browser stand-ins ────────────────────────────────────────────────────────────────────────────────
 class MemStorage {
   m = new Map<string, string>();
+  full = new Set<string>(); // keys whose writes fail (storage full)
   getItem(k: string) {
     return this.m.has(k) ? this.m.get(k)! : null;
   }
   setItem(k: string, v: string) {
+    if (this.full.has(k)) throw new Error("QuotaExceededError");
     this.m.set(k, String(v));
   }
   removeItem(k: string) {
@@ -148,6 +150,7 @@ const DEVICE_KEY = "magus.deviceId.v1";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 
 let ls: MemStorage;
+let ss: MemStorage; // sessionStorage
 let win: EventTarget & Record<string, any>;
 let doc: EventTarget & Record<string, any>;
 
@@ -254,6 +257,8 @@ beforeEach(() => {
   doc = new EventTarget() as any;
   doc.visibilityState = "visible";
   vi.stubGlobal("localStorage", ls);
+  ss = new MemStorage();
+  vi.stubGlobal("sessionStorage", ss);
   vi.stubGlobal("window", win);
   vi.stubGlobal("document", doc);
   vi.stubGlobal("navigator", { onLine: true }); // no Web Locks: one tab's rounds are what's under test
@@ -426,5 +431,247 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.note?.error).toBe(true);
     expect(tab.api.note?.text).toContain("Drive");
     expect(tab.api.connectIssue).toBeGreaterThan(0);
+  });
+
+  test("retries wait 30 s, then twice as long each time; a success starts over; turning off stops them", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    let fail = true;
+    override = (url) => (fail && url.startsWith("https://www.googleapis.com/drive/v3/files?") ? jsonRes(503, {}) : null);
+    const rounds = () => calls.filter((c) => c.startsWith("GET https://www.googleapis.com/drive/v3/files")).length;
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500); // the edit's round fails
+    const n = rounds();
+    await settle(28_000);
+    expect(rounds()).toBe(n); // not yet
+    await settle(3_000);
+    expect(rounds()).toBe(n + 1); // 30 s
+    await settle(57_000);
+    expect(rounds()).toBe(n + 1);
+    await settle(4_000);
+    expect(rounds()).toBe(n + 2); // then 60 s
+    fail = false;
+    await settle(121_000); // then 120 s: works
+    expect(tab.api.status).toBe("idle");
+    expect(tab.api.pending.count).toBe(0);
+    fail = true;
+    store.upsert(storage.createBlankRecord("c_b", "Boromir"));
+    await settle(2500);
+    const m = rounds();
+    await settle(31_000);
+    expect(rounds()).toBe(m + 1); // 30 s again, not 240
+    tab.api.disable();
+    await settle(30 * 60_000);
+    expect(rounds()).toBe(m + 1);
+  });
+
+  test("another tab frozen with the sync lock: after two minutes this one takes it over and syncs", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const asked: string[] = [];
+    vi.stubGlobal("navigator", {
+      onLine: true,
+      locks: {
+        // the other tab holds the lock and never lets go (frozen); only a takeover gets it
+        request: (_name: string, opts: { signal?: AbortSignal; steal?: boolean }, fn: () => Promise<unknown>) => {
+          asked.push(opts.steal ? "steal" : "wait");
+          return opts.steal ? fn() : new Promise((_, reject) => opts.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
+        },
+      },
+    });
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500);
+    expect(tab.api.status).toBe("syncing"); // waiting for the lock
+    await settle(60_000);
+    expect(tab.api.status).toBe("syncing");
+    await settle(62_000);
+    expect(asked).toContain("steal");
+    expect(tab.api.status).toBe("idle");
+    expect(tab.api.pending.count).toBe(0);
+  });
+
+  test("the Google permission gone in the background: a one-time card says so, until dismissed", async () => {
+    enableWith("x@test", null, "cred-x");
+    tokenService = () => jsonRes(401, { error: "invalid_grant" });
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.status).toBe("needsTap");
+    expect(tab.api.hop).toBe("lost");
+    tab.api.dismissHop();
+    await settle(0);
+    expect(tab.api.hop).toBeNull();
+  });
+
+  test("without a token service an expired token isn't news: no card", async () => {
+    vi.stubEnv("VITE_TOKEN_SERVICE_URL", "");
+    enableWith("x@test", null, null);
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.service).toBe(false);
+    expect(tab.api.status).toBe("needsTap");
+    expect(tab.api.hop).toBeNull();
+  });
+
+  test("Drive data from a newer app version: sync waits for the update, without retrying", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    drives["x@test"] = new Map([
+      ["f99", { name: "codex-magica-sync.other.json", props: { kind: "sync", device: "other" }, body: JSON.stringify({ format: "codex-magica-sync", version: 99, device: "other", characters: {} }), version: 1, created: 1 }],
+    ]);
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.needsUpdate).toBe(true);
+    expect(tab.api.status).toBe("error");
+    expect(tab.api.note?.text).toContain("újabb verzióját");
+    const n = calls.length;
+    await settle(30 * 60_000);
+    expect(calls.length).toBe(n); // nothing to gain by asking again
+  });
+
+  test("cancelling on Google's page is a notice, not an error, and the window says it", async () => {
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    win.location.search = "?state=S1&error=access_denied";
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.status).toBe("off");
+    expect(tab.api.note?.error).toBe(false);
+    expect(tab.api.note?.text).toContain("nem adtál engedélyt");
+    expect(tab.api.connectIssue).toBeGreaterThan(0);
+  });
+
+  test("storage full: the unsaved edits are parked for the trip to Google's page, and are back afterwards", async () => {
+    enableWith("x@test", null, null); // the permission is gone: "Újrakapcsolás" leaves for Google's page
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    ls.full.add("magus.roster.v1");
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn")); // only in memory now
+    expect(store.getState().saveFailed).toBe(true);
+    tab.api.syncNow();
+    for (let i = 0; i < 20 && !vi.mocked(win.location.assign).mock.calls.length; i++) await new Promise((r) => (globalThis as any).setImmediate(r)); // WebCrypto runs off the fake clock
+    expect(win.location.assign).toHaveBeenCalledTimes(1);
+    expect(String(vi.mocked(win.location.assign).mock.calls[0][0])).toContain("accounts.google.com");
+    // back from Google: a fresh page, with room to save again
+    ls.full.clear();
+    win.location.search = "";
+    const back = await openTab();
+    await settle(100);
+    expect(back.store.getState().records.map((r) => r.name)).toContain("Aragorn");
+    expect(back.store.getState().saveFailed).toBe(false);
+    expect(JSON.parse(ls.getItem("magus.roster.v1")!).map((r: { name: string }) => r.name)).toContain("Aragorn"); // saved now
+    expect(ss.getItem("magus.unsavedRoster.v1")).toBeNull();
+  });
+
+  test("storage full and nowhere to park the edits: it stays, and says to save a file first", async () => {
+    enableWith("x@test", null, null);
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    ls.full.add("magus.roster.v1");
+    ss.full.add("magus.unsavedRoster.v1");
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    tab.api.syncNow();
+    await settle(100);
+    expect(win.location.assign).not.toHaveBeenCalled();
+    expect(tab.api.note?.text).toContain("mentsd el a karaktereidet fájlba");
+  });
+});
+
+// ── helpers for the tests below ──
+const sendStorageEvent = (key: string) => win.dispatchEvent(Object.assign(new Event("storage"), { key }));
+const syncFileHas = (account: string, text: string) => [...(drives[account]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes(text));
+const codeReturn = (state: string) => {
+  ls.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+  win.location.search = `?state=${state}&code=C-${state}`;
+};
+
+describe("sync orchestration: other tabs, reconnects, Google storage", () => {
+  test("an edit saved by another tab that was closed within 2 s is uploaded by the tab that stays open", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const A = await openTab();
+    await settle(100);
+    expect(A.tab.api.status).toBe("idle");
+    // tab B (same browser): the player renames/creates something and closes the tab before B's 2 s timer
+    // fires; only the roster store of B ever runs
+    vi.resetModules();
+    const bRoster = await import("./rosterStore");
+    const bStorage = await import("./storage");
+    bRoster.rosterStore().upsert(bStorage.createBlankRecord("c_b", "Boromir"));
+    sendStorageEvent("magus.roster.v1"); // what the browser tells tab A
+    await settle(100);
+    expect(A.store.getState().records.map((r) => r.name)).toContain("Boromir");
+    expect(A.tab.api.pending.count).toBe(1);
+    await settle(60 * 60_000); // an hour, tab A open and visible, no edits in it
+    expect.soft(A.tab.api.pending.count).toBe(0);
+    expect(syncFileHas("x@test", "Boromir")).toBe(true);
+  });
+
+  test("reconnecting: another account answers and the account check has a network hiccup → the right account's credential stays", async () => {
+    enableWith("x@test", null, "cred-x"); // needs a reconnect (say, the access token is gone)
+    codeReturn("S1");
+    tokenService = (path) =>
+      path === "/v1/exchange"
+        ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" })
+        : jsonRes(200, { access_token: "y-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    let net = false;
+    override = (url) => (!net && url.startsWith("https://openidconnect.googleapis.com/") ? Promise.reject(new TypeError("Failed to fetch")) : null);
+    const { tab } = await openTab();
+    await settle(100);
+    net = true;
+    await settle(60_000); // the scheduled retry: the account check now says y@test
+    expect.soft(tab.api.status).toBe("needsTap");
+    expect.soft(syncFileHas("y@test", "")).toBe(false); // nothing went into the wrong Drive (good)
+    expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // docs: "the right account's credential stays"
+  });
+
+  test("sync turned off in another tab while this tab finishes a reconnect: no account is left recorded, and another account can be used later", async () => {
+    enableWith("x@test", null, "cred-x");
+    codeReturn("S1");
+    let answer!: () => void;
+    tokenService = (path) =>
+      path === "/v1/exchange"
+        ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-2", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x2" }))))
+        : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    const A = await openTab(); // back from Google, exchanging the code
+    await settle(100);
+    win.location.search = "";
+    const B = await openTab(); // another tab: "Kikapcsolás"
+    await settle(100);
+    B.tab.api.disable();
+    answer();
+    await settle(100);
+    expect.soft(A.tab.api.status).toBe("off");
+    const s = JSON.parse(ls.getItem(SETTINGS_KEY)!);
+    expect.soft(s.enabled).toBe(false);
+    expect.soft(s.email).toBeNull(); // turned off: no account should be remembered
+    // weeks later: the player turns sync on with their other Google account
+    tokenService = (path) =>
+      path === "/v1/exchange" ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" }) : jsonRes(500, {});
+    codeReturn("S2");
+    const C = await openTab();
+    await settle(100);
+    expect.soft(C.tab.api.note?.text ?? "").not.toContain("x@test");
+    expect(C.tab.api.enabled).toBe(true);
+  });
+
+  test("Google storage full (403 storageQuotaExceeded): the player is told their storage is full, and sync goes on once there's room", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    override = (url) =>
+      url.startsWith("https://www.googleapis.com/upload/")
+        ? jsonRes(403, { error: { code: 403, message: "The user's Drive storage quota has been exceeded.", errors: [{ reason: "storageQuotaExceeded" }] } })
+        : null;
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(3 * 3600_000);
+    expect.soft(tab.api.status).toBe("error");
+    const uploads = calls.filter((c) => c.startsWith("PATCH https://www.googleapis.com/upload/")).length;
+    expect.soft(uploads).toBeGreaterThan(5); // keeps trying (slowly), so it goes on by itself once there's room
+    expect.soft(tab.api.note?.text ?? "").not.toMatch(/magától újra megpróbálja/);
+    expect(tab.api.note?.text ?? "").toMatch(/tárhely/i);
+    expect(tab.api.driveFull).toBe(true);
+    override = null; // the player made room
+    await settle(16 * 60_000);
+    expect(tab.api.status).toBe("idle");
+    expect(tab.api.driveFull).toBe(false);
   });
 });

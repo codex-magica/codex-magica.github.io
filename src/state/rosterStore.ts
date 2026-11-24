@@ -21,10 +21,11 @@
 //     are merged into memory rather than overwritten.
 
 import { CharacterRecord } from "../model/character";
-import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } from "./storage";
+import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, repairRecord, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
 import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
 import { conflictCopyName, mergeLocal, reconcile } from "./driveMerge";
+import { deletionAwaitsDrive } from "./syncState";
 
 export { conflictCopyName };
 
@@ -45,7 +46,18 @@ export interface RosterState {
 
 const DELETIONS_KEY = "magus.deletions.v1";
 const LEGACY_TOMBSTONES_KEY = "magus.tombstones.v1"; // id → time, from the first version of the Drive sync
-const KEEP_LAST_MS = 60 * 24 * 3600_000; // without sync, a deleted character's last state is kept this long
+const KEEP_LAST_MS = 60 * 24 * 3600_000; // a deleted character's last state is kept this long (with sync, until it's in Drive)
+// While saving fails (storage full), memory is the only copy of the latest edits. Before the page is
+// replaced (the round trip to Google's consent page, an app update), memory is parked here: the tab's
+// session storage has its own room, and survives the page change. The next start merges it back.
+const STASH_KEY = "magus.unsavedRoster.v1";
+const session = (): Storage | null => {
+  try {
+    return typeof sessionStorage === "undefined" ? null : sessionStorage;
+  } catch {
+    return null;
+  }
+};
 
 const readRaw = (key: string): string | null => {
   try {
@@ -63,7 +75,7 @@ const readDeletions = (liveIds: Set<string>): Deletions => {
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
       for (const [id, d] of Object.entries(parsed as Record<string, Deletion>))
         if (d && typeof d.t === "number" && isVersionVector(d.vc)) {
-          const keepLast = d.last && typeof d.last === "object" && now - d.t < KEEP_LAST_MS;
+          const keepLast = d.last && typeof d.last === "object" && (now - d.t < KEEP_LAST_MS || deletionAwaitsDrive(id, d));
           out[id] = keepLast ? { t: d.t, vc: d.vc, last: d.last } : { t: d.t, vc: d.vc };
         }
     // The first sync version wrote a time per deleted id and never cleared it while sync was off, so a
@@ -109,6 +121,16 @@ type Listener = () => void;
 
 export const createRosterStore = () => {
   let state: RosterState = { ...load(), revision: 0, saveFailed: false };
+  // edits parked before the last page change, because they couldn't be saved: back in, merged
+  let stashed: { records: CharacterRecord[]; deletions: Deletions } | null = null;
+  try {
+    const raw = session()?.getItem(STASH_KEY);
+    const parsed = raw ? (JSON.parse(raw) as { records?: unknown; deletions?: unknown }) : null;
+    if (parsed && Array.isArray(parsed.records) && parsed.deletions && typeof parsed.deletions === "object")
+      stashed = { records: (parsed.records as unknown[]).map((r) => repairRecord(r)).filter((r): r is CharacterRecord => r !== null), deletions: parsed.deletions as Deletions };
+  } catch {
+    stashed = null;
+  }
   // what's saved, as last read or written by this tab: a change elsewhere shows up as a difference
   let seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
   const listeners = new Set<Listener>();
@@ -138,20 +160,36 @@ export const createRosterStore = () => {
   // without a character whose deletion marker isn't saved (it would come back from Drive after a reload),
   // never a marker saved for a change whose roster isn't. When storage is full, the order matters (a
   // deletion shrinks the roster but grows the markers), so both orders are tried; then the markers without
-  // the deleted characters' last states (those stay in memory, and saving counts as failed); and if
-  // nothing fits, what was saved before is put back.
+  // the deleted characters' last states (they're only kept for a Drive backup: if sync still needs one,
+  // it stays in memory and saving counts as failed; otherwise this is saved); and if nothing fits, what
+  // was saved before is put back.
   const persist = (records: CharacterRecord[], deletions: Deletions): boolean => {
     const before = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
     let ok = (writeDeletions(deletions) && saveRoster(records)) || (saveRoster(records) && writeDeletions(deletions));
-    if (!ok && !(saveRoster(records) && writeDeletions(withoutLastStates(deletions)))) {
-      for (let i = 0; i < 2; i++) {
-        const back = i === 0 ? writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions) : writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster);
-        if (back) break;
-      }
+    if (!ok) {
+      if (saveRoster(records) && writeDeletions(withoutLastStates(deletions)))
+        ok = !Object.entries(deletions).some(([id, d]) => d.last && deletionAwaitsDrive(id, d));
+      else
+        for (let i = 0; i < 2; i++) {
+          const back = i === 0 ? writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions) : writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster);
+          if (back) break;
+        }
     }
     seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
+    if (ok)
+      try {
+        session()?.removeItem(STASH_KEY); // all of memory is saved: nothing parked is needed any more
+      } catch {
+        /* ignore */
+      }
     return ok;
   };
+
+  if (stashed) {
+    const merged = mergeLocal(stashed, state);
+    const saved = persist(merged.records, merged.deletions);
+    state = { ...state, records: merged.records, deletions: merged.deletions, saveFailed: !saved };
+  }
 
   const commit = (records: CharacterRecord[], deletions: Deletions, local: boolean) => {
     const saved = persist(records, deletions);
@@ -279,6 +317,20 @@ export const createRosterStore = () => {
       refresh();
       const next = reconcile(snapshot, state, merged);
       commit(next.records, next.deletions, false);
+    },
+
+    // Before the page is replaced while saving fails: park memory for the next start (see STASH_KEY).
+    // False if that isn't possible either: then leaving would lose the latest edits.
+    parkUnsaved(): boolean {
+      if (!state.saveFailed) return true;
+      try {
+        const s = session();
+        if (!s) return false;
+        s.setItem(STASH_KEY, JSON.stringify({ records: state.records, deletions: state.deletions }));
+        return true;
+      } catch {
+        return false;
+      }
     },
 
     // The player downloaded the saved data that couldn't be read (storage.unreadableKeys) and dropped it.
