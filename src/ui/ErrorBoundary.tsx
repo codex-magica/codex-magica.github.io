@@ -79,10 +79,10 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
           ) : (
             <>
               <Text fontSize="15px" lineHeight="1.55" mb="8px">
-                A karaktereid nem vesztek el: minden módosítás azonnal mentődik ezen az eszközön. Töltsd újra az alkalmazást.
+                A karaktereid nem vesztek el: minden módosításodat azonnal elmenti az alkalmazás ezen az eszközön. Töltsd újra az alkalmazást.
               </Text>
               <Text fontSize="14px" color="muted" lineHeight="1.55" mb="16px">
-                Ha a hiba újra előjön, mentsd el a karaktereidet egy fájlba, és jelezd a hibát a projekt GitHub-oldalán.
+                Ha a hiba ismét jelentkezik, mentsd el a karaktereidet egy fájlba, és jelezd a hibát a projekt GitHub-oldalán.
               </Text>
             </>
           )}

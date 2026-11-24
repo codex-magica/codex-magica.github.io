@@ -420,7 +420,7 @@ export const CharacterBuilder: React.FC<{ api: CharacterBuilderApi; mode: "creat
           onConfirm={() => { update({ houseRules: { ...record.houseRules, skillRework: pendingRework.on }, levels: pendingRework.levels }); setPendingRework(null); }}
           onClose={() => setPendingRework(null)}>
           {pendingRework.on ? "A házi szabályban" : "A könyv szabályai szerint"} ezek a képzettségek másképp
-          működnek, ezért a megvásárlásuk törlődik, és a rájuk költött pontokat újra elköltheted:
+          működnek, ezért a vásárlásukat töröljük, a rájuk költött KAP-ot pedig újra elköltheted:
           <Box as="ul" pl="20px" my="8px">
             {pendingRework.dropped.map((d, i) => (
               <li key={i}>

@@ -79,7 +79,7 @@ function applySkillPurchases(ctx: DeriveCtx, L: number, lvlRec: LevelRecord): vo
     // a level the skill can't have (a hand-edited file, or a purchase from the other rules variant where
     // the skill is priced the other way): skipped, so it can't break the point totals
     if (!Number.isFinite(sp.to) || (isPct ? sp.to < 0 || sp.to > 100 : sp.to < 1 || sp.to > 5)) {
-      diag("warn", `${sp.skill}: ${sp.to}${isPct ? "%" : ". fok"} nem lehetséges, ez a vásárlás nem számít bele.`, L);
+      diag("warn", `${sp.skill}: ${sp.to}${isPct ? "%" : ". fok"} nem létezik, ezért ezt a vásárlást az alkalmazás figyelmen kívül hagyja.`, L);
       continue;
     }
     // A two-tier specific (Fegyverhasználat weapon) inherits its parent CATEGORY's fok as its floor;

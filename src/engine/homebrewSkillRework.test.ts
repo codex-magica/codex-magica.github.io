@@ -195,7 +195,7 @@ describe("a purchase at a level the skill can't have", () => {
     const rec = base({ levels: [{ level: 1, allocations: [], skillPurchases: [{ skill: "Mászás", to: 18 }], hmAssignments: [], statIncreases: [] }] });
     const d = derive(rulesHomebrew(), rec);
     expect(d.pools.kapBalanceByLevel.every(Number.isFinite)).toBe(true);
-    expect(d.diagnostics.some((x) => x.message.includes("Mászás: 18. fok nem lehetséges"))).toBe(true);
+    expect(d.diagnostics.some((x) => x.message.includes("Mászás: 18. fok nem létezik"))).toBe(true);
   });
 });
 
