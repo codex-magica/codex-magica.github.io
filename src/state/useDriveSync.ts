@@ -25,6 +25,7 @@ import {
 } from "./googleDrive";
 import { BACKUP_FORMAT, DeviceIdClashError, SyncNewerVersionError, runSync } from "./driveSyncEngine";
 import { rosterStore } from "./rosterStore";
+import { loadLastBackupAt } from "./transfer";
 import { deviceId, resetDeviceId } from "./versions";
 import { normalizeRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
@@ -60,7 +61,8 @@ import {
 
 export type DriveStatus = "off" | "idle" | "syncing" | "needsTap" | "error";
 // The notice after coming back from Google's consent page: syncing, then done.
-export type DriveHop = "backSyncing" | "backDone" | null;
+// "lost": sync stopped because Google's permission is gone (shown once, on any screen, until dismissed).
+export type DriveHop = "backSyncing" | "backDone" | "lost" | null;
 
 export interface DriveSyncApi {
   available: boolean; // built with a Google client ID
@@ -78,7 +80,10 @@ export interface DriveSyncApi {
   syncNow: () => void; // call from a tap
   disable: () => void;
   setBackups: (on: boolean) => void;
+  dismissNote: () => void; // the player read it
   hop: DriveHop;
+  dismissHop: () => void;
+  needsUpdate: boolean; // Drive holds data from a newer app version: sync waits for this one to update
   connectIssue: number; // bumped when coming back from Google's page went wrong: show the window with the note
   listBackups: () => Promise<BackupMeta[]>;
   restoreBackup: (b: BackupMeta) => Promise<CharacterRecord>; // adds it as a new character
@@ -121,22 +126,41 @@ const noteReducer = (n: DriveNote | null, a: NoteAction): DriveNote | null => {
   return n && !n.error ? n : null;
 };
 
+// What a round did that the player should know about: characters kept twice (edited on two devices at
+// once) and deleted ones that came back (edited elsewhere meanwhile). Null if nothing.
+const quoted = (names: string[]): string => {
+  const q = names.slice(0, 3).map((n) => `„${n}”`);
+  return names.length > 3 ? `${q.join(", ")} és még ${names.length - 3}` : q.length > 1 ? `${q.slice(0, -1).join(", ")} és ${q[q.length - 1]}` : q[0];
+};
+export const roundNotice = (copied: string[], undeleted: string[]): string | null => {
+  const parts: string[] = [];
+  if (copied.length === 1)
+    parts.push(`${quoted(copied)} két eszközön is módosult egyszerre, ezért mindkét változata megmaradt: a másik „${copied[0]} (másik változat)” néven került a listára. Nézd át, és töröld, amelyikre nincs szükséged.`);
+  else if (copied.length > 1)
+    parts.push(`${copied.length} karaktered két eszközön is módosult egyszerre: ${quoted(copied)}. Mindegyiknek mindkét változata megmaradt, a másik „(másik változat)” jelöléssel került a listára. Nézd át őket, és töröld, amelyikre nincs szükséged.`);
+  if (undeleted.length === 1) parts.push(`${quoted(undeleted)} törlése nem érvényesült, mert közben egy másik eszközön módosították. Ha nincs rá szükséged, töröld újra.`);
+  else if (undeleted.length > 1) parts.push(`${quoted(undeleted)} törlése nem érvényesült, mert közben egy másik eszközön módosították őket. Ha nincs rájuk szükséged, töröld őket újra.`);
+  return parts.length ? parts.join(" ") : null;
+};
+
 // The Hungarian note for an error, shown in the Drive window. `service`: reconnecting means Google's page.
 const errorNote = (e: unknown, service: boolean): string => {
   if (e instanceof AccountMismatchError) return e.message;
-  if (e instanceof SyncNewerVersionError) return "A Drive-on lévő adatokat az alkalmazás egy újabb verziója mentette. Frissítsd az alkalmazást (zárd be, majd nyisd meg újra), és folytatódik a szinkron.";
-  if (e instanceof TokenServiceError) return "Most nem sikerült elérni a szinkronszolgáltatást. Később magától újra megpróbálja.";
+  if (e instanceof SyncNewerVersionError)
+    return "Egy másik eszközöd már az alkalmazás újabb verzióját használja. Kattints a lent megjelenő „Frissítés” gombra; ha nem látod, zárd be az alkalmazást, és nyisd meg újra.";
   if (e instanceof DriveAuthError) return authNote(e.message, service);
-  if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. A szinkron a következő alkalommal folytatódik.";
-  return "Nem sikerült elérni a Google Drive-ot. Később magától újra megpróbálja.";
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. Amint lesz, a szinkron magától folytatódik.";
+  // Drive or the token service unreachable or busy: the same for the player
+  return "Most nem érhető el a Google Drive. Az alkalmazás magától újra megpróbálja; a módosításaid addig is megmaradnak ezen az eszközön.";
 };
 const authNote = (reason: string, service: boolean): string => {
   if (reason === "popup closed") return "A Google-ablak bezárult, mielőtt engedélyt adtál volna.";
-  if (reason === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és hagyd bejelölve a Drive-ra vonatkozó engedélyt.";
-  if (reason === "access_denied") return "Nem adtál engedélyt a Google-nek, ezért a szinkron nem kapcsolódott.";
+  if (reason === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és a Google oldalán jelöld be a Drive-ra vonatkozó négyzetet is.";
+  if (reason === "access_denied") return "A szinkron nem kapcsolt be, mert a Google oldalán nem adtál engedélyt. Bármikor újra megpróbálhatod.";
   if (reason === "no answer") return "A Google-bejelentkezés nem fejeződött be. Próbáld újra.";
-  if (reason === "credential revoked") return "Ez például akkor fordul elő, ha a Google-fiókodban visszavontad az alkalmazás engedélyét, vagy hat hónapig nem használtad.";
-  return service ? "A Google-kapcsolatot újra össze kell kötni. Kattints az „Újrakapcsolás” gombra." : "A Google-hozzáférés lejárt. Kattints a „Szinkronizálás most” gombra.";
+  if (reason === "credential revoked")
+    return "A szinkron engedélye megszűnt (például mert a Google-fiókodban eltávolítottad, vagy hónapokig nem használtad). Kattints az „Újrakapcsolás” gombra; addig a karaktereid ezen az eszközön megmaradnak.";
+  return service ? "Újra engedélyt kell adnod a Google-nek. Kattints az „Újrakapcsolás” gombra." : "A Google-hozzáférés lejárt. Kattints a „Szinkronizálás most” gombra.";
 };
 
 // Google's answer from the consent page, read once at startup (before rendering).
@@ -146,10 +170,10 @@ let codeTaken = false;
 
 // Finishing the connection failed before it was set up: a tap is needed (nothing retries by itself).
 const connectNote = (e: unknown, service: boolean): string => {
-  if (e instanceof TokenServiceError) return "A szinkronszolgáltatás most nem érhető el, ezért a Google-kapcsolat nem jött létre. Próbáld újra egy kicsit később.";
+  if (e instanceof TokenServiceError) return "A Google-kapcsolat most egy átmeneti hiba miatt nem jött létre. Próbáld újra pár perc múlva.";
   if (e instanceof DriveAuthError && (e.message === "drive permission not granted" || e.message === "access_denied")) return authNote(e.message, service);
   if (e instanceof AccountMismatchError) return e.message;
-  return "Nem sikerült befejezni a Google-kapcsolódást. Próbáld újra.";
+  return "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.";
 };
 
 // One round at a time across this browser's tabs (where the browser supports Web Locks).
@@ -166,6 +190,16 @@ const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
 };
 
 const store = rosterStore();
+
+// Saving fails (storage full), so the latest edits exist only in memory: a backup file saved after the
+// last of them holds everything, so leaving the page for Google's is safe then.
+const exportedSinceLastEdit = (): boolean => {
+  const at = loadLastBackupAt();
+  if (at === null) return false;
+  const st = store.getState();
+  const last = Math.max(0, ...st.records.map((r) => r.updatedAt ?? 0), ...Object.values(st.deletions).map((d) => d.t));
+  return at >= last;
+};
 const verifiedTokens = new Set<string>();
 
 export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
@@ -178,7 +212,9 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     back ? "syncing" : settings.enabled ? (validToken() || hasCredential() ? "idle" : "needsTap") : "off"
   );
   const [note, setNote] = useReducer(noteReducer, null, () =>
-    available && initialOutcome.kind === "error" ? { text: authNote(initialOutcome.error, service), error: true, seq: ++noteSeq } : null
+    available && initialOutcome.kind === "error"
+      ? { text: authNote(initialOutcome.error, service), error: initialOutcome.error !== "access_denied", seq: ++noteSeq } // cancelling isn't a failure
+      : null
   );
   // coming back from Google's page went wrong: the window was closed by the page change, so it's opened
   // again with the note (an error from the address counts from the start)
@@ -200,6 +236,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const optsRef = useRef(opts);
   optsRef.current = opts;
   const [hop, setHopState] = useState<DriveHop>(() => (back ? "backSyncing" : null));
+  const [needsUpdate, setNeedsUpdate] = useState(false);
   const hopRef = useRef(hop);
   const setHop = useCallback((h: DriveHop) => {
     hopRef.current = h;
@@ -207,6 +244,14 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   }, []);
 
   const patchSettings = useCallback((patch: Partial<DriveSettings>) => setSettings(updateDriveSettings(patch)), []);
+
+  // Sync stopped in the background and needs the player (Google's permission is gone): with a token
+  // service this is rare, so a card says so once, wherever the player is. (Without one, a tap is
+  // needed every hour: the roster line is enough.)
+  const needTap = useCallback(() => {
+    if (service && statusRef.current !== "needsTap" && hopRef.current === null) setHop("lost");
+    setStatus("needsTap");
+  }, [service, setHop]);
 
   // A round failed for a passing reason (no network, Google or the token service busy): try again by
   // itself, so changes don't wait for the next edit or for the app to be reopened.
@@ -250,7 +295,9 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       const expected = loadDriveSettings().email;
       if (expected && expected.toLowerCase() !== email.toLowerCase()) {
         forgetToken(token);
-        throw new AccountMismatchError(`Ezzel a Google-fiókkal jelentkeztél be: ${email}, de a szinkron ehhez a fiókhoz tartozik: ${expected}. Jelentkezz be azzal, vagy kapcsold ki, majd újra be a szinkront.`);
+        throw new AccountMismatchError(
+          `A szinkron ehhez a fiókhoz tartozik: ${expected}, de most ezzel jelentkeztél be: ${email}. Kattints az „Újrakapcsolás” gombra, és válaszd a(z) ${expected} fiókot. Ha mostantól a másik fiókot használnád, kapcsold ki a szinkront, majd kapcsold be újra.`
+        );
       }
       if (!expected) patchSettings({ email });
       verifiedTokens.add(token);
@@ -323,16 +370,15 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             saveBackedUp(out.backedUp);
             patchSettings({ lastSyncAt: Date.now() });
             setSyncTick((n) => n + 1);
-            if (out.conflictCopies > 0)
-              setNote({
-                info: `${out.conflictCopies} karakter két eszközön is módosult, mielőtt szinkronizálódhatott volna. A másik változat külön karakterként került a listára („… (másik változat)”), hogy semmi ne vesszen el.`,
-              });
-            else setNote({ clearError: true }); // a conflict notice stays; an error is over
+            const told = roundNotice(out.copied, out.undeleted);
+            if (told) setNote({ info: told });
+            else setNote({ clearError: true }); // a notice stays until it's dismissed; an error is over
           } while (again.current);
         });
         authRetried.current = false;
         if (current()) {
           stopRetrying();
+          setNeedsUpdate(false);
           if (hopRef.current === "backSyncing") {
             setHop("backDone");
             window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
@@ -348,7 +394,13 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             again.current = true;
           } else {
             const tap = e instanceof DriveAuthError || e instanceof AccountMismatchError;
-            setStatus(tap ? "needsTap" : "error");
+            if (tap) needTap();
+            else setStatus("error");
+            if (e instanceof SyncNewerVersionError) {
+              setNeedsUpdate(true);
+              // fetch the new version now, so the update banner can offer it
+              void navigator.serviceWorker?.getRegistration?.().then((r) => r?.update()).catch(() => undefined);
+            }
             setNote(errorNote(e, service));
             if (!tap) {
               authRetried.current = false; // a later refused token gets its quiet renewal again
@@ -368,7 +420,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         }, RETRY_MS);
       }
     },
-    [ensureAccount, patchSettings, setHop, service, scheduleRetry, stopRetrying]
+    [ensureAccount, patchSettings, setHop, service, scheduleRetry, stopRetrying, needTap]
   );
 
   // Sync without user interaction, renewing the token quietly if there's a way to.
@@ -379,15 +431,16 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       token = await getToken();
     } catch (e) {
       if (!enabledRef.current) return;
-      setStatus(e instanceof DriveAuthError ? "needsTap" : "error");
+      if (e instanceof DriveAuthError) needTap();
+      else setStatus("error");
       setNote(errorNote(e, service));
       if (!(e instanceof DriveAuthError)) scheduleRetry();
       return;
     }
     if (!enabledRef.current) return;
     if (token) await round(token);
-    else if (!running.current) setStatus("needsTap"); // (a round still running reports for itself)
-  }, [available, getToken, round, service, scheduleRetry]);
+    else if (!running.current) needTap(); // (a round still running reports for itself)
+  }, [available, getToken, round, service, scheduleRetry, needTap]);
   autoRef.current = autoSync;
 
   // A token from a tap, without a token service (the popup), with the account pre-filled.
@@ -405,9 +458,9 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
 
   // With a token service: off to Google's consent page (turning sync on, or reconnecting).
   const leaveForGoogle = useCallback((backups?: boolean) => {
-    if (store.getState().saveFailed) {
-      // the latest edits exist only in memory: the page reload would lose them
-      setNote("Előbb mentsd el a karaktereidet fájlba: ezen az eszközön most nem sikerül menteni, és a Google oldalára átlépve elvesznének a legutóbbi módosítások.");
+    if (store.getState().saveFailed && !exportedSinceLastEdit()) {
+      // the latest edits exist only in memory: the page change would lose them, unless they're in a file
+      setNote("Ezen az eszközön most nem sikerül menteni, ezért ha átlépsz a Google oldalára, elvesznének a legutóbbi módosításaid. Előbb mentsd el a karaktereidet fájlba a karakterlistán, utána újra megpróbálhatod.");
       return;
     }
     void beginConnect(optsRef.current.returnContext(), loadDriveSettings().email, backups).then((r) => {
@@ -451,6 +504,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     generation.current++;
     stopRetrying();
     setHop(null);
+    setNeedsUpdate(false);
     // This device only: the permission stays valid for the player's other devices (and in their Google
     // account's list of connected apps, where it can be removed).
     forgetToken();
@@ -667,7 +721,10 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     syncNow: () => interactive(false),
     disable,
     setBackups: (on: boolean) => patchSettings({ backups: on }),
+    dismissNote: () => setNote(null),
     hop,
+    dismissHop: () => setHop(null),
+    needsUpdate: settings.enabled && needsUpdate,
     connectIssue,
     listBackups,
     restoreBackup,

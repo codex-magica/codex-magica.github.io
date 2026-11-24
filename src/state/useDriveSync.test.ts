@@ -319,7 +319,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500);
     expect(tab.api.status).toBe("error");
-    expect(tab.api.note?.text).toContain("Később magától újra megpróbálja"); // "it will retry by itself later"
+    expect(tab.api.note?.text).toContain("magától újra megpróbálja"); // "it will retry by itself"
     fail = false;
     await settle(30 * 60_000); // half an hour, app open in the foreground, no further edits
     expect(tab.api.pending.count).toBe(0);

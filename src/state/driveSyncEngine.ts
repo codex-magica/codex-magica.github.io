@@ -47,6 +47,8 @@ export interface SyncOutput {
   backedUp: Set<string>;
   pulled: number;
   conflictCopies: number;
+  copied: string[]; // names of characters kept twice (parallel edits), for the player
+  undeleted: string[]; // characters deleted here that came back (a parallel edit won)
   uploaded: boolean;
   skippedFiles: number; // other devices' files that couldn't be read (left alone)
 }
@@ -150,5 +152,5 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
   }
 
   const published: Published = result.published;
-  return { records: result.records, deletions: result.deletions, published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, uploaded, skippedFiles };
+  return { records: result.records, deletions: result.deletions, published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, copied: result.copied, undeleted: result.undeleted, uploaded, skippedFiles };
 }

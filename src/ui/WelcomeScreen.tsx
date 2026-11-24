@@ -14,7 +14,8 @@ import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile }
 import { rosterStore } from "../state/rosterStore";
 import { ROSTER_KEY, releaseHeldRoster, unreadableKeys } from "../state/storage";
 import { DriveSyncApi } from "../state/useDriveSync";
-import { CloudIcon, DriveSyncModal, driveStatusLine } from "./DriveSyncModal";
+import { CloudIcon, DriveSyncModal, driveAttention, driveStatusLine } from "./DriveSyncModal";
+import { Callout } from "./Callout";
 
 interface Props {
   records: CharacterRecord[];
@@ -28,6 +29,8 @@ interface Props {
   onOpenCompendium: () => void;
   onOpenCredits: () => void;
   drive: DriveSyncApi;
+  notice?: string | null; // something that happened elsewhere, said once (the open character was deleted…)
+  onDismissNotice?: () => void;
 }
 
 const SIDE = { base: "20px", sm: "32px" };
@@ -61,7 +64,7 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
   </Box>
 );
 
-export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium, onOpenCredits, drive }) => {
+export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium, onOpenCredits, drive, notice, onDismissNotice }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   // the version the delete dialog was opened on: only that one may be deleted (a sync may bring a newer one)
@@ -84,6 +87,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   // saved data the app couldn't read at some point, kept aside (see storage.ts): offer it, never drop it
   const [aside, setAside] = useState(() => unreadableKeys());
   const [asideSaved, setAsideSaved] = useState(false);
+  const [confirmDropAside, setConfirmDropAside] = useState(false);
   const saveAside = () => {
     setAsideSaved(true);
     for (const k of aside) {
@@ -109,7 +113,10 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   const [now] = useState(() => Date.now()); // render must stay pure: read the clock once per visit
   // with Google Drive sync on, the characters are not "only in this browser" any more
   const backupStale = !drive.enabled && (lastBackupAt === null || now - lastBackupAt > BACKUP_STALE_DAYS * DAY_MS);
-  const driveLine = driveStatusLine(drive, now);
+  // what sync needs from the player is said at the top; the footer keeps the quiet status
+  const driveNeeds = driveAttention(drive, now);
+  const driveLine = driveNeeds ? null : driveStatusLine(drive, now);
+  const driveNotice = drive.note && !drive.note.error ? drive.note : null; // a conflict copy, a deletion that didn't hold
 
   const handleImportFile = (file: File | undefined) => {
     if (!file) return;
@@ -193,6 +200,15 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
               : "A karaktereid ezen az eszközön, a böngészőben tárolódnak."}
           </Text>
         </Box>
+
+        {(driveNeeds || notice || deleteNote || driveNotice) && (
+          <Box display="flex" flexDirection="column" gap="10px" mt={{ base: "-24px", md: "-16px" }} mb="22px" maxW="640px" mx="auto">
+            {driveNeeds && <Callout kind="warn" actions={[{ label: "Google Drive", onClick: () => setDriveOpen(true) }]}>{driveNeeds}</Callout>}
+            {notice && <Callout kind="info" actions={onDismissNotice ? [{ label: "Rendben", onClick: onDismissNotice }] : undefined}>{notice}</Callout>}
+            {deleteNote && <Callout kind="warn" actions={[{ label: "Rendben", onClick: () => setDeleteNote(null) }]}>{deleteNote}</Callout>}
+            {driveNotice && <Callout key={driveNotice.seq} kind="info" actions={[{ label: "Rendben", onClick: drive.dismissNote }]}>{driveNotice.text}</Callout>}
+          </Box>
+        )}
 
         <HStack align="baseline" justify="space-between" gap="14px" mb="13px" px="2px">
           <Heading as="h2" fontFamily="system-ui" fontSize="11.5px" fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint">
@@ -281,24 +297,25 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         </HStack>
         {aside.length > 0 && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="warn" mt="8px" maxW="56ch" mx="auto">
-            Ezen az eszközön van egy korábbi mentés, amelyet az alkalmazás nem tudott beolvasni; félretette, hogy ne vesszen el.{" "}
+            Ezen az eszközön van egy korábbi mentés, amelyet az alkalmazás nem tudott beolvasni, ezért félretette. Mentsd el
+            fájlba; ha hiányzik egy karaktered, jelezd a projekt GitHub-oldalán, és csatold a fájlt.{" "}
             <Box as="button" type="button" onClick={saveAside} textDecoration="underline" textUnderlineOffset="2px">Mentés fájlba</Box>
             {asideSaved && (
               <>
                 {" · "}
-                <Box as="button" type="button" onClick={dropAside} textDecoration="underline" textUnderlineOffset="2px">Törlés erről az eszközről</Box>
+                <Box as="button" type="button" onClick={() => setConfirmDropAside(true)} textDecoration="underline" textUnderlineOffset="2px">Törlés erről az eszközről</Box>
               </>
             )}
           </Text>
         )}
-        {records.length > 0 && (
+        {records.length > 0 && !drive.enabled && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
             {lastBackupAt === null ? "Még nem készült biztonsági mentés." : `Utolsó biztonsági mentés: ${daysAgo(lastBackupAt, now)}.`}
             {backupStale && " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes menteni."}
           </Text>
         )}
         {driveLine && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={drive.status === "error" || drive.status === "needsTap" || driveLine.startsWith("Ezen az eszközön") ? "warn" : "fgFaint"} mt="4px" maxW="52ch" mx="auto">
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mt="4px" maxW="52ch" mx="auto">
             {driveLine}
           </Text>
         )}
@@ -313,11 +330,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           }}
         />
 
-        {deleteNote && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="warn" mt="9px" maxW="52ch" mx="auto">
-            {deleteNote}
-          </Text>
-        )}
         {(importError || importInfo) && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={importError ? "bad" : "good"} mt="9px" maxW="52ch" mx="auto">
             {importError ?? importInfo}
@@ -326,6 +338,19 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       </Box>
       </Box>
 
+      {confirmDropAside && (
+        <ConfirmModal
+          title="Félretett mentés törlése"
+          confirmLabel="Törlés"
+          onConfirm={() => {
+            setConfirmDropAside(false);
+            dropAside();
+          }}
+          onClose={() => setConfirmDropAside(false)}
+        >
+          Csak akkor töröld, ha a fájl megvan a letöltéseid között. Ez nem vonható vissza.
+        </ConfirmModal>
+      )}
       {driveOpen && <DriveSyncModal drive={drive} records={records} onClose={closeDrive} />}
 
       {menuView && !menuAsPopover && (
@@ -348,7 +373,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
             const i = deleteView.id;
             setConfirmDeleteId(null);
             if (!onDelete(i, deleteBase ?? undefined))
-              setDeleteNote(`${deleteView.name} időközben megváltozott (például egy másik eszközön szerkesztették), ezért az alkalmazás nem törölte. Nézd meg, és ha továbbra is törölnéd, töröld újra.`);
+              setDeleteNote(`„${deleteView.name}” közben megváltozott egy másik eszközön, ezért nem törlődött. Nézd meg, és ha kell, töröld újra.`);
           }}
           onClose={() => setConfirmDeleteId(null)}
         >

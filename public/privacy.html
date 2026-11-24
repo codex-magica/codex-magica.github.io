@@ -44,8 +44,9 @@
         törlés előtti utolsó állapotuk is.</li>
       <li>A Drive-ra vonatkozó egyetlen engedély a <code>drive.appdata</code>. Ezzel az alkalmazás a Drive-od
         többi fájlját nem látja, nem olvassa és nem módosítja.</li>
-      <li>Az e-mail-címedet is lekéri, de csak azért, hogy megmutassa, melyik fiókkal szinkronizál, és hogy a Google
-        a következő bejelentkezéskor ne kérdezze meg újra, melyik fiókot használod. Ezen az eszközön tárolja.</li>
+      <li>Az e-mail-címedet is lekéri, de csak azért, hogy megmutassa, melyik fiókkal szinkronizál, hogy a szinkron
+        véletlenül se kerüljön egy másik Google-fiókba, és hogy a Google a következő bejelentkezéskor ne kérdezze meg
+        újra, melyik fiókot használod. Ezen az eszközön tárolja.</li>
       <li>A bekapcsoláskor kapott tartós Google-engedélyt az alkalmazás titkosítva, ezen az eszközön tárolja. Ezzel kér
         óránként új hozzáférési kódot (tokent) egy kis szolgáltatástól, amely a Cloudflare-en fut. Ez a szolgáltatás
         csak a Google-lel váltja ki a kódot: a karaktereidet nem látja, semmit nem tárol, és a kéréseket nem naplózza.
@@ -89,8 +90,9 @@
         are kept in the same folder.</li>
       <li>Its only Drive permission is <code>drive.appdata</code>. It cannot see, read or change any other file in
         your Drive.</li>
-      <li>It also reads your email address, only to show which account syncs and so that Google doesn't ask which
-        account to use next time. It is stored on this device.</li>
+      <li>It also reads your email address, only to show which account syncs, to make sure sync never goes into another
+        Google account by mistake, and so that Google doesn't ask which account to use next time. It is stored on this
+        device.</li>
       <li>The lasting Google permission you give when turning sync on is stored encrypted, on this device. With it, the
         app gets a new access token every hour from a small service running on Cloudflare. That service only exchanges
         the token with Google: it cannot see your characters, stores nothing and keeps no request logs. Cloudflare

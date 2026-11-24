@@ -82,9 +82,20 @@ export const RootApp: React.FC = () => {
   const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 
   const current = currentId ? roster.get(currentId) : undefined;
-  // the open character disappeared (deleted in another tab or on another device): back to the roster
+  // the open character disappeared (deleted in another tab or on another device): back to the roster,
+  // which says why
+  const lastName = useRef<string | null>(null);
+  if (current) lastName.current = current.name;
+  const [rosterNotice, setRosterNotice] = useState<string | null>(null);
   useEffect(() => {
-    if (screen === "sheet" && !current) go("roster");
+    if (screen === "sheet" && !current) {
+      if (currentId && lastName.current)
+        setRosterNotice(
+          `„${lastName.current}” karaktert közben törölték egy másik eszközön vagy lapon, ezért bezárult.` +
+            (drive.enabled && drive.backups ? " Ha tévedés volt, a Google Drive ablakban, a biztonsági másolatok közül visszaállíthatod." : "")
+        );
+      go("roster");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, current]);
 
@@ -141,6 +152,8 @@ export const RootApp: React.FC = () => {
           onOpenCompendium={() => go("compendium")}
           onOpenCredits={() => setShowCredits(true)}
           drive={drive}
+          notice={rosterNotice}
+          onDismissNotice={() => setRosterNotice(null)}
         />
       )}
 
@@ -170,8 +183,8 @@ export const RootApp: React.FC = () => {
       )}
 
       {roster.saveFailed && <SaveFailedBanner />}
-      <DriveHopNotice hop={drive.hop} />
-      <UpdateBanner paused={creator !== null || drive.hop !== null || roster.saveFailed} />
+      <DriveHopNotice hop={drive.hop} onDismiss={drive.dismissHop} />
+      <UpdateBanner paused={creator !== null || drive.hop !== null || roster.saveFailed} required={drive.needsUpdate} />
     </>
   );
 };

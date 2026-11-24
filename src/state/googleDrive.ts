@@ -26,7 +26,6 @@ const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 const SCOPES = `${SCOPE} openid email`;
 const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const RETURN_KEY = "magus.driveReturn.v2";
-const NO_ANSWER_MS = 10 * 60_000; // signing in and agreeing takes a minute or two at most
 const STALE_ANSWER_MS = 30 * 60_000;
 const REQUEST_TIMEOUT_MS = 60_000;
 const SERVICE_TIMEOUT_MS = 20_000;
@@ -229,7 +228,6 @@ interface PendingRedirect {
   ctx: ReturnContext;
   verifier: string; // PKCE: proves the code is redeemed by whoever asked for it
   backups?: boolean; // turning sync on: the daily backups choice made before leaving
-  reported?: boolean; // "didn't finish" was already said once (the entry stays, in case Google still answers)
 }
 export type RedirectOutcome =
   | { kind: "none" }
@@ -301,18 +299,12 @@ export const consumeRedirectResult = (): RedirectOutcome => {
   if (typeof window === "undefined") return outcome;
   const params = new URLSearchParams(window.location.search);
   if (!params.has("state")) {
-    // We left for Google a while ago but came back without an answer (the user went back, or Google
-    // showed its own error page): say so once, and return to where the player was. A fresh entry may
-    // belong to another tab that is still on its way; the entry stays until it's too old to be answered,
-    // so a slow sign-in in another tab still lands.
+    // No answer in the address: an ordinary start. A sign-in that was left without an answer (the player
+    // went back from Google's page) needs no message, they know; its entry is dropped once it's too old
+    // to be answered. A fresh one may belong to another tab that is still on its way.
     try {
       const pending = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
-      const age = pending ? Date.now() - pending.at : 0;
-      if (pending && age > STALE_ANSWER_MS) localStorage.removeItem(RETURN_KEY);
-      if (pending && age > NO_ANSWER_MS && age <= STALE_ANSWER_MS && !pending.reported) {
-        localStorage.setItem(RETURN_KEY, JSON.stringify({ ...pending, reported: true }));
-        outcome = { kind: "error", error: "no answer", ctx: pending.ctx ?? null };
-      }
+      if (pending && Date.now() - pending.at > STALE_ANSWER_MS) localStorage.removeItem(RETURN_KEY);
     } catch {
       /* ignore */
     }

@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
-import { keyframes } from "@emotion/react";
 import { ModalShell } from "./Modal";
+import { Callout } from "./Callout";
+import { ConfirmModal } from "./ConfirmModal";
 import { DriveNote, DriveSyncApi } from "../state/useDriveSync";
 import { BackupMeta, DriveAuthError } from "../state/googleDrive";
 import { CharacterRecord } from "../model/character";
@@ -25,19 +26,29 @@ export const syncedAgo = (ts: number, now: number): string => {
 
 const STALE_PENDING_MS = 3 * 3600_000;
 
-// One-line status (null while sync is off). On the roster the button to tap is "Google Drive"; inside the
-// window it's "Szinkronizálás most", or "Újrakapcsolás" when the Google permission has to be given again.
-export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
-  if (!drive.enabled) return null;
+// What sync needs from the player, if anything (null: nothing, or sync is off): an app update, Google's
+// permission again, a tap (without a token service), or changes stuck on this device for hours (said
+// before the player picks up another device). On the roster the button to tap is "Google Drive"; inside
+// the window it's "Szinkronizálás most", or "Újrakapcsolás" when the permission has to be given again.
+export const driveAttention = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
+  if (!drive.enabled || drive.status === "syncing") return null;
   const reconnect = drive.service && drive.status === "needsTap";
   const button = !inWindow ? "a Google Drive gombra" : reconnect ? "az „Újrakapcsolás” gombra" : "a „Szinkronizálás most” gombra";
-  if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
-  // changes stuck on this device for hours: say so before the user picks up another device
-  if (drive.status !== "idle" && drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
-    return `Ezen az eszközön vannak még fel nem töltött módosítások (${drive.pending.count}). Kattints ${button}, mielőtt másik eszközön folytatod.`;
-  if (reconnect) return `Google Drive: a kapcsolat megszakadt. Az újrakapcsoláshoz kattints ${button}.`;
+  if (drive.needsUpdate) return "Google Drive: a szinkron folytatásához frissítsd az alkalmazást.";
+  if (reconnect) return `Google Drive: a szinkron leállt, újra engedélyt kell adnod. Kattints ${button}.`;
   if (drive.status === "needsTap") return `Google Drive: a következő szinkronhoz kattints ${button}.`;
-  if (drive.status === "error") return "Google Drive: a legutóbbi szinkron nem sikerült.";
+  if (drive.status !== "idle" && drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS)
+    return `${drive.pending.count} karakter módosítása még csak ezen az eszközön van meg. Mielőtt másik eszközön folytatod, kattints ${button}.`;
+  return null;
+};
+
+// One-line status (null while sync is off): what needs the player, or how it's going.
+export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = false): string | null => {
+  if (!drive.enabled) return null;
+  if (drive.status === "syncing") return "Szinkronizálás a Google Drive-val…";
+  const attention = driveAttention(drive, now, inWindow);
+  if (attention) return attention;
+  if (drive.status === "error") return "Google Drive: most nem érhető el, az alkalmazás magától újra megpróbálja.";
   return drive.lastSyncAt ? `Google Drive: szinkronizálva ${syncedAgo(drive.lastSyncAt, now)}.` : "Google Drive: bekapcsolva.";
 };
 
@@ -66,39 +77,20 @@ const BackupsChoice: React.FC<{ on: boolean; onChange: (on: boolean) => void }> 
         Napi biztonsági másolat a Drive-on
       </Text>
       <Text fontFamily="system-ui" fontSize="12.5px" color="muted" lineHeight="1.5">
-        Ha egy karaktert egy későbbi napon módosítasz, megmarad az előző napi állapota, ha pedig törlöd, a törlés előtti
-        állapota. Bármikor visszaállíthatod őket. A fájlok aprók, egyenként néhány kilobájtosak.
+        Amikor egy karaktert új napon módosítasz, az előző napi állapota megmarad; ha törlöd, a törlés előtti állapota.
+        Ezekből bármikor visszaállíthatod. A fájlok aprók, néhány kilobájtosak.
       </Text>
     </Box>
     <Toggle on={on} onChange={onChange} label="Napi biztonsági másolat a Drive-on" />
   </Box>
 );
 
-const noteIn = keyframes`from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; }`;
-
 // The last error or notice, right above the buttons (always in view, next to what was just tapped).
-// Keyed by `seq`, so it appears again even when a retry ends with the same text: the tap did something.
-const NoteCallout: React.FC<{ note: DriveNote }> = ({ note }) => (
-  <Box role={note.error ? "alert" : "status"} display="flex" gap="10px" alignItems="flex-start" mx="22px" mb="12px" p="10px 12px"
-    borderRadius="10px" border="1px solid" borderColor={note.error ? "warn" : "accentBd"} bg={note.error ? "warnSoft" : "accentSoft"}
-    fontFamily="system-ui" fontSize="13.5px" color="fg" lineHeight="1.5" animation={`${noteIn} .2s ease`}>
-    <Box as="span" aria-hidden="true" flexShrink={0} mt="1px" color={note.error ? "warn" : "accentTx"} lineHeight={0}>
-      {note.error ? (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-      ) : (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="16" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12.01" y2="8" />
-        </svg>
-      )}
-    </Box>
-    <Text>{note.text}</Text>
-  </Box>
+// Keyed by `seq` where it's used, so it appears again even when a retry ends with the same text.
+const NoteCallout: React.FC<{ note: DriveNote; mx?: string }> = ({ note, mx = "22px" }) => (
+  <Callout kind={note.error ? "warn" : "info"} mx={mx} mb="12px">
+    {note.text}
+  </Callout>
 );
 
 const dayLabel = (day: string) => {
@@ -221,6 +213,9 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
   const [now] = useState(() => Date.now());
   const [backupsChoice, setBackupsChoice] = useState(drive.backups);
   const [view, setView] = useState<"main" | "backups">("main");
+  const [confirmOff, setConfirmOff] = useState(false);
+  // turning off while changes are still only here: say what that means first
+  const turnOff = () => (drive.pending.count > 0 ? setConfirmOff(true) : drive.disable());
   const busy = drive.status === "syncing";
 
   if (view === "backups")
@@ -235,6 +230,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           </Heading>
           <BackupsView drive={drive} records={records} />
         </Box>
+        {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
         <Box display="flex" justifyContent="flex-end" p="12px 22px 18px" borderTop="1px solid" borderColor="rule" mt="10px">
           <Box {...btn} onClick={() => setView("main")} border="1px solid" borderColor="hair" color="muted">
             Vissza
@@ -253,14 +249,16 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           Szinkron a Google Drive-val
         </Heading>
         <Text fontSize={{ base: "14px", md: "15px" }} color="fg" lineHeight="1.55" mb="10px">
-          A karaktereid a saját Google Drive-od egy rejtett mappájába kerülnek, amelyet csak ez az alkalmazás lát.
-          Így minden eszközödön ugyanazok a karakterek lesznek, ahol bekapcsolod a szinkront.
+          A karaktereid a saját Google Drive-od egy rejtett mappájába kerülnek, amelyet csak ez az alkalmazás lát. Így
+          minden eszközödön, ahol ugyanazzal a Google-fiókkal bekapcsolod a szinkront, ugyanazok a karakterek lesznek.
         </Text>
+        {!drive.enabled && (
         <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
           {drive.service ? (
             <>
               Nincs külön fiók: a karaktereid csak a te Google-fiókodba kerülnek, más szerverre nem. Bekapcsoláskor a
-              Google oldalán egyszer engedélyt adsz, aztán visszajössz ide, és onnantól az alkalmazás magától szinkronizál.
+              Google oldalán egyszer engedélyt adsz (ha külön rákérdez, jelöld be a Google Drive-hozzáférést is), aztán
+              visszakerülsz ide, és onnantól az alkalmazás magától szinkronizál.
             </>
           ) : (
             <>
@@ -275,15 +273,16 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           </Box>
           .
         </Text>
+        )}
 
         <BackupsChoice on={drive.enabled ? drive.backups : backupsChoice} onChange={drive.enabled ? drive.setBackups : setBackupsChoice} />
 
         {drive.enabled && (
           <Box borderTop="1px solid" borderBottom="1px solid" borderColor="rule" py="10px" mb="12px" fontFamily="system-ui" fontSize="13px" color="muted" display="flex" flexDirection="column" gap="4px">
-            <Text color={drive.status === "error" || drive.status === "needsTap" ? "warn" : undefined} fontWeight={drive.status === "error" || drive.status === "needsTap" ? 600 : undefined}>
+            <Text color={driveAttention(drive, now, true) ? "warn" : undefined} fontWeight={driveAttention(drive, now, true) ? 600 : undefined}>
               {driveStatusLine(drive, now, true)}
             </Text>
-            {drive.pending.count > 0 && drive.status !== "syncing" && <Text color="accentTx">{drive.pending.count} módosítás vár szinkronra.</Text>}
+            {drive.pending.count > 0 && drive.status !== "syncing" && <Text color="accentTx">{drive.pending.count} karakter módosítása még nem került fel a Drive-ra.</Text>}
             {drive.email && <Text color="fgFaint">Fiók: {drive.email}</Text>}
             <Box as="button" type="button" onClick={() => setView("backups")} alignSelf="flex-start" mt="4px" color="accentTx" fontWeight={600} textDecoration="underline" textUnderlineOffset="3px">
               Biztonsági másolatok megtekintése
@@ -292,9 +291,8 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         )}
         {drive.enabled && (
           <Text fontFamily="system-ui" fontSize="12px" color="fgFaint" lineHeight="1.5" mb="6px">
-            Kikapcsoláskor semmi sem törlődik: a karakterek ezen az eszközön és a Drive-on is megmaradnak, a biztonsági
-            másolatokkal együtt. A kikapcsolás csak erre az eszközre vonatkozik, a többin a szinkron tovább működik.
-            A Drive-on lévőket a Google Drive beállításaiban, az „Alkalmazások kezelése” résznél törölheted.
+            A kikapcsolás csak erre az eszközre vonatkozik, és semmit sem töröl: a karakterek itt és a Drive-on is
+            megmaradnak, a többi eszközödön pedig a szinkron tovább működik.
           </Text>
         )}
       </Box>
@@ -304,7 +302,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
       <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap="10px" p="0 22px 18px">
         {drive.enabled ? (
           <>
-            <Box {...btn} onClick={drive.disable} border="1px solid" borderColor="hair" color="muted" mr="auto">
+            <Box {...btn} onClick={turnOff} border="1px solid" borderColor="hair" color="muted" mr="auto">
               Kikapcsolás
             </Box>
             <Box {...btn} onClick={drive.syncNow} disabled={busy} opacity={busy ? 0.6 : 1} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
@@ -323,6 +321,20 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         )}
       </Box>
       </Box>
+      {confirmOff && (
+        <ConfirmModal
+          title="Szinkron kikapcsolása"
+          confirmLabel="Kikapcsolás"
+          onConfirm={() => {
+            setConfirmOff(false);
+            drive.disable();
+          }}
+          onClose={() => setConfirmOff(false)}
+        >
+          Ezen az eszközön {drive.pending.count} karakter módosítása még nem került fel a Drive-ra. Ha most kikapcsolod, a
+          többi eszközöd nem kapja meg őket (itt megmaradnak).
+        </ConfirmModal>
+      )}
     </ModalShell>
   );
 };

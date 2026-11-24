@@ -173,6 +173,8 @@ export interface RoundResult {
   published: Record<string, string>; // id → version key of what the file holds
   pulled: number; // characters changed here because of another device
   conflictCopies: number; // parallel edits kept as a second character
+  copied: string[]; // the names those copies were made from (to tell the player)
+  undeleted: string[]; // characters deleted here that came back: an edit made elsewhere in parallel won
   backups: BackupCandidate[];
 }
 
@@ -254,14 +256,19 @@ export function mergeRound(
   for (const v of acc.values()) if (v.h === DELETED) deletions[v.id] = { t: v.t, vc: v.vc };
 
   let pulled = 0;
-  let conflictCopies = 0;
+  const copied: string[] = [];
+  const undeleted: string[] = [];
   for (const v of acc.values()) {
     const before = mine.get(v.id);
     if (!before) {
-      if (v.id.includes("~") && v.record) conflictCopies++;
+      if (v.id.includes("~") && v.record) copied.push(acc.get(v.id.slice(0, v.id.indexOf("~")))?.record?.name ?? v.record.name);
       else if (v.record) pulled++;
-    } else if (before.h !== v.h) pulled++;
+    } else if (before.h !== v.h) {
+      pulled++;
+      if (before.h === DELETED && v.record) undeleted.push(v.record.name);
+    }
   }
+  const conflictCopies = copied.length;
 
   // Daily backups: a version of a character that gets replaced by one from another day, or by a deletion,
   // is kept (the last state of each day the character was edited, and the last state before deleting it).
@@ -300,7 +307,7 @@ export function mergeRound(
 
   const published: Record<string, string> = {};
   for (const v of acc.values()) published[v.id] = versionKey(v);
-  return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, nonce, characters }, publishNeeded, published, pulled, conflictCopies, backups: backupList };
+  return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, nonce, characters }, publishNeeded, published, pulled, conflictCopies, copied, undeleted, backups: backupList };
 }
 
 export const stripBookkeeping = (r: CharacterRecord): CharacterRecord => {
