@@ -60,7 +60,7 @@ export async function syncRound({ store, drive, backups, current, now, cache }: 
     const old = deviceId();
     newDeviceId = resetDeviceId();
     // shared history: what Drive holds, and what this device itself last published there
-    store.relabelDevice(old, newDeviceId, new Set([...e.published, ...Object.values(loadPublished())]));
+    store.relabelDevice(old, newDeviceId, new Set([...e.published, ...Object.values(loadPublished())]), e.ancestry);
     forgetNonces();
     savePublished({});
     out = await run();

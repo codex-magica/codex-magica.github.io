@@ -551,7 +551,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
 });
 
 // ── helpers for the tests below ──
-const sendStorageEvent = (key: string) => win.dispatchEvent(Object.assign(new Event("storage"), { key }));
 const syncFileHas = (account: string, text: string) => [...(drives[account]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes(text));
 const codeReturn = (state: string) => {
   ls.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
@@ -627,5 +626,20 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
     await settle(16 * 60_000);
     expect(tab.api.status).toBe("idle");
     expect(tab.api.driveFull).toBe(false);
+  });
+  test("phone: an edit, then the app goes to the background within 2 s with the access token expired: the edit still leaves for Drive", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    expect(tab.api.status).toBe("idle");
+    // more than an hour later (no sync since: nothing changed), the access token has run out
+    ls.removeItem(TOKEN_KEY);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn")); // e.g. HP changed at the table
+    await settle(500);
+    doc.visibilityState = "hidden"; // phone locked / app switched: the page is frozen soon after
+    doc.dispatchEvent(new Event("visibilitychange"));
+    await settle(1000); // still before the 2-second timer (which a frozen page never reaches)
+    expect(calls.some((c) => c.includes("/v1/token"))).toBe(true); // a renewal was at least attempted
+    expect(syncFileHas("x@test", "Aragorn")).toBe(true);
   });
 });

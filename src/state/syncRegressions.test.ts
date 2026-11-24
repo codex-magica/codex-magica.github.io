@@ -3,7 +3,7 @@
 import { CharacterRecord } from "../model/character";
 import { createRosterStore } from "./rosterStore";
 import { unreadableKeys } from "./storage";
-import { DAY, Device, FakeDrive, MemStorage, QuotaStorage, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
+import { DAY, Device, FakeDrive, MemStorage, QuotaStorage, clashes, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
 import { defaultRecord } from "./defaultRecord";
 
 setupSyncHarness();
@@ -337,5 +337,59 @@ describe("saving when storage is full", () => {
     const saved = JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[];
     expect(saved.map((r) => r.name)).toEqual(["Megvan"]);
     expect(tokensOf(saved[0])).toContain("note");
+  });
+});
+
+const cloneOf = (a: Device): Device => {
+  const c = new Device(a.id);
+  for (const [k, v] of a.storage.m) c.storage.m.set(k, v);
+  c.store = c.run(() => createRosterStore());
+  return c;
+};
+
+describe("a cloned device relabelling its edits keeps their history (third review)", () => {
+  test("a clone deletes a character nobody else touched: after the relabel it stays deleted", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const w = a.create("Wulf");
+    const v = a.create("Vera");
+    await realSync(a, drive);
+    await realSync(a, drive);
+    const clone = cloneOf(a); // browser data restored onto a second phone
+    later();
+    clone.remove(w.id); // the player deletes Wulf on the new phone
+    a.edit(v.id, "a-edit"); // the old phone keeps playing (its write marks the file as its own)
+    await realSync(a, drive);
+    await realSync(clone, drive); // clash → new id → relabel → run again
+    expect(clashes.get(clone) ?? 0).toBe(1);
+    for (let i = 0; i < 2; i++) {
+      await realSync(a, drive);
+      await realSync(clone, drive);
+    }
+    // nobody edited Wulf after the clone's deletion: it must not come back
+    expect(clone.byName("Wulf")).toBeUndefined();
+    expect(a.byName("Wulf")).toBeUndefined();
+  });
+
+  test("a clone edits a character the original didn't touch: no '(másik változat)' copy of its own ancestor", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const w = a.create("Wulf");
+    const v = a.create("Vera");
+    await realSync(a, drive);
+    await realSync(a, drive);
+    const clone = cloneOf(a);
+    later();
+    clone.edit(w.id, "clone-edit"); // continues Wulf as published
+    a.edit(v.id, "a-edit");
+    await realSync(a, drive);
+    await realSync(clone, drive);
+    for (let i = 0; i < 2; i++) {
+      await realSync(a, drive);
+      await realSync(clone, drive);
+    }
+    const wulfs = clone.records().filter((r) => r.name.startsWith("Wulf"));
+    expect(wulfs.flatMap(tokensOf)).toContain("clone-edit");
+    expect(wulfs).toHaveLength(1); // the clone's edit simply continues Wulf
   });
 });

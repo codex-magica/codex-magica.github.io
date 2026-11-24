@@ -295,19 +295,24 @@ export const createRosterStore = () => {
     // here under the old id that were never published (`published`: the version keys Drive holds now plus
     // what this device last published, both shared history with the other device) get the new id
     // instead, so they count as this device's own parallel edits (and are kept next to the other
-    // device's) rather than as steps of the other device's history.
-    relabelDevice(oldId: string, newId: string, published: Set<string> = new Set()): void {
+    // device's) rather than as steps of the other device's history. They keep the part of the old id's
+    // count they were built on (the highest one of that character's versions in Drive, `ancestry`, that
+    // they contain): an edit or deletion made here on top of a published version still replaces that
+    // version, instead of looking parallel to its own ancestor.
+    relabelDevice(oldId: string, newId: string, published: Set<string> = new Set(), ancestry: Map<string, VersionVector[]> = new Map()): void {
       refresh();
-      const move = (vc: VersionVector, h: string): VersionVector => {
+      const move = (id: string, vc: VersionVector, h: string): VersionVector => {
         if (vc[oldId] === undefined || published.has(versionKeyOf(vc, h))) return vc;
         const { [oldId]: n, ...rest } = vc;
-        return { ...rest, [newId]: n };
+        const base = Math.max(0, ...(ancestry.get(id) ?? []).filter((a) => dominatedBy(a, vc)).map((a) => a[oldId] ?? 0));
+        if (base >= n) return vc; // nothing of the old id's count is unpublished
+        return { ...rest, ...(base > 0 ? { [oldId]: base } : {}), [newId]: n };
       };
       const records = state.records.map((r) => {
-        const vc = move(r.syncVc ?? {}, contentHash(r));
+        const vc = move(r.id, r.syncVc ?? {}, contentHash(r));
         return vc === r.syncVc ? r : { ...r, syncVc: vc, syncCvc: undefined };
       });
-      const deletions = Object.fromEntries(Object.entries(state.deletions).map(([id, d]) => [id, { ...d, vc: move(d.vc, DELETED_HASH) }]));
+      const deletions = Object.fromEntries(Object.entries(state.deletions).map(([id, d]) => [id, { ...d, vc: move(id, d.vc, DELETED_HASH) }]));
       commit(records, deletions, false);
     },
 

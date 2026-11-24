@@ -518,10 +518,12 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   // go on syncing. (Declared before the start below: React's development double start runs this cleanup
   // and then the mount again, which must put things back first.)
   useEffect(() => {
-    enabledRef.current = loadDriveSettings().enabled;
+    const gen = generation; // the refs themselves (they live as long as the component)
+    const enabled = enabledRef;
+    enabled.current = loadDriveSettings().enabled;
     return () => {
-      generation.current++;
-      enabledRef.current = false;
+      gen.current++;
+      enabled.current = false;
       stopRetrying();
     };
   }, [stopRetrying]);

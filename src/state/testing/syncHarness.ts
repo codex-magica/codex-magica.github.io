@@ -225,7 +225,7 @@ export class Device {
         // what useDriveSync does: a fresh id, this device's versions relabelled, sync again
         const old = this.id;
         this.id = `${old}x${Math.floor(Math.random() * 1e6)}`;
-        this.run(() => this.store.relabelDevice(old, this.id, new Set<string>([...e.published, ...Object.values(this.published)])));
+        this.run(() => this.store.relabelDevice(old, this.id, new Set<string>([...e.published, ...Object.values(this.published)]), e.ancestry));
         this.nonces = [];
         this.published = {};
         out = await go();
