@@ -109,7 +109,7 @@ const authNote = (reason: string, service: boolean): string => {
   if (reason === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és hagyd bejelölve a Drive-ra vonatkozó engedélyt.";
   if (reason === "access_denied") return "Nem adtál engedélyt a Google-nek, ezért a szinkron nem kapcsolódott.";
   if (reason === "no answer") return "A Google-bejelentkezés nem fejeződött be. Próbáld újra.";
-  if (reason === "credential revoked") return "A Google-kapcsolat megszakadt (például visszavontad az engedélyt a Google-fiókodban). Az „Újrakapcsolás” gombbal köthető össze újra.";
+  if (reason === "credential revoked") return "Ez például akkor fordul elő, ha a Google-fiókodban visszavontad az alkalmazás engedélyét, vagy hat hónapig nem használtad.";
   return service ? "A Google-kapcsolatot újra össze kell kötni. Kattints az „Újrakapcsolás” gombra." : "A Google-hozzáférés lejárt. Kattints a „Szinkronizálás most” gombra.";
 };
 
