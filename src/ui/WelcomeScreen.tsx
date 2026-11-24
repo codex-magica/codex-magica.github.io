@@ -269,11 +269,11 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         <HStack justify="center" columnGap="18px" rowGap="8px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
           {records.length > 0 && (
             <>
-              <Box as="button" type="button" onClick={handleBackup} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{BackupIcon}Biztonsági mentés</Box>
+              <Box as="button" type="button" onClick={handleBackup} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{BackupIcon}Exportálás</Box>
               <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
             </>
           )}
-          <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás fájlból</Box>
+          <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás</Box>
           {drive.available && (
             <>
               <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
@@ -304,8 +304,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         )}
         {records.length > 0 && !drive.enabled && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
-            {lastBackupAt === null ? "Még nem készült biztonsági mentés." : `Utolsó biztonsági mentés: ${daysAgo(lastBackupAt, now)}.`}
-            {backupStale && " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes menteni."}
+            {lastBackupAt === null ? "Még nem exportáltad a karaktereidet." : `Utolsó exportálás: ${daysAgo(lastBackupAt, now)}.`}
+            {backupStale && " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket."}
           </Text>
         )}
         {driveLine && (

@@ -412,7 +412,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const leaveForGoogle = useCallback((backups?: boolean) => {
     if (!store.parkUnsaved()) {
       // the latest edits exist only in memory and can't be parked for the page change: it would lose them
-      setNote("Ezen az eszközön most nem sikerül menteni, ezért ha átlépsz a Google oldalára, elvesznének a legutóbbi módosításaid. Előbb mentsd el a karaktereidet fájlba a karakterlistán, utána újra megpróbálhatod.");
+      setNote("Ezen az eszközön most nem sikerül menteni, ezért ha átlépsz a Google oldalára, elvesznének a legutóbbi módosításaid. Előbb exportáld a karaktereidet a karakterlistán, utána újra megpróbálhatod.");
       return;
     }
     void beginConnect(optsRef.current.returnContext(), loadDriveSettings().email, backups).then((r) => {
@@ -421,7 +421,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         r === "insecure"
           ? "A Google-bejelentkezés csak biztonságos (https) kapcsolaton keresztül indul el. Nyisd meg az alkalmazást a szokásos címén."
           : r === "storage"
-            ? "Nem sikerült elindítani a Google-bejelentkezést, mert ezen az eszközön betelt a tárhely. Mentsd el a karaktereidet fájlba, töröld, amire nincs szükséged, és próbáld újra."
+            ? "Nem sikerült elindítani a Google-bejelentkezést, mert ezen az eszközön betelt a tárhely. Exportáld a karaktereidet, töröld, amire nincs szükséged, és próbáld újra."
             : "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra."
       );
     });

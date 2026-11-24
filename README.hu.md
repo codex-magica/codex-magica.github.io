@@ -129,9 +129,9 @@ oldalt. Bármelyik mai böngészőben fut, és nem kell hozzá regisztrálni.
 A telepítés abban is segít, hogy a böngésző tartósan megőrizze az alkalmazás adatait, különösen Safariban.
 
 **Szinkron vagy mentés.** Ha több eszközön is használnád a karaktereidet, kattints a karakterlistán a
-**Google Drive** gombra, és kapcsold be a szinkront. Emellett is érdemes időnként megnyomni a **Biztonsági
-mentés** gombot: telefonon és tableten a megosztás menü nyílik meg, így a fájl egyenesen iCloud Drive-ba,
-Google Drive-ba vagy a Fájlokba mehet. Az **Importálás fájlból** gombbal visszaállítható, akár másik
+**Google Drive** gombra, és kapcsold be a szinkront. Emellett is érdemes időnként megnyomni az **Exportálás**
+gombot: telefonon és tableten a megosztás menü nyílik meg, így a fájl egyenesen iCloud Drive-ba,
+Google Drive-ba vagy a Fájlokba mehet. Az **Importálás** gombbal visszaállítható, akár másik
 eszközön is, és sosem ír felül semmit. Egy-egy karaktert ugyanígy elküldhetsz valakinek (karakter menü →
 **Exportálás fájlba**).
 

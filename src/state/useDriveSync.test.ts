@@ -572,7 +572,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     tab.api.syncNow();
     await settle(100);
     expect(win.location.assign).not.toHaveBeenCalled();
-    expect(tab.api.note?.text).toContain("mentsd el a karaktereidet fájlba");
+    expect(tab.api.note?.text).toContain("exportáld a karaktereidet");
   });
 });
 

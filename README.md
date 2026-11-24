@@ -266,8 +266,8 @@ runs in any current browser (iPhone and iPad: iOS 15.4 or later), and there's no
 Installing also makes the browser more likely to keep the app's storage for good, Safari especially.
 
 **Sync or back up.** To use your characters on more than one device, tap **Google Drive** on the roster
-and turn it on. Either way, tap **Biztonsági mentés** (backup) now and then. On a phone or tablet it opens
-the share sheet, so the file can go straight to iCloud Drive, Google Drive or Files. **Importálás fájlból**
+and turn it on. Either way, tap **Exportálás** (export) now and then. On a phone or tablet it opens
+the share sheet, so the file can go straight to iCloud Drive, Google Drive or Files. **Importálás**
 (import) restores it on the same or another device, and never overwrites anything. Single characters can
 be sent to someone the same way: character menu → **Exportálás fájlba** (export).
 
