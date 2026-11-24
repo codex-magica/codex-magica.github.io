@@ -61,10 +61,6 @@ export type ParsedFile =
   | { ok: true; device: string; nonce: string | null; versions: Map<string, Version>; opaque: Record<string, unknown>; skipped: number }
   | { ok: false; reason: "newer" | "unreadable"; version?: number };
 
-// The first version of the sync kept ONE shared file of this name (no version vectors). It is read as one
-// more source, with its characters given a lineage of their own, so nothing in it is lost or silently
-// overridden; its deletions aren't applied.
-export const LEGACY_FILE_NAME = "codex-magica-roster.json";
 const LEGACY_VC = { legacy: 1 };
 
 export const versionKey = (v: Pick<Version, "vc" | "h">): string => versionKeyOf(v.vc, v.h);

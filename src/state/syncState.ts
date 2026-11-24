@@ -9,7 +9,7 @@
 import { CharacterRecord } from "../model/character";
 import { contentHash } from "./recordHash";
 import { Deletions } from "./rosterStore";
-import { vcKey } from "./versions";
+import { DELETED_HASH, versionKeyOf } from "./versions";
 
 export const SETTINGS_KEY = "magus.driveSync.v1";
 const PUBLISHED_KEY = "magus.drivePublished.v2";
@@ -41,7 +41,7 @@ export interface DriveSettings {
   email: string | null; // the Google account that syncs (shown in the window; skips the account chooser)
 }
 
-export const OFF_SETTINGS: DriveSettings = { enabled: false, backups: true, lastSyncAt: null, email: null };
+const OFF_SETTINGS: DriveSettings = { enabled: false, backups: true, lastSyncAt: null, email: null };
 
 export const loadDriveSettings = (): DriveSettings => {
   const s = read<Record<string, unknown>>(SETTINGS_KEY, {});
@@ -53,7 +53,7 @@ export const loadDriveSettings = (): DriveSettings => {
     email: typeof s.email === "string" ? s.email : null,
   };
 };
-export const saveDriveSettings = (s: DriveSettings): void => write(SETTINGS_KEY, s);
+const saveDriveSettings = (s: DriveSettings): void => write(SETTINGS_KEY, s);
 export const updateDriveSettings = (patch: Partial<DriveSettings>): DriveSettings => {
   const next = { ...loadDriveSettings(), ...patch };
   saveDriveSettings(next);
@@ -65,8 +65,9 @@ export type Published = Record<string, string>;
 export const loadPublished = (): Published => read<Published>(PUBLISHED_KEY, {});
 export const savePublished = (p: Published): void => write(PUBLISHED_KEY, p);
 
-export const recordKey = (r: CharacterRecord): string => `${vcKey(r.syncVc ?? {})}|${contentHash(r)}`;
-export const deletionKey = (d: { vc: Record<string, number> }): string => `${vcKey(d.vc)}|deleted`;
+// the same keys as driveMerge.versionKey, so what's published compares with what's here
+const recordKey = (r: CharacterRecord): string => versionKeyOf(r.syncVc ?? {}, contentHash(r));
+const deletionKey = (d: { vc: Record<string, number> }): string => versionKeyOf(d.vc, DELETED_HASH);
 
 // Changes on this device not yet in its Drive file: edits, new characters and deletions. `oldest` is
 // when the oldest of them happened (for the "sync before switching devices" hint).

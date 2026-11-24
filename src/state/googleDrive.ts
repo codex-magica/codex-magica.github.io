@@ -51,7 +51,6 @@ interface GoogleOAuth2 {
     error_callback?: (e: { type: string; message?: string }) => void;
   }) => TokenClient;
   hasGrantedAllScopes: (r: TokenResponse, ...scopes: string[]) => boolean;
-  revoke: (token: string, done?: () => void) => void;
 }
 declare global {
   interface Window {
@@ -62,7 +61,7 @@ declare global {
 export class DriveAuthError extends Error {}
 
 let gisPromise: Promise<GoogleOAuth2> | null = null;
-export const loadGoogleIdentity = (): Promise<GoogleOAuth2> => {
+const loadGoogleIdentity = (): Promise<GoogleOAuth2> => {
   if (window.google?.accounts?.oauth2) return Promise.resolve(window.google.accounts.oauth2);
   if (!gisPromise) {
     gisPromise = new Promise((resolve, reject) => {
@@ -235,7 +234,7 @@ export type RedirectOutcome =
   | { kind: "error"; error: string; ctx: ReturnContext | null };
 
 // The app's own address, registered in the Google Cloud console as an authorized redirect URI.
-export const redirectUri = (): string => `${window.location.origin}${import.meta.env.BASE_URL}`;
+const redirectUri = (): string => `${window.location.origin}${import.meta.env.BASE_URL}`;
 
 const randomB64url = (n: number): string => {
   const bytes = new Uint8Array(n);
@@ -249,11 +248,10 @@ const b64url = (bytes: Uint8Array): string => {
 };
 
 // Off to Google's consent page (with the token service only). `backups` is passed when turning sync on.
-// Returns false (and stays) if the round trip can't be made safely.
-// Why leaving for Google didn't start: "insecure" (the page isn't on https, so the browser withholds the
-// cryptography the sign-in needs), "storage" (the sign-in couldn't be noted down for the return), or
-// "failed" (anything else).
-export type ConnectStartFailure = "insecure" | "storage" | "failed";
+// If the round trip can't be made safely, it stays and says why: "insecure" (the page isn't on https, so
+// the browser withholds the cryptography the sign-in needs), "storage" (the sign-in couldn't be noted
+// down for the return), or "failed" (anything else).
+type ConnectStartFailure = "insecure" | "storage" | "failed";
 export const beginConnect = async (ctx: ReturnContext, loginHint: string | null, backups?: boolean): Promise<true | ConnectStartFailure> => {
   if (!tokenServiceAvailable()) return "failed";
   if (typeof window !== "undefined" && window.isSecureContext === false) return "insecure";
@@ -344,7 +342,7 @@ export const consumeRedirectResult = (): RedirectOutcome => {
 // tries again.
 export class TokenServiceError extends Error {}
 
-const service = async (path: string, body: object): Promise<{ status: number; data: Record<string, unknown> }> => {
+const callTokenService = async (path: string, body: object): Promise<{ status: number; data: Record<string, unknown> }> => {
   const ctl = typeof AbortController === "function" ? new AbortController() : null;
   const timer = ctl ? window.setTimeout(() => ctl.abort(), SERVICE_TIMEOUT_MS) : undefined;
   try {
@@ -382,7 +380,7 @@ export const keepConnection = (c: Connection): void => {
 // After the consent page: the code becomes an access token and the long-term credential. Not stored yet:
 // the caller checks the account first, so a wrong account can't replace the right one's credential.
 export const exchangeCode = async (code: string, verifier: string): Promise<Connection> => {
-  const { status, data } = await service("/v1/exchange", { code, code_verifier: verifier, redirect_uri: redirectUri() });
+  const { status, data } = await callTokenService("/v1/exchange", { code, code_verifier: verifier, redirect_uri: redirectUri() });
   if (status !== 200) {
     if (status >= 500 || status === 429) throw new TokenServiceError(`exchange: HTTP ${status}`);
     throw new DriveAuthError(typeof data.error === "string" ? data.error : "exchange failed");
@@ -400,7 +398,7 @@ export const refreshAccess = (): Promise<string> => {
   if (!credential || !tokenServiceAvailable()) return Promise.reject(new DriveAuthError("no credential"));
   refreshing = (async () => {
     try {
-      const { status, data } = await service("/v1/token", { credential });
+      const { status, data } = await callTokenService("/v1/token", { credential });
       if (loadCredential() !== credential) {
         // sync was turned off (or reconnected) meanwhile, here or in another tab: keep nothing from this
         const now = validToken();
@@ -458,7 +456,11 @@ export interface DriveTransport {
   listBackups(): Promise<BackupMeta[]>;
 }
 
-export const SYNC_FILE_PREFIX = "codex-magica-sync";
+const SYNC_FILE_PREFIX = "codex-magica-sync"; // codex-magica-sync.<device>.json
+// The first version of the sync kept ONE shared file of this name (no version vectors). It's still read as
+// one more source (driveMerge gives its characters a lineage of their own, so nothing in it is lost or
+// silently overridden, and doesn't apply its deletions), never written.
+const LEGACY_SYNC_FILE = "codex-magica-roster.json";
 
 const API = "https://www.googleapis.com/drive/v3/files";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
@@ -520,7 +522,7 @@ export const httpDrive = (token: string): DriveTransport => {
     async listSyncFiles() {
       // the device files, plus the single shared file of the first sync version if it's still there
       const files = await list<{ id: string; version: string; createdTime: string } & Props>(
-        "(appProperties has { key='kind' and value='sync' } or name='codex-magica-roster.json') and trashed=false",
+        `(appProperties has { key='kind' and value='sync' } or name='${LEGACY_SYNC_FILE}') and trashed=false`,
         "id,version,createdTime,appProperties"
       );
       return files.map((f) => ({ id: f.id, version: f.version, createdTime: f.createdTime, device: f.appProperties?.device ?? "" }));

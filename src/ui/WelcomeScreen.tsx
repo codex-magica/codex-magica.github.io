@@ -12,7 +12,7 @@ import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
 import { rosterStore } from "../state/rosterStore";
-import { ROSTER_KEY, releaseHeldRoster, unreadableKeys } from "../state/storage";
+import { unreadableKeys } from "../state/storage";
 import { DriveSyncApi } from "../state/useDriveSync";
 import { CloudIcon, DriveSyncModal, driveAttention, driveStatusLine } from "./DriveSyncModal";
 import { Callout } from "./Callout";
@@ -98,14 +98,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
     }
   };
   const dropAside = () => {
-    for (const k of aside) {
-      if (k !== ROSTER_KEY) localStorage.removeItem(k);
-      else {
-        // the unreadable roster itself (no room to keep it aside): save what could be read over it
-        releaseHeldRoster();
-        rosterStore().resave();
-      }
-    }
+    rosterStore().dropUnreadable(aside);
     setAside([]);
   };
   const fileInputRef = useRef<HTMLInputElement>(null);

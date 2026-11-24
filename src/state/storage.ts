@@ -11,7 +11,9 @@ import { getRulesPreference } from "./rulesPreference";
 import { derive } from "../engine/derive";
 import { rulesFor } from "../model/rulesVariants";
 
-const KEY = "magus.roster.v1";
+// (the app was called "magus" while it was private: the keys keep the name, renaming them would need a migration)
+export const ROSTER_KEY = "magus.roster.v1";
+const KEY = ROSTER_KEY;
 
 // Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
 // (64 random bits after the time: a bulk import makes many ids within one millisecond)
@@ -115,8 +117,7 @@ const stillHeld = (): boolean => {
   return false;
 };
 // After the player saved the held roster to a file and chose to drop it from the device: saving works
-// again (the caller saves what's in memory over it).
-export const ROSTER_KEY = KEY;
+// again (the caller saves what's in memory over it, see rosterStore.dropUnreadable).
 export const releaseHeldRoster = (): void => {
   held = null;
 };
@@ -208,7 +209,7 @@ export const repairRecord = (raw: unknown): CharacterRecord | null => {
 };
 
 // Can the rules engine compute this record?
-export const derivable = (rec: CharacterRecord): boolean => {
+const derivable = (rec: CharacterRecord): boolean => {
   try {
     derive(rulesFor(rec), rec);
     return true;

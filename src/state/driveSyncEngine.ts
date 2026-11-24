@@ -28,7 +28,7 @@ export class DeviceIdClashError extends Error {
   }
 }
 
-export const BACKUP_FORMAT = "codex-magica-snapshot";
+export const DRIVE_SNAPSHOT_FORMAT = "codex-magica-snapshot"; // one character's backup in Drive (not the roster backup file, transfer.ts)
 
 export interface SyncInput {
   records: CharacterRecord[];
@@ -85,7 +85,7 @@ const tag = (s: string) => {
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
   return (h >>> 0).toString(16).padStart(8, "0");
 };
-export const backupFileName = (c: BackupCandidate): string => `codex-magica-backup.${tag(c.id)}.${c.version.h}.json`;
+const backupFileName = (c: BackupCandidate): string => `codex-magica-backup.${tag(c.id)}.${c.version.h}.json`;
 const newNonce = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 
 export async function runSync(drive: DriveTransport, input: SyncInput, now: () => number = Date.now, cache: RunSyncCache = sharedCache): Promise<SyncOutput> {
@@ -131,7 +131,7 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
     const name = backupFileName(c);
     if (!(await drive.backupExists(name))) {
       const props = { char: c.id, day: dayOf(c.version.t), reason: c.reason, name: fitBytes(c.version.record!.name, 110) };
-      await drive.createBackup(name, props, { format: BACKUP_FORMAT, version: 1, savedAt: now(), reason: c.reason, day: props.day, record: stripBookkeeping(c.version.record!) });
+      await drive.createBackup(name, props, { format: DRIVE_SNAPSHOT_FORMAT, version: 1, savedAt: now(), reason: c.reason, day: props.day, record: stripBookkeeping(c.version.record!) });
     }
     backedUp.add(key);
   }

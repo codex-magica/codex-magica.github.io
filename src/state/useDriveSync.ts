@@ -23,11 +23,11 @@ import {
   tokenServiceAvailable,
   validToken,
 } from "./googleDrive";
-import { BACKUP_FORMAT, SyncNewerVersionError } from "./driveSyncEngine";
+import { DRIVE_SNAPSHOT_FORMAT, SyncNewerVersionError } from "./driveSyncEngine";
 import { syncRound } from "./driveSyncRound";
 import { rosterStore } from "./rosterStore";
 import { loadLastBackupAt } from "./transfer";
-import { normalizeRecord, genId } from "./storage";
+import { repairRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
   DriveSettings,
@@ -183,6 +183,8 @@ const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
 };
 
 const store = rosterStore();
+// a token that still works, or a way to renew one quietly
+const hasAccess = (): boolean => validToken() !== null || hasCredential();
 
 // Saving fails (storage full), so the latest edits exist only in memory: a backup file saved after the
 // last of them holds everything, so leaving the page for Google's is safe then.
@@ -202,7 +204,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const [settings, setSettings] = useState<DriveSettings>(() => loadDriveSettings());
   const back = available && initialOutcome.kind === "code"; // back from Google's consent page with a code
   const [status, setStatus] = useState<DriveStatus>(() =>
-    back ? "syncing" : settings.enabled ? (validToken() || hasCredential() ? "idle" : "needsTap") : "off"
+    back ? "syncing" : settings.enabled ? (hasAccess() ? "idle" : "needsTap") : "off"
   );
   const [note, setNote] = useReducer(noteReducer, null, () =>
     available && initialOutcome.kind === "error"
@@ -437,7 +439,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     authRetried.current = false;
     if (service) {
       // "Szinkronizálás most" syncs (renewing quietly); "Újrakapcsolás" (needsTap) goes to Google's page
-      if (!firstTime && statusRef.current !== "needsTap" && (validToken() || hasCredential())) return void autoSync();
+      if (!firstTime && statusRef.current !== "needsTap" && (hasAccess())) return void autoSync();
       return leaveForGoogle(firstTime ? backups : undefined);
     }
     const token = !firstTime ? validToken() : null;
@@ -457,21 +459,26 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     );
   };
 
-  const disable = () => {
+  // Sync stopped in this tab (turned off here or in another tab): nothing from before may touch anything.
+  const stopHere = useCallback(() => {
     enabledRef.current = false;
     generation.current++;
     stopRetrying();
     setHop(null);
     setNeedsUpdate(false);
+    verifiedTokens.clear();
+    setStatus("off");
+    setNote(null);
+  }, [stopRetrying, setHop]);
+
+  const disable = () => {
+    stopHere();
     // This device only: the permission stays valid for the player's other devices (and in their Google
     // account's list of connected apps, where it can be removed).
     forgetToken();
     forgetCredential();
     clearDriveState();
-    verifiedTokens.clear();
     setSettings(loadDriveSettings());
-    setStatus("off");
-    setNote(null);
   };
 
   // Back from Google's consent page with a code: exchange it, check the account, and sync.
@@ -589,23 +596,16 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== SETTINGS_KEY) return;
       const next = loadDriveSettings();
-      if (enabledRef.current && !next.enabled) {
-        enabledRef.current = false;
-        generation.current++;
-        stopRetrying();
-        setHop(null);
-        verifiedTokens.clear();
-        setStatus("off");
-        setNote(null);
-      } else if (!enabledRef.current && next.enabled) {
+      if (enabledRef.current && !next.enabled) stopHere();
+      else if (!enabledRef.current && next.enabled) {
         enabledRef.current = true;
-        setStatus(validToken() || hasCredential() ? "idle" : "needsTap");
+        setStatus(hasAccess() ? "idle" : "needsTap");
       }
       setSettings(next);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [setHop, stopRetrying]);
+  }, [stopHere]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const pending = useMemo(() => pendingChanges(roster.records, roster.deletions, loadPublished()), [roster.records, roster.deletions, syncTick]);
@@ -623,10 +623,12 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     async (b: BackupMeta): Promise<CharacterRecord> => {
       const body = await httpDrive(await needToken()).readFile(b.id);
       const data = "json" in body ? (body.json as { format?: string; record?: unknown }) : null;
-      const rec = data && data.format === BACKUP_FORMAT ? normalizeRecord({ ...(data.record as object), id: genId() }) : null;
+      // repaired, not checked against today's rules engine: a character it can't compute is still restored
+      const id = genId();
+      const rec = data && data.format === DRIVE_SNAPSHOT_FORMAT && data.record && typeof data.record === "object" ? repairRecord({ ...(data.record as CharacterRecord), id }) : null;
       if (!rec) throw new Error("unreadable backup");
       const [y, m, d] = b.day.split("-");
-      const restored: CharacterRecord = { ...rec, id: genId(), name: `${rec.name} (${y}. ${m}. ${d}.)`, syncVc: undefined, syncCvc: undefined, updatedAt: undefined };
+      const restored: CharacterRecord = { ...rec, id, name: `${rec.name} (${y}. ${m}. ${d}.)`, syncVc: undefined, syncCvc: undefined, updatedAt: undefined };
       store.upsert(restored);
       return restored;
     },

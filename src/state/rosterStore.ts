@@ -21,7 +21,7 @@
 //     are merged into memory rather than overwritten.
 
 import { CharacterRecord } from "../model/character";
-import { clone, genId, loadRoster, saveRoster } from "./storage";
+import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
 import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
 import { conflictCopyName, mergeLocal, reconcile } from "./driveMerge";
@@ -42,7 +42,7 @@ export interface RosterState {
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
 }
 
-const ROSTER_KEY = "magus.roster.v1";
+
 const DELETIONS_KEY = "magus.deletions.v1";
 const LEGACY_TOMBSTONES_KEY = "magus.tombstones.v1"; // id → time, from the first version of the Drive sync
 const KEEP_LAST_MS = 60 * 24 * 3600_000; // without sync, a deleted character's last state is kept this long
@@ -281,9 +281,21 @@ export const createRosterStore = () => {
       commit(next.records, next.deletions, false);
     },
 
-    // save memory again as it is (after the unreadable saved roster was let go, see storage.ts)
-    resave(): void {
-      commit(state.records, state.deletions, false);
+    // The player downloaded the saved data that couldn't be read (storage.unreadableKeys) and dropped it.
+    // The unreadable roster itself, if it's among them (there was no room to keep it aside), is replaced
+    // by what's in memory: what could be read of it, plus any edits since.
+    dropUnreadable(keys: string[]): void {
+      for (const k of keys) {
+        if (k === ROSTER_KEY) {
+          releaseHeldRoster();
+          commit(state.records, state.deletions, false);
+        } else
+          try {
+            localStorage.removeItem(k);
+          } catch {
+            /* ignore */
+          }
+      }
     },
 
     // re-read what's saved (another tab changed it, or right before a sync round); a no-op while
