@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { Box, BoxProps } from "@chakra-ui/react";
 import { ParchPanel } from "./ParchPanel";
 import { refreshStatusTint } from "./statusTint";
@@ -12,7 +12,9 @@ import { refreshStatusTint } from "./statusTint";
 const escStack: React.MutableRefObject<() => void>[] = [];
 export const useEscClose = (onClose: () => void) => {
   const ref = useRef(onClose);
-  ref.current = onClose;
+  useLayoutEffect(() => {
+    ref.current = onClose; // the latest handler, for the key listener below
+  });
   useEffect(() => {
     escStack.push(ref);
     const onKey = (e: KeyboardEvent) => {

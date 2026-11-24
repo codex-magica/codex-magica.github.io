@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Box } from "@chakra-ui/react";
 import { Reorder, useDragControls } from "framer-motion";
 
@@ -17,7 +17,9 @@ export function ReorderList<T>({ items, keyOf, onReorder, row }: {
 }) {
   const [local, setLocal] = useState(items);
   const localRef = useRef(local);
-  localRef.current = local;
+  useLayoutEffect(() => {
+    localRef.current = local; // the latest list, for the drag handlers
+  });
   const dragging = useRef(false);
   // Adopt outside changes (add / delete / the post-commit refresh) whenever no drag is active.
   useEffect(() => { if (!dragging.current) setLocal(items); }, [items]);

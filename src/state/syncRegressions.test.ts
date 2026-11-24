@@ -230,7 +230,7 @@ describe("storage full and long absences (second review)", () => {
     expect(tokensOf(savedW)).toContain("w1"); // it IS saved...
     // ...but the app keeps saying "Nem sikerült menteni" (banner, update banner held back, Drive connect
     // refused unless a backup file is exported), and numbers every edit under the "unsaved" lineage
-    expect.soft(Object.keys(savedW.syncVc ?? {}).some((k) => k.includes(".u"))).toBe(false);
+    expect(Object.keys(savedW.syncVc ?? {}).some((k) => k.includes(".u"))).toBe(false);
     expect(a.store.getState().saveFailed).toBe(false);
   });
 
@@ -254,7 +254,7 @@ describe("storage full and long absences (second review)", () => {
     phone.store = phone.run(() => createRosterStore());
     await realSync(phone, drive);
     const back = phone.byName("Xena");
-    expect.soft(back && tokensOf(back)).toContain("laptop-edit"); // the parallel edit wins (by design)
+    expect(back && tokensOf(back)).toContain("laptop-edit"); // the parallel edit wins (by design)
     // docs: "a deletion keeps the last state on the device until it's in Drive, so an edit just before
     // deleting is kept too, also when a parallel edit elsewhere wins over the deletion"
     const kept = backupBodies(drive).some((b) => tokensOf(b.record).includes("phone-last-edit"));

@@ -48,3 +48,6 @@ __pycache__/
 worker/.dev.vars
 worker/node_modules/
 .wrangler/
+
+# TypeScript incremental build info
+*.tsbuildinfo

@@ -177,7 +177,7 @@ const ResultRow = React.memo<{
 // picking a result (reopen resumes the search) and the parent clears it on dismissal (Esc /
 // backdrop / ⌘K).
 export const SearchPalette: React.FC<{
-  initialQuery: string;
+  initialQuery: () => string; // read once, when the palette opens
   onQueryChange: (q: string) => void;
   onClose: () => void;
   onPick: (e: SearchEntry) => void;
@@ -190,14 +190,13 @@ export const SearchPalette: React.FC<{
   const hits = useMemo(() => runSearch(query, homebrew), [query, homebrew]);
   const short = query.trim().length < 1;
 
-  useEffect(() => setSel(0), [query]);
-
   // a resumed search opens with the query selected — typing restarts, arrows/Enter continue
   useEffect(() => { inputRef.current?.select(); }, []);
   useEffect(() => () => refreshStatusTint(), []); // closed: let iOS pick the status bar colour again
 
   const setQueryBoth = (q: string) => {
     setQuery(q);
+    setSel(0); // a new query starts at the top hit
     onQueryChange(q);
   };
   const onHover = React.useCallback((i: number) => setSel(i), []);

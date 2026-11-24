@@ -397,13 +397,13 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     override = null;
     release();
     await settle(100);
-    expect.soft(ls.getItem(NONCES_KEY) ?? "[]").toBe("[]");
-    expect.soft(ls.getItem(CONFIRMED_NONCE_KEY)).toBeNull();
+    expect(ls.getItem(NONCES_KEY) ?? "[]").toBe("[]");
+    expect(ls.getItem(CONFIRMED_NONCE_KEY)).toBeNull();
     // 3. back to account Y (after the consent round trip: a fresh page)
     enableWith("y@test", "y-2", "cred-y2");
     t = await openTab();
     await settle(2500);
-    expect.soft(t.store.getState().records.map((r) => r.name)).toEqual(["Aragorn II"]);
+    expect(t.store.getState().records.map((r) => r.name)).toEqual(["Aragorn II"]);
     expect(ls.getItem(DEVICE_KEY)).toBe(device);
   });
 
@@ -429,7 +429,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     await settle(100);
     expect(tab.api.status).toBe("off");
     expect(tab.api.note?.error).toBe(true);
-    expect(tab.api.note?.text).toContain("Drive");
+    expect(tab.api.note?.text).toContain("jelöld be a Drive-ra vonatkozó négyzetet");
     expect(tab.api.connectProblem).toBe(true);
   });
 
@@ -522,7 +522,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     store.upsert(storage.createBlankRecord("c_a", "Aragorn")); // only in memory now
     expect(store.getState().saveFailed).toBe(true);
     tab.api.syncNow();
-    for (let i = 0; i < 20 && !vi.mocked(win.location.assign).mock.calls.length; i++) await new Promise((r) => (globalThis as any).setImmediate(r)); // WebCrypto runs off the fake clock
+    await vi.waitFor(() => expect(win.location.assign).toHaveBeenCalled()); // WebCrypto answers off the fake clock
     expect(win.location.assign).toHaveBeenCalledTimes(1);
     expect(String(vi.mocked(win.location.assign).mock.calls[0][0])).toContain("accounts.google.com");
     // back from Google: a fresh page, with room to save again
@@ -571,8 +571,8 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
     await settle(100);
     net = true;
     await settle(60_000); // the scheduled retry: the account check now says y@test
-    expect.soft(tab.api.status).toBe("needsTap");
-    expect.soft(syncFileHas("y@test", "")).toBe(false); // nothing went into the wrong Drive (good)
+    expect(tab.api.status).toBe("needsTap");
+    expect(syncFileHas("y@test", "")).toBe(false); // nothing went into the wrong Drive (good)
     expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // docs: "the right account's credential stays"
   });
 
@@ -592,18 +592,21 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
     B.tab.api.disable();
     answer();
     await settle(100);
-    expect.soft(A.tab.api.status).toBe("off");
+    expect(A.tab.api.status).toBe("off");
     const s = JSON.parse(ls.getItem(SETTINGS_KEY)!);
-    expect.soft(s.enabled).toBe(false);
-    expect.soft(s.email).toBeNull(); // turned off: no account should be remembered
+    expect(s.enabled).toBe(false);
+    expect(s.email).toBeNull(); // turned off: no account should be remembered
     // weeks later: the player turns sync on with their other Google account
     tokenService = (path) =>
       path === "/v1/exchange" ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" }) : jsonRes(500, {});
     codeReturn("S2");
     const C = await openTab();
     await settle(100);
-    expect.soft(C.tab.api.note?.text ?? "").not.toContain("x@test");
+    expect(C.tab.api.note?.text ?? "").not.toContain("x@test");
     expect(C.tab.api.enabled).toBe(true);
+    expect(C.tab.api.status).toBe("idle");
+    expect(C.tab.api.email).toBe("y@test");
+    expect(syncFileHas("y@test", "")).toBe(true); // it really syncs, into the new account's Drive
   });
 
   test("Google storage full (403 storageQuotaExceeded): the player is told their storage is full, and sync goes on once there's room", async () => {
@@ -616,10 +619,10 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
         : null;
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(3 * 3600_000);
-    expect.soft(tab.api.status).toBe("error");
+    expect(tab.api.status).toBe("error");
     const uploads = calls.filter((c) => c.startsWith("PATCH https://www.googleapis.com/upload/")).length;
-    expect.soft(uploads).toBeGreaterThan(5); // keeps trying (slowly), so it goes on by itself once there's room
-    expect.soft(tab.api.note?.text ?? "").not.toMatch(/magától újra megpróbálja/);
+    expect(uploads).toBeGreaterThan(5); // keeps trying (slowly), so it goes on by itself once there's room
+    expect(tab.api.note?.text ?? "").not.toMatch(/magától újra megpróbálja/);
     expect(tab.api.note?.text ?? "").toMatch(/tárhely/i);
     expect(tab.api.driveFull).toBe(true);
     override = null; // the player made room

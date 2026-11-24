@@ -161,7 +161,7 @@ export interface BackupCandidate {
   reason: "daily" | "deleted";
 }
 
-export interface RoundResult {
+export interface MergeResult {
   records: CharacterRecord[];
   deletions: Deletions;
   file: DeviceFile;
@@ -211,7 +211,7 @@ export function mergeRound(
   backups: boolean,
   nonce = "",
   ownOpaque: Record<string, unknown> = {} // entries of this device's previous file that couldn't be read
-): RoundResult {
+): MergeResult {
   const mine = localVersions(local.records, local.deletions);
   const groups = new Map<string, Version[]>(); // every known version of each id
   const add = (v: Version) => groups.set(v.id, [...(groups.get(v.id) ?? []), v]);

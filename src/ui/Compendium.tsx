@@ -555,7 +555,7 @@ export const Compendium: React.FC<Props> = ({ compTab, onSelectTab, onOpenModal,
       </Box>
       {searchOpen && (
         <SearchPalette
-          initialQuery={searchQueryRef.current}
+          initialQuery={() => searchQueryRef.current}
           onQueryChange={(q) => { searchQueryRef.current = q; }}
           onClose={dismissSearch}
           onPick={pickResult}
