@@ -4,6 +4,7 @@ import './index.css';
 import {ChakraProvider} from "@chakra-ui/react";
 import theme from "@/theme";
 import {RootApp} from "@/ui/RootApp";
+import {TabGate} from "@/ui/TabGate";
 import {ErrorBoundary} from "@/ui/ErrorBoundary";
 
 // Dev-only referential check over the rules data (typo'd skill/background/tag names surface in the
@@ -40,7 +41,9 @@ root.render(
   <React.StrictMode>
     <ChakraProvider theme={theme}>
       <ErrorBoundary>
-        <RootApp />
+        <TabGate>
+          <RootApp />
+        </TabGate>
       </ErrorBoundary>
     </ChakraProvider>
   </React.StrictMode>

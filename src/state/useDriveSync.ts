@@ -32,7 +32,6 @@ import { repairRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
   DriveSettings,
-  SETTINGS_KEY,
   clearDriveState,
   loadDriveSettings,
   loadPublished,
@@ -103,8 +102,6 @@ const FOREGROUND_MIN_GAP_MS = 20_000;
 const RETRY_MS = 2000; // a round asked for while a failing one was running
 const RETRY_FIRST_MS = 30_000; // after a failed round (Drive or the token service unreachable): try again,
 const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
-const LOCK_WAIT_MS = 120_000; // another tab's round holding the lock this long (a frozen tab): take it over
-const LOCK_NAME = "codex-magica-drive-sync";
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 
 class AccountMismatchError extends Error {}
@@ -155,27 +152,6 @@ const connectNote = (e: unknown, service: boolean): string => {
   if (e instanceof DriveAuthError && (e.message === "drive permission not granted" || e.message === "access_denied")) return authNote(e.message, service);
   if (e instanceof AccountMismatchError) return e.message;
   return "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.";
-};
-
-// One round at a time across this browser's tabs (where the browser supports Web Locks).
-const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
-  const locks = typeof navigator !== "undefined" ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
-  if (!locks?.request) return fn();
-  // A tab frozen mid-round (in the background on a phone) keeps the lock: after waiting this long, take it
-  // over. Should the frozen round wake up and finish later, that's safe: a round's result is applied to
-  // what's saved at its end, and the next round publishes again.
-  const ctl = typeof AbortController === "function" ? new AbortController() : null;
-  const timer = ctl ? setTimeout(() => ctl.abort(), LOCK_WAIT_MS) : undefined;
-  const wait = locks.request(LOCK_NAME, ctl ? { signal: ctl.signal } : {}, () => {
-    clearTimeout(timer);
-    return fn();
-  }) as Promise<T>;
-  return wait
-    .catch((e: unknown) => {
-      if (!ctl?.signal.aborted || (e as { name?: string })?.name !== "AbortError") throw e;
-      return locks.request(LOCK_NAME, { steal: true }, fn) as Promise<T>;
-    })
-    .finally(() => clearTimeout(timer));
 };
 
 const store = rosterStore();
@@ -311,20 +287,18 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       setStatus("syncing");
       try {
         await ensureAccount(token, current);
-        await withSyncLock(async () => {
-          do {
-            if (!current()) return;
-            again.current = false;
-            const result = await syncRound({ store, drive: httpDrive(token), backups: loadDriveSettings().backups, current });
-            if (!result) return; // turned off meanwhile: nothing was kept
-            const { out } = result;
-            patchSettings({ lastSyncAt: Date.now() });
-            setSyncTick((n) => n + 1);
-            const told = roundNotice(out.copied, out.undeleted);
-            if (told) setNote({ info: told });
-            else setNote({ clearError: true }); // a notice stays until it's dismissed; an error is over
-          } while (again.current);
-        });
+        do {
+          if (!current()) break;
+          again.current = false;
+          const result = await syncRound({ store, drive: httpDrive(token), backups: loadDriveSettings().backups, current });
+          if (!result) break; // turned off meanwhile: nothing was kept
+          const { out } = result;
+          patchSettings({ lastSyncAt: Date.now() });
+          setSyncTick((n) => n + 1);
+          const told = roundNotice(out.copied, out.undeleted);
+          if (told) setNote({ info: told });
+          else setNote({ clearError: true }); // a notice stays until it's dismissed; an error is over
+        } while (again.current);
         authRetried.current = false;
         if (current()) {
           stopRetrying();
@@ -540,6 +514,18 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     [ensureAccount, patchSettings, round, setHop, service, scheduleRetry]
   );
 
+  // This tab stepped back (the app is continued in another one, see activeTab.ts): nothing from here may
+  // go on syncing. (Declared before the start below: React's development double start runs this cleanup
+  // and then the mount again, which must put things back first.)
+  useEffect(() => {
+    enabledRef.current = loadDriveSettings().enabled;
+    return () => {
+      generation.current++;
+      enabledRef.current = false;
+      stopRetrying();
+    };
+  }, [stopRetrying]);
+
   // app start: finish a return from Google's consent page, or sync (renewing quietly if needed)
   useEffect(() => {
     if (!available) return;
@@ -564,64 +550,40 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     return () => window.clearTimeout(t);
   }, [revision, available, settings.enabled, autoSync]);
 
-  // a change saved by another tab that hasn't reached Drive (that tab may have been closed before its own
-  // round): this tab sends it, 2 seconds later like an edit of its own
-  const { records, deletions } = roster;
-  const lastSeen = useRef({ records, deletions, revision });
-  useEffect(() => {
-    const before = lastSeen.current;
-    lastSeen.current = { records, deletions, revision };
-    if (before.records === records && before.deletions === deletions) return; // nothing new (app start included)
-    if (before.revision !== revision) return; // this tab's own edit: handled above
-    if (!available || !settings.enabled) return;
-    if (pendingChanges(records, deletions, loadPublished()).count === 0) return; // a round's own result, say
-    const t = window.setTimeout(() => void autoRef.current(), AUTO_DELAY_MS);
-    return () => window.clearTimeout(t);
-  }, [records, deletions, revision, available, settings.enabled]);
-
-  // leaving the app: upload right away while the token works; coming back, or back online: sync
+  // leaving the app: send what's waiting right away (renewing the token if it ran out: an edit made just
+  // before locking the phone must not wait for the app to be opened again); coming back, or back online:
+  // sync
   useEffect(() => {
     if (!available || !settings.enabled) return;
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
-        const token = validToken();
         const st = store.getState();
-        if (token && pendingChanges(st.records, st.deletions, loadPublished()).count > 0) void round(token);
-      } else {
-        store.reload(); // a frozen or cached page may have missed another tab's changes
-        if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) void autoSync();
-      }
+        if (pendingChanges(st.records, st.deletions, loadPublished()).count > 0) void autoSync();
+      } else if (Date.now() - lastAttempt.current > FOREGROUND_MIN_GAP_MS) void autoSync();
     };
     const onOnline = () => void autoSync();
-    // back through the back/forward cache: the page wasn't reloaded, another tab may have saved meanwhile
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) store.reload();
-    };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("online", onOnline);
-    window.addEventListener("pageshow", onPageShow);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("online", onOnline);
-      window.removeEventListener("pageshow", onPageShow);
     };
-  }, [available, settings.enabled, autoSync, round]);
+  }, [available, settings.enabled, autoSync]);
 
-  // sync turned off (or on) in another tab
+  // edits that exist only in memory (storage full): parked whenever the page may go away (the phone may
+  // discard a background app), so they're back on the next start in this tab
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key !== SETTINGS_KEY) return;
-      const next = loadDriveSettings();
-      if (enabledRef.current && !next.enabled) stopHere();
-      else if (!enabledRef.current && next.enabled) {
-        enabledRef.current = true;
-        setStatus(hasAccess() ? "idle" : "needsTap");
-      }
-      setSettings(next);
+    const park = () => void store.parkUnsaved();
+    const onHide = () => document.visibilityState === "hidden" && park();
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", park);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", park);
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [stopHere]);
+  }, []);
+
+
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const pending = useMemo(() => pendingChanges(roster.records, roster.deletions, loadPublished()), [roster.records, roster.deletions, syncTick]);

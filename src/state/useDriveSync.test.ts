@@ -466,32 +466,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(rounds()).toBe(m + 1);
   });
 
-  test("another tab frozen with the sync lock: after two minutes this one takes it over and syncs", async () => {
-    enableWith("x@test", "at-1", "cred-x");
-    const asked: string[] = [];
-    vi.stubGlobal("navigator", {
-      onLine: true,
-      locks: {
-        // the other tab holds the lock and never lets go (frozen); only a takeover gets it
-        request: (_name: string, opts: { signal?: AbortSignal; steal?: boolean }, fn: () => Promise<unknown>) => {
-          asked.push(opts.steal ? "steal" : "wait");
-          return opts.steal ? fn() : new Promise((_, reject) => opts.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))));
-        },
-      },
-    });
-    const { tab, store, storage } = await openTab();
-    await settle(100);
-    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
-    await settle(2500);
-    expect(tab.api.status).toBe("syncing"); // waiting for the lock
-    await settle(60_000);
-    expect(tab.api.status).toBe("syncing");
-    await settle(62_000);
-    expect(asked).toContain("steal");
-    expect(tab.api.status).toBe("idle");
-    expect(tab.api.pending.count).toBe(0);
-  });
-
   test("the Google permission gone in the background: a one-time card says so, until dismissed", async () => {
     enableWith("x@test", null, "cred-x");
     tokenService = () => jsonRes(401, { error: "invalid_grant" });
@@ -585,26 +559,6 @@ const codeReturn = (state: string) => {
 };
 
 describe("sync orchestration: other tabs, reconnects, Google storage", () => {
-  test("an edit saved by another tab that was closed within 2 s is uploaded by the tab that stays open", async () => {
-    enableWith("x@test", "at-1", "cred-x");
-    const A = await openTab();
-    await settle(100);
-    expect(A.tab.api.status).toBe("idle");
-    // tab B (same browser): the player renames/creates something and closes the tab before B's 2 s timer
-    // fires; only the roster store of B ever runs
-    vi.resetModules();
-    const bRoster = await import("./rosterStore");
-    const bStorage = await import("./storage");
-    bRoster.rosterStore().upsert(bStorage.createBlankRecord("c_b", "Boromir"));
-    sendStorageEvent("magus.roster.v1"); // what the browser tells tab A
-    await settle(100);
-    expect(A.store.getState().records.map((r) => r.name)).toContain("Boromir");
-    expect(A.tab.api.pending.count).toBe(1);
-    await settle(60 * 60_000); // an hour, tab A open and visible, no edits in it
-    expect.soft(A.tab.api.pending.count).toBe(0);
-    expect(syncFileHas("x@test", "Boromir")).toBe(true);
-  });
-
   test("reconnecting: another account answers and the account check has a network hiccup → the right account's credential stays", async () => {
     enableWith("x@test", null, "cred-x"); // needs a reconnect (say, the access token is gone)
     codeReturn("S1");
