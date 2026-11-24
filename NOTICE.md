@@ -39,7 +39,7 @@ rights today.
 ### Takedown requests
 
 If you hold rights to any of this material and would like something changed or removed, please
-[open an issue](https://github.com/codex-magica/codex-magica/issues) or contact the maintainer through
+[open an issue](https://github.com/codex-magica/codex-magica.github.io/issues) or contact the maintainer through
 GitHub. Requests will be handled promptly.
 
 > **Magyarul:** A Codex Magica független, nem kereskedelmi célú rajongói projekt. Nem hivatalos

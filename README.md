@@ -12,9 +12,9 @@ built from a scanned copy of the _Új Törvénykönyv_ rulebook.**
 
 Runs in the browser · installs to the home screen · works offline · optional sync through your own Google Drive
 
-[**Open the app**](https://codex-magica.github.io/codex-magica/) · **English** · [Magyar](README.hu.md)
+[**Open the app**](https://codex-magica.github.io/) · **English** · [Magyar](README.hu.md)
 
-[![CI](https://github.com/codex-magica/codex-magica/actions/workflows/ci.yml/badge.svg)](https://github.com/codex-magica/codex-magica/actions/workflows/ci.yml)
+[![CI](https://github.com/codex-magica/codex-magica.github.io/actions/workflows/ci.yml/badge.svg)](https://github.com/codex-magica/codex-magica.github.io/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
@@ -140,7 +140,7 @@ same on your phone, tablet and computer:
 - Google's access for web apps runs out every hour. The app renews it with a quick hop through Google,
   shows a small notice before it does, and brings you back to the same place.
 - There's no account to create and no server of ours in between: the data goes straight from your browser
-  to your Drive. See the [privacy notice](https://codex-magica.github.io/codex-magica/privacy.html).
+  to your Drive. See the [privacy notice](https://codex-magica.github.io/privacy.html).
 
 **Your data stays with you.** Without sync, characters live only in the browser on your device. A backup
 of all of them is one tap away, and the file can go straight to iCloud Drive, Google Drive or Files.
@@ -251,7 +251,7 @@ same in a few clicks; see [Use it](#use-it).
 
 ## Use it
 
-**Open it.** Go to **[codex-magica.github.io/codex-magica](https://codex-magica.github.io/codex-magica/)**. It
+**Open it.** Go to **[codex-magica.github.io](https://codex-magica.github.io/)**. It
 runs in any current browser (iPhone and iPad: iOS 15.4 or later), and there's nothing to sign up for.
 
 **Add it to your home screen.**
@@ -272,7 +272,7 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
 
 **Host your own copy (free, a few clicks).**
 
-- **GitHub Pages:** fork this repository and enable workflows in the fork's **Actions** tab. In its
+- **GitHub Pages:** fork this repository (name the fork `codex-magica`) and enable workflows in the fork's **Actions** tab. In its
   settings choose **Pages → Source: GitHub Actions** and add the Actions variable `DEPLOY_PAGES` = `true`,
   then run **Deploy to GitHub Pages** once from the Actions tab. After that every push to `main` deploys to
   `https://<you>.github.io/codex-magica/` ([workflow](.github/workflows/deploy.yml)). For a custom domain,
@@ -287,7 +287,7 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
 
 The text comes from OCR of a low-quality scan and was proofread by hand, but errors can remain. If you spot
 a typo, a wrong table value or a rule the app calculates differently from the book, please
-[open an issue](https://github.com/codex-magica/codex-magica/issues/new/choose) (there's a form for it) with the
+[open an issue](https://github.com/codex-magica/codex-magica.github.io/issues/new/choose) (there's a form for it) with the
 page or chapter and what the book says. Pull requests are welcome too.
 
 ## Getting started (development)
@@ -295,7 +295,7 @@ page or chapter and what the book says. Pull requests are welcome too.
 Requires Node.js 22.12 or newer.
 
 ```sh
-git clone https://github.com/codex-magica/codex-magica.git
+git clone https://github.com/codex-magica/codex-magica.github.io.git codex-magica
 cd codex-magica
 npm ci
 npm run dev          # http://localhost:3000
@@ -354,7 +354,7 @@ the bestiary and the magic items, is not included.
 Codex Magica is an independent, non-commercial fan project and not an official M.A.G.U.S. product: it is
 not published or endorsed by the rights holders, who are not responsible for its content. The book's original
 credits are reproduced in [NOTICE.md](NOTICE.md). If you hold rights to this material and would like
-something changed or removed, please [open an issue](https://github.com/codex-magica/codex-magica/issues).
+something changed or removed, please [open an issue](https://github.com/codex-magica/codex-magica.github.io/issues).
 
 The interface font is [Crimson Pro](https://github.com/Fonthausen/CrimsonPro), with Ψ and ⅓ from [EB Garamond](https://github.com/octaviopardo/EBGaramond12) (both SIL OFL 1.1). Some icons are
 from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons); their license texts are in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
