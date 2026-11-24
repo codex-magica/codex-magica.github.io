@@ -114,15 +114,41 @@ export const createRosterStore = () => {
   const listeners = new Set<Listener>();
   const emit = () => listeners.forEach((l) => l());
 
-  const persist = (records: CharacterRecord[], deletions: Deletions): boolean => {
-    let ok = true;
+  const writeDeletions = (deletions: Deletions): boolean => {
     try {
       localStorage.setItem(DELETIONS_KEY, JSON.stringify(deletions));
       localStorage.removeItem(LEGACY_TOMBSTONES_KEY);
+      return true;
     } catch {
-      ok = false;
+      return false;
     }
-    ok = saveRoster(records) && ok;
+  };
+  const writeRaw = (key: string, raw: string | null): boolean => {
+    try {
+      if (raw === null) localStorage.removeItem(key);
+      else localStorage.setItem(key, raw);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const withoutLastStates = (deletions: Deletions): Deletions => Object.fromEntries(Object.entries(deletions).map(([id, { t, vc }]) => [id, { t, vc }]));
+
+  // Saves the roster and the deletion markers so that what's saved always fits together: never a roster
+  // without a character whose deletion marker isn't saved (it would come back from Drive after a reload),
+  // never a marker saved for a change whose roster isn't. When storage is full, the order matters (a
+  // deletion shrinks the roster but grows the markers), so both orders are tried; then the markers without
+  // the deleted characters' last states (those stay in memory, and saving counts as failed); and if
+  // nothing fits, what was saved before is put back.
+  const persist = (records: CharacterRecord[], deletions: Deletions): boolean => {
+    const before = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
+    let ok = (writeDeletions(deletions) && saveRoster(records)) || (saveRoster(records) && writeDeletions(deletions));
+    if (!ok && !(saveRoster(records) && writeDeletions(withoutLastStates(deletions)))) {
+      for (let i = 0; i < 2; i++) {
+        const back = i === 0 ? writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions) : writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster);
+        if (back) break;
+      }
+    }
     seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
     return ok;
   };
@@ -202,14 +228,19 @@ export const createRosterStore = () => {
       });
     },
 
-    remove(id: string): void {
+    // `base`: the version the player confirmed deleting (what the dialog showed). If it changed since (a
+    // sync brought another device's edit, or another tab edited it), nothing is deleted and false is
+    // returned: a deletion must never swallow an edit the player hasn't seen.
+    remove(id: string, base?: CharacterRecord): boolean {
       refresh();
       const prev = find(id);
-      if (!prev) return;
+      if (!prev) return true;
+      if (base && contentHash(prev) !== contentHash(base)) return false;
       mutate((lineage) => ({
         records: state.records.filter((r) => r.id !== id),
         deletions: { ...state.deletions, [id]: { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, lineage), last: prev } },
       }));
+      return true;
     },
 
     duplicate(id: string): void {
@@ -248,6 +279,11 @@ export const createRosterStore = () => {
       refresh();
       const next = reconcile(snapshot, state, merged);
       commit(next.records, next.deletions, false);
+    },
+
+    // save memory again as it is (after the unreadable saved roster was let go, see storage.ts)
+    resave(): void {
+      commit(state.records, state.deletions, false);
     },
 
     // re-read what's saved (another tab changed it, or right before a sync round); a no-op while

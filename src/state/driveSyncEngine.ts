@@ -62,7 +62,13 @@ const read = async (drive: DriveTransport, f: DriveFileMeta, cache: Cache): Prom
   const hit = cache.get(f.id);
   if (hit && hit.version === f.version) return hit;
   let body: FileBody = await drive.readFile(f.id);
-  if ("raw" in body) body = await drive.readFile(f.id);
+  if ("raw" in body) {
+    const first = body.raw;
+    body = await drive.readFile(f.id);
+    // two different texts: the downloads were cut off, not the file damaged. Stop the round (it's tried
+    // again later) rather than treat this device's own file as damaged and rewrite it.
+    if ("raw" in body && body.raw !== first) throw new Error("download cut off twice");
+  }
   const parsed: ParsedFile = "json" in body ? parseDeviceFile(body.json) : { ok: false, reason: "unreadable" };
   // keep the original text of anything unreadable, so it can be set aside intact
   const out = { parsed, raw: parsed.ok ? undefined : "raw" in body ? body.raw : JSON.stringify(body.json) };

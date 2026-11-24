@@ -31,7 +31,8 @@ Without one, the app stays local-only and never contacts Google. The token servi
     content was made as, so when the device it came from edits it again before seeing the merge, that edit
     counts as continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
-  download that isn't valid JSON is fetched again (a cut-off response reads fine the second time); a damaged
+  download that isn't valid JSON is fetched again (a cut-off response reads fine the second time; two
+  different texts mean cut-off downloads, not a damaged file, and stop the round); a damaged
   file of this device's own is kept aside (`kind=unreadable`) before it's rewritten; another device's damaged
   file is left alone; entries that don't check out are skipped, not applied and not deleted; a file from a
   newer app version stops the round with a "please update" note.
@@ -45,19 +46,26 @@ Without one, the app stays local-only and never contacts Google. The token servi
   rejected because the rules engine can't compute them today (that may be a bug fixed tomorrow): the
   screen shows "Ezt a karaktert most nem sikerült megnyitni" with export instead. Entries a device can't
   parse at all stay in its file verbatim. Saved data that couldn't be read is kept aside and offered on
-  the roster for download.
+  the roster for download; if there's no room to keep it aside, it stays where it is and nothing is saved
+  over it until the player has downloaded and dropped it.
 - **Storage full:** memory isn't replaced by the older saved state; the sync uploads from memory, so the
   edit survives in Drive, and neither the renewal round trip nor the update banner reloads the page. Edits
   that exist only in memory get a lineage of their own, so an edit made later from the older saved state
   (after a reload, or in another tab) is parallel to them and both are kept; another tab's saved changes
   are merged into memory, not overwritten. A round's result is applied to what's saved at that moment.
+  The roster and the deletion markers are saved so that they always fit together (a roster without a
+  character whose marker isn't saved would get it back from Drive): both write orders are tried, then the
+  markers without the last states, and if nothing fits, what was saved before is put back.
 - **A cloned device** (browser data restored onto a second device) is noticed by the mark each write
   leaves in the device file. The last mark seen in the file is kept apart from recent attempts, so a run
   of failed writes can't make a device's own file look foreign. It takes a new id; its versions that were
   never published (in neither Drive nor its own last upload) move to the new id and are kept as parallel
   versions, while shared history keeps its vector, so deletions made by the other device still apply.
 - **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
-  file can't bring a deleted character back.
+  file can't bring a deleted character back. A deletion beats only what it saw: the delete dialog deletes
+  the version it showed (if a sync or another tab changed the character meanwhile, nothing is deleted and
+  the roster says why), and a deletion made after seeing a merged version's content wins over it even
+  though the merge made their vectors look parallel.
 - **Daily backups** (if on, a per-device setting): before Drive's copy of a character is replaced by an edit
   from another day, or by a deletion, the last state of that day is saved as its own file (a deletion keeps
   the last state on the device until it's in Drive, so an edit just before deleting is kept too, also when
@@ -74,12 +82,19 @@ Without one, the app stays local-only and never contacts Google. The token servi
   has) as an opaque credential, which stays on the device. When the access token runs out, the app sends the
   credential to the service and gets a new access token: no popup, no redirect, no tap. A token Drive refuses
   early is renewed and retried once. If the service is unreachable, the credential is kept and the next
-  round tries again.
+  round tries again. A renewal answered after the credential changed (sync turned off, or reconnected) is
+  dropped.
+- **Retrying.** A round that fails for a passing reason (no network, Google or the token service busy) is
+  tried again by itself after 30 seconds, then waiting twice as long each time, up to 15 minutes (and
+  right away when the device comes back online or the app back to the foreground). Requests have time
+  limits (the account check too), and waiting for another tab's round gives up after two minutes, so a
+  hung request or a frozen tab can't stop sync.
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
-  months, or sync turned off on another device) does the app ask the player to reconnect: the footer says so,
+  months) does the app ask the player to reconnect: the footer says so,
   and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
-  If another account answers, its token and credential are dropped on this device (its permission stays in
-  that account, which may sync a roster of its own elsewhere).
+  The answer is stored only after the account check: if another account answers, nothing it gave is kept
+  and the right account's credential stays (the other account's permission stays in that account, which may
+  sync a roster of its own elsewhere). If another tab turned sync off meanwhile, that wins.
 - **Without a token service** the app uses Google's popup to sign in, and every expired token needs a tap
   ("Szinkronizálás most"). A silent renewal by redirect (`prompt=none`) was tried and dropped: Google keeps
   showing its consent screen to this kind of request, so it never succeeded.

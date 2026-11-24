@@ -12,7 +12,7 @@ import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { exportBackupFile, exportRecordFile, loadLastBackupAt, parseImportFile } from "../state/transfer";
 import { rosterStore } from "../state/rosterStore";
-import { unreadableKeys } from "../state/storage";
+import { ROSTER_KEY, releaseHeldRoster, unreadableKeys } from "../state/storage";
 import { DriveSyncApi } from "../state/useDriveSync";
 import { CloudIcon, DriveSyncModal, driveStatusLine } from "./DriveSyncModal";
 
@@ -22,7 +22,7 @@ interface Props {
   onNew: () => void;
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, base?: CharacterRecord) => boolean; // false: it changed since the dialog opened, nothing deleted
   onImport: (records: CharacterRecord[]) => void;
   onRename: (id: string, name: string) => void;
   onOpenCompendium: () => void;
@@ -64,6 +64,9 @@ const MenuItem: React.FC<{ icon: React.ReactNode; onClick: () => void; danger?: 
 export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew, onEdit, onDuplicate, onDelete, onImport, onRename, onOpenCompendium, onOpenCredits, drive }) => {
   const [menuId, setMenuId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  // the version the delete dialog was opened on: only that one may be deleted (a sync may bring a newer one)
+  const [deleteBase, setDeleteBase] = useState<CharacterRecord | null>(null);
+  const [deleteNote, setDeleteNote] = useState<string | null>(null);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -83,7 +86,14 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
     }
   };
   const dropAside = () => {
-    for (const k of aside) localStorage.removeItem(k);
+    for (const k of aside) {
+      if (k !== ROSTER_KEY) localStorage.removeItem(k);
+      else {
+        // the unreadable roster itself (no room to keep it aside): save what could be read over it
+        releaseHeldRoster();
+        rosterStore().resave();
+      }
+    }
     setAside([]);
   };
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +162,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
       <MenuItem icon={CopyIcon} onClick={() => { setMenuId(null); onDuplicate(v.id); }}>Másolat készítése</MenuItem>
       <MenuItem icon={ExportIcon} onClick={() => { const r = records.find((x) => x.id === v.id); setMenuId(null); if (r) void exportRecordFile(r); }}>Exportálás fájlba</MenuItem>
       <Box h="1px" bg="rule" mx="10px" my="6px" />
-      <MenuItem icon={TrashIcon} onClick={() => { setMenuId(null); setConfirmDeleteId(v.id); }} danger>Törlés</MenuItem>
+      <MenuItem icon={TrashIcon} onClick={() => { setMenuId(null); setConfirmDeleteId(v.id); setDeleteBase(records.find((r) => r.id === v.id) ?? null); setDeleteNote(null); }} danger>Törlés</MenuItem>
     </>
   );
 
@@ -295,6 +305,11 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           }}
         />
 
+        {deleteNote && (
+          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="warn" mt="9px" maxW="52ch" mx="auto">
+            {deleteNote}
+          </Text>
+        )}
         {(importError || importInfo) && (
           <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={importError ? "bad" : "good"} mt="9px" maxW="52ch" mx="auto">
             {importError ?? importInfo}
@@ -324,7 +339,8 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
           onConfirm={() => {
             const i = deleteView.id;
             setConfirmDeleteId(null);
-            onDelete(i);
+            if (!onDelete(i, deleteBase ?? undefined))
+              setDeleteNote(`${deleteView.name} időközben megváltozott (például egy másik eszközön szerkesztették), ezért az alkalmazás nem törölte. Nézd meg, és ha továbbra is törölnéd, töröld újra.`);
           }}
           onClose={() => setConfirmDeleteId(null)}
         >

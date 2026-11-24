@@ -7,7 +7,7 @@ export interface RosterApi {
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
   get: (id: string) => CharacterRecord | undefined;
   upsert: (record: CharacterRecord, base?: CharacterRecord) => void; // create or replace by id; `base`: the version the edit started from
-  remove: (id: string) => void;
+  remove: (id: string, base?: CharacterRecord) => boolean; // `base`: the version the player confirmed; false if it changed since
   duplicate: (id: string) => void;
 }
 
@@ -23,7 +23,7 @@ const requestPersistentStorage = (): void => {
 
 const store = rosterStore();
 const upsert = (r: CharacterRecord, base?: CharacterRecord) => store.upsert(r, base);
-const remove = (id: string) => store.remove(id);
+const remove = (id: string, base?: CharacterRecord) => store.remove(id, base);
 const duplicate = (id: string) => store.duplicate(id);
 
 // The character roster (see rosterStore.ts). The callbacks are stable; the object changes only when

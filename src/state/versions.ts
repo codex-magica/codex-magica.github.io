@@ -12,39 +12,41 @@ export type VersionVector = Record<string, number>;
 
 const DEVICE_KEY = "magus.deviceId.v1";
 const COUNTER_KEY = "magus.vcCounter.v1";
-let deviceIdCache: string | null = null;
+let sessionId: string | null = null; // only when the id can't be saved
+let testId: string | null = null;
 
-// This browser's id for the sync. Stable as long as the browser keeps the app's storage.
+// This browser's id for the sync. Stable as long as the browser keeps the app's storage. Read from
+// storage every time (not cached), so when one tab takes a new id (see resetDeviceId) the others follow
+// at once instead of numbering edits under the old one.
 export const deviceId = (): string => {
-  if (deviceIdCache) return deviceIdCache;
+  if (testId) return testId;
   let id: string | null = null;
   try {
     id = localStorage.getItem(DEVICE_KEY);
   } catch {
     /* storage unavailable */
   }
-  if (!id || !/^[a-z0-9]{6,32}$/.test(id)) {
-    id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).slice(0, 16);
-    try {
-      localStorage.setItem(DEVICE_KEY, id);
-    } catch {
-      /* storage unavailable: a new id per session, which only costs a few extra conflict checks */
-    }
+  if (id && /^[a-z0-9]{6,32}$/.test(id)) return id;
+  if (sessionId) return sessionId;
+  const fresh = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).slice(0, 16);
+  try {
+    localStorage.setItem(DEVICE_KEY, fresh);
+  } catch {
+    sessionId = fresh; // can't be saved: one id for this session, which only costs a few extra conflict checks
   }
-  deviceIdCache = id;
-  return id;
+  return fresh;
 };
 export const setDeviceIdForTests = (id: string | null): void => {
-  deviceIdCache = id;
+  testId = id;
 };
 
 // A fresh id for this browser: used when another device turns out to be writing under the same id
-// (browser data restored from a backup onto a second device).
+// (browser data restored from a backup onto a second device). The edit counter stays: numbers only have
+// to be unique per id, and a tab still finishing an edit must not get a number twice.
 export const resetDeviceId = (): string => {
-  deviceIdCache = null;
+  sessionId = null;
   try {
     localStorage.removeItem(DEVICE_KEY);
-    localStorage.removeItem(COUNTER_KEY);
   } catch {
     /* storage unavailable */
   }

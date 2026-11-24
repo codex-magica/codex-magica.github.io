@@ -135,6 +135,11 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   const aDel = a.h === DELETED;
   const bDel = b.h === DELETED;
   if (aDel && bDel) return { version: { ...a, t: Math.max(a.t, b.t), vc } };
+  // A deletion made after seeing the other side's content: the vectors look parallel only because a merge
+  // joined them (the version that lost there is already kept as a copy). The deletion stands.
+  if (aDel && dominatedBy(cvcOf(b), a.vc)) return { version: { ...a, t: Math.max(a.t, b.t), vc } };
+  if (bDel && dominatedBy(cvcOf(a), b.vc)) return { version: { ...b, t: Math.max(a.t, b.t), vc } };
+  // otherwise the edit the deletion didn't see wins
   if (aDel) return { version: withVc(b, vc, cvcOf(b)) };
   if (bDel) return { version: withVc(a, vc, cvcOf(a)) };
   // One side's content is an earlier step of the other side: a merge gave it a joined vector (the version

@@ -158,21 +158,28 @@ export const requestTokenInteractive = (firstTime: boolean, loginHint?: string |
 // the caller renews it instead of retrying a dead token until it expires.
 export const fetchAccountEmail = async (token: string): Promise<string | null> => {
   let res: Response;
+  // a hung request mustn't hold up every later round: give up and try again next time
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), SERVICE_TIMEOUT_MS) : undefined;
   try {
-    res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${token}` } });
+    res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${token}` }, signal: ctl?.signal });
   } catch {
+    clearTimeout(timer);
     return null;
   }
   if (res.status === 401) {
+    clearTimeout(timer);
     forgetToken(token);
     throw new DriveAuthError("token expired");
   }
-  if (!res.ok) return null;
   try {
+    if (!res.ok) return null;
     const info = (await res.json()) as { email?: unknown };
     return typeof info.email === "string" ? info.email : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 };
 
@@ -340,17 +347,25 @@ const service = async (path: string, body: object): Promise<{ status: number; da
   }
 };
 
-const accept = (data: Record<string, unknown>): { token: string; credential: string | null } => {
+export interface Connection {
+  token: string;
+  expiresIn: number;
+  credential: string | null;
+}
+const parseAnswer = (data: Record<string, unknown>): Connection => {
   const token = typeof data.access_token === "string" ? data.access_token : null;
   if (!token) throw new TokenServiceError("no token");
-  storeToken(token, typeof data.expires_in === "number" ? data.expires_in : 3600);
-  const credential = typeof data.credential === "string" ? data.credential : null;
-  if (credential) saveCredential(credential);
-  return { token, credential };
+  return { token, expiresIn: typeof data.expires_in === "number" ? data.expires_in : 3600, credential: typeof data.credential === "string" ? data.credential : null };
+};
+// Store what the token service gave (after the account was checked, for a new connection).
+export const keepConnection = (c: Connection): void => {
+  storeToken(c.token, c.expiresIn);
+  if (c.credential) saveCredential(c.credential);
 };
 
-// After the consent page: the code becomes an access token and the long-term credential.
-export const exchangeCode = async (code: string, verifier: string): Promise<{ token: string; credential: string | null }> => {
+// After the consent page: the code becomes an access token and the long-term credential. Not stored yet:
+// the caller checks the account first, so a wrong account can't replace the right one's credential.
+export const exchangeCode = async (code: string, verifier: string): Promise<Connection> => {
   const { status, data } = await service("/v1/exchange", { code, code_verifier: verifier, redirect_uri: redirectUri() });
   if (status !== 200) {
     if (status >= 500 || status === 429) throw new TokenServiceError(`exchange: HTTP ${status}`);
@@ -358,7 +373,7 @@ export const exchangeCode = async (code: string, verifier: string): Promise<{ to
   }
   // the Drive permission left unticked on Google's screen (the token service already undid the grant)
   if (!(typeof data.scope === "string" && data.scope.split(" ").includes(SCOPE))) throw new DriveAuthError("drive permission not granted");
-  return accept(data);
+  return parseAnswer(data);
 };
 
 // A fresh access token from the credential, without any UI. Concurrent callers share one request.
@@ -370,7 +385,17 @@ export const refreshAccess = (): Promise<string> => {
   refreshing = (async () => {
     try {
       const { status, data } = await service("/v1/token", { credential });
-      if (status === 200) return accept(data).token;
+      if (loadCredential() !== credential) {
+        // sync was turned off (or reconnected) meanwhile, here or in another tab: keep nothing from this
+        const now = validToken();
+        if (now) return now;
+        throw new DriveAuthError("no credential");
+      }
+      if (status === 200) {
+        const got = parseAnswer(data);
+        keepConnection(got);
+        return got.token;
+      }
       if (status === 401) {
         // the grant is gone (revoked in the Google account, or unused for months): ask the user again
         forgetCredential(credential);

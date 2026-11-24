@@ -132,10 +132,9 @@ export const clearDriveState = (): void => {
     localStorage.removeItem(PUBLISHED_KEY);
     localStorage.removeItem(LEGACY_BASE_KEY);
     localStorage.removeItem(BACKED_UP_KEY); // another account may be next: its backups are its own
-    localStorage.removeItem(NONCES_KEY);
-    localStorage.removeItem(CONFIRMED_NONCE_KEY);
   } catch {
     /* ignore */
   }
+  forgetNonces(); // this tab's in-memory marks too
   saveDriveSettings({ ...OFF_SETTINGS, backups });
 };

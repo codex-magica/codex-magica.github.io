@@ -14,7 +14,13 @@ import { rulesFor } from "../model/rulesVariants";
 const KEY = "magus.roster.v1";
 
 // Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
-export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+// (64 random bits after the time: a bulk import makes many ids within one millisecond)
+const randomPart = (): string => {
+  const c = (globalThis as { crypto?: Crypto }).crypto;
+  if (c?.getRandomValues) return Array.from(c.getRandomValues(new Uint32Array(2)), (n) => n.toString(36).padStart(7, "0")).join("");
+  return Math.random().toString(36).slice(2, 9).padEnd(7, "0") + Math.random().toString(36).slice(2, 9).padEnd(7, "0");
+};
+export const genId = (prefix = "c"): string => `${prefix}_${Date.now().toString(36)}${randomPart()}`;
 
 // Renamed class-specialization options (2026-07): the general variants are all plain "Általános" now.
 // Selections store the option NAME, and a stale name silently drops the whole skill package on an
@@ -80,7 +86,7 @@ export const migrateRecord = (r: CharacterRecord): CharacterRecord => {
 // download. At most a few are kept (they count against the browser's storage limit).
 const UNREADABLE_PREFIX = `${KEY}.unreadable.`;
 const UNREADABLE_MAX = 3;
-export const unreadableKeys = (): string[] => {
+const asideKeys = (): string[] => {
   const out: string[] = [];
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -92,15 +98,41 @@ export const unreadableKeys = (): string[] => {
   }
   return out.sort();
 };
-const keepUnreadable = (raw: string) => {
+export const unreadableKeys = (): string[] => (stillHeld() ? [...asideKeys(), KEY] : asideKeys());
+// The saved roster couldn't be read and there was no room to keep it aside: it stays where it is, nothing
+// is saved over it (saving reports failure, so the app says so), and it's offered for download like the
+// ones kept aside. Once it's gone from there (downloaded and discarded, or replaced by another tab),
+// saving works again.
+let held: string | null = null;
+const stillHeld = (): boolean => {
+  if (held === null) return false;
   try {
-    const existing = unreadableKeys();
-    if (existing.some((k) => localStorage.getItem(k) === raw)) return; // already kept
+    if (localStorage.getItem(KEY) === held) return true;
+  } catch {
+    return true;
+  }
+  held = null;
+  return false;
+};
+// After the player saved the held roster to a file and chose to drop it from the device: saving works
+// again (the caller saves what's in memory over it).
+export const ROSTER_KEY = KEY;
+export const releaseHeldRoster = (): void => {
+  held = null;
+};
+const keepUnreadable = (raw: string): boolean => {
+  try {
+    const existing = asideKeys();
+    if (existing.some((k) => localStorage.getItem(k) === raw)) return true; // already kept
     for (const k of existing.slice(0, Math.max(0, existing.length - UNREADABLE_MAX + 1))) localStorage.removeItem(k);
     localStorage.setItem(`${UNREADABLE_PREFIX}${Date.now()}`, raw);
+    return true;
   } catch {
-    /* storage full: nothing more we can do here */
+    return false;
   }
+};
+const keepOrHold = (raw: string) => {
+  if (!keepUnreadable(raw)) held = raw;
 };
 
 export const loadRoster = (): CharacterRecord[] => {
@@ -121,16 +153,17 @@ export const loadRoster = (): CharacterRecord[] => {
       if (rec) records.push(rec);
       else dropped = true;
     }
-    if (dropped) keepUnreadable(raw);
+    if (dropped) keepOrHold(raw);
     return records;
   } catch {
-    keepUnreadable(raw);
+    keepOrHold(raw);
     return [];
   }
 };
 
 // Returns false if the save failed (storage full or blocked), so the app can say so.
 export const saveRoster = (records: CharacterRecord[]): boolean => {
+  if (stillHeld()) return false;
   try {
     localStorage.setItem(KEY, JSON.stringify(records));
     return true;

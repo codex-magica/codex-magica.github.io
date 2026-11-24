@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   BackupMeta,
+  Connection,
   DriveAuthError,
   RedirectOutcome,
   ReturnContext,
@@ -14,6 +15,7 @@ import {
   forgetToken,
   hasCredential,
   httpDrive,
+  keepConnection,
   prepareSignIn,
   refreshAccess,
   requestTokenInteractive,
@@ -89,6 +91,9 @@ export interface DriveSyncOptions {
 const AUTO_DELAY_MS = 2000;
 const FOREGROUND_MIN_GAP_MS = 20_000;
 const RETRY_MS = 2000; // a round asked for while a failing one was running
+const RETRY_FIRST_MS = 30_000; // after a failed round (Drive or the token service unreachable): try again,
+const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
+const LOCK_WAIT_MS = 120_000; // another tab's round holding the lock this long (a frozen tab): give up, retry later
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 
 class AccountMismatchError extends Error {}
@@ -129,7 +134,14 @@ const connectNote = (e: unknown, service: boolean): string => {
 // One round at a time across this browser's tabs (where the browser supports Web Locks).
 const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
   const locks = typeof navigator !== "undefined" ? (navigator as Navigator & { locks?: LockManager }).locks : undefined;
-  return locks?.request ? (locks.request("codex-magica-drive-sync", fn) as Promise<T>) : fn();
+  if (!locks?.request) return fn();
+  // a tab frozen mid-round (in the background on a phone) keeps the lock: don't wait for it forever
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), LOCK_WAIT_MS) : undefined;
+  return (locks.request("codex-magica-drive-sync", ctl ? { signal: ctl.signal } : {}, () => {
+    clearTimeout(timer);
+    return fn();
+  }) as Promise<T>).finally(() => clearTimeout(timer));
 };
 
 const store = rosterStore();
@@ -155,6 +167,8 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const statusRef = useRef<DriveStatus>(status);
   statusRef.current = status;
   const lastAttempt = useRef(0);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const retryDelay = useRef(RETRY_FIRST_MS);
   const enabledRef = useRef(settings.enabled);
   enabledRef.current = settings.enabled;
   const optsRef = useRef(opts);
@@ -167,6 +181,24 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   }, []);
 
   const patchSettings = useCallback((patch: Partial<DriveSettings>) => setSettings(updateDriveSettings(patch)), []);
+
+  // A round failed for a passing reason (no network, Google or the token service busy): try again by
+  // itself, so changes don't wait for the next edit or for the app to be reopened.
+  const scheduleRetry = useCallback(() => {
+    clearTimeout(retryTimer.current);
+    const gen = generation.current;
+    const delay = retryDelay.current;
+    retryDelay.current = Math.min(delay * 2, RETRY_MAX_MS);
+    retryTimer.current = setTimeout(() => {
+      retryTimer.current = undefined;
+      if (generation.current === gen && enabledRef.current) void autoRef.current();
+    }, delay);
+  }, []);
+  const stopRetrying = useCallback(() => {
+    clearTimeout(retryTimer.current);
+    retryTimer.current = undefined;
+    retryDelay.current = RETRY_FIRST_MS;
+  }, []);
 
   // Only without a token service: load Google's script ahead of the tap, so the popup opens straight
   // from it (browsers block popups opened after a wait).
@@ -230,7 +262,18 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             let snapshot = store.getState();
             const run = () => {
               snapshot = store.getState();
-              const input = { records: snapshot.records, deletions: snapshot.deletions, device: deviceId(), backups: s.backups, backedUp: loadBackedUp(), ourNonces: loadNonces(), rememberNonce, confirmNonce };
+              // marks are kept only while this round is still wanted: after "Kikapcsolás" they'd outlive the
+              // reset and make this device's file look like a clone's later
+              const input = {
+                records: snapshot.records,
+                deletions: snapshot.deletions,
+                device: deviceId(),
+                backups: s.backups,
+                backedUp: loadBackedUp(),
+                ourNonces: loadNonces(),
+                rememberNonce: (n: string) => current() && rememberNonce(n),
+                confirmNonce: (n: string) => current() && confirmNonce(n),
+              };
               return runSync(httpDrive(token), input);
             };
             let out;
@@ -238,6 +281,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
               out = await run();
             } catch (e) {
               if (!(e instanceof DeviceIdClashError)) throw e;
+              if (!current()) return;
               // another device writes under this device's id: take a new one, keep this device's edits as
               // its own, and sync again
               const old = deviceId();
@@ -262,6 +306,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         });
         authRetried.current = false;
         if (current()) {
+          stopRetrying();
           if (hopRef.current === "backSyncing") {
             setHop("backDone");
             window.setTimeout(() => hopRef.current === "backDone" && setHop(null), HOP_DONE_MS);
@@ -276,8 +321,13 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
             authRetried.current = true;
             again.current = true;
           } else {
-            setStatus(e instanceof DriveAuthError || e instanceof AccountMismatchError ? "needsTap" : "error");
+            const tap = e instanceof DriveAuthError || e instanceof AccountMismatchError;
+            setStatus(tap ? "needsTap" : "error");
             setNote(errorNote(e, service));
+            if (!tap) {
+              authRetried.current = false; // a later refused token gets its quiet renewal again
+              if (!(e instanceof SyncNewerVersionError)) scheduleRetry(); // that one waits for an app update
+            }
           }
         }
       } finally {
@@ -292,7 +342,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
         }, RETRY_MS);
       }
     },
-    [ensureAccount, patchSettings, setHop, service]
+    [ensureAccount, patchSettings, setHop, service, scheduleRetry, stopRetrying]
   );
 
   // Sync without user interaction, renewing the token quietly if there's a way to.
@@ -305,12 +355,13 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       if (!enabledRef.current) return;
       setStatus(e instanceof DriveAuthError ? "needsTap" : "error");
       setNote(errorNote(e, service));
+      if (!(e instanceof DriveAuthError)) scheduleRetry();
       return;
     }
     if (!enabledRef.current) return;
     if (token) await round(token);
-    else setStatus((st) => (st === "syncing" ? st : "needsTap"));
-  }, [available, getToken, round, service]);
+    else if (!running.current) setStatus("needsTap"); // (a round still running reports for itself)
+  }, [available, getToken, round, service, scheduleRetry]);
   autoRef.current = autoSync;
 
   // A token from a tap, without a token service (the popup), with the account pre-filled.
@@ -365,6 +416,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const disable = () => {
     enabledRef.current = false;
     generation.current++;
+    stopRetrying();
     setHop(null);
     // This device only: the permission stays valid for the player's other devices (and in their Google
     // account's list of connected apps, where it can be removed).
@@ -381,12 +433,19 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const finishConnect = useCallback(
     async (o: Extract<RedirectOutcome, { kind: "code" }>) => {
       const enabling = !loadDriveSettings().enabled;
+      // reconnecting, and another tab turned sync off meanwhile: that wins
+      const droppedMeanwhile = () => {
+        if (enabling || loadDriveSettings().enabled) return false;
+        setHop(null);
+        setStatus("off");
+        return true;
+      };
       const turnOn = () => {
         if (!enabling) return;
         enabledRef.current = true;
         patchSettings({ enabled: true, ...(o.backups === undefined ? {} : { backups: o.backups }) });
       };
-      let got: { token: string; credential: string | null };
+      let got: Connection;
       try {
         got = await exchangeCode(o.code, o.verifier);
       } catch (e) {
@@ -401,24 +460,28 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       } catch (e) {
         setHop(null);
         if (e instanceof AccountMismatchError) {
-          // another account answered: drop what it gave (its permission stays in that account, which may
-          // well sync a roster of its own elsewhere)
-          if (got.credential) forgetCredential(got.credential);
+          // another account answered: nothing it gave is kept, and the right account's credential stays
+          // (the other account's permission stays in that account, which may sync a roster of its own)
           setStatus(enabling ? "off" : "needsTap");
           setNote(connectNote(e, service));
           return;
         }
+        if (droppedMeanwhile()) return;
         // network trouble checking the account: the connection itself is fine, so turn sync on; the next
-        // round checks the account again
+        // round checks the account again (every token is checked before Drive is touched)
+        keepConnection(got);
         turnOn();
         setStatus("error");
         setNote(errorNote(e, service));
+        scheduleRetry();
         return;
       }
+      if (droppedMeanwhile()) return;
+      keepConnection(got);
       turnOn();
       await round(got.token);
     },
-    [ensureAccount, patchSettings, round, setHop, service]
+    [ensureAccount, patchSettings, round, setHop, service, scheduleRetry]
   );
 
   // app start: finish a return from Google's consent page, or sync (renewing quietly if needed)
@@ -481,6 +544,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       if (enabledRef.current && !next.enabled) {
         enabledRef.current = false;
         generation.current++;
+        stopRetrying();
         setHop(null);
         verifiedTokens.clear();
         setStatus("off");
@@ -493,7 +557,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [setHop]);
+  }, [setHop, stopRetrying]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const pending = useMemo(() => pendingChanges(roster.records, roster.deletions, loadPublished()), [roster.records, roster.deletions, syncTick]);
