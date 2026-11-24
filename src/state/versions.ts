@@ -45,6 +45,7 @@ export const setDeviceIdForTests = (id: string | null): void => {
 // to be unique per id, and a tab still finishing an edit must not get a number twice.
 export const resetDeviceId = (): string => {
   sessionId = null;
+  testId = null;
   try {
     localStorage.removeItem(DEVICE_KEY);
   } catch {

@@ -15,10 +15,10 @@ import { Deletions } from "./rosterStore";
 import { Published } from "./syncState";
 
 export class SyncNewerVersionError extends Error {}
-// Another device is writing this device's file: two devices ended up with the same id (browser data
-// restored from a backup onto a second device). The caller takes a fresh id and syncs again.
-// Another device writes this device's file (browser data copied to a second device). `published`: the
-// version keys every readable Drive file holds, so only versions that aren't in Drive yet get relabelled.
+// Another device writes this device's file: two devices ended up with the same id (browser data copied
+// onto a second device). The caller takes a fresh id and syncs again (see driveSyncRound.ts).
+// `published`: the version keys every readable Drive file holds, so only versions that aren't in Drive yet
+// get relabelled.
 export class DeviceIdClashError extends Error {
   constructor(
     message: string,
@@ -55,12 +55,12 @@ export interface SyncOutput {
 
 // Downloaded files by id and version: a round where nothing changed costs one listing. Only files that
 // read fine are kept; an unreadable one is downloaded again next time.
-const sharedCache = new Map<string, { version: string; parsed: ParsedFile; raw?: string }>();
+export type RunSyncCache = Map<string, { version: string; parsed: ParsedFile; raw?: string }>;
+const sharedCache: RunSyncCache = new Map();
 
 const byCreated = (a: DriveFileMeta, b: DriveFileMeta) => (a.createdTime < b.createdTime ? -1 : a.createdTime > b.createdTime ? 1 : a.id < b.id ? -1 : 1);
 
-type Cache = Map<string, { version: string; parsed: ParsedFile; raw?: string }>;
-const read = async (drive: DriveTransport, f: DriveFileMeta, cache: Cache): Promise<{ parsed: ParsedFile; raw?: string }> => {
+const read = async (drive: DriveTransport, f: DriveFileMeta, cache: RunSyncCache): Promise<{ parsed: ParsedFile; raw?: string }> => {
   const hit = cache.get(f.id);
   if (hit && hit.version === f.version) return hit;
   let body: FileBody = await drive.readFile(f.id);
@@ -88,7 +88,7 @@ const tag = (s: string) => {
 export const backupFileName = (c: BackupCandidate): string => `codex-magica-backup.${tag(c.id)}.${c.version.h}.json`;
 const newNonce = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 
-export async function runSync(drive: DriveTransport, input: SyncInput, now: () => number = Date.now, cache: Cache = sharedCache): Promise<SyncOutput> {
+export async function runSync(drive: DriveTransport, input: SyncInput, now: () => number = Date.now, cache: RunSyncCache = sharedCache): Promise<SyncOutput> {
   const files = await drive.listSyncFiles();
   const own = files.filter((f) => f.device === input.device).sort(byCreated)[0] ?? null;
 

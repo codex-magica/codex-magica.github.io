@@ -23,26 +23,19 @@ import {
   tokenServiceAvailable,
   validToken,
 } from "./googleDrive";
-import { BACKUP_FORMAT, DeviceIdClashError, SyncNewerVersionError, runSync } from "./driveSyncEngine";
+import { BACKUP_FORMAT, SyncNewerVersionError } from "./driveSyncEngine";
+import { syncRound } from "./driveSyncRound";
 import { rosterStore } from "./rosterStore";
 import { loadLastBackupAt } from "./transfer";
-import { deviceId, resetDeviceId } from "./versions";
 import { normalizeRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
 import {
   DriveSettings,
   SETTINGS_KEY,
   clearDriveState,
-  loadBackedUp,
   loadDriveSettings,
   loadPublished,
-  loadNonces,
-  forgetNonces,
   pendingChanges,
-  rememberNonce,
-  confirmNonce,
-  saveBackedUp,
-  savePublished,
   updateDriveSettings,
 } from "./syncState";
 
@@ -330,44 +323,9 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
           do {
             if (!current()) return;
             again.current = false;
-            store.reload(); // the freshest saved state (another tab may have changed it)
-            const s = loadDriveSettings();
-            let snapshot = store.getState();
-            const run = () => {
-              snapshot = store.getState();
-              // marks are kept only while this round is still wanted: after "Kikapcsolás" they'd outlive the
-              // reset and make this device's file look like a clone's later
-              const input = {
-                records: snapshot.records,
-                deletions: snapshot.deletions,
-                device: deviceId(),
-                backups: s.backups,
-                backedUp: loadBackedUp(),
-                ourNonces: loadNonces(),
-                rememberNonce: (n: string) => current() && rememberNonce(n),
-                confirmNonce: (n: string) => current() && confirmNonce(n),
-              };
-              return runSync(httpDrive(token), input);
-            };
-            let out;
-            try {
-              out = await run();
-            } catch (e) {
-              if (!(e instanceof DeviceIdClashError)) throw e;
-              if (!current()) return;
-              // another device writes under this device's id: take a new one, keep this device's edits as
-              // its own, and sync again
-              const old = deviceId();
-              // shared history: what Drive holds, and what this device itself last published there
-              store.relabelDevice(old, resetDeviceId(), new Set([...e.published, ...Object.values(loadPublished())]));
-              forgetNonces();
-              savePublished({});
-              out = await run();
-            }
-            if (!current()) return; // turned off meanwhile: drop the result
-            store.applyRound(snapshot, out); // against what's saved now: edits made meanwhile (here or in another tab) stay
-            savePublished(out.published);
-            saveBackedUp(out.backedUp);
+            const result = await syncRound({ store, drive: httpDrive(token), backups: loadDriveSettings().backups, current });
+            if (!result) return; // turned off meanwhile: nothing was kept
+            const { out } = result;
             patchSettings({ lastSyncAt: Date.now() });
             setSyncTick((n) => n + 1);
             const told = roundNotice(out.copied, out.undeleted);
