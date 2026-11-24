@@ -13,8 +13,9 @@
 //   GET  /health
 //
 // It stores nothing and logs nothing (see wrangler.toml): the credential lives on the player's device.
-// Requests are accepted only from the app's own origins, and rate-limited. The Worker never sees any
-// Drive data: it only talks to Google's token endpoints.
+// Browsers may call it only from the app's own origins (CORS); scripts outside a browser can claim any
+// origin, so the real protection is that a credential is needed, plus rate limits. The Worker never sees
+// any Drive data: it only talks to Google's token endpoints.
 
 export interface RateLimit {
   limit(o: { key: string }): Promise<{ success: boolean }>;
@@ -158,7 +159,8 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
     return reply(200, { ok: true, version: VERSION, configured: keyOk && !!env.GOOGLE_CLIENT_SECRET && !!env.GOOGLE_CLIENT_ID && origins(env).length > 0 });
   }
 
-  // only the app itself: other sites (and requests without an Origin, i.e. not from a browser) are turned away
+  // only the app's pages: other sites, and requests without an Origin, are turned away (CORS hygiene; a
+  // script outside a browser can fake the header, which is why everything below needs a credential)
   const origin = request.headers.get("Origin") ?? "";
   if (!origins(env).includes(origin)) return reply(403, { error: "origin" });
   const h = cors(origin);
@@ -168,6 +170,7 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
   const route = url.pathname;
   if (route !== "/v1/exchange" && route !== "/v1/token" && route !== "/v1/revoke") return reply(404, { error: "not found" }, h);
 
+  if (Number(request.headers.get("Content-Length") ?? 0) > MAX_BODY) return reply(413, { error: "too large" }, h);
   const text = await request.text();
   if (text.length > MAX_BODY) return reply(413, { error: "too large" }, h);
   let input: Record<string, unknown>;

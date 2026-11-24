@@ -10,6 +10,7 @@ import {
   driveSyncAvailable,
   exchangeCode,
   fetchAccountEmail,
+  forgetCredential,
   forgetToken,
   hasCredential,
   httpDrive,
@@ -115,6 +116,16 @@ const authNote = (reason: string, service: boolean): string => {
 
 // Google's answer from the consent page, read once at startup (before rendering).
 const initialOutcome: RedirectOutcome = typeof window !== "undefined" ? consumeRedirectResult() : { kind: "none" };
+// A code can be redeemed once: React's development double start mustn't send it twice.
+let codeTaken = false;
+
+// Finishing the connection failed before it was set up: a tap is needed (nothing retries by itself).
+const connectNote = (e: unknown, service: boolean): string => {
+  if (e instanceof TokenServiceError) return "A szinkronszolgáltatás most nem érhető el, ezért a Google-kapcsolat nem jött létre. Próbáld újra egy kicsit később.";
+  if (e instanceof DriveAuthError && (e.message === "drive permission not granted" || e.message === "access_denied")) return authNote(e.message, service);
+  if (e instanceof AccountMismatchError) return e.message;
+  return "Nem sikerült befejezni a Google-kapcsolódást. Próbáld újra.";
+};
 
 // One round at a time across this browser's tabs (where the browser supports Web Locks).
 const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
@@ -142,6 +153,8 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const generation = useRef(0); // bumped when sync is turned off: a round from before must not touch anything
   const autoRef = useRef<() => Promise<void>>(async () => {});
   const authRetried = useRef(false); // a token Drive refused: renewed and retried once
+  const statusRef = useRef<DriveStatus>(status);
+  statusRef.current = status;
   const lastAttempt = useRef(0);
   const enabledRef = useRef(settings.enabled);
   enabledRef.current = settings.enabled;
@@ -327,8 +340,10 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   }, []);
 
   const interactive = (firstTime: boolean, backups?: boolean) => {
+    authRetried.current = false;
     if (service) {
-      if (!firstTime && (validToken() || hasCredential())) return void autoSync();
+      // "Szinkronizálás most" syncs (renewing quietly); "Újrakapcsolás" (needsTap) goes to Google's page
+      if (!firstTime && statusRef.current !== "needsTap" && (validToken() || hasCredential())) return void autoSync();
       return leaveForGoogle(firstTime ? backups : undefined);
     }
     const token = !firstTime ? validToken() : null;
@@ -364,21 +379,42 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const finishConnect = useCallback(
     async (o: Extract<RedirectOutcome, { kind: "code" }>) => {
       const enabling = !loadDriveSettings().enabled;
+      const turnOn = () => {
+        if (!enabling) return;
+        enabledRef.current = true;
+        patchSettings({ enabled: true, ...(o.backups === undefined ? {} : { backups: o.backups }) });
+      };
+      let got: { token: string; credential: string | null };
       try {
-        const token = await exchangeCode(o.code, o.verifier);
-        await ensureAccount(token);
-        if (enabling) {
-          enabledRef.current = true;
-          patchSettings({ enabled: true, ...(o.backups === undefined ? {} : { backups: o.backups }) });
-        }
-        await round(token);
+        got = await exchangeCode(o.code, o.verifier);
+      } catch (e) {
+        // the code is spent and nothing was set up: say what to do (nothing retries by itself)
+        setHop(null);
+        setStatus(enabling ? "off" : "needsTap");
+        setNote(connectNote(e, service));
+        return;
+      }
+      try {
+        await ensureAccount(got.token);
       } catch (e) {
         setHop(null);
-        // another account answered: its permission is no use here, so give it back
-        if (e instanceof AccountMismatchError) void revokeAccess();
-        setStatus(enabling ? "off" : "needsTap");
+        if (e instanceof AccountMismatchError) {
+          // another account answered: drop what it gave (its permission stays in that account, which may
+          // well sync a roster of its own elsewhere)
+          if (got.credential) forgetCredential(got.credential);
+          setStatus(enabling ? "off" : "needsTap");
+          setNote(connectNote(e, service));
+          return;
+        }
+        // network trouble checking the account: the connection itself is fine, so turn sync on; the next
+        // round checks the account again
+        turnOn();
+        setStatus("error");
         setNote(errorNote(e, service));
+        return;
       }
+      turnOn();
+      await round(got.token);
     },
     [ensureAccount, patchSettings, round, setHop, service]
   );
@@ -387,7 +423,10 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   useEffect(() => {
     if (!available) return;
     if (initialOutcome.kind === "code") {
-      void finishConnect(initialOutcome);
+      if (!codeTaken) {
+        codeTaken = true;
+        void finishConnect(initialOutcome);
+      }
       return;
     }
     if (!settings.enabled) return;

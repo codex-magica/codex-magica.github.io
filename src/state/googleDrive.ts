@@ -153,11 +153,22 @@ export const requestTokenInteractive = (firstTime: boolean, loginHint?: string |
   return p;
 };
 
-// The signed-in account's email (needs the `email` scope). Null if Google doesn't say.
+// The signed-in account's email (needs the `email` scope). Null if Google doesn't say (network trouble).
+// A token Google refuses (revoked from another device, say) is forgotten, and DriveAuthError thrown, so
+// the caller renews it instead of retrying a dead token until it expires.
 export const fetchAccountEmail = async (token: string): Promise<string | null> => {
+  let res: Response;
   try {
-    const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) return null;
+    res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${token}` } });
+  } catch {
+    return null;
+  }
+  if (res.status === 401) {
+    forgetToken(token);
+    throw new DriveAuthError("token expired");
+  }
+  if (!res.ok) return null;
+  try {
     const info = (await res.json()) as { email?: unknown };
     return typeof info.email === "string" ? info.email : null;
   } catch {
@@ -182,8 +193,9 @@ const saveCredential = (c: string) => {
     /* storage full: works for this hour; the next renewal will ask for a reconnect */
   }
 };
-export const forgetCredential = (): void => {
+export const forgetCredential = (only?: string): void => {
   try {
+    if (only !== undefined && localStorage.getItem(CREDENTIAL_KEY) !== only) return;
     localStorage.removeItem(CREDENTIAL_KEY);
   } catch {
     /* ignore */
@@ -210,6 +222,7 @@ interface PendingRedirect {
   ctx: ReturnContext;
   verifier: string; // PKCE: proves the code is redeemed by whoever asked for it
   backups?: boolean; // turning sync on: the daily backups choice made before leaving
+  reported?: boolean; // "didn't finish" was already said once (the entry stays, in case Google still answers)
 }
 export type RedirectOutcome =
   | { kind: "none" }
@@ -271,12 +284,15 @@ export const consumeRedirectResult = (): RedirectOutcome => {
   const params = new URLSearchParams(window.location.search);
   if (!params.has("state")) {
     // We left for Google a while ago but came back without an answer (the user went back, or Google
-    // showed its own error page): say so, and return to where the player was. A fresh entry may belong
-    // to another tab that is still on its way.
+    // showed its own error page): say so once, and return to where the player was. A fresh entry may
+    // belong to another tab that is still on its way; the entry stays until it's too old to be answered,
+    // so a slow sign-in in another tab still lands.
     try {
       const pending = JSON.parse(localStorage.getItem(RETURN_KEY) ?? "null") as PendingRedirect | null;
-      if (pending && Date.now() - pending.at > NO_ANSWER_MS) {
-        localStorage.removeItem(RETURN_KEY);
+      const age = pending ? Date.now() - pending.at : 0;
+      if (pending && age > STALE_ANSWER_MS) localStorage.removeItem(RETURN_KEY);
+      if (pending && age > NO_ANSWER_MS && age <= STALE_ANSWER_MS && !pending.reported) {
+        localStorage.setItem(RETURN_KEY, JSON.stringify({ ...pending, reported: true }));
         outcome = { kind: "error", error: "no answer", ctx: pending.ctx ?? null };
       }
     } catch {
@@ -324,16 +340,17 @@ const service = async (path: string, body: object): Promise<{ status: number; da
   }
 };
 
-const accept = (data: Record<string, unknown>): string => {
+const accept = (data: Record<string, unknown>): { token: string; credential: string | null } => {
   const token = typeof data.access_token === "string" ? data.access_token : null;
   if (!token) throw new TokenServiceError("no token");
   storeToken(token, typeof data.expires_in === "number" ? data.expires_in : 3600);
-  if (typeof data.credential === "string") saveCredential(data.credential);
-  return token;
+  const credential = typeof data.credential === "string" ? data.credential : null;
+  if (credential) saveCredential(credential);
+  return { token, credential };
 };
 
 // After the consent page: the code becomes an access token and the long-term credential.
-export const exchangeCode = async (code: string, verifier: string): Promise<string> => {
+export const exchangeCode = async (code: string, verifier: string): Promise<{ token: string; credential: string | null }> => {
   const { status, data } = await service("/v1/exchange", { code, code_verifier: verifier, redirect_uri: redirectUri() });
   if (status !== 200) {
     if (status >= 500 || status === 429) throw new TokenServiceError(`exchange: HTTP ${status}`);
@@ -353,10 +370,10 @@ export const refreshAccess = (): Promise<string> => {
   refreshing = (async () => {
     try {
       const { status, data } = await service("/v1/token", { credential });
-      if (status === 200) return accept(data);
+      if (status === 200) return accept(data).token;
       if (status === 401) {
         // the grant is gone (revoked in the Google account, or unused for months): ask the user again
-        if (loadCredential() === credential) forgetCredential();
+        forgetCredential(credential);
         throw new DriveAuthError("credential revoked");
       }
       throw new TokenServiceError(`token: HTTP ${status}`);

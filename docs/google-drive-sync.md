@@ -78,6 +78,8 @@ Without one, the app stays local-only and never contacts Google. The token servi
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
   months, or sync turned off on another device) does the app ask the player to reconnect: the footer says so,
   and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
+  If another account answers, its token and credential are dropped on this device (its permission stays in
+  that account, which may sync a roster of its own elsewhere).
 - **Without a token service** the app uses Google's popup to sign in, and every expired token needs a tap
   ("Szinkronizálás most"). A silent renewal by redirect (`prompt=none`) was tried and dropped: Google keeps
   showing its consent screen to this kind of request, so it never succeeded.

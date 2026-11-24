@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  test:
     if: vars.DEPLOY_WORKER == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -35,12 +35,24 @@ jobs:
         with:
           node-version: 26
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            worker/package-lock.json
       - run: npm ci
       - run: npx vitest run worker
       - run: npx tsc --noEmit -p worker
+
+  # A job of its own: the app's dependencies (and their install scripts) never run next to the
+  # Cloudflare token. Only the Worker's pinned toolchain is installed here.
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
       - run: npm ci
         working-directory: worker
       - run: npx wrangler deploy --env=""
@@ -50,9 +62,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           WRANGLER_SEND_METRICS: "false"
       - name: Check that it answers
+        env:
+          SERVICE_URL: ${{ vars.TOKEN_SERVICE_URL }}
         run: |
-          url="${{ vars.TOKEN_SERVICE_URL }}"
-          if [ -n "$url" ]; then
+          if [ -n "$SERVICE_URL" ]; then
             sleep 5
-            curl -fsS "$url/health" | tee /dev/stderr | grep -q '"configured":true'
+            curl -fsS "$SERVICE_URL/health" | tee /dev/stderr | grep -q '"configured":true'
           fi

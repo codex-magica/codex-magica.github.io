@@ -177,5 +177,7 @@ describe("token service", () => {
     expect((await handle(post("/v1/other", {}), env(), g.doFetch)).status).toBe(404);
     expect((await handle(new Request("https://x/v1/token", { method: "GET", headers: { Origin: APP } }), env(), g.doFetch)).status).toBe(405);
     expect((await handle(post("/v1/token", "x".repeat(9000)), env(), g.doFetch)).status).toBe(413);
+    const big = new Request("https://x/v1/token", { method: "POST", headers: { Origin: APP, "Content-Length": "100000" }, body: "{}" });
+    expect((await handle(big, env(), g.doFetch)).status).toBe(413);
   });
 });
