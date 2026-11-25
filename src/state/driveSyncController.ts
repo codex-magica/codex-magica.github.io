@@ -35,7 +35,7 @@ import {
   validToken,
 } from "./googleDrive";
 import { DRIVE_SNAPSHOT_FORMAT, SyncNewerVersionError } from "./driveSyncEngine";
-import { syncRound } from "./driveSyncRound";
+import { LocalSaveError, syncRound } from "./driveSyncRound";
 import { roundNotice } from "./driveStatus";
 import { rosterStore } from "./rosterStore";
 import { repairRecord, genId } from "./storage";
@@ -70,7 +70,6 @@ export interface DriveSyncState {
 
 const AUTO_DELAY_MS = 2000;
 const FOREGROUND_MIN_GAP_MS = 20_000;
-const AGAIN_MS = 2000; // a round asked for while one was running, or a refused token renewed: run it after this
 const RETRY_FIRST_MS = 30_000; // after a failed round (Drive or the token service unreachable): try again,
 const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
@@ -91,6 +90,8 @@ const errorNote = (e: unknown): string => {
   if (e instanceof SyncNewerVersionError)
     return "Egy másik eszközöd már az alkalmazás újabb verzióját használja. Kattints a lent megjelenő „Frissítés” gombra; ha nem látod, zárd be az alkalmazást, és nyisd meg újra.";
   if (e instanceof DriveAuthError) return authNote(e.message);
+  if (e instanceof LocalSaveError)
+    return "Ezen az eszközön most nem sikerül menteni (valószínűleg megtelt a böngésző tárhelye), ezért a szinkron szünetel. Exportáld a karaktereidet, és törölj, amire nincs szükséged.";
   if (e instanceof DriveFullError)
     return "Betelt a Google-tárhelyed, ezért a szinkron szünetel. Szabadíts fel helyet a Google-fiókodban (a Drive, a Gmail és a Fotók közösen használják); utána a szinkron magától folytatódik.";
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. Amint lesz, a szinkron magától folytatódik.";
@@ -165,11 +166,14 @@ export const createDriveSync = () => {
   // A round failed for a passing reason (no network, Google or the token service busy): try again by
   // itself, so changes don't wait for the next edit or for the app to be reopened.
   const scheduleRetry = () => {
-    clearTimeout(retryTimer);
+    if (retryTimer !== undefined) return; // already waiting (several triggers failed at once): back off once
     const gen = generation;
     const delay = retryDelay;
     retryDelay = Math.min(delay * 2, RETRY_MAX_MS);
-    retryTimer = setTimeout(() => gen === generation && void autoSync(), delay);
+    retryTimer = setTimeout(() => {
+      retryTimer = undefined;
+      if (gen === generation) void autoSync();
+    }, delay);
   };
   const stopRetrying = () => {
     clearTimeout(retryTimer);
@@ -222,6 +226,7 @@ export const createDriveSync = () => {
           authRetried = true;
           again = true;
         } else if (e instanceof DriveAuthError) {
+          set({ driveFull: false });
           needTap();
           say(errorNote(e));
         } else {
@@ -238,13 +243,17 @@ export const createDriveSync = () => {
     }
     if (again) {
       again = false;
-      setTimeout(() => void autoSync(), AGAIN_MS);
+      void autoSync(); // right away: the app may be about to be frozen in the background
     }
   };
 
   // Sync without the player, renewing the token quietly.
   const autoSync = async () => {
     if (!available || !enabled() || !active) return;
+    if (running) {
+      again = true; // one at a time: the running round's end starts the next
+      return;
+    }
     let token: string | null;
     try {
       token = await getToken();

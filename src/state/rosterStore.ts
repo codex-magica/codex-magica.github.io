@@ -249,7 +249,9 @@ export const createRosterStore = () => {
       const move = (id: string, vc: VersionVector, h: string): VersionVector => {
         if (vc[oldId] === undefined || published.has(versionKeyOf(vc, h))) return vc;
         const { [oldId]: n, ...rest } = vc;
-        const base = Math.max(0, ...(ancestry.get(id) ?? []).filter((a) => dominatedBy(a, vc)).map((a) => a[oldId] ?? 0));
+        // (a Drive version with the very same vector isn't an ancestor: its key differs, so it's a parallel
+        // version made by the other device under the same id)
+        const base = Math.max(0, ...(ancestry.get(id) ?? []).filter((a) => dominatedBy(a, vc) && vcKey(a) !== vcKey(vc)).map((a) => a[oldId] ?? 0));
         if (base >= n) return vc; // nothing of the old id's count is unpublished
         return { ...rest, ...(base > 0 ? { [oldId]: base } : {}), [newId]: n };
       };

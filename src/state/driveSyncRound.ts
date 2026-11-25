@@ -11,6 +11,9 @@ import { RosterStore } from "./rosterStore";
 import { deviceId, resetDeviceId } from "./versions";
 import { confirmNonce, forgetNonces, loadBackedUp, loadNonces, loadPublished, rememberNonce, saveBackedUp, savePublished } from "./syncState";
 
+// The round's result (or its write mark) couldn't be saved on this device: storage full or blocked.
+export class LocalSaveError extends Error {}
+
 export interface RoundOptions {
   store: RosterStore;
   drive: DriveTransport;
@@ -43,7 +46,14 @@ export async function syncRound({ store, drive, backups, current, now, cache }: 
         ourNonces: loadNonces(),
         // marks are kept only while the round is still wanted: after "Kikapcsolás" they'd outlive the
         // reset and make this device's file look like a clone's later
-        rememberNonce: (n: string) => void (current() && rememberNonce(n)),
+        rememberNonce: (n: string) => {
+          if (!current()) return;
+          try {
+            rememberNonce(n);
+          } catch {
+            throw new LocalSaveError("couldn't save on this device");
+          }
+        },
         confirmNonce: (n: string) => void (current() && confirmNonce(n)),
         current,
       },
@@ -61,7 +71,7 @@ export async function syncRound({ store, drive, backups, current, now, cache }: 
     const old = deviceId();
     newDeviceId = resetDeviceId();
     // shared history: what Drive holds, and what this device itself last published there
-    if (!store.relabelDevice(old, newDeviceId, new Set([...e.published, ...Object.values(loadPublished())]), e.ancestry)) throw new Error("couldn't save on this device");
+    if (!store.relabelDevice(old, newDeviceId, new Set([...e.published, ...Object.values(loadPublished())]), e.ancestry)) throw new LocalSaveError("couldn't save on this device");
     forgetNonces();
     savePublished({});
     out = await run();
@@ -69,7 +79,7 @@ export async function syncRound({ store, drive, backups, current, now, cache }: 
   if (!current()) return null;
   // can't be saved here (storage full or blocked): the round fails and is tried again; Drive is ahead
   // meanwhile, which the next round reads back
-  if (!store.applyRound(snapshot, out)) throw new Error("couldn't save on this device");
+  if (!store.applyRound(snapshot, out)) throw new LocalSaveError("couldn't save on this device");
   savePublished(out.published);
   saveBackedUp(out.backedUp);
   return { out, newDeviceId };

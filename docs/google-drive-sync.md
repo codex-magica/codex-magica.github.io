@@ -76,8 +76,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   over reloads when continued; the lock is let go when the page is left, a busy lock is tried again for a
   moment before saying "another tab", and a return from Google's consent page takes it outright). Only the
   tab in use syncs: a round in a tab that stepped back writes nothing to Drive, and that tab neither
-  retries nor turns sync on for itself (a connection it was finishing is saved for the tab in use, which
-  follows the setting). Saving stays safe across tabs regardless: every change re-reads what's saved first.
+  retries nor keeps a sign-in it was finishing (the player turns sync on again in the tab in use). Saving
+  stays safe across tabs regardless: every change re-reads what's saved first.
 - **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background (renewing the token
   if it ran out, so an edit made just before locking the phone still goes), when it comes back, and when
   the device is back online.
@@ -92,7 +92,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
 - **Retrying.** A round that fails for a passing reason (no network, Google or the token service busy) is
   tried again by itself after 30 seconds, then waiting twice as long each time, up to 15 minutes (and
   right away when the device comes back online or the app back to the foreground). Requests have time
-  limits (the account check too), so a hung request can't stop sync.
+  limits, so a hung request can't stop sync. One round at a time: one asked for while another runs
+  (an edit, the app going to the background) starts right after it.
 - **Google storage full** (Drive answers `storageQuotaExceeded`): the player is told that their Google
   storage is full and only they can make room; rounds keep being retried (slowly), so sync goes on by
   itself afterwards.
@@ -106,8 +107,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
   months) does the app ask the player to reconnect: the roster says so,
   and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
-  The answer is stored only after the account check (and not at all if the check fails on the network:
-  the player tries again): if another account answers, nothing it gave is kept and the right account's
+  The answer is stored only after the account check (and not at all if it names no account: the player
+  tries again): if another account answers, nothing it gave is kept and the right account's
   credential stays (the other account's permission stays in that account, which may
   sync a roster of its own elsewhere).
 - **Account check.** At sign-in, the token service passes on the account's email from Google's ID token,

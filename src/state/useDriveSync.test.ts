@@ -646,3 +646,149 @@ describe("taking over in another tab", () => {
   });
 });
 
+const listing = (url: string) => url.startsWith("https://www.googleapis.com/drive/v3/files?") && url.includes("'sync'");
+
+describe("one round at a time, and what failures say", () => {
+  test("an edit made while a round runs, with the token service down for a moment: it still reaches Drive by itself", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    expect(tab.api.status).toBe("idle");
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    let holding = true;
+    override = (url) => (holding && listing(url) ? (held.then(() => null) as any) : null);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500); // round 1 starts with at-1 and waits on Drive
+    // the access token runs out meanwhile, and the token service has a hiccup
+    ls.removeItem(TOKEN_KEY);
+    tokenService = () => jsonRes(503, {});
+    store.upsert(storage.createBlankRecord("c_b", "Boromir")); // an edit while round 1 runs
+    await settle(2500); // asked for while round 1 runs: it runs right after it
+    holding = false;
+    release();
+    await settle(100); // round 1 succeeds (Aragorn), and clears the retry meant for Boromir
+    let n = 0;
+    tokenService = (path) => (path === "/v1/token" ? jsonRes(200, { access_token: `at-r${++n}`, expires_in: 3600, scope: DRIVE_SCOPE }) : jsonRes(500, {}));
+    await settle(30 * 60_000); // app open, no further edits
+    expect(syncFileHas("x@test", "Aragorn")).toBe(true);
+    expect({ status: tab.api.status, pending: tab.api.pending.count, boromirInDrive: syncFileHas("x@test", "Boromir") }).toEqual({ status: "idle", pending: 0, boromirInDrive: true });
+  });
+
+  test("the permission gone while a round runs: after it, the player is asked to reconnect (not told it synced)", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    let holding = true;
+    override = (url) => (holding && listing(url) ? (held.then(() => null) as any) : null);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500);
+    ls.removeItem(TOKEN_KEY);
+    tokenService = () => jsonRes(401, { error: "invalid_grant" });
+    store.upsert(storage.createBlankRecord("c_b", "Boromir"));
+    await settle(2500);
+    holding = false;
+    release();
+    await settle(100);
+    expect(tab.api.status).toBe("needsTap"); // Boromir can't go up without a reconnect
+  });
+
+  test("an edit, then the phone locked while a round runs: the edit leaves right after that round", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { store, storage } = await openTab();
+    await settle(100);
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    let holding = true;
+    override = (url) => (holding && listing(url) ? (held.then(() => null) as any) : null);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500); // round 1 waits on a slow network
+    store.upsert(storage.createBlankRecord("c_b", "Boromir"));
+    await settle(200);
+    doc.visibilityState = "hidden"; // phone locked: a round is asked for, one is running
+    doc.dispatchEvent(new Event("visibilitychange"));
+    await settle(10);
+    holding = false;
+    release();
+    await settle(1000); // the page gets a moment before it's frozen
+    expect(syncFileHas("x@test", "Aragorn")).toBe(true);
+    expect(syncFileHas("x@test", "Boromir")).toBe(true);
+  });
+
+  test("a round whose result can't be saved on this device says so (not that Google Drive is unreachable)", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    ls.full.add("magus.roster.v1"); // storage full right after the edit
+    ls.full.add("magus.deletions.v1");
+    await settle(2500);
+    expect(tab.api.status).toBe("error");
+    expect(tab.api.note?.text ?? "").not.toContain("nem érhető el a Google Drive");
+  });
+
+  test("storage full when the round notes its mark: it writes nothing and says this device can't save", async () => {
+    enableWith("x@test", "at-1", "cred-x");
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    ls.full.add(NONCES_KEY);
+    await settle(2500);
+    expect(tab.api.status).toBe("error");
+    expect(tab.api.note?.text ?? "").toContain("Ezen az eszközön most nem sikerül menteni");
+  });
+
+  test("several triggers failing at once on the token service back off once, not three times", async () => {
+    enableWith("x@test", null, "cred-x");
+    tokenService = () => jsonRes(503, {});
+    const { tab } = await openTab();
+    await settle(100); // start: renewal fails, retry in 30 s
+    expect(tab.api.status).toBe("error");
+    await settle(25_000);
+    win.dispatchEvent(new Event("online"));
+    doc.dispatchEvent(new Event("visibilitychange")); // visible, > 20 s since last attempt... (no round yet: lastAttempt 0)
+    await settle(100);
+    const before = calls.filter((c) => c.includes("/v1/token")).length;
+    await settle(65_000); // second failure: the next try should come 60 s later (30, 60, 120, ...)
+    expect(calls.filter((c) => c.includes("/v1/token")).length).toBeGreaterThan(before);
+  });
+
+  test("React's development double start (start, stop, start) while finishing sign-in syncs once and settles", async () => {
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
+    win.location.search = "?state=S1&code=C1";
+    tokenService = (path) =>
+      path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }) : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    vi.resetModules();
+    const ctl = await import("./driveSyncController");
+    const s = ctl.driveSync();
+    s.start();
+    s.stop();
+    s.start();
+    s.start();
+    await settle(3000);
+    expect(calls.filter((c) => c.includes("/v1/exchange"))).toHaveLength(1);
+    expect(s.getState().status).toBe("idle");
+    expect(s.getState().settings.enabled).toBe(true);
+    expect(s.getState().hop === "backDone" || s.getState().hop === null).toBe(true);
+  });
+
+  test("Google storage full, then the permission lost: the roster asks to reconnect (not to free space)", async () => {
+    enableWith("x@test", "at-1", null);
+    const { tab, store, storage } = await openTab();
+    await settle(100);
+    override = (url) =>
+      url.startsWith("https://www.googleapis.com/upload/") ? jsonRes(403, { error: { errors: [{ reason: "storageQuotaExceeded" }] } }) : null;
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500);
+    expect(tab.api.driveFull).toBe(true);
+    override = null;
+    deadTokens.add("at-1"); // the permission is gone (and there's no credential to renew with)
+    tab.api.syncNow();
+    await settle(100);
+    expect(tab.api.status).toBe("needsTap");
+    expect(tab.api.driveFull).toBe(false);
+  });
+});
+
