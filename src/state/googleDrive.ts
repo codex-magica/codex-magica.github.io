@@ -208,30 +208,17 @@ export const forgetCredential = (only?: string): void => {
 };
 
 // ── the round trip to Google's consent page ─────────────────────────────────────────────────────────
-// Where the app was, so the round trip through Google lands the user back on the same screen.
-export interface ScrollMark {
-  path: number[]; // child indexes from #root down to the scrolled element
-  top: number;
-  left: number;
-}
-export interface ReturnContext {
-  screen: "roster" | "sheet" | "compendium";
-  characterId: string | null;
-  view?: "sheet" | "compendium"; // inside a character: the sheet or its compendium
-  compTab?: number;
-  scroll?: ScrollMark[];
-}
+// It starts from the sync window on the roster, and comes back to the roster.
 interface PendingRedirect {
   state: string;
   at: number;
-  ctx: ReturnContext;
   verifier: string; // PKCE: proves the code is redeemed by whoever asked for it
   backups?: boolean; // turning sync on: the daily backups choice made before leaving
 }
 export type RedirectOutcome =
   | { kind: "none" }
-  | { kind: "code"; code: string; verifier: string; ctx: ReturnContext; backups?: boolean }
-  | { kind: "error"; error: string; ctx: ReturnContext | null };
+  | { kind: "code"; code: string; verifier: string; backups?: boolean }
+  | { kind: "error"; error: string };
 
 // The app's own address, registered in the Google Cloud console as an authorized redirect URI.
 const redirectUri = (): string => `${window.location.origin}${import.meta.env.BASE_URL}`;
@@ -252,7 +239,7 @@ const b64url = (bytes: Uint8Array): string => {
 // the browser withholds the cryptography the sign-in needs), "storage" (the sign-in couldn't be noted
 // down for the return), or "failed" (anything else).
 type ConnectStartFailure = "insecure" | "storage" | "failed";
-export const beginConnect = async (ctx: ReturnContext, loginHint: string | null, backups?: boolean): Promise<true | ConnectStartFailure> => {
+export const beginConnect = async (loginHint: string | null, backups?: boolean): Promise<true | ConnectStartFailure> => {
   if (!tokenServiceAvailable()) return "failed";
   if (typeof window !== "undefined" && window.isSecureContext === false) return "insecure";
   let state: string;
@@ -266,7 +253,7 @@ export const beginConnect = async (ctx: ReturnContext, loginHint: string | null,
     return "failed"; // no crypto: we couldn't verify the answer, so don't go
   }
   try {
-    localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx, verifier, ...(backups === undefined ? {} : { backups }) } satisfies PendingRedirect));
+    localStorage.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), verifier, ...(backups === undefined ? {} : { backups }) } satisfies PendingRedirect));
   } catch {
     return "storage";
   }
@@ -327,13 +314,13 @@ export const consumeRedirectResult = (): RedirectOutcome => {
   if (!saved || !ours || stale) {
     // an answer that can't be used (another tab started a newer sign-in, or it took too long): say so
     // rather than come back as if nothing had happened
-    outcome = { kind: "error", error: "no answer", ctx: saved && !stale ? saved.ctx : null };
+    outcome = { kind: "error", error: "no answer" };
     return outcome;
   }
   const code = params.get("code");
   outcome = code
-    ? { kind: "code", code, verifier: saved.verifier, ctx: saved.ctx, ...(saved.backups === undefined ? {} : { backups: saved.backups }) }
-    : { kind: "error", error: params.get("error") ?? "unknown", ctx: saved.ctx };
+    ? { kind: "code", code, verifier: saved.verifier, ...(saved.backups === undefined ? {} : { backups: saved.backups }) }
+    : { kind: "error", error: params.get("error") ?? "unknown" };
   return outcome;
 };
 

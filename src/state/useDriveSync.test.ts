@@ -240,7 +240,7 @@ const openTab = async () => {
   const hook = await import("./useDriveSync");
   const roster = await import("./rosterStore");
   const storage = await import("./storage");
-  const tab = R.mount(() => hook.useDriveSync({ returnContext: () => ({ screen: "roster", characterId: null }) }));
+  const tab = R.mount(() => hook.useDriveSync());
   return { tab, store: roster.rosterStore(), storage };
 };
 
@@ -374,7 +374,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
 
   test("reconnecting with the wrong account keeps the right account's credential", async () => {
     enableWith("x@test", null, "cred-x");
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&code=C1";
     tokenService = (path) =>
       path === "/v1/exchange" ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" }) : jsonRes(200, { access_token: "at-r", expires_in: 3600 });
@@ -417,7 +417,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
   });
 
   test("coming back from Google with an answer for an older sign-in (another tab started a newer one): said, and the newer one is kept", async () => {
-    const newer = { state: "S2", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "w".repeat(43) };
+    const newer = { state: "S2", at: Date.now(), verifier: "w".repeat(43) };
     ls.setItem(RETURN_KEY, JSON.stringify(newer));
     win.location.search = "?state=S1&code=C1"; // this tab's sign-in, overwritten by the other tab's
     const { tab } = await openTab();
@@ -430,7 +430,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
   });
 
   test("a failed return from Google (permission refused) reopens the window with the reason", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&code=C1";
     tokenService = (path) => (path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: "openid email" }) : jsonRes(500, {}));
     const { tab } = await openTab();
@@ -513,7 +513,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
   });
 
   test("cancelling on Google's page is a notice, not an error, and the window says it", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&error=access_denied";
     const { tab } = await openTab();
     await settle(100);
@@ -562,7 +562,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
 // ── helpers for the tests below ──
 const syncFileHas = (account: string, text: string) => [...(drives[account]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes(text));
 const codeReturn = (state: string) => {
-  ls.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+  ls.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), verifier: "v".repeat(43) }));
   win.location.search = `?state=${state}&code=C-${state}`;
 };
 
@@ -656,7 +656,7 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
   });
 
   test("after a failed return from Google the window shows once: once closed, it stays closed", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&error=access_denied";
     const { tab } = await openTab();
     await settle(100);
@@ -668,7 +668,7 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
 
   test("cancelling a reconnect says sync is still stopped (not that it didn't turn on)", async () => {
     enableWith("x@test", null, null);
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), ctx: { screen: "roster", characterId: null }, verifier: "v".repeat(43) }));
+    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&error=access_denied";
     const { tab } = await openTab();
     await settle(100);

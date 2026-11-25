@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DraftContext } from "./sheet/draftContext";
 import { Box, Flex, HStack, IconButton, Spacer, Text } from "@chakra-ui/react";
 import { EditIcon, ArrowUpIcon, ArrowBackIcon } from "@chakra-ui/icons";
@@ -19,8 +19,6 @@ interface AppShellProps {
   onEdit: () => void; // open the full-screen creator in edit mode
   onLevelup: () => void; // open it in level-up mode
   onPatchRecord: (record: CharacterRecord, base: CharacterRecord) => void; // persist play-state edits (vitals…); base = the version they were made from
-  restore?: { view?: "sheet" | "compendium"; compTab?: number }; // back from a Google round trip
-  onPlace?: (view: "sheet" | "compendium", compTab: number) => void; // where the user is, for that round trip
 }
 
 const SIDE = { base: "12px", md: "16px" }; // base matches the compendium's merged mobile bar
@@ -36,12 +34,9 @@ const ActBtn: React.FC<{ onClick: () => void; icon: React.ReactNode; accent?: bo
   </Box>
 );
 
-export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLevelup, onPatchRecord, restore, onPlace }) => {
-  const [view, setView] = useState<"sheet" | "compendium">(() => restore?.view ?? "sheet");
-  const [compTab, setCompTab] = useState(() => restore?.compTab ?? 0);
-  useEffect(() => {
-    onPlace?.(view, compTab);
-  }, [view, compTab, onPlace]);
+export const AppShell: React.FC<AppShellProps> = ({ record, onBack, onEdit, onLevelup, onPatchRecord }) => {
+  const [view, setView] = useState<"sheet" | "compendium">("sheet");
+  const [compTab, setCompTab] = useState(0);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [weaponModal, setWeaponModal] = useState<WeaponModalState | null>(null);
 

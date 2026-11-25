@@ -5,7 +5,6 @@ import {
   DriveAuthError,
   DriveFullError,
   RedirectOutcome,
-  ReturnContext,
   TokenServiceError,
   beginConnect,
   consumeRedirectResult,
@@ -96,10 +95,6 @@ export interface DriveNote {
   seq: number;
 }
 
-export interface DriveSyncOptions {
-  returnContext: () => ReturnContext; // where to come back to after Google's consent page
-}
-
 const AUTO_DELAY_MS = 2000;
 const FOREGROUND_MIN_GAP_MS = 20_000;
 const RETRY_MS = 2000; // a round asked for while a failing one was running
@@ -163,7 +158,7 @@ const hasAccess = (): boolean => validToken() !== null || hasCredential();
 
 const verifiedTokens = new Set<string>();
 
-export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
+export function useDriveSync(): DriveSyncApi {
   const available = driveSyncAvailable();
   const service = tokenServiceAvailable();
   const roster = useSyncExternalStore(store.subscribe, store.getState);
@@ -205,8 +200,6 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
   const retryDelay = useRef(RETRY_FIRST_MS);
   const enabledRef = useRef(settings.enabled);
   enabledRef.current = settings.enabled;
-  const optsRef = useRef(opts);
-  optsRef.current = opts;
   const [hop, setHopState] = useState<DriveHop>(() => (back ? "backSyncing" : null));
   const [needsUpdate, setNeedsUpdate] = useState(false);
   const [driveFull, setDriveFull] = useState(false);
@@ -409,7 +402,7 @@ export function useDriveSync(opts: DriveSyncOptions): DriveSyncApi {
       );
       return;
     }
-    void beginConnect(optsRef.current.returnContext(), loadDriveSettings().email, backups).then((r) => {
+    void beginConnect(loadDriveSettings().email, backups).then((r) => {
       if (r === true) return;
       setNote(
         r === "insecure"

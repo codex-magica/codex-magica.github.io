@@ -8,14 +8,11 @@ import { UpdateBanner } from "./UpdateBanner";
 import { DriveHopNotice } from "./DriveHopNotice";
 import { CharacterTrouble, ErrorBoundary } from "./ErrorBoundary";
 import { exportBackupFile, exportRecordFile } from "../state/transfer";
-import { captureScroll, restoreScroll } from "./scrollMemory";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { useDriveSync } from "../state/useDriveSync";
 import { rosterStore } from "../state/rosterStore";
-import { ReturnContext, consumeRedirectResult } from "../state/googleDrive";
-import { TABS } from "./compendiumData";
 import { createBlankRecord } from "../state/storage";
 import { refreshStatusTint } from "./statusTint";
 import { CharacterRecord } from "../model/character";
@@ -55,36 +52,14 @@ export const RootApp: React.FC = () => {
     window.addEventListener("pageshow", onShow);
     return () => window.removeEventListener("pageshow", onShow);
   }, []);
-  // back from Google's consent page (turning Drive sync on, or reconnecting): land on the screen, tab
-  // and scroll position the user was on (read once; later screens open normally)
-  const [back] = useState<ReturnContext | null>(() => {
-    const o = consumeRedirectResult();
-    if (o.kind === "none" || !o.ctx) return null;
-    const compTab = o.ctx.compTab !== undefined && TABS[o.ctx.compTab] ? o.ctx.compTab : undefined; // a stale/odd value can't open an empty page
-    return { ...o.ctx, compTab };
-  });
-  const restore = useRef(back);
-  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">(() =>
-    back && (back.screen !== "sheet" || (back.characterId && roster.get(back.characterId))) ? back.screen : "roster"
-  );
-  const [currentId, setCurrentId] = useState<string | null>(() => back?.characterId ?? null);
-  useEffect(() => {
-    restore.current = null;
-    if (back?.scroll) restoreScroll(back.scroll);
-  }, [back]);
-  // where inside the current screen the user is (sheet or its compendium, compendium tab)
-  const inner = useRef<{ view?: "sheet" | "compendium"; compTab?: number }>({});
+  // The app starts on the roster, also when coming back from Google's consent page: the sync window,
+  // where that trip starts, is there.
+  const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
+  const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
-  const where = useRef({ screen, characterId: currentId });
-  where.current = { screen, characterId: currentId };
-  const go = (s: typeof screen) => {
-    inner.current = {};
-    setScreen(s);
-  };
+  const go = (s: typeof screen) => setScreen(s);
   // optional Google Drive sync (absent without a client ID)
-  const drive = useDriveSync({
-    returnContext: () => ({ ...where.current, ...inner.current, scroll: captureScroll() }),
-  });
+  const drive = useDriveSync();
   // "sync stopped" card: for the other screens; the roster says it at the top already (and seeing that
   // counts as having seen it)
   const hop = drive.hop === "lost" && screen === "roster" ? null : drive.hop;
@@ -132,10 +107,6 @@ export const RootApp: React.FC = () => {
         <ErrorBoundary key={current.id} fallback={(error) => <CharacterTrouble error={error} onBack={() => go("roster")} onExport={() => void exportRecordFile(current)} />}>
         <AppShell
           record={current}
-          restore={restore.current ?? undefined}
-          onPlace={(view, compTab) => {
-            inner.current = { view, compTab };
-          }}
           onBack={() => go("roster")}
           onEdit={() => editChar(current.id)}
           onLevelup={() => setCreator({ mode: "levelup", record: current })}
@@ -144,10 +115,6 @@ export const RootApp: React.FC = () => {
         </ErrorBoundary>
       ) : screen === "compendium" ? (
         <CompendiumScreen
-          initialTab={restore.current?.compTab}
-          onTab={(compTab) => {
-            inner.current = { compTab };
-          }}
           onExit={() => go("roster")}
         />
       ) : (

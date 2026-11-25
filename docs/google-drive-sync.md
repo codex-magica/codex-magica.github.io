@@ -13,7 +13,7 @@ Without one, the app stays local-only and never contacts Google. The token servi
 
 - The **Google Drive** button on the roster opens a short explanation, a switch for **daily backups** (on by
   default) and a **Bekapcsolás** (turn on) button. It takes the player to Google's consent page and back to
-  the same screen. Google asks for `drive.appdata` (a hidden folder in the user's Drive that only this app can
+  the roster. Google asks for `drive.appdata` (a hidden folder in the user's Drive that only this app can
   see; it can't read any other file) and the email address. (Without a token service: Google's popup.)
 - **One file per device.** Each device keeps its own file in that folder (`codex-magica-sync.<device>.json`)
   and is the only one that ever writes it, so two devices can never overwrite each other's work. A sync round
