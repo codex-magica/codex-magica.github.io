@@ -140,6 +140,51 @@ fake Google and token service (retries, renewals, the return from the consent pa
 in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts` and `activeTab.test.ts`
 cover the Drive client, the status texts and the one-tab rule.
 
+## Scope and deliberate limitations
+
+Read this before changing the sync. The rule it serves: **no edit is ever silently lost, a deletion never
+silently comes back (except that an edit made in parallel with it wins, by design), and sync never stops
+without the player being told.** Everything below is a deliberate choice made to keep the code small
+enough to get that right. Several of these were supported once and removed (late 2026) because they
+caused most of the bugs; don't bring one back without a strong reason and tests for it.
+
+What it is built for: one player, a handful to a few dozen characters (a few kilobytes each), a few
+devices (phone, tablet, laptop), each running the app in one browser tab, often offline at the table.
+
+Deliberately not covered (and what happens instead):
+
+- **Several tabs at once.** The app runs in one tab at a time (`activeTab.ts`, a Web Lock); another tab
+  shows "open in another tab" with a button to continue there. Only the tab in use syncs. There is no
+  coordination of sync rounds across tabs. Browsers without Web Locks (older than the build target, or
+  with site data blocked) run every tab, and saving stays safe there (every change re-reads what's saved),
+  but two tabs syncing at once may cause an extra "(másik változat)" or a false clone detection.
+- **Storage full or blocked.** Memory is always what's saved: a change that can't be saved is not made,
+  and a banner says so (with Exportálás) until saving works again. There are no memory-only edits and
+  nothing is parked across page changes. Deleting a character still works (it's how to make room).
+- **No token service, no sync.** Sync needs both `VITE_GOOGLE_CLIENT_ID` and `VITE_TOKEN_SERVICE_URL`.
+  There is no popup sign-in fallback.
+- **The account is checked once, at sign-in** (the email in Google's ID token, passed on by the token
+  service). Renewals are assumed to be for the same account, which holds because a refresh token belongs
+  to one account. Changing accounts means turning sync off and on (the characters then go to the new
+  account's Drive as well; nothing moves between Drives).
+- **Turning sync off is per device.** Nothing is revoked at Google; withdrawing access everywhere is done in
+  the Google account. A tab taken over while it is finishing sign-in keeps nothing (sign in again).
+- **After Google's consent page the app always comes back to the roster**, where the trip starts.
+- **No live updates.** Drive has no change events and the app doesn't poll on a timer: another device's
+  changes arrive when this one syncs (2 seconds after an edit here, coming back to the foreground, back
+  online, or "Szinkronizálás most"). An app left open and untouched doesn't pick them up.
+- **Parallel edits are not merged field by field.** Both versions are kept, one as "(másik változat)",
+  and the player deletes the one they don't want. An edit made in parallel with a deletion wins.
+- **A copied browser** (data restored onto a second device) is detected by the marks in its sync file and
+  moves to a new device id; it is not detected on the first round after sync was turned off and on.
+- **Nothing in Drive is ever cleaned up automatically:** daily backups, deletion markers, files of device
+  ids that are no longer used, and copies of unreadable files all stay (they are small). The player can
+  delete the app's data in Drive's settings.
+- **Drive data from a newer app version** stops sync until this device updates (it says so). **Google
+  storage full** pauses sync, with a message, until there is room; rounds keep being retried slowly.
+- **Whole-file rewrites.** Each device's file holds all its characters and is rewritten when anything
+  changes; fine for dozens of characters, not designed for thousands.
+
 ## Why this approach
 
 Browser-only apps get a one-hour access token and no refresh token: a refresh token needs the client

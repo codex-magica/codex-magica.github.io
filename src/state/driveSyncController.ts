@@ -10,6 +10,10 @@
 // - Only if Google withdrew the permission (revoked in the Google account, or unused for months) does the
 //   player have to reconnect, with a tap.
 // - One round at a time; a round asked for meanwhile runs right after.
+//
+// Scope: several cases are deliberately not handled (several tabs syncing at once, edits that can't be
+// saved locally, sign-in without the token service, live updates, …): see "Scope and deliberate
+// limitations" in docs/google-drive-sync.md before adding to this.
 
 import {
   BackupMeta,
