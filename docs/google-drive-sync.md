@@ -110,8 +110,10 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   the player tries again): if another account answers, nothing it gave is kept and the right account's
   credential stays (the other account's permission stays in that account, which may
   sync a roster of its own elsewhere).
-- **Account check.** Every new token is checked against the account sync was set up with; a different
-  account is refused with an explanation, so characters never merge into someone else's Drive.
+- **Account check.** At sign-in, the token service passes on the account's email from Google's ID token,
+  and the app checks it against the account sync was set up with: a different account is refused with an
+  explanation (nothing it gave is kept), so characters never merge into someone else's Drive. Renewals
+  need no check: a refresh token belongs to one account.
 - **Kikapcsolás** (turn off) affects that device only: it forgets the token and the credential there, and
   revokes nothing at Google, because revoking removes the whole permission and would disconnect the player's
   other devices too. To withdraw access everywhere, the player removes the app in their Google account
@@ -124,7 +126,8 @@ saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflic
 selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, backups, write),
 `driveSyncRound.ts` (a round with this device's saved sync state, clone handling), `syncState.ts` (what's
 published, nonces, settings), `googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive
-calls), `useDriveSync.ts` (when to sync, what to tell the player), `driveStatus.ts` (the status texts),
+calls), `driveSyncController.ts` (when to sync, connecting, what to tell the player; no React),
+`useDriveSync.ts` (the screens' view of it), `driveStatus.ts` (the status texts),
 `activeTab.ts` (one tab at a time), `transfer.ts` (export and import files); `src/ui/DriveSyncModal.tsx`,
 `DriveHopNotice.tsx`, `TabGate.tsx`; the token service in `worker/src/index.ts` (tested in
 `worker/src/index.test.ts`).

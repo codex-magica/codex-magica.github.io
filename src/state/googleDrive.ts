@@ -62,36 +62,6 @@ export const forgetToken = (only?: string): void => {
   }
 };
 
-// The signed-in account's email (needs the `email` scope). Null if Google doesn't say (network trouble).
-// A token Google refuses (revoked from another device, say) is forgotten, and DriveAuthError thrown, so
-// the caller renews it instead of retrying a dead token until it expires.
-export const fetchAccountEmail = async (token: string): Promise<string | null> => {
-  let res: Response;
-  // a hung request mustn't hold up every later round: give up and try again next time
-  const ctl = typeof AbortController === "function" ? new AbortController() : null;
-  const timer = ctl ? setTimeout(() => ctl.abort(), SERVICE_TIMEOUT_MS) : undefined;
-  try {
-    res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${token}` }, signal: ctl?.signal });
-  } catch {
-    clearTimeout(timer);
-    return null;
-  }
-  if (res.status === 401) {
-    clearTimeout(timer);
-    forgetToken(token);
-    throw new DriveAuthError("token expired");
-  }
-  try {
-    if (!res.ok) return null;
-    const info = (await res.json()) as { email?: unknown };
-    return typeof info.email === "string" ? info.email : null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
-};
-
 // ── the long-term credential ─────────────────────────────────────────────────────────────────────────
 // Opaque to the app: the refresh token, encrypted by the token service with a key only it has.
 const loadCredential = (): string | null => {
@@ -263,11 +233,17 @@ export interface Connection {
   token: string;
   expiresIn: number;
   credential: string | null;
+  email: string | null; // the account, from the sign-in (the exchange only): checked once, there
 }
 const parseAnswer = (data: Record<string, unknown>): Connection => {
   const token = typeof data.access_token === "string" ? data.access_token : null;
   if (!token) throw new TokenServiceError("no token");
-  return { token, expiresIn: typeof data.expires_in === "number" ? data.expires_in : 3600, credential: typeof data.credential === "string" ? data.credential : null };
+  return {
+    token,
+    expiresIn: typeof data.expires_in === "number" ? data.expires_in : 3600,
+    credential: typeof data.credential === "string" ? data.credential : null,
+    email: typeof data.email === "string" && data.email ? data.email : null,
+  };
 };
 // Store what the token service gave (after the account was checked, for a new connection).
 export const keepConnection = (c: Connection): void => {

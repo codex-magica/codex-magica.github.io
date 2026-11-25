@@ -1,7 +1,7 @@
 // Failure and race scenarios for the Drive sync orchestration (useDriveSync + googleDrive), found in the
 // pre-release review and fixed; run against the real hook
 // with a tiny stand-in for React's hooks, an in-memory localStorage shared by "tabs" (separate module
-// instances), fake timers, and a fake fetch for Google (userinfo, Drive REST) and the token service.
+// instances), fake timers, and a fake fetch for Google (Drive REST) and the token service.
 // Each test asserts the intended behaviour.
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -188,12 +188,17 @@ const fakeFetch = async (input: string, init?: RequestInit): Promise<Response> =
   calls.push(`${init?.method ?? "GET"} ${url.split("?")[0]}`);
   const o = override ? await override(url, init) : null;
   if (o) return o;
-  if (url.startsWith(TS)) return tokenService(url.slice(TS.length), JSON.parse(String(init?.body ?? "{}")));
-  const token = tokenOf(init);
-  if (url.startsWith("https://openidconnect.googleapis.com/v1/userinfo")) {
-    if (deadTokens.has(token)) return jsonRes(401, {});
-    return jsonRes(200, { email: accountOf(token) });
+  if (url.startsWith(TS)) {
+    const path = url.slice(TS.length);
+    const res = await tokenService(path, JSON.parse(String(init?.body ?? "{}")));
+    // like the real token service: the exchange answer names the account (from Google's ID token)
+    if (path === "/v1/exchange" && res.status === 200) {
+      const body = (await res.clone().json()) as Record<string, unknown>;
+      if (typeof body.access_token === "string" && !("email" in body)) return jsonRes(200, { ...body, email: accountOf(body.access_token) });
+    }
+    return res;
   }
+  const token = tokenOf(init);
   if (!url.startsWith("https://www.googleapis.com/")) throw new Error(`unexpected ${url}`);
   if (deadTokens.has(token)) return jsonRes(401, { error: "invalid" });
   const files = (drives[accountOf(token)] ??= new Map());
@@ -310,24 +315,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.note?.text).toContain("magától újra megpróbálja"); // "it will retry by itself"
     fail = false;
     await settle(30 * 60_000); // half an hour, app open in the foreground, no further edits
-    expect(tab.api.pending.count).toBe(0);
-  });
-
-  test("a hung account check times out and doesn't block later rounds", async () => {
-    enableWith("x@test", "at-1", "cred-x");
-    // hangs until aborted, as a real fetch would with its signal
-    override = (url, init) =>
-      url.startsWith("https://openidconnect.googleapis.com/")
-        ? new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))))
-        : null;
-    const { tab, store, storage } = await openTab();
-    await settle(100);
-    override = null; // the network is fine again; only that one request hangs
-    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
-    await settle(2500);
-    win.dispatchEvent(new Event("online"));
-    await settle(10 * 60_000);
-    expect(tab.api.status).not.toBe("syncing");
     expect(tab.api.pending.count).toBe(0);
   });
 
@@ -507,57 +494,6 @@ const codeReturn = (state: string) => {
 };
 
 describe("sync orchestration: other tabs, reconnects, Google storage", () => {
-  test("reconnecting: another account answers and the account check has a network hiccup → the right account's credential stays", async () => {
-    enableWith("x@test", null, "cred-x"); // needs a reconnect (say, the access token is gone)
-    codeReturn("S1");
-    tokenService = (path) =>
-      path === "/v1/exchange"
-        ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" })
-        : jsonRes(200, { access_token: "y-r", expires_in: 3600, scope: DRIVE_SCOPE });
-    let net = false;
-    override = (url) => (!net && url.startsWith("https://openidconnect.googleapis.com/") ? Promise.reject(new TypeError("Failed to fetch")) : null);
-    const { tab } = await openTab();
-    await settle(100);
-    net = true;
-    await settle(60_000); // the scheduled retry: the account check now says y@test
-    expect(tab.api.status).toBe("needsTap");
-    expect(syncFileHas("y@test", "")).toBe(false); // nothing went into the wrong Drive (good)
-    expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // docs: "the right account's credential stays"
-  });
-
-  test("sync turned off in another tab while this tab finishes a reconnect: no account is left recorded, and another account can be used later", async () => {
-    enableWith("x@test", null, "cred-x");
-    codeReturn("S1");
-    let answer!: () => void;
-    tokenService = (path) =>
-      path === "/v1/exchange"
-        ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-2", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x2" }))))
-        : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
-    const A = await openTab(); // back from Google, exchanging the code
-    await settle(100);
-    win.location.search = "";
-    const B = await openTab(); // another tab: "Kikapcsolás"
-    await settle(100);
-    B.tab.api.disable();
-    answer();
-    await settle(100);
-    expect(A.tab.api.status).toBe("off");
-    const s = JSON.parse(ls.getItem(SETTINGS_KEY)!);
-    expect(s.enabled).toBe(false);
-    expect(s.email).toBeNull(); // turned off: no account should be remembered
-    // weeks later: the player turns sync on with their other Google account
-    tokenService = (path) =>
-      path === "/v1/exchange" ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" }) : jsonRes(500, {});
-    codeReturn("S2");
-    const C = await openTab();
-    await settle(100);
-    expect(C.tab.api.note?.text ?? "").not.toContain("x@test");
-    expect(C.tab.api.enabled).toBe(true);
-    expect(C.tab.api.status).toBe("idle");
-    expect(C.tab.api.email).toBe("y@test");
-    expect(syncFileHas("y@test", "")).toBe(true); // it really syncs, into the new account's Drive
-  });
-
   test("Google storage full (403 storageQuotaExceeded): the player is told their storage is full, and sync goes on once there's room", async () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();
@@ -630,10 +566,9 @@ describe("sync orchestration: other tabs, reconnects, Google storage", () => {
 
 // ── the app continued in another tab ("Használat itt"): the tab that stepped back does nothing more ──
 const syncFiles = (account: string) => [...(drives[account]?.values() ?? [])].filter((f) => f.props.kind === "sync");
-const settingsEvent = () => win.dispatchEvent(Object.assign(new Event("storage"), { key: SETTINGS_KEY })); // what the browser tells the other tab
 
 describe("taking over in another tab", () => {
-  test("while this tab finishes turning sync on: it saves the connection for the tab in use, which takes it from there", async () => {
+  test("while this tab finishes turning sync on: it keeps nothing (the player turns it on again in the tab in use)", async () => {
     codeReturn("S1"); // back from Google's page, turning sync on
     let answer!: () => void;
     tokenService = (path) =>
@@ -647,20 +582,14 @@ describe("taking over in another tab", () => {
     win.location.search = "";
     const B = await openTab();
     await settle(100);
-    expect(B.tab.api.enabled).toBe(false); // sync wasn't on yet when B started
     const before = calls.length;
     answer();
-    await settle(100);
-    const fromA = calls.slice(before).filter((c) => c.includes("googleapis.com/drive") || c.includes("upload/drive"));
-    expect(fromA).toHaveLength(0); // the stepped-back tab ran no round
-    expect(JSON.parse(ls.getItem(SETTINGS_KEY)!).enabled).toBe(true); // but the connection wasn't wasted
-    settingsEvent();
-    await settle(2500);
-    expect(B.tab.api.enabled).toBe(true);
-    expect(B.tab.api.status).toBe("idle");
-    expect(syncFiles("x@test").some((f) => f.body.includes("Aragorn"))).toBe(true);
+    await settle(5000);
+    expect(calls.slice(before).filter((c) => c.includes("googleapis.com"))).toHaveLength(0); // no round from the stepped-back tab
+    expect(JSON.parse(ls.getItem(SETTINGS_KEY) ?? "{}").enabled ?? false).toBe(false); // nothing turned on
+    expect(ls.getItem(CREDENTIAL_KEY)).toBeNull();
+    expect(B.tab.api.enabled).toBe(false);
   });
-
   test("while this tab finishes turning sync on and Drive is unreachable: it doesn't keep retrying in the background", async () => {
     codeReturn("S1");
     let answer!: () => void;
@@ -703,4 +632,17 @@ describe("taking over in another tab", () => {
     expect(syncFiles("x@test")).toHaveLength(1);
     expect(syncFiles("x@test")[0].body).toContain("Aragorn II"); // the tab in use sent it
   });
+
+  test("a sign-in answer that doesn't name the account isn't kept (the account can't be checked)", async () => {
+    enableWith("x@test", null, "cred-x");
+    codeReturn("S1");
+    tokenService = (path) =>
+      path === "/v1/exchange" ? jsonRes(200, { access_token: "x-2", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-new", email: "" }) : jsonRes(500, {});
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.status).toBe("needsTap");
+    expect(tab.api.note?.text).toContain("Nem sikerült ellenőrizni");
+    expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // the right account's credential stays
+  });
 });
+

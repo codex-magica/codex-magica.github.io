@@ -60,7 +60,8 @@ describe("token service", () => {
   });
 
   test("exchange: the code becomes an access token and an encrypted credential", async () => {
-    const g = google({ exchange: [200, { access_token: "at-1", expires_in: 3599, scope: `${DRIVE} openid email`, refresh_token: "rt-1", id_token: "x.y.z" }] });
+    const idToken = `h.${btoa(JSON.stringify({ email: "player@example.com", sub: "1" })).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_")}.sig`;
+    const g = google({ exchange: [200, { access_token: "at-1", expires_in: 3599, scope: `${DRIVE} openid email`, refresh_token: "rt-1", id_token: idToken }] });
     const res = await handle(post("/v1/exchange", { code: "c-1", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch);
     expect(res.status).toBe(200);
     const body = await json(res);
@@ -70,6 +71,7 @@ describe("token service", () => {
     expect(JSON.stringify(body)).not.toContain("rt-1"); // the refresh token itself never leaves the Worker
     expect(JSON.stringify(body)).not.toContain("the-client-secret");
     expect(body).not.toHaveProperty("id_token");
+    expect(body.email).toBe("player@example.com"); // for the app's one account check
     expect((await openCredential(env(), body.credential as string))?.secret.rt).toBe("rt-1");
     // Google got the secret, the PKCE verifier and the exact redirect
     expect(g.calls[0].form).toMatchObject({ grant_type: "authorization_code", code: "c-1", code_verifier: VERIFIER, redirect_uri: `${APP}/`, client_secret: "the-client-secret" });

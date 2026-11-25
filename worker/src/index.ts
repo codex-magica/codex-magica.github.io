@@ -136,12 +136,26 @@ const googlePost = async (doFetch: Fetch, url: string, form: Record<string, stri
 
 const str = (v: unknown, max: number): string | null => (typeof v === "string" && v.length > 0 && v.length <= max ? v : null);
 
-// What the app gets back after a successful exchange or refresh.
-const tokenAnswer = (g: Record<string, unknown>, credential: string | null) => ({
+// The account's email from the ID token Google returns with the code exchange (the `openid email`
+// scopes). It comes straight from Google's token endpoint over TLS, so its signature needn't be checked.
+const emailOf = (idToken: unknown): string | null => {
+  if (typeof idToken !== "string") return null;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(fromB64url(idToken.split(".")[1] ?? ""))) as { email?: unknown };
+    return typeof payload.email === "string" && payload.email ? payload.email : null;
+  } catch {
+    return null;
+  }
+};
+
+// What the app gets back after a successful exchange (with the account's email, so the app can check
+// it once, at sign-in: a renewal can only ever be for the same account) or refresh.
+const tokenAnswer = (g: Record<string, unknown>, credential: string | null, email: string | null = null) => ({
   access_token: g.access_token,
   expires_in: typeof g.expires_in === "number" ? g.expires_in : 3600,
   scope: typeof g.scope === "string" ? g.scope : "",
   ...(credential ? { credential } : {}),
+  ...(email ? { email } : {}),
 });
 
 export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch): Promise<Response> => {
@@ -223,7 +237,7 @@ export const handle = async (request: Request, env: Env, doFetch: Fetch = fetch)
         return reply(200, tokenAnswer(g.body, null), h);
       }
       const credential = rt ? await sealCredential(env, { rt, iat: Date.now() }) : null;
-      return reply(200, tokenAnswer(g.body, credential), h);
+      return reply(200, tokenAnswer(g.body, credential, emailOf(g.body.id_token)), h);
     }
 
     const credential = str(input.credential, 4096);
