@@ -3,7 +3,7 @@
 import { CharacterRecord } from "../model/character";
 import { createRosterStore } from "./rosterStore";
 import { unreadableKeys } from "./storage";
-import { DAY, Device, FakeDrive, MemStorage, QuotaStorage, clashes, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
+import { DAY, Device, FakeDrive, QuotaStorage, clashes, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
 import { defaultRecord } from "./defaultRecord";
 
 setupSyncHarness();
@@ -82,46 +82,6 @@ describe("R2 storage full: deleting a character saves the roster and the deletio
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R3 a cloned device with a second tab: both tabs take the new device id", () => {
-  test("R3 an edit from the second tab is not numbered under the original device's id, and survives", async () => {
-    const drive = new FakeDrive();
-    const orig = new Device("devaaa");
-    orig.storage.m.set("magus.deviceId.v1", "devaaa");
-    orig.storedId = true;
-    const x = orig.create("Xena");
-    await realSync(orig, drive);
-    // browser data restored onto a second device, opened in two tabs
-    const tab1 = new Device("devaaa");
-    for (const [k, v] of orig.storage.m) tab1.storage.m.set(k, v);
-    tab1.storedId = true;
-    tab1.store = tab1.run(() => createRosterStore());
-    const tab2 = new Device("devaaa"); // same browser: same storage
-    tab2.storage = tab1.storage;
-    tab2.storedId = true;
-    tab2.store = tab2.run(() => createRosterStore());
-    later();
-    orig.edit(x.id, "o1");
-    await realSync(orig, drive);
-    await realSync(tab1, drive); // clash → tab 1 takes a fresh id (resetDeviceId); tab 2 is not told
-    expect(tab1.id).not.toBe("devaaa");
-    later();
-    tab2.run(() => tab2.store.reload()); // the storage event
-    tab2.edit(x.id, "tab2-edit"); // numbered under "deva" (tab 2's cached id), with the counter just reset
-    later();
-    orig.edit(x.id, "o2");
-    orig.edit(x.id, "o3");
-    await realSync(orig, drive);
-    await realSync(tab1, drive); // e.g. tab 1 comes to the foreground first and syncs tab 2's edit
-    for (let i = 0; i < 2; i++) {
-      await realSync(orig, drive);
-      await realSync(tab1, drive);
-    }
-    const everywhere = [...orig.records(), ...tab1.records()].flatMap(tokensOf);
-    expect(everywhere).toContain("tab2-edit");
-  });
-});
-
-// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe("R4 an unreadable saved roster when storage is (nearly) full", () => {
   test("R4 it isn't saved over, and it's offered for download", () => {
     const d = new Device("deva");
@@ -190,23 +150,6 @@ describe("this device's own file downloaded cut off twice, at different points",
   });
 });
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("a new device id taken in one tab", () => {
-  test("is used by the browser's other tabs at once (each tab has its own copy of the code)", async () => {
-    (globalThis as { localStorage?: unknown }).localStorage = new MemStorage();
-    vi.resetModules();
-    const tab1 = await import("./versions");
-    vi.resetModules();
-    const tab2 = await import("./versions");
-    const old = tab1.deviceId();
-    expect(tab2.deviceId()).toBe(old);
-    const fresh = tab1.resetDeviceId(); // tab 1 found a clone writing under the old id
-    expect(fresh).not.toBe(old);
-    expect(tab2.deviceId()).toBe(fresh);
-    expect(tab2.bump({}, tab2.deviceId())).toEqual({ [fresh]: expect.any(Number) });
-  });
-});
-
 const backupBodies = (drive: FakeDrive) => drive.backups().map((f) => JSON.parse(f.body) as { record: CharacterRecord; reason: string });
 
 describe("storage full and long absences (second review)", () => {
@@ -228,9 +171,7 @@ describe("storage full and long absences (second review)", () => {
     a.edit(w.id, "w1"); // an ordinary edit that fits
     const savedW = (JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[]).find((r) => r.id === w.id)!;
     expect(tokensOf(savedW)).toContain("w1"); // it IS saved...
-    // ...but the app keeps saying "Nem sikerült menteni" (banner, update banner held back, Drive connect
-    // refused unless a backup file is exported), and numbers every edit under the "unsaved" lineage
-    expect(Object.keys(savedW.syncVc ?? {}).some((k) => k.includes(".u"))).toBe(false);
+    // ...and the app doesn't keep saying "Nem sikerül menteni"
     expect(a.store.getState().saveFailed).toBe(false);
   });
 

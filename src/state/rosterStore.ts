@@ -1,6 +1,6 @@
 // The character roster as one store outside React: the single source of truth for the UI, for import
 // and for the Drive sync. Every change is saved to localStorage synchronously, so what the sync reads
-// is always exactly what's on the device, and another tab's changes arrive through the `storage` event.
+// is always exactly what's on the device.
 //
 // Each local edit is stamped twice:
 //   - `updatedAt`, the edit time (for ordering parallel edits and dating backups),
@@ -10,10 +10,11 @@
 // marker also keeps the character's last state, so it can still be backed up there.
 //
 // Safety rules:
-//   - every change starts from what's saved now (another tab may have changed it), never from a stale
-//     copy in memory;
-//   - an edit made from an older version than the one stored now (an editor stayed open while a sync or
-//     another tab changed the character) is saved next to the newer version, not over it;
+//   - every change starts from what's saved now, never from a stale copy in memory (the app runs in one
+//     tab, see activeTab.ts, but a page brought back from the browser's cache or an older copy of the
+//     app could still have saved meanwhile: re-reading is cheap insurance);
+//   - an edit made from an older version than the one stored now (an editor stayed open while a sync
+//     changed the character) is saved next to the newer version, not over it;
 //   - memory is always what's saved: a change that can't be saved (storage full or blocked) isn't made,
 //     and `saveFailed` says so until a save works again. (Characters take a few kilobytes and browsers
 //     give the app megabytes, so this is for blocked storage and the unexpected, not for everyday use.)
@@ -25,8 +26,6 @@ import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVect
 import { conflictCopyName, reconcile } from "./driveMerge";
 import { deletionAwaitsDrive } from "./syncState";
 
-export { conflictCopyName };
-
 export interface Deletion {
   t: number;
   vc: VersionVector;
@@ -37,7 +36,7 @@ export type Deletions = Record<string, Deletion>;
 export interface RosterState {
   records: CharacterRecord[];
   deletions: Deletions;
-  revision: number; // counts local edits (not sync results or other tabs' changes)
+  revision: number; // counts local edits (not sync results)
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
 }
 
@@ -101,7 +100,7 @@ type Listener = () => void;
 
 export const createRosterStore = () => {
   let state: RosterState = { ...load(), revision: 0, saveFailed: false };
-  // what's saved, as last read or written by this tab: a change elsewhere shows up as a difference
+  // what's saved, as last read or written here: a change from elsewhere shows up as a difference
   let seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
   const listeners = new Set<Listener>();
   const emit = () => listeners.forEach((l) => l());
@@ -155,7 +154,7 @@ export const createRosterStore = () => {
     return saved;
   };
 
-  // Re-read what's saved if another tab changed it.
+  // Re-read what's saved if it changed elsewhere.
   const refresh = (): boolean => {
     const now = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
     if (now.roster === seen.roster && now.deletions === seen.deletions) return false;
@@ -198,7 +197,7 @@ export const createRosterStore = () => {
     },
 
     // `base`: the version the player confirmed deleting (what the dialog showed). If it changed since (a
-    // sync brought another device's edit, or another tab edited it), nothing is deleted and false is
+    // sync brought another device's edit), nothing is deleted and false is
     // returned: a deletion must never swallow an edit the player hasn't seen.
     remove(id: string, base?: CharacterRecord): boolean {
       refresh();
@@ -242,7 +241,7 @@ export const createRosterStore = () => {
     },
 
     // The result of a sync round (not a local edit), applied to the roster as saved NOW: what changed
-    // since the round started (here or in another tab) is kept, see driveMerge.reconcile. False if it
+    // since the round started is kept, see driveMerge.reconcile. False if it
     // couldn't be saved (the round then counts as failed, and is tried again).
     applyRound(snapshot: { records: CharacterRecord[]; deletions: Deletions }, merged: { records: CharacterRecord[]; deletions: Deletions }): boolean {
       refresh();
@@ -267,7 +266,7 @@ export const createRosterStore = () => {
       }
     },
 
-    // re-read what's saved (another tab changed it, or right before a sync round)
+    // re-read what's saved (right before a sync round, or when it changed elsewhere)
     reload(): void {
       if (refresh()) emit();
     },

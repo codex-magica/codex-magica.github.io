@@ -298,29 +298,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect([...(drives["x@test"]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes("Aragorn"))).toBe(true);
   });
 
-  test("grant revoked with two tabs open: the tab whose retry runs after the other forgot the credential asks to reconnect (not stuck on syncing)", async () => {
-    enableWith("x@test", "at-1", "cred-x");
-    // the player removed the app in their Google account: every token and the refresh grant are dead
-    deadTokens.add("at-1");
-    tokenService = (path) => (path === "/v1/token" ? jsonRes(401, { error: "invalid_grant" }) : jsonRes(500, {}));
-    const A = await openTab(); // tab A syncs at start → the token is refused → renew-and-retry in 2 s, status stays "syncing"
-    await settle(100);
-    expect(A.tab.api.status).toBe("syncing");
-    await settle(900);
-    const B = await openTab(); // tab B (opened a second later) renews → invalid_grant → forgets the shared credential
-    await settle(100);
-    expect(B.tab.api.status).toBe("needsTap");
-    await settle(1500); // A's retry: no token, no credential → getToken() null → status kept at "syncing"
-    // every later trigger in A: an edit, coming back online, coming back to the foreground
-    A.store.upsert(A.storage.createBlankRecord("c_b", "Boromir"));
-    await settle(2500);
-    win.dispatchEvent(new Event("online"));
-    await settle(60_000);
-    doc.dispatchEvent(new Event("visibilitychange"));
-    await settle(100);
-    expect(A.tab.api.status).toBe("needsTap");
-  });
-
   test("a failed round (Drive 503) retries by itself and the edit reaches Drive while the app stays open", async () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();

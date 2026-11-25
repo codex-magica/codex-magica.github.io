@@ -103,7 +103,7 @@ const asideKeys = (): string[] => {
 export const unreadableKeys = (): string[] => (stillHeld() ? [...asideKeys(), KEY] : asideKeys());
 // The saved roster couldn't be read and there was no room to keep it aside: it stays where it is, nothing
 // is saved over it (saving reports failure, so the app says so), and it's offered for download like the
-// ones kept aside. Once it's gone from there (downloaded and discarded, or replaced by another tab),
+// ones kept aside. Once it's gone from there (downloaded and discarded, or replaced from elsewhere),
 // saving works again.
 let held: string | null = null;
 const stillHeld = (): boolean => {

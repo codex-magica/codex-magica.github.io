@@ -51,6 +51,7 @@ export interface SyncOutput {
   deletions: Deletions;
   published: Published;
   backedUp: Set<string>;
+  // for tests and diagnostics: characters changed here by another device, copies made
   pulled: number;
   conflictCopies: number;
   copied: string[]; // names of characters kept twice (parallel edits), for the player
@@ -61,7 +62,7 @@ export interface SyncOutput {
 
 // Downloaded files by id and version: a round where nothing changed costs one listing. Only files that
 // read fine are kept; an unreadable one is downloaded again next time.
-export type RunSyncCache = Map<string, { version: string; parsed: ParsedFile; raw?: string }>;
+export type RunSyncCache = Map<string, { version: string; parsed: ParsedFile }>;
 const sharedCache: RunSyncCache = new Map();
 
 const byCreated = (a: DriveFileMeta, b: DriveFileMeta) => (a.createdTime < b.createdTime ? -1 : a.createdTime > b.createdTime ? 1 : a.id < b.id ? -1 : 1);
@@ -80,7 +81,7 @@ const read = async (drive: DriveTransport, f: DriveFileMeta, cache: RunSyncCache
   const parsed: ParsedFile = "json" in body ? parseDeviceFile(body.json) : { ok: false, reason: "unreadable" };
   // keep the original text of anything unreadable, so it can be set aside intact
   const out = { parsed, raw: parsed.ok ? undefined : "raw" in body ? body.raw : JSON.stringify(body.json) };
-  if (parsed.ok) cache.set(f.id, { version: f.version, ...out });
+  if (parsed.ok) cache.set(f.id, { version: f.version, parsed });
   return out;
 };
 
@@ -162,6 +163,5 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
     uploaded = true;
   }
 
-  const published: Published = result.published;
-  return { records: result.records, deletions: result.deletions, published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, copied: result.copied, undeleted: result.undeleted, uploaded, skippedFiles };
+  return { records: result.records, deletions: result.deletions, published: result.published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, copied: result.copied, undeleted: result.undeleted, uploaded, skippedFiles };
 }

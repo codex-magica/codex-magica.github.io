@@ -37,10 +37,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   newer app version stops the round with a "please update" note.
 - **Edits during a round** are kept: the result is reconciled with the roster as it is when the round ends.
   Every edit carries the version it was started from (the creator, the sheet's equipment, companion and
-  condition editors); if the stored version changed since (a sync or another tab), the edit is saved
-  alongside it as "(másik változat)" rather than over it. Every change re-reads what's saved first, so a
-  stale tab can't overwrite another tab's work, and each device numbers its versions from one counter
-  shared by its tabs.
+  condition editors); if the stored version changed since (a sync), the edit is saved alongside it as
+  "(másik változat)" rather than over it. Every change re-reads what's saved first.
 - **Nothing is dropped for being unreadable.** Records from storage or Drive are only repaired, never
   rejected because the rules engine can't compute them today (that may be a bug fixed tomorrow): the
   screen shows "Ezt a karaktert most nem sikerült megnyitni" with export instead. Entries a device can't
@@ -128,7 +126,7 @@ selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, b
 published, nonces, settings), `googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive
 calls), `useDriveSync.ts` (when to sync, what to tell the player), `driveStatus.ts` (the status texts),
 `activeTab.ts` (one tab at a time), `transfer.ts` (export and import files); `src/ui/DriveSyncModal.tsx`,
-`DriveHopNotice.tsx`, `TabGate.tsx`, `scrollMemory.ts`; the token service in `worker/src/index.ts` (tested in
+`DriveHopNotice.tsx`, `TabGate.tsx`; the token service in `worker/src/index.ts` (tested in
 `worker/src/index.test.ts`).
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks

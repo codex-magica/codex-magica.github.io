@@ -19,9 +19,9 @@ const breakDerive = (name: string | null) => ((globalThis as { __breakDerive?: s
 // Each device has its own localStorage and device id and uses the real roster store.
 import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
-import { Version, combine, localVersions, mergeRound, parseDeviceFile, reconcile } from "./driveMerge";
+import { Version, combine, conflictCopyName, localVersions, mergeRound, parseDeviceFile, reconcile } from "./driveMerge";
 import { SyncNewerVersionError } from "./driveSyncEngine";
-import { conflictCopyName, createRosterStore } from "./rosterStore";
+import { createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
 import { forgetSessionNoncesForTests } from "./syncState";
 import { normalizeRecord } from "./storage";

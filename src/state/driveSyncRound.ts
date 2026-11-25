@@ -1,8 +1,8 @@
 // One sync round with this device's saved state: what useDriveSync runs each time (under its lock), and
 // what the tests run too, so they exercise exactly this code.
 //
-// The roster is re-read first (another tab may have changed it); the round's result is applied to what's
-// saved when it ends, so edits made meanwhile (here or in another tab) stay. If another device turns out
+// The roster is re-read first; the round's result is applied to what's saved when it ends, so edits made
+// meanwhile stay. If another device turns out
 // to write under this device's id (browser data copied to a second device), this device takes a new id,
 // keeps its own unpublished edits as its own, and runs again.
 import { DriveTransport } from "./googleDrive";

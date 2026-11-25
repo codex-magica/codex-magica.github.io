@@ -92,7 +92,7 @@ export const fetchAccountEmail = async (token: string): Promise<string | null> =
   }
 };
 
-// ── the long-term credential (only with a token service) ───────────────────────────────────────────
+// ── the long-term credential ─────────────────────────────────────────────────────────────────────────
 // Opaque to the app: the refresh token, encrypted by the token service with a key only it has.
 const loadCredential = (): string | null => {
   try {
@@ -145,7 +145,7 @@ const b64url = (bytes: Uint8Array): string => {
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 };
 
-// Off to Google's consent page (with the token service only). `backups` is passed when turning sync on.
+// Off to Google's consent page. `backups` is passed when turning sync on.
 // If the round trip can't be made safely, it stays and says why: "insecure" (the page isn't on https, so
 // the browser withholds the cryptography the sign-in needs), "storage" (the sign-in couldn't be noted
 // down for the return), or "failed" (anything else).
