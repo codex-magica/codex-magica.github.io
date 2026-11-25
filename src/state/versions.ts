@@ -11,7 +11,6 @@
 export type VersionVector = Record<string, number>;
 
 const DEVICE_KEY = "magus.deviceId.v1";
-const COUNTER_KEY = "magus.vcCounter.v1";
 let sessionId: string | null = null; // only when the id can't be saved
 let testId: string | null = null;
 
@@ -41,8 +40,7 @@ export const setDeviceIdForTests = (id: string | null): void => {
 };
 
 // A fresh id for this browser: used when another device turns out to be writing under the same id
-// (browser data restored from a backup onto a second device). The edit counter stays: numbers only have
-// to be unique per id, and a tab still finishing an edit must not get a number twice.
+// (browser data restored from a backup onto a second device).
 export const resetDeviceId = (): string => {
   sessionId = null;
   testId = null;
@@ -54,25 +52,10 @@ export const resetDeviceId = (): string => {
   return deviceId();
 };
 
-// One counter per device, shared by all its tabs (read and written in the same synchronous step), so a
-// device never gives two different versions the same number, even from two tabs.
-const nextCounter = (atLeast: number): number => {
-  let n = 0;
-  try {
-    n = Number(localStorage.getItem(COUNTER_KEY)) || 0;
-  } catch {
-    /* storage unavailable */
-  }
-  const next = Math.max(n, atLeast) + 1;
-  try {
-    localStorage.setItem(COUNTER_KEY, String(next));
-  } catch {
-    /* storage unavailable: the in-version count still increases */
-  }
-  return next;
-};
-
-export const bump = (vc: VersionVector | undefined, device: string): VersionVector => ({ ...vc, [device]: nextCounter(vc?.[device] ?? 0) });
+// This device's next edit of a character: one more than its count in the version the edit was made from.
+// Every change starts from what's saved (rosterStore re-reads it first), so a character's versions from
+// this device are numbered in order, never twice the same.
+export const bump = (vc: VersionVector | undefined, device: string): VersionVector => ({ ...vc, [device]: (vc?.[device] ?? 0) + 1 });
 
 export const join = (a: VersionVector, b: VersionVector): VersionVector => {
   const out: VersionVector = { ...a };
