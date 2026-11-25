@@ -214,12 +214,16 @@ export const createRosterStore = () => {
       };
       const i = state.records.findIndex((r) => r.id === record.id);
       let records = i < 0 ? [...state.records, stamped] : state.records.map((r, j) => (j === i ? stamped : r));
-      // the editor started from a version a sync has replaced meanwhile: that one is kept as an alternative
-      const altId = prev ? `${record.id}~${contentHash(prev).slice(0, 10)}` : "";
-      if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped) && !find(altId))
-        records = [...records, { ...prev, id: altId, name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, me), syncCvc: undefined }];
       const deletions = { ...state.deletions };
       delete deletions[record.id];
+      // the editor started from a version a sync has replaced meanwhile: that one is kept as an alternative
+      // (outranking an earlier answer that dropped an alternative with the same content: this is new)
+      const altId = prev ? `${record.id}~${contentHash(prev).slice(0, 10)}` : "";
+      if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped) && !find(altId)) {
+        const dropped = deletions[altId];
+        records = [...records, { ...prev, id: altId, name: conflictCopyName(prev.name), updatedAt: nextStamp(Math.max(prev.updatedAt ?? 0, dropped?.t ?? 0)), syncVc: bump(dropped?.vc ?? {}, me), syncCvc: undefined }];
+        delete deletions[altId];
+      }
       commit(records, deletions, true);
     },
 
@@ -278,11 +282,11 @@ export const createRosterStore = () => {
         records = records.map((r) =>
           r.id === mainId ? { ...clone(chosen), id: mainId, name: plainName(chosen.name), updatedAt: nextStamp(Math.max(main.updatedAt ?? 0, chosen.updatedAt ?? 0)), syncVc: bump(main.syncVc, me), syncCvc: undefined } : r
         );
-      else if (keep === mainId)
+      else if (keep !== mainId) return;
+      if (keep === mainId || keep === "both")
         // a choice too (with the content as it is): another device choosing differently at the same time
         // meets it as a parallel edit, and the player is asked again, instead of one choice silently winning
         records = records.map((r) => (r.id === mainId ? { ...r, updatedAt: nextStamp(r.updatedAt), syncVc: bump(r.syncVc, me), syncCvc: undefined } : r));
-      else return;
       commit(records, deletions, true);
     },
 

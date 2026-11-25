@@ -150,7 +150,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
   };
 
   const handleBackup = () => {
-    void exportBackupFile(records).then((saved) => {
+    void exportBackupFile(rosterStore().getState().records).then((saved) => { // (with the versions a conflict question waits on)
       if (saved) setLastBackupAt(loadLastBackupAt());
     });
   };

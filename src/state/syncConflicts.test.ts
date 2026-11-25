@@ -1,6 +1,6 @@
 // A character changed differently on two devices: the other version waits as an alternative (not
 // listed), the player picks which one stays, and the choice reaches every device.
-import { conflictsOf, listedRecords } from "./rosterStore";
+import { conflictsOf, createRosterStore, listedRecords } from "./rosterStore";
 import { Device, FakeDrive, later, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
 
 setupSyncHarness();
@@ -125,5 +125,99 @@ describe("a conflict over content the player already dropped once", () => {
       const [c] = conflictsOf(d.records());
       expect(c?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]);
     }
+  });
+});
+
+const everywhere = (d: Device) => d.records().flatMap(tokensOf);
+const setText = (d: Device, id: string, text: string) =>
+  d.run(() => {
+    const r = d.records().find((v) => v.id === id)!;
+    d.store.upsert({ ...r, inventoryText: text }, r);
+  });
+
+describe("an alternative made by an editor's save, on an id an earlier answer dropped", () => {
+  test("B re-makes content A dropped; A's open creator saves over it: B's edit is kept as an alternative (sync + reload)", async () => {
+    const { drive, a, b, x } = await parallelEdits(); // Xena: b1, alternative a1
+    later();
+    a.run(() => a.store.resolveConflict(x.id, x.id)); // on A the player keeps b1 (the a1 alternative is deleted here)
+    await settle(drive, a, b);
+    const opened = a.records().find((r) => r.id === x.id)!; // A's creator opens Xena (b1)
+    later();
+    setText(b, x.id, "Xena#0\na1"); // B: ÉP back to the same value, a fresh edit (exactly the content A dropped)
+    await settle(drive, b, a); // A gets B's edit while the creator is open
+    later();
+    a.run(() => a.store.upsert({ ...opened, inventoryText: `${opened.inventoryText}\neditor` }, opened)); // the creator saves
+    // the safety net works for a moment: B's version waits as an alternative...
+    expect(conflictsOf(a.records())[0]?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]);
+    // ...but its vector is {deva: 1}, below A's own deletion marker of the same id ({~id: n, deva: 1})
+    a.store = a.run(() => createRosterStore()); // a reload
+    const afterReload = conflictsOf(a.records()).length;
+    await settle(drive, a, b);
+    expect({ afterReload, a: everywhere(a).includes("a1"), b: everywhere(b).includes("a1") }).toEqual({ afterReload: 1, a: true, b: true });
+  });
+
+  test("the same without a reload: the next round keeps it", async () => {
+    const { drive, a, b, x } = await parallelEdits();
+    later();
+    a.run(() => a.store.resolveConflict(x.id, x.id));
+    await settle(drive, a, b);
+    const opened = a.records().find((r) => r.id === x.id)!;
+    later();
+    setText(b, x.id, "Xena#0\na1");
+    await settle(drive, b, a);
+    later();
+    a.run(() => a.store.upsert({ ...opened, inventoryText: `${opened.inventoryText}\neditor` }, opened));
+    await settle(drive, a, b);
+    expect({ a: everywhere(a).includes("a1"), b: everywhere(b).includes("a1"), asked: conflictsOf(b.records()).length }).toEqual({ a: true, b: true, asked: 1 });
+  });
+
+  test("same device: a sheet editor open on Xena while the player picks the other version in the popup; the editor's save keeps it as a question", async () => {
+    const { drive, a, b, x } = await parallelEdits(); // A shows b1
+    const opened = a.records().find((r) => r.id === x.id)!; // a sheet editor (draft) opens on b1
+    const alt = conflictsOf(a.records())[0].alternatives[0];
+    later();
+    a.run(() => a.store.resolveConflict(x.id, alt.id)); // the popup (over the sheet): the player picks a1
+    await a.sync(drive); // the round 2 s later publishes the deletion of the alternative
+    later();
+    // the editor saves its draft (made from b1) on top of what's on screen now (AppShell.patch: {...record, field}, base = draftBase)
+    a.run(() => {
+      const cur = a.records().find((r) => r.id === x.id)!;
+      a.store.upsert({ ...cur, inventoryText: `${opened.inventoryText}\neditor` }, opened);
+    });
+    expect(conflictsOf(a.records())[0]?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]); // asked again, for now
+    await settle(drive, a, b);
+    // the version the player just picked (a1) must not vanish without an answer
+    expect({ a: everywhere(a).includes("a1"), b: everywhere(b).includes("a1") }).toEqual({ a: true, b: true });
+  });
+});
+
+describe("two devices answering differently, one of them 'keep both'", () => {
+  test("A keeps both, B picks the alternative: asked again, nothing dropped", async () => {
+    const { drive, a, b, x } = await parallelEdits(); // Xena: b1, alternative a1
+    const alt = conflictsOf(b.records())[0].alternatives[0];
+    later();
+    a.run(() => a.store.resolveConflict(x.id, "both")); // A: keep b1 AND a1
+    b.run(() => b.store.resolveConflict(x.id, alt.id)); // B, at the same time: a1 replaces b1
+    await settle(drive, a, b);
+    const outcome = (d: Device) => ({ b1: everywhere(d).includes("b1"), asked: conflictsOf(d.records()).length });
+    // design (docs, combine/resolveConflict comments): two devices choosing differently meet as a new conflict
+    expect([outcome(a), outcome(b)].map((o) => o.b1 || o.asked > 0)).toEqual([true, true]);
+  });
+});
+
+describe("the round notice for an alternative asked about again", () => {
+  test("a dropped alternative coming back as a new question is not announced as a deleted character back on the list", async () => {
+    const { drive, a, b, x } = await parallelEdits();
+    later();
+    b.run(() => b.store.resolveConflict(x.id, x.id)); // B keeps b1 (drops a1)
+    await settle(drive, a, b);
+    later();
+    setText(a, x.id, "Xena#0\na1"); // A: the content back as a1 was
+    later();
+    b.edit(x.id, "b2");
+    await a.sync(drive);
+    const told = (await b.sync(drive)).undeleted;
+    expect(conflictsOf(b.records())).toHaveLength(1); // asked again (as designed)
+    expect(told).toEqual([]);
   });
 });

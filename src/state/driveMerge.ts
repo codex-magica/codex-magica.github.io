@@ -263,7 +263,8 @@ export function mergeRound(
       else if (v.record) pulled++;
     } else if (before.h !== v.h) {
       pulled++;
-      if (before.h === DELETED_HASH && v.record) undeleted.push(v.record.name);
+      // (an alternative a conflict answer dropped can come back as a new question: that's not on the list)
+      if (before.h === DELETED_HASH && v.record && !v.id.includes("~")) undeleted.push(v.record.name);
     }
   }
 

@@ -12,6 +12,7 @@ import { exportBackupFile, exportRecordFile } from "../state/transfer";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
+import { rosterStore } from "../state/rosterStore";
 import { useDriveSync } from "../state/useDriveSync";
 import { createBlankRecord } from "../state/storage";
 import { refreshStatusTint } from "./statusTint";
@@ -178,7 +179,7 @@ export const RootApp: React.FC = () => {
           onClose={() => setConflictsLater(conflictKey(roster.conflicts))}
         />
       )}
-      {roster.saveFailed && <SaveFailedBanner onExport={() => void exportBackupFile(roster.records)} />}
+      {roster.saveFailed && <SaveFailedBanner onExport={() => void exportBackupFile(rosterStore().getState().records)} />}
       <DriveHopNotice hop={hop} onDismiss={drive.dismissHop} />
       <UpdateBanner paused={creator !== null || drive.hop !== null} required={drive.needsUpdate} />
     </>
