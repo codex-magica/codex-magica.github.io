@@ -143,7 +143,7 @@ calls), `driveSyncController.ts` (when to sync, connecting, what to tell the pla
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
-`src/state/syncConflicts.test.ts` covers the conflict question, `src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
+`src/state/syncConflicts.test.ts` and `syncConflictFuzz.test.ts` cover the conflict question, `src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
 cloned devices, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between
 several devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real hook against a
 fake Google and token service (retries, renewals, the return from the consent page). They share the harness
