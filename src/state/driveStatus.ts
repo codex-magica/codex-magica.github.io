@@ -56,19 +56,15 @@ export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = fal
   return synced;
 };
 
-// What a round did that the player should know about: characters kept twice (edited on two devices at
-// once) and deleted ones that came back (edited elsewhere meanwhile). Null if nothing.
+// What a round did that the player should know about: deleted characters that came back (edited elsewhere
+// meanwhile). Null if nothing. (Characters changed on two devices at once are asked about in a popup,
+// see rosterStore's Conflict.)
 const quoted = (names: string[]): string => {
   const q = names.slice(0, 3).map((n) => `„${n}”`);
   return names.length > 3 ? `${q.join(", ")} és még ${names.length - 3}` : q.length > 1 ? `${q.slice(0, -1).join(", ")} és ${q[q.length - 1]}` : q[0];
 };
-export const roundNotice = (copied: string[], undeleted: string[]): string | null => {
-  const parts: string[] = [];
-  if (copied.length === 1)
-    parts.push(`${quoted(copied)} két eszközön is módosult, mielőtt szinkronizálódott volna, ezért mindkét változata megmaradt. A másikat „${copied[0]} (másik változat)” néven találod a listán; nézd át, és töröld, amelyik nem kell.`);
-  else if (copied.length > 1)
-    parts.push(`${copied.length} karaktered két eszközön is módosult, mielőtt szinkronizálódott volna: ${quoted(copied)}. Mindegyiknek megmaradt mindkét változata; a másikat „(másik változat)” végződéssel találod a listán. Nézd át őket, és töröld, amelyik nem kell.`);
-  if (undeleted.length === 1) parts.push(`A törölt ${quoted(undeleted)} visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.`);
-  else if (undeleted.length > 1) parts.push(`A törölt ${quoted(undeleted)} visszakerültek a listára, mert közben egy másik eszközön módosították őket. Ha nem kellenek, töröld őket újra.`);
-  return parts.length ? parts.join(" ") : null;
+export const roundNotice = (undeleted: string[]): string | null => {
+  if (undeleted.length === 1) return `A törölt ${quoted(undeleted)} visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.`;
+  if (undeleted.length > 1) return `A törölt ${quoted(undeleted)} visszakerültek a listára, mert közben egy másik eszközön módosították őket. Ha nem kellenek, töröld őket újra.`;
+  return null;
 };

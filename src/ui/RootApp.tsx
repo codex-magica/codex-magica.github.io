@@ -6,6 +6,7 @@ import { CompendiumScreen } from "./CompendiumScreen";
 import { CreatorScreen, CreatorMode } from "./CreatorScreen";
 import { UpdateBanner } from "./UpdateBanner";
 import { DriveHopNotice } from "./DriveHopNotice";
+import { SyncConflictModal } from "./SyncConflictModal";
 import { CharacterTrouble, ErrorBoundary } from "./ErrorBoundary";
 import { exportBackupFile, exportRecordFile } from "../state/transfer";
 import { CreditsModal } from "./CreditsModal";
@@ -35,6 +36,8 @@ const SaveFailedBanner: React.FC<{ onExport: () => void }> = ({ onExport }) => (
 // Top-level navigation: the roster is home; opening a character shows the sheet; create / edit /
 // level-up open the shared full-screen creator as an overlay. Characters persist to local storage
 // via the roster; the creator commits a working copy on save.
+const conflictKey = (cs: { alternatives: CharacterRecord[] }[]): string => cs.flatMap((c) => c.alternatives.map((a) => a.id)).join(",");
+
 export const RootApp: React.FC = () => {
   const roster = useRoster();
   // keep the browser/OS chrome colour (theme-color) in step with the app's light/dark mode
@@ -57,6 +60,9 @@ export const RootApp: React.FC = () => {
   const [screen, setScreen] = useState<"roster" | "sheet" | "compendium">("roster");
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
+  // the conflicts the player put off (closed the popup): asked again when the app is next opened, or when
+  // another one arrives
+  const [conflictsLater, setConflictsLater] = useState<string | null>(null);
   const go = (s: typeof screen) => setScreen(s);
   // optional Google Drive sync (absent without a client ID and a token service)
   const drive = useDriveSync();
@@ -163,6 +169,15 @@ export const RootApp: React.FC = () => {
         />
       )}
 
+      {/* a sync can find one on any screen; not over the creator (it would hide the work in progress) */}
+      {roster.conflicts.length > 0 && !creator && conflictsLater !== conflictKey(roster.conflicts) && (
+        <SyncConflictModal
+          conflict={roster.conflicts[0]}
+          remaining={roster.conflicts.length}
+          onResolve={(keep) => roster.resolveConflict(roster.conflicts[0].main.id, keep)}
+          onClose={() => setConflictsLater(conflictKey(roster.conflicts))}
+        />
+      )}
       {roster.saveFailed && <SaveFailedBanner onExport={() => void exportBackupFile(roster.records)} />}
       <DriveHopNotice hop={hop} onDismiss={drive.dismissHop} />
       <UpdateBanner paused={creator !== null || drive.hop !== null} required={drive.needsUpdate} />

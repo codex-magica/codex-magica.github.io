@@ -24,10 +24,15 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   - one contains the other → the newer one;
   - edited in parallel and one of them deleted → the edit wins;
   - edited in parallel, same content → one version;
-  - edited in parallel, different content → **both are kept**: the one edited last keeps the character, the
-    other becomes "Név (másik változat)". Every device resolves it identically (the copy's id comes from its
-    content, and it starts a history of its own), so they converge without extra copies, and a later copy of
-    the same content can't replace edits made to the first one. The kept version also remembers which version its
+  - edited in parallel, different content → **both are kept, and the player picks one**: the one edited
+    last stays listed, the other is stored as an alternative (id `Név-id~…`, synced like any character but
+    not listed), and a "Szinkronütközés" popup asks which version stays (or keeps both, the other as
+    "Név (másik változat)"). The choice is an ordinary edit plus deleting the alternative, so it reaches
+    every device; two devices choosing differently at once meet as a new conflict. Closing the popup puts
+    it off until the app is next opened. Every device resolves the merge identically (the alternative's id
+    comes from its content, and it starts a history of its own, counted from the losing version's edits),
+    so they converge without extra copies, a later alternative of the same content can't replace edits
+    made to an earlier one, and one the player dropped can come back only as a new question. The kept version also remembers which version its
     content was made as, so when the device it came from edits it again before seeing the merge, that edit
     counts as continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
@@ -38,8 +43,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   newer app version stops the round with a "please update" note.
 - **Edits during a round** are kept: the result is reconciled with the roster as it is when the round ends.
   Every edit carries the version it was started from (the creator, the sheet's equipment, companion and
-  condition editors); if the stored version changed since (a sync), the edit is saved alongside it as
-  "(másik változat)" rather than over it. Every change re-reads what's saved first.
+  condition editors); if the stored version changed since (a sync), the edit is saved, and the version it
+  replaced is kept as an alternative the player is asked about. Every change re-reads what's saved first.
 - **Nothing is dropped for being unreadable.** Records from storage or Drive are only repaired, never
   rejected because the rules engine can't compute them today (that may be a bug fixed tomorrow): the
   screen shows "Ezt a karaktert most nem sikerült megnyitni" with export instead. Entries a device can't
@@ -60,7 +65,7 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   never published (in neither Drive nor its own last upload) move to the new id. Under the shared id the
   two copies' versions can't be told apart, so when in doubt both are kept: only what this device itself
   last published counts as their history, and anything else looks parallel. The worst case is an extra
-  "(másik változat)", or a deleted character coming back (both with a notice); never a silent loss.
+  conflict question, or a deleted character coming back (with a notice); never a silent loss.
 - **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
   file can't bring a deleted character back. A deletion beats only what it saw: the delete dialog deletes
   the version it showed (if a sync changed the character meanwhile, nothing is deleted and
@@ -102,8 +107,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   itself afterwards.
 - **What the player is told, and where.** The roster says at the top what sync needs from the player
   (reconnect, an app update, Google storage full, changes stuck on this device for hours), with a button
-  to the sync window, and names the characters a round kept twice ("(másik változat)") or brought back
-  after a deletion (an edit made elsewhere in parallel), until dismissed. The roster footer keeps the
+  to the sync window, and names the characters a round brought back after a deletion (an edit made
+  elsewhere in parallel), until dismissed. Characters changed on two devices are asked about in a popup. The roster footer keeps the
   quiet status. If Google's permission goes away while the player is elsewhere (a character sheet), a
   card says so once on any screen. Coming back from Google's page with a problem reopens the sync window
   with what happened.
@@ -138,7 +143,7 @@ calls), `driveSyncController.ts` (when to sync, connecting, what to tell the pla
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
-`src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
+`src/state/syncConflicts.test.ts` covers the conflict question, `src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
 cloned devices, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between
 several devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real hook against a
 fake Google and token service (retries, renewals, the return from the consent page). They share the harness
@@ -162,7 +167,7 @@ Deliberately not covered (and what happens instead):
   shows "open in another tab" with a button to continue there. Only the tab in use syncs. There is no
   coordination of sync rounds across tabs. Browsers without Web Locks (older than the build target, or
   with site data blocked) run every tab, and saving stays safe there (every change re-reads what's saved),
-  but two tabs syncing at once may cause an extra "(másik változat)" or a false clone detection.
+  but two tabs syncing at once may cause an extra conflict question or a false clone detection.
 - **Storage full or blocked.** Memory is always what's saved: a change that can't be saved is not made,
   and a banner says so (with Exportálás) until saving works again. There are no memory-only edits and
   nothing is parked across page changes. Deleting a character still works (it's how to make room).
@@ -178,8 +183,9 @@ Deliberately not covered (and what happens instead):
 - **No live updates.** Drive has no change events and the app doesn't poll on a timer: another device's
   changes arrive when this one syncs (2 seconds after an edit here, coming back to the foreground, back
   online, or "Szinkronizálás most"). An app left open and untouched doesn't pick them up.
-- **Parallel edits are not merged field by field.** Both versions are kept, one as "(másik változat)",
-  and the player deletes the one they don't want. An edit made in parallel with a deletion wins.
+- **Parallel edits are not merged field by field.** The player picks one whole version (or keeps both).
+  An edit made in parallel with a deletion wins. Deleting a character whose question is unanswered keeps
+  the other version, listed as "(másik változat)".
 - **A copied browser** (data restored onto a second device) is detected by the marks in its sync file and
   moves to a new device id; it is not detected on the first round after sync was turned off and on. What
   both copies changed before that is kept twice, and a character one copy deleted may come back.

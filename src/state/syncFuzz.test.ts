@@ -4,8 +4,8 @@
 // realSync) between three devices with Drive failures, imports of earlier backup files, reloads, edits
 // during rounds and copied browsers (only of browsers that have written to Drive: a copy with no marks
 // yet, or sync off/on next to a copy, is the documented blind spot). It checks that no edit is lost
-// unless a deletion saw it, and (when no browser was copied) that no deletion is undone without an edit it
-// didn't see. After a browser copy a deletion may come back (with a notice): the copies' versions can't
+// unless a deletion saw it, and (when no browser was copied) that no deleted character comes back without
+// an edit it didn't see. After a browser copy a deletion may come back (with a notice): the copies' versions can't
 // be told apart, so both are kept (rosterStore.relabelDevice).
 // Knobs: FUZZ=clone,import,reload,offon,during (features), FUZZ_FROM/FUZZ_TO (seeds), FUZZ_NOFAIL=1 (no Drive
 // failures), FUZZ_LOG=<file> (step log of a failing seed), FUZZ_WATCH=<token>/FUZZ_WID=<id> (trace one).
@@ -177,7 +177,9 @@ describe("fuzz: clones, imports, reloads, sync off/on, real rounds", () => {
     const lost = [...created].filter((t) => !finalTokens.has(t) && !deletedSaw.has(t));
     // a deletion that came back without an edit it didn't see
     const reverted = (devices.length > 3 ? [] : deletions) // (a copied browser: see the top)
-      .filter((del) => !recreated.has(del.id))
+      // (a dropped alternative of a conflict may come back: a later conflict with the same content asks
+      // again rather than risk dropping a fresh edit, see driveMerge.combine)
+      .filter((del) => !recreated.has(del.id) && !del.id.includes("~"))
       .filter((del) => {
         const r = final.find((x) => x.id === del.id);
         return r && tokensOf(r).every((t) => del.seen.has(t));

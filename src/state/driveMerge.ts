@@ -147,11 +147,13 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   const [win, lose] = a.t > b.t || (a.t === b.t && a.h > b.h) ? [a, b] : [b, a];
   const version: Version = withVc(win, vc, cvcOf(win));
   if (a.h === b.h) return { version };
-  // The copy starts a history of its own (not the losing version's: a later copy of the same content
-  // lands on the same id, and with that history it would replace edits made to this copy meanwhile).
-  // The same copy made on several devices is the same version, so it merges into one.
+  // The copy starts a history of its own, not the losing version's: a later copy of the same content
+  // lands on the same id, and with that history it would replace edits made to this copy meanwhile. Its
+  // one count is how many edits the losing version had, which grows with every later edit of the
+  // character, so a later copy isn't taken for one the player already dropped (resolving a conflict
+  // deletes the copy). The same copy made on several devices is the same version, so it merges into one.
   const id = copyId(a.id, lose);
-  const copyVc = { [`~${id}`]: 1 };
+  const copyVc = { [`~${id}`]: Math.max(1, Object.values(lose.vc).reduce((s, n) => s + n, 0)) };
   const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: copyVc, syncCvc: undefined };
   return { version, copy: { id, t: lose.t, vc: copyVc, h: contentHash(record), record } };
 };
@@ -169,7 +171,7 @@ export interface MergeResult {
   publishNeeded: boolean;
   published: Record<string, string>; // id → version key of what the file holds
   pulled: number; // characters changed here because of another device
-  copied: string[]; // the names those copies were made from (to tell the player)
+  copied: string[]; // the names those copies were made from
   undeleted: string[]; // characters deleted here that came back: an edit made elsewhere in parallel won
   backups: BackupCandidate[];
 }

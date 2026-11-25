@@ -11,8 +11,8 @@ Design, rules and setup: [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
 - The hard requirement is that no edit is ever silently lost and a deleted character never silently comes
   back. Any change to `src/state/` sync or storage code must keep `driveSync.test.ts`,
-  `syncRegressions.test.ts`, `syncFuzz.test.ts` and `useDriveSync.test.ts` green; add a test for any new
-  failure mode.
+  `syncRegressions.test.ts`, `syncConflicts.test.ts`, `syncFuzz.test.ts` and `useDriveSync.test.ts` green;
+  add a test for any new failure mode.
 - The sync deliberately does **not** cover several edge cases (several tabs syncing at once, edits that
   can't be saved locally when storage is full, sign-in without the token service, live updates, merging
   parallel edits field by field, …). This is a choice, made to keep the code small enough to be correct.

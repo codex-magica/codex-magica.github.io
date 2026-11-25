@@ -40,6 +40,31 @@ export interface RosterState {
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
 }
 
+// ── conflicts ────────────────────────────────────────────────────────────────────────────────────
+// A character changed differently on two devices keeps both versions: the merge (driveMerge.combine), or
+// an editor saving over a version a sync replaced meanwhile (upsert), stores the other one as an
+// alternative under `${id}~…`. It syncs like any character, but isn't listed: the player is asked which
+// version to keep (resolveConflict). An alternative whose character is gone is listed as a character.
+export interface Conflict {
+  main: CharacterRecord; // the version listed now
+  alternatives: CharacterRecord[];
+}
+const mainIdOf = (id: string): string | null => (id.includes("~") ? id.slice(0, id.indexOf("~")) : null);
+export const listedRecords = (records: CharacterRecord[]): CharacterRecord[] => {
+  const ids = new Set(records.map((r) => r.id));
+  return records.filter((r) => {
+    const main = mainIdOf(r.id);
+    return main === null || !ids.has(main);
+  });
+};
+export const conflictsOf = (records: CharacterRecord[]): Conflict[] =>
+  records
+    .filter((r) => mainIdOf(r.id) === null)
+    .map((main) => ({ main, alternatives: records.filter((r) => mainIdOf(r.id) === main.id) }))
+    .filter((c) => c.alternatives.length > 0);
+const COPY_SUFFIX = conflictCopyName("");
+const plainName = (name: string): string => (name.endsWith(COPY_SUFFIX) ? name.slice(0, -COPY_SUFFIX.length) : name);
+
 
 const DELETIONS_KEY = "magus.deletions.v1";
 
@@ -189,8 +214,10 @@ export const createRosterStore = () => {
       };
       const i = state.records.findIndex((r) => r.id === record.id);
       let records = i < 0 ? [...state.records, stamped] : state.records.map((r, j) => (j === i ? stamped : r));
-      if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped))
-        records = [...records, { ...prev, id: genId(), name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, me), syncCvc: undefined }];
+      // the editor started from a version a sync has replaced meanwhile: that one is kept as an alternative
+      const altId = prev ? `${record.id}~${contentHash(prev).slice(0, 10)}` : "";
+      if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped) && !find(altId))
+        records = [...records, { ...prev, id: altId, name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, me), syncCvc: undefined }];
       const deletions = { ...state.deletions };
       delete deletions[record.id];
       commit(records, deletions, true);
@@ -205,6 +232,7 @@ export const createRosterStore = () => {
       if (!prev) return true;
       if (base && contentHash(prev) !== contentHash(base)) return false;
       // the last state goes with the marker only while sync is on: it's for the Drive backup of the deletion
+      // (its alternatives waiting in a conflict stay: the player may not have seen them; they're listed now)
       const marker = { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, deviceId()), ...(loadDriveSettings().enabled ? { last: prev } : {}) };
       commit(state.records.filter((r) => r.id !== id), { ...state.deletions, [id]: marker }, true);
       return true;
@@ -227,6 +255,35 @@ export const createRosterStore = () => {
         return { ...r, updatedAt: nextStamp(Math.max(now, deletion?.t ?? 0)), syncVc: { ...deletion?.vc, [lineage]: 1 }, syncCvc: undefined };
       });
       commit([...state.records.filter((r) => !added.some((a) => a.id === r.id)), ...added], deletions, true);
+    },
+
+    // The player chose which version of a character to keep (see Conflict): `keep` is the id of the chosen
+    // version (the character's own, or one of its alternatives), or "both" to keep every alternative as a
+    // character of its own. The alternatives are deleted either way (with daily backups on, their last
+    // state stays in Drive); the choice syncs to the other devices like any edit.
+    resolveConflict(mainId: string, keep: string): void {
+      refresh();
+      const main = find(mainId);
+      const alternatives = state.records.filter((r) => mainIdOf(r.id) === mainId);
+      if (!main || alternatives.length === 0) return;
+      const me = deviceId();
+      const sync = loadDriveSettings().enabled;
+      const deletions = { ...state.deletions };
+      for (const a of alternatives) deletions[a.id] = { t: nextStamp(a.updatedAt), vc: bump(a.syncVc, me), ...(sync ? { last: a } : {}) };
+      let records = state.records.filter((r) => !alternatives.includes(r));
+      const chosen = alternatives.find((a) => a.id === keep);
+      if (keep === "both")
+        records = [...records, ...alternatives.map((a) => ({ ...clone(a), id: genId(), name: conflictCopyName(plainName(a.name)), updatedAt: nextStamp(a.updatedAt), syncVc: bump({}, me), syncCvc: undefined }))];
+      else if (chosen)
+        records = records.map((r) =>
+          r.id === mainId ? { ...clone(chosen), id: mainId, name: plainName(chosen.name), updatedAt: nextStamp(Math.max(main.updatedAt ?? 0, chosen.updatedAt ?? 0)), syncVc: bump(main.syncVc, me), syncCvc: undefined } : r
+        );
+      else if (keep === mainId)
+        // a choice too (with the content as it is): another device choosing differently at the same time
+        // meets it as a parallel edit, and the player is asked again, instead of one choice silently winning
+        records = records.map((r) => (r.id === mainId ? { ...r, updatedAt: nextStamp(r.updatedAt), syncVc: bump(r.syncVc, me), syncCvc: undefined } : r));
+      else return;
+      commit(records, deletions, true);
     },
 
     duplicate(id: string): void {

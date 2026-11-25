@@ -203,7 +203,7 @@ const createDriveSync = () => {
       const result = await syncRound({ store, drive: httpDrive(token), backups: state.settings.backups, current });
       if (result && current()) {
         patchSettings({ lastSyncAt: Date.now() });
-        const told = roundNotice(result.out.copied, result.out.undeleted);
+        const told = roundNotice(result.out.undeleted);
         const hopDone = state.hop === "backSyncing";
         set({
           status: "idle",

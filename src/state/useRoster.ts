@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { CharacterRecord } from "../model/character";
-import { rosterStore } from "./rosterStore";
+import { Conflict, conflictsOf, listedRecords, rosterStore } from "./rosterStore";
 
 export interface RosterApi {
-  records: CharacterRecord[];
+  records: CharacterRecord[]; // the listed characters (not the alternatives waiting in a conflict)
+  conflicts: Conflict[]; // characters changed differently on two devices: the player picks a version
+  resolveConflict: (mainId: string, keep: string) => void;
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
   get: (id: string) => CharacterRecord | undefined;
   upsert: (record: CharacterRecord, base?: CharacterRecord) => void; // create or replace by id; `base`: the version the edit started from
@@ -27,6 +29,7 @@ const upsert = (r: CharacterRecord, base?: CharacterRecord) => store.upsert(r, b
 const importRecords = (rs: CharacterRecord[]) => store.importRecords(rs);
 const remove = (id: string, base?: CharacterRecord) => store.remove(id, base);
 const duplicate = (id: string) => store.duplicate(id);
+const resolveConflict = (mainId: string, keep: string) => store.resolveConflict(mainId, keep);
 
 // The character roster (see rosterStore.ts). The callbacks are stable; the object changes only when
 // the roster does.
@@ -37,7 +40,17 @@ export function useRoster(): RosterApi {
     if (hasAny) requestPersistentStorage();
   }, [hasAny]);
   return useMemo(
-    () => ({ records: state.records, saveFailed: state.saveFailed, get: (id: string) => state.records.find((r) => r.id === id), upsert, importRecords, remove, duplicate }),
+    () => ({
+      records: listedRecords(state.records),
+      conflicts: conflictsOf(state.records),
+      resolveConflict,
+      saveFailed: state.saveFailed,
+      get: (id: string) => state.records.find((r) => r.id === id),
+      upsert,
+      importRecords,
+      remove,
+      duplicate,
+    }),
     [state.records, state.saveFailed]
   );
 }

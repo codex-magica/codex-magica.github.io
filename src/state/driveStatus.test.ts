@@ -61,12 +61,9 @@ describe("sync status in words", () => {
   });
 
   test("what a round did is named: copies and deletions that came back", () => {
-    expect(roundNotice([], [])).toBeNull();
-    expect(roundNotice(["Kael"], [])).toContain("„Kael” két eszközön is módosult, mielőtt szinkronizálódott volna");
-    expect(roundNotice(["Kael"], [])).toContain("„Kael (másik változat)”");
-    expect(roundNotice(["Kael", "Mira"], [])).toContain("2 karaktered két eszközön is módosult, mielőtt szinkronizálódott volna: „Kael” és „Mira”");
-    expect(roundNotice(["A", "B", "C", "D", "E"], [])).toContain("„A”, „B”, „C” és még 2");
-    expect(roundNotice([], ["Kael"])).toBe("A törölt „Kael” visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.");
-    expect(roundNotice(["Kael"], ["Mira"])).toMatch(/„Kael”.*A törölt „Mira”/);
+    expect(roundNotice([])).toBeNull();
+    expect(roundNotice(["Kael"])).toBe("A törölt „Kael” visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.");
+    expect(roundNotice(["Kael", "Mira"])).toContain("A törölt „Kael” és „Mira” visszakerültek a listára");
+    expect(roundNotice(["A", "B", "C", "D", "E"])).toContain("„A”, „B”, „C” és még 2");
   });
 });

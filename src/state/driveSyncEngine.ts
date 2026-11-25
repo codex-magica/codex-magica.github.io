@@ -50,7 +50,7 @@ export interface SyncOutput {
   backedUp: Set<string>;
   // for tests and diagnostics: characters changed here by another device, copies made
   pulled: number;
-  copied: string[]; // names of characters kept twice (parallel edits), for the player
+  copied: string[]; // names of characters kept twice (parallel edits)
   undeleted: string[]; // characters deleted here that came back (a parallel edit won)
   uploaded: boolean;
   skippedFiles: number; // other devices' files that couldn't be read (left alone)
