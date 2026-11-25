@@ -141,10 +141,10 @@ fork beállításaiban válaszd a **Pages → Source: GitHub Actions** lehetős�
 Pages** workflow-t. Ezután minden módosítás után magától frissül a
 `https://<felhasználóneved>.github.io/codex-magica/` oldal. Saját domainhez a `BASE_PATH` változót is
 állítsd `/`-re, a `SITE_URL`-t pedig a címedre (a linkelőnézetekhez). Cloudflare Pages vagy Netlify is jó:
-build parancs `npm run build`, mappa `dist`. A Google Drive-szinkronhoz saját Google OAuth-ügyfélazonosító kell. Ingyenes, és nagyjából negyedóra alatt
-beállítható: [docs/google-drive-sync.md](docs/google-drive-sync.md) (angolul). Enélkül a saját példányodban
-egyszerűen nincs szinkron gomb, minden más ugyanúgy működik. A Google-hozzáférés megújításához egy ingyenes
-Cloudflare-függvény is kell (a leírás ugyanott); enélkül a szinkron óránként egy kattintást kér.
+build parancs `npm run build`, mappa `dist`. A Google Drive-szinkronhoz saját Google OAuth-ügyfélazonosító és egy ingyenes Cloudflare-függvény (a `worker/`
+mappában) kell. Mindkettő ingyenes, és nagyjából fél óra alatt beállítható:
+[docs/google-drive-sync.md](docs/google-drive-sync.md) (angolul). Enélkül a saját példányodban egyszerűen nincs
+szinkron gomb, minden más ugyanúgy működik.
 
 **Saját gépen, fejlesztéshez.** [Node.js](https://nodejs.org) 22.12 vagy újabb kell:
 

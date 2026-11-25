@@ -19,10 +19,9 @@ const online = (): boolean => typeof navigator === "undefined" || navigator.onLi
 const say = (text: string, inWindow: boolean): string => (inWindow ? text[0].toUpperCase() + text.slice(1) : `Google Drive: ${text}`);
 
 // What sync needs from the player, if anything (null: nothing, or sync is off), and which kind, so the
-// button next to it can do it: an app update, Google storage full, Google's permission again, a tap
-// (without a token service), or changes stuck on this device for hours (said before the player picks up
-// another device).
-export type AttentionKind = "update" | "full" | "reconnect" | "tap" | "stuck" | "stuckOffline";
+// button next to it can do it: an app update, Google storage full, Google's permission again, or changes
+// stuck on this device for hours (said before the player picks up another device).
+export type AttentionKind = "update" | "full" | "reconnect" | "stuck" | "stuckOffline";
 export interface Attention {
   kind: AttentionKind;
   text: string;
@@ -33,8 +32,7 @@ export const driveAttention = (drive: DriveSyncApi, now: number, inWindow = fals
   if (drive.needsUpdate)
     return a("update", "a szinkron folytatásához frissítsd az alkalmazást a lent megjelenő „Frissítés” gombbal. Ha nem látod, zárd be, és nyisd meg újra az alkalmazást.");
   if (drive.driveFull) return a("full", "betelt a Google-tárhelyed, ezért a szinkron szünetel. Ha felszabadítasz helyet, magától folytatódik.");
-  if (drive.service && drive.status === "needsTap") return a("reconnect", "a szinkron leállt, mert megszűnt a Google-engedély.");
-  if (drive.status === "needsTap") return a("tap", "a következő szinkronhoz kattints a „Szinkronizálás most” gombra.");
+  if (drive.status === "needsTap") return a("reconnect", "a szinkron leállt, mert megszűnt a Google-engedély.");
   if (drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS) {
     const n = drive.pending.count;
     return online()

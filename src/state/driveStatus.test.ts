@@ -6,7 +6,7 @@ import type { DriveSyncApi } from "./useDriveSync";
 const NOW = Date.UTC(2026, 10, 24, 12, 0, 0);
 const H = 3600_000;
 const drive = (over: Partial<DriveSyncApi> = {}): DriveSyncApi =>
-  ({ enabled: true, service: true, status: "idle", needsUpdate: false, lastSyncAt: NOW - 5 * 60_000, pending: { count: 0, oldest: null }, ...over }) as DriveSyncApi;
+  ({ enabled: true, status: "idle", needsUpdate: false, lastSyncAt: NOW - 5 * 60_000, pending: { count: 0, oldest: null }, ...over }) as DriveSyncApi;
 
 describe("sync status in words", () => {
   test("how long ago", () => {
@@ -33,7 +33,6 @@ describe("sync status in words", () => {
   test("the permission is gone: a reconnect, said once (the button next to it does it)", () => {
     expect(driveAttention(drive({ status: "needsTap" }), NOW)).toEqual({ kind: "reconnect", text: "Google Drive: a szinkron leállt, mert megszűnt a Google-engedély." });
     expect(driveAttention(drive({ status: "needsTap" }), NOW, true)?.text).toBe("A szinkron leállt, mert megszűnt a Google-engedély."); // no prefix inside the Google Drive window
-    expect(driveAttention(drive({ status: "needsTap", service: false }), NOW)?.kind).toBe("tap");
   });
 
   test("an app update comes first, and says where the button is", () => {

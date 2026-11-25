@@ -5,16 +5,15 @@ characters travel only between the browser and Google, and are stored nowhere ex
 and their Drive. A small token service (`worker/`, a Cloudflare Worker) renews the browser's Google access
 so sync never needs a tap; it sees tokens, never characters, and stores nothing.
 
-The feature appears only in builds made with a Google OAuth client ID (`VITE_GOOGLE_CLIENT_ID`).
-Without one, the app stays local-only and never contacts Google. The token service is optional too
-(`VITE_TOKEN_SERVICE_URL`): without it, sync works the same but asks for a tap about once an hour.
+The feature appears only in builds made with a Google OAuth client ID (`VITE_GOOGLE_CLIENT_ID`) and a
+token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only and never contacts Google.
 
 ## How it works
 
 - The **Google Drive** button on the roster opens a short explanation, a switch for **daily backups** (on by
   default) and a **Bekapcsolás** (turn on) button. It takes the player to Google's consent page and back to
   the roster. Google asks for `drive.appdata` (a hidden folder in the user's Drive that only this app can
-  see; it can't read any other file) and the email address. (Without a token service: Google's popup.)
+  see; it can't read any other file) and the email address.
 - **One file per device.** Each device keeps its own file in that folder (`codex-magica-sync.<device>.json`)
   and is the only one that ever writes it, so two devices can never overwrite each other's work. A sync round
   lists the folder, downloads the files that changed since last time, merges them with the roster on the
@@ -117,9 +116,6 @@ Without one, the app stays local-only and never contacts Google. The token servi
   the player tries again): if another account answers, nothing it gave is kept and the right account's
   credential stays (the other account's permission stays in that account, which may
   sync a roster of its own elsewhere).
-- **Without a token service** the app uses Google's popup to sign in, and every expired token needs a tap
-  ("Szinkronizálás most"). A silent renewal by redirect (`prompt=none`) was tried and dropped: Google keeps
-  showing its consent screen to this kind of request, so it never succeeded.
 - **Account check.** Every new token is checked against the account sync was set up with; a different
   account is refused with an explanation, so characters never merge into someone else's Drive.
 - **Kikapcsolás** (turn off) affects that device only: it forgets the token and the credential there, and
@@ -154,7 +150,7 @@ secret, and a secret can't be kept in a public web app. The options weighed:
 
 | Option | Tap needed | Server | Catch |
 |---|---|---|---|
-| Popup each time the token expires (the fallback) | about once an hour | none | a tap prompt |
+| Popup each time the token expires (supported until 2026-11; dropped as a second sign-in path to maintain) | about once an hour | none | a tap prompt |
 | Redirect with `prompt=none` | would be none | none | doesn't work: Google answers `interaction_required` for this app every time |
 | The client secret in the app | none | none | anyone could use the app's identity; a copied refresh token would work for months; against Google's policy |
 | A stateless token service on Cloudflare Workers' free plan (chosen) | none | tiny, holds no data | a piece of infrastructure to run; it sees tokens in transit |
@@ -211,7 +207,7 @@ reconnect weekly.
 
 ### The token service
 
-Optional, but without it sync asks for a tap about once an hour. Free on Cloudflare's Workers plan (no card).
+Required for sync. Free on Cloudflare's Workers plan (no card).
 
 1. **Cloudflare account** (dash.cloudflare.com), free plan. Under *Workers & Pages* pick your
    `*.workers.dev` subdomain.

@@ -7,20 +7,16 @@
 // device. When the access token runs out, the app asks the token service for a new one with that
 // credential: no popup, no redirect, no tap. The token service stores nothing and never sees Drive data.
 //
-// Without a token service configured (forks, local builds), sign-in falls back to Google Identity
-// Services' popup, and an expired token is renewed by a tap (browser apps get no long-term access on
-// their own).
-//
 // The access token is kept in localStorage until it expires, so reloads within the hour don't ask again.
 //
 // The OAuth client ID comes from VITE_GOOGLE_CLIENT_ID and the token service's address from
-// VITE_TOKEN_SERVICE_URL, both at build time. Without a client ID the feature is simply absent. See
+// VITE_TOKEN_SERVICE_URL, both at build time. Without both the feature is simply absent. See
 // docs/google-drive-sync.md.
 
-export const GOOGLE_CLIENT_ID: string = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() ?? "";
-export const driveSyncAvailable = (): boolean => GOOGLE_CLIENT_ID !== "";
-export const TOKEN_SERVICE: string = ((import.meta.env.VITE_TOKEN_SERVICE_URL as string | undefined)?.trim() ?? "").replace(/\/+$/, "");
-export const tokenServiceAvailable = (): boolean => TOKEN_SERVICE !== "";
+const GOOGLE_CLIENT_ID: string = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() ?? "";
+const TOKEN_SERVICE: string = ((import.meta.env.VITE_TOKEN_SERVICE_URL as string | undefined)?.trim() ?? "").replace(/\/+$/, "");
+// Sync needs both: without them the feature is simply absent (no Google Drive button).
+export const driveSyncAvailable = (): boolean => GOOGLE_CLIENT_ID !== "" && TOKEN_SERVICE !== "";
 
 const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 const SCOPES = `${SCOPE} openid email`;
@@ -30,54 +26,9 @@ const STALE_ANSWER_MS = 30 * 60_000;
 const REQUEST_TIMEOUT_MS = 60_000;
 const SERVICE_TIMEOUT_MS = 20_000;
 const CREDENTIAL_KEY = "magus.driveCredential.v1";
-const GIS_SRC = "https://accounts.google.com/gsi/client";
 const TOKEN_KEY = "magus.driveToken.v1";
 
-// ── Google Identity Services (minimal typing of what we use) ─────────────────────────────────────
-interface TokenResponse {
-  access_token?: string;
-  expires_in?: number;
-  error?: string;
-  error_description?: string;
-}
-interface TokenClient {
-  requestAccessToken: (o?: { prompt?: string; login_hint?: string }) => void;
-}
-interface GoogleOAuth2 {
-  initTokenClient: (cfg: {
-    client_id: string;
-    scope: string;
-    callback: (r: TokenResponse) => void;
-    error_callback?: (e: { type: string; message?: string }) => void;
-  }) => TokenClient;
-  hasGrantedAllScopes: (r: TokenResponse, ...scopes: string[]) => boolean;
-}
-declare global {
-  interface Window {
-    google?: { accounts?: { oauth2?: GoogleOAuth2 } };
-  }
-}
-
 export class DriveAuthError extends Error {}
-
-let gisPromise: Promise<GoogleOAuth2> | null = null;
-const loadGoogleIdentity = (): Promise<GoogleOAuth2> => {
-  if (window.google?.accounts?.oauth2) return Promise.resolve(window.google.accounts.oauth2);
-  if (!gisPromise) {
-    gisPromise = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = GIS_SRC;
-      s.async = true;
-      s.onload = () => (window.google?.accounts?.oauth2 ? resolve(window.google.accounts.oauth2) : reject(new Error("Google sign-in did not load")));
-      s.onerror = () => {
-        gisPromise = null; // allow a retry (e.g. after coming back online)
-        reject(new Error("Google sign-in could not be loaded"));
-      };
-      document.head.appendChild(s);
-    });
-  }
-  return gisPromise;
-};
 
 // ── token ─────────────────────────────────────────────────────────────────────────────────────────
 interface StoredToken {
@@ -109,46 +60,6 @@ export const forgetToken = (only?: string): void => {
   } catch {
     /* ignore */
   }
-};
-
-let tokenClient: TokenClient | null = null;
-let pending: { resolve: (t: string) => void; reject: (e: Error) => void } | null = null;
-
-// Load Google's script and set up the token client ahead of time: the popup must open directly
-// from the user's tap, with no awaiting in between, or browsers (Safari especially) block it.
-export const prepareSignIn = async (): Promise<void> => {
-  const oauth2 = await loadGoogleIdentity();
-  if (tokenClient) return;
-  tokenClient = oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: SCOPES,
-    callback: (r) => {
-      const p = pending;
-      pending = null;
-      if (!p) return;
-      if (r.error || !r.access_token) return p.reject(new DriveAuthError(r.error_description || r.error || "sign-in failed"));
-      if (!oauth2.hasGrantedAllScopes(r, SCOPE)) return p.reject(new DriveAuthError("drive permission not granted"));
-      storeToken(r.access_token, r.expires_in ?? 3600);
-      p.resolve(r.access_token);
-    },
-    error_callback: (e) => {
-      const p = pending;
-      pending = null;
-      p?.reject(new DriveAuthError(e.type === "popup_closed" ? "popup closed" : e.message || e.type));
-    },
-  });
-};
-export const signInReady = (): boolean => tokenClient !== null;
-
-// Must be called synchronously inside a click/tap handler (after prepareSignIn() has finished).
-// `firstTime` shows the consent screen; otherwise Google only shows it if permission is missing.
-// `loginHint` (the account's email) skips Google's account chooser.
-export const requestTokenInteractive = (firstTime: boolean, loginHint?: string | null): Promise<string> => {
-  if (!tokenClient) return Promise.reject(new Error("Google sign-in is not ready yet"));
-  pending?.reject(new DriveAuthError("superseded"));
-  const p = new Promise<string>((resolve, reject) => (pending = { resolve, reject }));
-  tokenClient.requestAccessToken({ prompt: firstTime ? "consent" : "", ...(loginHint ? { login_hint: loginHint } : {}) });
-  return p;
 };
 
 // The signed-in account's email (needs the `email` scope). Null if Google doesn't say (network trouble).
@@ -190,7 +101,7 @@ const loadCredential = (): string | null => {
     return null;
   }
 };
-export const hasCredential = (): boolean => tokenServiceAvailable() && loadCredential() !== null;
+export const hasCredential = (): boolean => driveSyncAvailable() && loadCredential() !== null;
 const saveCredential = (c: string) => {
   try {
     localStorage.setItem(CREDENTIAL_KEY, c);
@@ -240,7 +151,7 @@ const b64url = (bytes: Uint8Array): string => {
 // down for the return), or "failed" (anything else).
 type ConnectStartFailure = "insecure" | "storage" | "failed";
 export const beginConnect = async (loginHint: string | null, backups?: boolean): Promise<true | ConnectStartFailure> => {
-  if (!tokenServiceAvailable()) return "failed";
+  if (!driveSyncAvailable()) return "failed";
   if (typeof window !== "undefined" && window.isSecureContext === false) return "insecure";
   let state: string;
   let verifier: string;
@@ -382,7 +293,7 @@ let refreshing: Promise<string> | null = null;
 export const refreshAccess = (): Promise<string> => {
   if (refreshing) return refreshing;
   const credential = loadCredential();
-  if (!credential || !tokenServiceAvailable()) return Promise.reject(new DriveAuthError("no credential"));
+  if (!credential || !driveSyncAvailable()) return Promise.reject(new DriveAuthError("no credential"));
   refreshing = (async () => {
     try {
       const { status, data } = await callTokenService("/v1/token", { credential });

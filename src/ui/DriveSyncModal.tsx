@@ -177,8 +177,6 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
   initialView = "main",
   onClose,
 }) => {
-  const { prepare } = drive;
-  useEffect(() => prepare(), [prepare]); // without a token service: load Google's sign-in now, so the tap can open its popup
   const [now] = useState(() => Date.now());
   const [backupsChoice, setBackupsChoice] = useState(drive.backups);
   const [view, setView] = useState<"main" | "backups">(initialView);
@@ -227,17 +225,8 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
         </Text>
         {!drive.enabled && (
         <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
-          {drive.service ? (
-            <>
-              Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google oldalán egyszer engedélyt adsz (ha
-              kérdezi, jelöld be a Google Drive-hozzáférést is), utána visszajutsz ide, és az alkalmazás magától szinkronizál.
-            </>
-          ) : (
-            <>
-              Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google egyszer, egy felugró ablakban kér
-              engedélyt. Utána az alkalmazás magától szinkronizál, de óránként egyszer kattintani kell hozzá.
-            </>
-          )}{" "}
+          Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google oldalán egyszer engedélyt adsz (ha
+          kérdezi, jelöld be a Google Drive-hozzáférést is), utána visszajutsz ide, és az alkalmazás magától szinkronizál.{" "}
           Részletek az{" "}
           <Box as="a" href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
             adatvédelmi tájékoztatóban
@@ -278,7 +267,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
               Kikapcsolás
             </Box>
             <Box {...btn} onClick={drive.syncNow} disabled={busy} opacity={busy ? 0.6 : 1} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-              {busy ? "Szinkronizálás…" : drive.service && drive.status === "needsTap" ? "Újrakapcsolás" : "Szinkronizálás most"}
+              {busy ? "Szinkronizálás…" : drive.status === "needsTap" ? "Újrakapcsolás" : "Szinkronizálás most"}
             </Box>
           </>
         ) : (
@@ -286,8 +275,8 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
             <Box {...btn} onClick={onClose} border="1px solid" borderColor="hair" color="muted">
               Mégse
             </Box>
-            <Box {...btn} onClick={() => drive.enable(backupsChoice)} disabled={!drive.ready} opacity={drive.ready ? 1 : 0.6} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-              {drive.ready ? "Bekapcsolás" : "Betöltés…"}
+            <Box {...btn} onClick={() => drive.enable(backupsChoice)} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
+              Bekapcsolás
             </Box>
           </>
         )}

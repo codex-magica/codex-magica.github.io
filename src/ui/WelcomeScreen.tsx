@@ -116,7 +116,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
     update: [], // the update banner at the bottom has the button
     full: [{ label: "Google-tárhely", onClick: () => window.open("https://one.google.com/storage", "_blank", "noopener") }],
     reconnect: [act("Újrakapcsolás")],
-    tap: [act("Szinkronizálás most")],
     stuck: [act("Szinkronizálás most")],
     stuckOffline: [],
   };

@@ -241,7 +241,7 @@ flowchart LR
   (`worker/`, free plan) holds the secret: it turns the consent page's one-time code into an access token
   plus the refresh token encrypted into an opaque credential, which stays on the device, and later turns that
   credential into fresh access tokens. It stores nothing, logs nothing, answers only the app's origins, and
-  never sees Drive data. Without it, sync falls back to a tap about once an hour. Setup, details and the
+  never sees Drive data. Setup, details and the
   options weighed: [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
 ### 4 · Hosting
@@ -280,10 +280,10 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
   also set the variables `BASE_PATH` = `/` and `SITE_URL` = your address (for link previews).
 - **Cloudflare Pages, Netlify, or any static host** (these also work with private repositories): build
   command `npm run build`, output folder `dist`.
-- **Google Drive sync** needs a Google OAuth client ID of your own. It's free and takes about fifteen
-  minutes: [docs/google-drive-sync.md](docs/google-drive-sync.md). Without one, your copy simply has no
-  sync button, and everything else works the same. For sync without hourly taps, also deploy the token
-  service in `worker/` to Cloudflare's free plan (same doc); without it, sync asks for a tap about once an hour.
+- **Google Drive sync** needs a Google OAuth client ID of your own and the token service in `worker/`,
+  deployed to Cloudflare's free plan. Both are free and take about half an hour:
+  [docs/google-drive-sync.md](docs/google-drive-sync.md). Without them, your copy simply has no sync
+  button, and everything else works the same.
 
 ## Found a mistake?
 

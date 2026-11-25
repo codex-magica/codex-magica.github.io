@@ -487,14 +487,14 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.hop).toBeNull();
   });
 
-  test("without a token service an expired token isn't news: no card", async () => {
+  test("without a token service there's no sync at all (no button, no requests)", async () => {
     vi.stubEnv("VITE_TOKEN_SERVICE_URL", "");
-    enableWith("x@test", null, null);
-    const { tab } = await openTab();
-    await settle(100);
-    expect(tab.api.service).toBe(false);
-    expect(tab.api.status).toBe("needsTap");
-    expect(tab.api.hop).toBeNull();
+    enableWith("x@test", "at-1", null);
+    const { tab, store, storage } = await openTab();
+    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(5000);
+    expect(tab.api.available).toBe(false);
+    expect(calls).toEqual([]);
   });
 
   test("Drive data from a newer app version: sync waits for the update, without retrying", async () => {
