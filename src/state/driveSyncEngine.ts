@@ -12,20 +12,17 @@ import { CharacterRecord } from "../model/character";
 import { DriveFileMeta, DriveTransport, FileBody, fitBytes } from "./googleDrive";
 import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping, versionKey } from "./driveMerge";
 import { Deletions } from "./rosterStore";
-import type { VersionVector } from "./versions";
 import { Published } from "./syncState";
 
 export class SyncNewerVersionError extends Error {}
 // Another device writes this device's file: two devices ended up with the same id (browser data copied
 // onto a second device). The caller takes a fresh id and syncs again (see driveSyncRound.ts).
 // `published`: the version keys every readable Drive file holds, so only versions that aren't in Drive yet
-// get relabelled; `ancestry`: every vector Drive holds per character, so a relabelled version keeps the
-// published history it was made on.
+// get relabelled.
 export class DeviceIdClashError extends Error {
   constructor(
     message: string,
-    readonly published: Set<string> = new Set(),
-    readonly ancestry: Map<string, VersionVector[]> = new Map()
+    readonly published: Set<string>
   ) {
     super(message);
   }
@@ -123,13 +120,8 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
   }
   if (clash) {
     const published = new Set<string>();
-    const ancestry = new Map<string, VersionVector[]>();
-    for (const src of sources)
-      for (const v of src.values()) {
-        published.add(versionKey(v));
-        ancestry.set(v.id, [...(ancestry.get(v.id) ?? []), v.vc]);
-      }
-    throw new DeviceIdClashError("own file written elsewhere", published, ancestry);
+    for (const src of sources) for (const v of src.values()) published.add(versionKey(v));
+    throw new DeviceIdClashError("own file written elsewhere", published);
   }
 
   const nonce = newNonce();

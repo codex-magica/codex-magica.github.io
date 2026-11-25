@@ -71,7 +71,8 @@ export async function syncRound({ store, drive, backups, current, now, cache }: 
     const old = deviceId();
     newDeviceId = resetDeviceId();
     // shared history: what Drive holds, and what this device itself last published there
-    if (!store.relabelDevice(old, newDeviceId, new Set([...e.published, ...Object.values(loadPublished())]), e.ancestry)) throw new LocalSaveError("couldn't save on this device");
+    const own = loadPublished();
+    if (!store.relabelDevice(old, newDeviceId, new Set([...e.published, ...Object.values(own)]), own)) throw new LocalSaveError("couldn't save on this device");
     forgetNonces();
     savePublished({});
     out = await run();

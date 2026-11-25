@@ -26,7 +26,8 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   - edited in parallel, same content → one version;
   - edited in parallel, different content → **both are kept**: the one edited last keeps the character, the
     other becomes "Név (másik változat)". Every device resolves it identically (the copy's id comes from its
-    content), so they converge without extra copies. The kept version also remembers which version its
+    content, and it starts a history of its own), so they converge without extra copies, and a later copy of
+    the same content can't replace edits made to the first one. The kept version also remembers which version its
     content was made as, so when the device it came from edits it again before seeing the merge, that edit
     counts as continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
@@ -56,8 +57,10 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
 - **A cloned device** (browser data restored onto a second device) is noticed by the mark each write
   leaves in the device file. The last mark seen in the file is kept apart from recent attempts, so a run
   of failed writes can't make a device's own file look foreign. It takes a new id; its versions that were
-  never published (in neither Drive nor its own last upload) move to the new id and are kept as parallel
-  versions, while shared history keeps its vector, so deletions made by the other device still apply.
+  never published (in neither Drive nor its own last upload) move to the new id. Under the shared id the
+  two copies' versions can't be told apart, so when in doubt both are kept: only what this device itself
+  last published counts as their history, and anything else looks parallel. The worst case is an extra
+  "(másik változat)", or a deleted character coming back (both with a notice); never a silent loss.
 - **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
   file can't bring a deleted character back. A deletion beats only what it saw: the delete dialog deletes
   the version it showed (if a sync or another tab changed the character meanwhile, nothing is deleted and
@@ -136,7 +139,8 @@ Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices again
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
 `src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
-cloned devices, deletions racing syncs), and `src/state/useDriveSync.test.ts` runs the real hook against a
+cloned devices, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between
+several devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real hook against a
 fake Google and token service (retries, renewals, the return from the consent page). They share the harness
 in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts` and `activeTab.test.ts`
 cover the Drive client, the status texts and the one-tab rule.
@@ -177,7 +181,8 @@ Deliberately not covered (and what happens instead):
 - **Parallel edits are not merged field by field.** Both versions are kept, one as "(másik változat)",
   and the player deletes the one they don't want. An edit made in parallel with a deletion wins.
 - **A copied browser** (data restored onto a second device) is detected by the marks in its sync file and
-  moves to a new device id; it is not detected on the first round after sync was turned off and on.
+  moves to a new device id; it is not detected on the first round after sync was turned off and on. What
+  both copies changed before that is kept twice, and a character one copy deleted may come back.
 - **Nothing in Drive is ever cleaned up automatically:** daily backups, deletion markers, files of device
   ids that are no longer used, and copies of unreadable files all stay (they are small). The player can
   delete the app's data in Drive's settings.

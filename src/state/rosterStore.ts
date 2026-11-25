@@ -22,7 +22,7 @@
 import { CharacterRecord } from "../model/character";
 import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
-import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
+import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, vcOfKey, versionKeyOf } from "./versions";
 import { conflictCopyName, reconcile } from "./driveMerge";
 import { loadDriveSettings } from "./syncState";
 
@@ -236,23 +236,22 @@ export const createRosterStore = () => {
       commit([...state.records, { ...clone(r), id: genId(), name: `${r.name} (másolat)`, updatedAt: Date.now(), syncVc: bump({}, deviceId()), syncCvc: undefined }], state.deletions, true);
     },
 
-    // After this device got a fresh id because another device was using the old one: the versions made
-    // here under the old id that were never published (`published`: the version keys Drive holds now plus
-    // what this device last published, both shared history with the other device) get the new id
-    // instead, so they count as this device's own parallel edits (and are kept next to the other
-    // device's) rather than as steps of the other device's history. They keep the part of the old id's
-    // count they were built on (the highest one of that character's versions in Drive, `ancestry`, that
-    // they contain): an edit or deletion made here on top of a published version still replaces that
-    // version, instead of looking parallel to its own ancestor.
-    relabelDevice(oldId: string, newId: string, published: Set<string> = new Set(), ancestry: Map<string, VersionVector[]> = new Map()): boolean {
+    // After this device got a fresh id because another device was using the old one (browser data copied
+    // onto a second device). Under the shared id the two copies' edits can't be told apart, so when in
+    // doubt both are kept: a version made here under the old id that isn't published (`published`: the
+    // version keys Drive holds now plus what this device last published) keeps only the part of the old
+    // id's count that this device itself last published for that character (`ownPublished`, id → version
+    // key: surely its own history), and takes the new id for the rest. It then looks parallel to whatever
+    // the other copy made since, so the merge keeps both (a "(másik változat)" copy, or a deleted character
+    // coming back, with a notice) instead of letting one replace the other unseen; and an edit made here
+    // on top of what was published still simply replaces it.
+    relabelDevice(oldId: string, newId: string, published: Set<string>, ownPublished: Record<string, string>): boolean {
       refresh();
       const move = (id: string, vc: VersionVector, h: string): VersionVector => {
         if (vc[oldId] === undefined || published.has(versionKeyOf(vc, h))) return vc;
         const { [oldId]: n, ...rest } = vc;
-        // (a Drive version with the very same vector isn't an ancestor: its key differs, so it's a parallel
-        // version made by the other device under the same id)
-        const base = Math.max(0, ...(ancestry.get(id) ?? []).filter((a) => dominatedBy(a, vc) && vcKey(a) !== vcKey(vc)).map((a) => a[oldId] ?? 0));
-        if (base >= n) return vc; // nothing of the old id's count is unpublished
+        const own = ownPublished[id] !== undefined ? vcOfKey(ownPublished[id]) : {};
+        const base = dominatedBy(own, vc) ? Math.min(own[oldId] ?? 0, n) : 0;
         return { ...rest, ...(base > 0 ? { [oldId]: base } : {}), [newId]: n };
       };
       const records = state.records.map((r) => {

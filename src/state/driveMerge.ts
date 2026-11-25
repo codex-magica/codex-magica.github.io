@@ -148,9 +148,13 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   const [win, lose] = a.t > b.t || (a.t === b.t && a.h > b.h) ? [a, b] : [b, a];
   const version: Version = withVc(win, vc, cvcOf(win));
   if (a.h === b.h) return { version };
+  // The copy starts a history of its own (not the losing version's: a later copy of the same content
+  // lands on the same id, and with that history it would replace edits made to this copy meanwhile).
+  // The same copy made on several devices is the same version, so it merges into one.
   const id = copyId(a.id, lose);
-  const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: lose.vc, syncCvc: undefined };
-  return { version, copy: { id, t: lose.t, vc: lose.vc, h: contentHash(record), record } };
+  const copyVc = { [`~${id}`]: 1 };
+  const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: copyVc, syncCvc: undefined };
+  return { version, copy: { id, t: lose.t, vc: copyVc, h: contentHash(record), record } };
 };
 
 export interface BackupCandidate {

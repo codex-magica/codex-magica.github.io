@@ -82,5 +82,18 @@ export const vcKey = (vc: VersionVector): string =>
 export const DELETED_HASH = "deleted";
 export const versionKeyOf = (vc: VersionVector, h: string): string => `${vcKey(vc)}|${h}`;
 
+// The vector a version key was made from (see versionKeyOf).
+export const vcOfKey = (key: string): VersionVector =>
+  Object.fromEntries(
+    key
+      .split("|")[0]
+      .split(",")
+      .filter(Boolean)
+      .map((p) => {
+        const i = p.lastIndexOf(":");
+        return [p.slice(0, i), Number(p.slice(i + 1))];
+      })
+  );
+
 export const isVersionVector = (v: unknown): v is VersionVector =>
   !!v && typeof v === "object" && !Array.isArray(v) && Object.values(v as object).every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0);
