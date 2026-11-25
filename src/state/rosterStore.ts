@@ -208,6 +208,25 @@ export const createRosterStore = () => {
       return true;
     },
 
+    // Characters from an import file (transfer.parseImportFile: new ones, or ones this device doesn't
+    // have). Each import gets a history of its own, parallel to everything else: a character Drive
+    // already has comes back as one if the content is the same, or as a second character
+    // ("(másik változat)") if it differs. Numbering it as this device's next edit instead could make an
+    // old file silently replace a newer version of the same character in Drive.
+    importRecords(records: CharacterRecord[]): void {
+      refresh();
+      if (records.length === 0) return;
+      const lineage = `${deviceId()}.i${Math.random().toString(36).slice(2, 8)}`;
+      const now = Date.now();
+      const deletions = { ...state.deletions };
+      const added = records.map((r) => {
+        const deletion = deletions[r.id];
+        delete deletions[r.id]; // restoring a deleted character undoes the deletion here
+        return { ...r, updatedAt: nextStamp(Math.max(now, deletion?.t ?? 0)), syncVc: { ...(deletion?.vc ?? {}), [lineage]: 1 }, syncCvc: undefined };
+      });
+      commit([...state.records.filter((r) => !added.some((a) => a.id === r.id)), ...added], deletions, true);
+    },
+
     duplicate(id: string): void {
       refresh();
       const r = find(id);

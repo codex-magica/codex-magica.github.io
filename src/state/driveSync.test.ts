@@ -285,10 +285,7 @@ describe("Google Drive sync: rounds between devices", () => {
     phone.edit(al.id, "level-up");
     await phone.sync(drive);
     const ipad = new Device("ipad");
-    ipad.run(() => {
-      const imported = parseImportFile(backupFile, ipad.records())!;
-      imported.add.forEach((r) => ipad.store.upsert(r));
-    });
+    ipad.run(() => ipad.store.importRecords(parseImportFile(backupFile, ipad.records())!.add));
     await ipad.sync(drive);
     await phone.sync(drive);
     const tokens = ipad.records().flatMap(tokensOf);
@@ -304,9 +301,28 @@ describe("Google Drive sync: rounds between devices", () => {
     const backupFile = JSON.stringify({ format: "codex-magica-backup", version: 1, exportedAt: "x", characters: phone.records().map(({ updatedAt: _u, syncVc: _v, ...r }) => r) });
     await phone.sync(drive);
     const ipad = new Device("ipad");
-    ipad.run(() => parseImportFile(backupFile, ipad.records())!.add.forEach((r) => ipad.store.upsert(r)));
+    ipad.run(() => ipad.store.importRecords(parseImportFile(backupFile, ipad.records())!.add));
     await ipad.sync(drive);
     expect(ipad.records()).toHaveLength(1);
+  });
+
+  test("an old backup imported on the same device before it syncs doesn't silently replace its newer edit in Drive", async () => {
+    const drive = new FakeDrive();
+    const phone = new Device("phone");
+    const al = phone.create("Aldar");
+    const backupFile = JSON.stringify({ format: "codex-magica-backup", version: 1, exportedAt: "x", characters: phone.records().map(({ updatedAt: _u, syncVc: _v, ...r }) => r) });
+    await phone.sync(drive);
+    later();
+    phone.edit(al.id, "same-day-edit"); // today's edit, in Drive (no daily backup of it: same day)
+    await phone.sync(drive);
+    // the saved roster becomes unreadable (it loads empty), the player imports the old file, offline
+    phone.storage.setItem("magus.roster.v1", "{damaged");
+    phone.store = phone.run(() => createRosterStore());
+    expect(phone.records()).toHaveLength(0);
+    phone.run(() => phone.store.importRecords(parseImportFile(backupFile, phone.records())!.add));
+    await phone.sync(drive);
+    expect(phone.records().flatMap(tokensOf)).toContain("same-day-edit"); // both kept, nothing silently lost
+    expect(phone.records()).toHaveLength(2);
   });
 
   test("a write whose answer got lost is reconciled on the next round", async () => {

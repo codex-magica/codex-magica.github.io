@@ -125,7 +125,7 @@ export const RootApp: React.FC = () => {
           onEdit={editChar}
           onDuplicate={roster.duplicate}
           onDelete={roster.remove}
-          onImport={(rs) => rs.forEach((r) => roster.upsert(r))}
+          onImport={roster.importRecords}
           onRename={(id, name) => {
             const r = roster.get(id);
             if (r) roster.upsert({ ...r, name }, r);

@@ -7,6 +7,7 @@ export interface RosterApi {
   saveFailed: boolean; // the last save to this device failed (storage full or blocked)
   get: (id: string) => CharacterRecord | undefined;
   upsert: (record: CharacterRecord, base?: CharacterRecord) => void; // create or replace by id; `base`: the version the edit started from
+  importRecords: (records: CharacterRecord[]) => void; // from an import file (see rosterStore.importRecords)
   remove: (id: string, base?: CharacterRecord) => boolean; // `base`: the version the player confirmed; false if it changed since
   duplicate: (id: string) => void;
 }
@@ -23,6 +24,7 @@ const requestPersistentStorage = (): void => {
 
 const store = rosterStore();
 const upsert = (r: CharacterRecord, base?: CharacterRecord) => store.upsert(r, base);
+const importRecords = (rs: CharacterRecord[]) => store.importRecords(rs);
 const remove = (id: string, base?: CharacterRecord) => store.remove(id, base);
 const duplicate = (id: string) => store.duplicate(id);
 
@@ -35,7 +37,7 @@ export function useRoster(): RosterApi {
     if (hasAny) requestPersistentStorage();
   }, [hasAny]);
   return useMemo(
-    () => ({ records: state.records, saveFailed: state.saveFailed, get: (id: string) => state.records.find((r) => r.id === id), upsert, remove, duplicate }),
+    () => ({ records: state.records, saveFailed: state.saveFailed, get: (id: string) => state.records.find((r) => r.id === id), upsert, importRecords, remove, duplicate }),
     [state.records, state.saveFailed]
   );
 }
