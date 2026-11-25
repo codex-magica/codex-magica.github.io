@@ -47,18 +47,14 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   parse at all stay in its file verbatim. Saved data that couldn't be read is kept aside and offered on
   the roster for download; if there's no room to keep it aside, it stays where it is and nothing is saved
   over it until the player has downloaded and dropped it.
-- **Storage full:** memory isn't replaced by the older saved state; the sync uploads from memory, so the
-  edit survives in Drive. Before the page is replaced (the round trip to Google's consent page, an app
-  update), memory is parked in the tab's session storage (separate room, survives the page change) and
-  merged back on the next start; if that isn't possible either, the page stays and the player is asked
-  to save a backup file first. Edits
-  that exist only in memory get a lineage of their own, so an edit made later from the older saved state
-  (after a reload, or in another tab) is parallel to them and both are kept; another tab's saved changes
-  are merged into memory, not overwritten. A round's result is applied to what's saved at that moment.
-  The roster and the deletion markers are saved so that they always fit together (a roster without a
-  character whose marker isn't saved would get it back from Drive): both write orders are tried, then the
-  markers without the last states (counted as saved unless sync still needs one for a backup), and if
-  nothing fits, what was saved before is put back.
+- **Storage full (or blocked):** memory is always what's saved. A change that can't be saved isn't made,
+  and a banner says so (with an export button) until saving works again; a sync round whose result
+  can't be saved fails and is tried again. Characters take a few kilobytes and browsers give the app
+  megabytes, so this is for blocked storage and the unexpected, not everyday use. The roster and the
+  deletion markers are saved so that they always fit together (a roster without a character whose
+  marker isn't saved would get it back from Drive): both write orders are tried (deleting a character,
+  the way to make room, must work when storage is full), then the markers without the deleted
+  characters' last states, and if nothing fits, what was saved before is put back.
 - **A cloned device** (browser data restored onto a second device) is noticed by the mark each write
   leaves in the device file. The last mark seen in the file is kept apart from recent attempts, so a run
   of failed writes can't make a device's own file look foreign. It takes a new id; its versions that were

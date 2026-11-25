@@ -558,7 +558,7 @@ describe("Google Drive sync: review findings", () => {
     expect([...drive.files.values()].some((f) => f.props.kind === "sync" && f.body.includes("day2"))).toBe(true);
   });
 
-  test("storage full: the edit stays on screen and reaches Drive", async () => {
+  test("storage full: an edit that can't be saved isn't made (memory stays what's saved), and it's said", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const al = a.create("Aldar");
@@ -571,9 +571,33 @@ describe("Google Drive sync: review findings", () => {
     later();
     a.edit(al.id, "while-full");
     expect(a.store.getState().saveFailed).toBe(true);
+    expect(tokensOf(a.byName("Aldar")!)).not.toContain("while-full");
+    a.storage.setItem = real; // room again
+    later();
+    a.edit(al.id, "after");
+    expect(a.store.getState().saveFailed).toBe(false);
     await a.sync(drive);
-    expect(tokensOf(a.byName("Aldar")!)).toContain("while-full");
-    expect(drive.syncFileOf("deva")!.body).toContain("while-full");
+    expect(drive.syncFileOf("deva")!.body).toContain("after");
+  });
+
+  test("storage full: a round whose result can't be saved here fails (and is tried again), nothing half-applied", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const b = new Device("devb");
+    a.create("Aldar");
+    await realSync(a, drive);
+    b.create("Bori");
+    await realSync(b, drive);
+    const real = a.storage.setItem.bind(a.storage);
+    a.storage.setItem = (k: string, v: string) => {
+      if (k === "magus.roster.v1") throw new Error("QuotaExceededError");
+      real(k, v);
+    };
+    await expect(realSync(a, drive)).rejects.toThrow("couldn't save");
+    expect(a.records().map((r) => r.name)).toEqual(["Aldar"]);
+    a.storage.setItem = real;
+    await realSync(a, drive);
+    expect(a.records().map((r) => r.name).sort()).toEqual(["Aldar", "Bori"]);
   });
 
   test("an editor's draft saved after a sync brought another device's change keeps both", async () => {
@@ -905,89 +929,7 @@ describe("nonces, tabs, conflicts, clones (earlier review findings)", () => {
   });
 });
 
-describe("review 2: storage full, and an edit before a losing deletion", () => {
-  const failRoster = (d: Device) => {
-    const real = d.storage.setItem.bind(d.storage);
-    d.storage.setItem = (k: string, v: string) => {
-      if (k === "magus.roster.v1") throw new Error("QuotaExceededError");
-      real(k, v);
-    };
-  };
-
-  test("storage full: an edit uploaded from memory survives a reload and a later edit of that character", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const b = new Device("devb");
-    const x = a.create("Xena");
-    await a.sync(drive);
-    await b.sync(drive);
-    failRoster(a); // storage full: the roster can't be saved (small keys still fit)
-    later();
-    a.edit(x.id, "c1-only-in-memory-and-drive");
-    await a.sync(drive);
-    expect(drive.syncFileOf("deva")!.body).toContain("c1-only-in-memory-and-drive");
-    a.store = a.run(() => createRosterStore()); // the app is closed and reopened (still full)
-    later();
-    a.edit(x.id, "c2-after-reload"); // before the first round of the new session
-    for (let i = 0; i < 2; i++) {
-      await a.sync(drive);
-      await b.sync(drive);
-    }
-    const all = b.records().flatMap(tokensOf);
-    expect(all).toContain("c1-only-in-memory-and-drive");
-  });
-
-  test("storage full: the same with a second tab instead of a reload", async () => {
-    const drive = new FakeDrive();
-    const tab1 = new Device("deva");
-    const x = tab1.create("Xena");
-    await realSync(tab1, drive);
-    failRoster(tab1);
-    const tab2 = new Device("deva");
-    tab2.storage = tab1.storage;
-    tab2.store = tab2.run(() => createRosterStore());
-    later();
-    tab1.edit(x.id, "tab1-unsaved");
-    await realSync(tab1, drive);
-    later();
-    tab2.edit(x.id, "tab2-edit"); // tab 2 only sees what's saved
-    await realSync(tab2, drive);
-    await realSync(tab1, drive);
-    const all = tab1.records().flatMap(tokensOf);
-    expect(all).toContain("tab1-unsaved");
-  });
-
-  test("storage full in tab 1, tab 2 frees space and saves: tab 1 merges instead of overwriting", async () => {
-    const tab1 = new Device("deva");
-    const x = tab1.create("Xena");
-    const w = tab1.create("Wulf");
-    const v = tab1.create("Vera");
-    const tab2 = new Device("deva");
-    tab2.storage = tab1.storage;
-    tab2.store = tab2.run(() => createRosterStore());
-    const real = tab1.storage.setItem.bind(tab1.storage);
-    let full = true;
-    tab1.storage.setItem = (k: string, val: string) => {
-      if (full && k === "magus.roster.v1") throw new Error("QuotaExceededError");
-      real(k, val);
-    };
-    later();
-    tab1.edit(x.id, "tab1-unsaved");
-    expect(tab1.store.getState().saveFailed).toBe(true);
-    full = false; // tab 2 deletes a character: there's room again
-    tab2.remove(w.id);
-    tab2.edit(v.id, "tab2-edit");
-    later();
-    tab1.edit(x.id, "tab1-next"); // tab 1 hasn't had the storage event yet
-    tab2.run(() => tab2.store.reload());
-    for (const t of [tab1, tab2]) {
-      expect(t.byName("Wulf")).toBeUndefined();
-      expect(tokensOf(t.byName("Vera")!)).toContain("tab2-edit");
-      expect(tokensOf(t.byName("Xena")!)).toEqual(expect.arrayContaining(["tab1-unsaved", "tab1-next"]));
-    }
-    expect(tab1.store.getState().saveFailed).toBe(false);
-  });
-
+describe("an edit before a losing deletion", () => {
   test("edit then delete on A, parallel edit on B: A's last edit is kept (in the roster or a backup)", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");

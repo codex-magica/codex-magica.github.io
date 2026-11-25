@@ -159,7 +159,6 @@ const DEVICE_KEY = "magus.deviceId.v1";
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
 
 let ls: MemStorage;
-let ss: MemStorage; // sessionStorage
 let win: EventTarget & Record<string, any>;
 let doc: EventTarget & Record<string, any>;
 
@@ -266,8 +265,6 @@ beforeEach(() => {
   doc = new EventTarget() as any;
   doc.visibilityState = "visible";
   vi.stubGlobal("localStorage", ls);
-  ss = new MemStorage();
-  vi.stubGlobal("sessionStorage", ss);
   vi.stubGlobal("window", win);
   vi.stubGlobal("document", doc);
   vi.stubGlobal("navigator", { onLine: true }); // no Web Locks: one tab's rounds are what's under test
@@ -523,40 +520,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.connectProblem).toBe(true);
   });
 
-  test("storage full: the unsaved edits are parked for the trip to Google's page, and are back afterwards", async () => {
-    enableWith("x@test", null, null); // the permission is gone: "Újrakapcsolás" leaves for Google's page
-    const { tab, store, storage } = await openTab();
-    await settle(100);
-    ls.full.add("magus.roster.v1");
-    store.upsert(storage.createBlankRecord("c_a", "Aragorn")); // only in memory now
-    expect(store.getState().saveFailed).toBe(true);
-    tab.api.syncNow();
-    await vi.waitFor(() => expect(win.location.assign).toHaveBeenCalled()); // WebCrypto answers off the fake clock
-    expect(win.location.assign).toHaveBeenCalledTimes(1);
-    expect(String(vi.mocked(win.location.assign).mock.calls[0][0])).toContain("accounts.google.com");
-    // back from Google: a fresh page, with room to save again
-    ls.full.clear();
-    win.location.search = "";
-    const back = await openTab();
-    await settle(100);
-    expect(back.store.getState().records.map((r) => r.name)).toContain("Aragorn");
-    expect(back.store.getState().saveFailed).toBe(false);
-    expect(JSON.parse(ls.getItem("magus.roster.v1")!).map((r: { name: string }) => r.name)).toContain("Aragorn"); // saved now
-    expect(ss.getItem("magus.unsavedRoster.v1")).toBeNull();
-  });
-
-  test("storage full and nowhere to park the edits: it stays, and says what helps", async () => {
-    enableWith("x@test", null, null);
-    const { tab, store, storage } = await openTab();
-    await settle(100);
-    ls.full.add("magus.roster.v1");
-    ss.full.add("magus.unsavedRoster.v1");
-    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
-    tab.api.syncNow();
-    await settle(100);
-    expect(win.location.assign).not.toHaveBeenCalled();
-    expect(tab.api.note?.text).toContain("Exportáld a karaktereidet, törölj egy feleslegeset");
-  });
 });
 
 // ── helpers for the tests below ──

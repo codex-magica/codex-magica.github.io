@@ -12,19 +12,19 @@ import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
 import { useDriveSync } from "../state/useDriveSync";
-import { rosterStore } from "../state/rosterStore";
 import { createBlankRecord } from "../state/storage";
 import { refreshStatusTint } from "./statusTint";
 import { CharacterRecord } from "../model/character";
 
-// Shown while saving to this device fails (storage full or blocked), so nobody loses edits unawares. Below
+// Shown while saving to this device fails (storage full or blocked): edits aren't kept then, so the
+// player must know, and can take everything saved so far to a file. Below
 // the screens' top bar (never over their back button), with the way out right in it.
 const SaveFailedBanner: React.FC<{ onExport: () => void }> = ({ onExport }) => (
   <Box role="alert" position="fixed" top="calc(max(10px, env(safe-area-inset-top)) + 58px)" left="50%" transform="translateX(-50%)" zIndex={62} w="min(520px, calc(100% - 32px))"
     display="flex" alignItems="center" gap="12px" px="14px" py="10px" borderRadius="12px" bg="sheet" border="1px solid" borderColor="warn" boxShadow="0 10px 30px rgba(0,0,0,.18)"
     fontFamily="system-ui" fontSize="13px" color="fg" lineHeight="1.4">
     <Text flex="1">
-      <b>Nem sikerül menteni ezen az eszközön</b> (valószínűleg megtelt a böngésző tárhelye). Az új módosítások csak az alkalmazás bezárásáig maradnak meg.
+      <b>Nem sikerül menteni ezen az eszközön</b> (valószínűleg megtelt vagy le van tiltva a böngésző tárhelye), ezért a módosításaid most nem maradnak meg. Exportáld a karaktereidet, hogy biztonságban legyenek.
     </Text>
     <Box as="button" type="button" onClick={onExport} flexShrink={0} px="11px" py="5px" borderRadius="8px" border="1px solid" borderColor="warn" bg="warnSoft" color="fg" fontSize="13px" fontWeight={700}>
       Exportálás
@@ -165,7 +165,7 @@ export const RootApp: React.FC = () => {
 
       {roster.saveFailed && <SaveFailedBanner onExport={() => void exportBackupFile(roster.records)} />}
       <DriveHopNotice hop={hop} onDismiss={drive.dismissHop} />
-      <UpdateBanner paused={creator !== null || drive.hop === "backSyncing" || drive.hop === "backDone"} required={drive.needsUpdate} beforeReload={() => rosterStore().parkUnsaved()} />
+      <UpdateBanner paused={creator !== null || drive.hop === "backSyncing" || drive.hop === "backDone"} required={drive.needsUpdate} />
     </>
   );
 };

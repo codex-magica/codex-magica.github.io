@@ -14,17 +14,15 @@
 //     copy in memory;
 //   - an edit made from an older version than the one stored now (an editor stayed open while a sync or
 //     another tab changed the character) is saved next to the newer version, not over it;
-//   - while saving fails (storage full), memory is never replaced by the older saved state: it's the
-//     only copy of the latest edits, and the sync uploads from it. Those edits get a lineage of their own
-//     (not this device's id), so an edit made later from the older saved state (after a reload, or in
-//     another tab) counts as parallel to them, never as their successor; and another tab's saved changes
-//     are merged into memory rather than overwritten.
+//   - memory is always what's saved: a change that can't be saved (storage full or blocked) isn't made,
+//     and `saveFailed` says so until a save works again. (Characters take a few kilobytes and browsers
+//     give the app megabytes, so this is for blocked storage and the unexpected, not for everyday use.)
 
 import { CharacterRecord } from "../model/character";
-import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, repairRecord, saveRoster } from "./storage";
+import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
 import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
-import { conflictCopyName, mergeLocal, reconcile } from "./driveMerge";
+import { conflictCopyName, reconcile } from "./driveMerge";
 import { deletionAwaitsDrive } from "./syncState";
 
 export { conflictCopyName };
@@ -46,17 +44,6 @@ export interface RosterState {
 
 const DELETIONS_KEY = "magus.deletions.v1";
 const KEEP_LAST_MS = 60 * 24 * 3600_000; // a deleted character's last state is kept this long (with sync, until it's in Drive)
-// While saving fails (storage full), memory is the only copy of the latest edits. Before the page is
-// replaced (the round trip to Google's consent page, an app update), memory is parked here: the tab's
-// session storage has its own room, and survives the page change. The next start merges it back.
-const STASH_KEY = "magus.unsavedRoster.v1";
-const session = (): Storage | null => {
-  try {
-    return typeof sessionStorage === "undefined" ? null : sessionStorage;
-  } catch {
-    return null;
-  }
-};
 
 const readRaw = (key: string): string | null => {
   try {
@@ -114,16 +101,6 @@ type Listener = () => void;
 
 export const createRosterStore = () => {
   let state: RosterState = { ...load(), revision: 0, saveFailed: false };
-  // edits parked before the last page change, because they couldn't be saved: back in, merged
-  let stashed: { records: CharacterRecord[]; deletions: Deletions } | null = null;
-  try {
-    const raw = session()?.getItem(STASH_KEY);
-    const parsed = raw ? (JSON.parse(raw) as { records?: unknown; deletions?: unknown }) : null;
-    if (parsed && Array.isArray(parsed.records) && parsed.deletions && typeof parsed.deletions === "object")
-      stashed = { records: (parsed.records as unknown[]).map((r) => repairRecord(r)).filter((r): r is CharacterRecord => r !== null), deletions: parsed.deletions as Deletions };
-  } catch {
-    stashed = null;
-  }
   // what's saved, as last read or written by this tab: a change elsewhere shows up as a difference
   let seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
   const listeners = new Set<Listener>();
@@ -148,77 +125,40 @@ export const createRosterStore = () => {
   };
   const withoutLastStates = (deletions: Deletions): Deletions => Object.fromEntries(Object.entries(deletions).map(([id, { t, vc }]) => [id, { t, vc }]));
 
-  // Saves the roster and the deletion markers so that what's saved always fits together: never a roster
-  // without a character whose deletion marker isn't saved (it would come back from Drive after a reload),
-  // never a marker saved for a change whose roster isn't. When storage is full, the order matters (a
-  // deletion shrinks the roster but grows the markers), so both orders are tried; then the markers without
-  // the deleted characters' last states (they're only kept for a Drive backup: if sync still needs one,
-  // it stays in memory and saving counts as failed; otherwise this is saved); and if nothing fits, what
-  // was saved before is put back.
+  // Saves the roster and the deletion markers together: never a roster without a character whose
+  // deletion marker isn't saved (it would come back from Drive after a reload), never a marker for a
+  // change whose roster isn't. With storage (nearly) full the order matters, because deleting a character
+  // shrinks the roster but grows the markers (deleting is how the player makes room, so it must work):
+  // both orders are tried, then the markers without the deleted characters' last states (kept only for
+  // a Drive backup). If nothing fits, what was saved before is put back and false is returned.
   const persist = (records: CharacterRecord[], deletions: Deletions): boolean => {
     const before = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
-    let ok = (writeDeletions(deletions) && saveRoster(records)) || (saveRoster(records) && writeDeletions(deletions));
-    if (!ok) {
-      if (saveRoster(records) && writeDeletions(withoutLastStates(deletions)))
-        ok = !Object.entries(deletions).some(([id, d]) => d.last && deletionAwaitsDrive(id, d));
-      else
-        for (let i = 0; i < 2; i++) {
-          const back = i === 0 ? writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions) : writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster);
-          if (back) break;
-        }
-    }
-    seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
-    if (ok)
-      try {
-        session()?.removeItem(STASH_KEY); // all of memory is saved: nothing parked is needed any more
-      } catch {
-        /* ignore */
+    const ok =
+      (writeDeletions(deletions) && saveRoster(records)) ||
+      (saveRoster(records) && writeDeletions(deletions)) ||
+      (saveRoster(records) && writeDeletions(withoutLastStates(deletions)));
+    if (!ok)
+      for (let i = 0; i < 2; i++) {
+        const back = i === 0 ? writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions) : writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster);
+        if (back) break;
       }
+    seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
     return ok;
   };
 
-  if (stashed) {
-    const merged = mergeLocal(stashed, state);
-    const saved = persist(merged.records, merged.deletions);
-    state = { ...state, records: merged.records, deletions: merged.deletions, saveFailed: !saved };
-  }
-
-  const commit = (records: CharacterRecord[], deletions: Deletions, local: boolean) => {
+  // A change, kept only if it's saved; `local`: the player's own edit (counted in `revision`, which
+  // starts a sync round). False if it couldn't be saved: nothing changed, and `saveFailed` says so.
+  const commit = (records: CharacterRecord[], deletions: Deletions, local: boolean): boolean => {
     const saved = persist(records, deletions);
-    state = { records, deletions, revision: state.revision + (local ? 1 : 0), saveFailed: !saved };
+    state = saved ? { records, deletions, revision: state.revision + (local ? 1 : 0), saveFailed: false } : { ...state, saveFailed: true };
     emit();
+    return saved;
   };
 
-  // The lineage of edits that exist only in memory (saving failed): one per session, never this device's
-  // id, see the header.
-  let unsavedLineage: string | null = null;
-  const lineageFor = (failing: boolean) => (failing ? (unsavedLineage ??= `${deviceId()}.u${Math.random().toString(36).slice(2, 8)}`) : deviceId());
-
-  // A local edit: built against the current state with this device's lineage; if it can't be saved, it's
-  // rebuilt with the unsaved lineage before it's kept in memory.
-  const mutate = (build: (lineage: string) => { records: CharacterRecord[]; deletions: Deletions } | null) => {
-    let next = build(lineageFor(state.saveFailed));
-    if (!next) return;
-    let saved = persist(next.records, next.deletions);
-    if (!saved && !state.saveFailed) {
-      next = build(lineageFor(true)) ?? next;
-      saved = persist(next.records, next.deletions);
-    }
-    state = { records: next.records, deletions: next.deletions, revision: state.revision + 1, saveFailed: !saved };
-    emit();
-  };
-
-  // Re-read what's saved if another tab changed it. While saving fails, memory holds edits that aren't
-  // saved anywhere: it's merged with the saved state instead of replaced, and saved if that works now.
+  // Re-read what's saved if another tab changed it.
   const refresh = (): boolean => {
     const now = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
     if (now.roster === seen.roster && now.deletions === seen.deletions) return false;
-    if (state.saveFailed) {
-      const merged = mergeLocal(state, load());
-      const saved = persist(merged.records, merged.deletions);
-      state = { ...state, records: merged.records, deletions: merged.deletions, saveFailed: !saved };
-      return true;
-    }
     state = { ...state, ...load() };
     seen = now;
     return true;
@@ -241,21 +181,20 @@ export const createRosterStore = () => {
       const deletion = state.deletions[record.id];
       // re-creating a deleted id (restoring a backup) must outrank the deletion
       const vc = join(prev?.syncVc ?? record.syncVc ?? {}, deletion?.vc ?? {});
-      mutate((lineage) => {
-        const stamped: CharacterRecord = {
-          ...record,
-          updatedAt: nextStamp(Math.max(prev?.updatedAt ?? 0, deletion?.t ?? 0, record.updatedAt ?? 0)),
-          syncVc: bump(vc, lineage),
-          syncCvc: undefined, // new content
-        };
-        const i = state.records.findIndex((r) => r.id === record.id);
-        let records = i < 0 ? [...state.records, stamped] : state.records.map((r, j) => (j === i ? stamped : r));
-        if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped))
-          records = [...records, { ...prev, id: genId(), name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, lineage), syncCvc: undefined }];
-        const deletions = { ...state.deletions };
-        delete deletions[record.id];
-        return { records, deletions };
-      });
+      const me = deviceId();
+      const stamped: CharacterRecord = {
+        ...record,
+        updatedAt: nextStamp(Math.max(prev?.updatedAt ?? 0, deletion?.t ?? 0, record.updatedAt ?? 0)),
+        syncVc: bump(vc, me),
+        syncCvc: undefined, // new content
+      };
+      const i = state.records.findIndex((r) => r.id === record.id);
+      let records = i < 0 ? [...state.records, stamped] : state.records.map((r, j) => (j === i ? stamped : r));
+      if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped))
+        records = [...records, { ...prev, id: genId(), name: conflictCopyName(prev.name), updatedAt: nextStamp(prev.updatedAt), syncVc: bump({}, me), syncCvc: undefined }];
+      const deletions = { ...state.deletions };
+      delete deletions[record.id];
+      commit(records, deletions, true);
     },
 
     // `base`: the version the player confirmed deleting (what the dialog showed). If it changed since (a
@@ -266,10 +205,7 @@ export const createRosterStore = () => {
       const prev = find(id);
       if (!prev) return true;
       if (base && contentHash(prev) !== contentHash(base)) return false;
-      mutate((lineage) => ({
-        records: state.records.filter((r) => r.id !== id),
-        deletions: { ...state.deletions, [id]: { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, lineage), last: prev } },
-      }));
+      commit(state.records.filter((r) => r.id !== id), { ...state.deletions, [id]: { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, deviceId()), last: prev } }, true);
       return true;
     },
 
@@ -277,10 +213,7 @@ export const createRosterStore = () => {
       refresh();
       const r = find(id);
       if (!r) return;
-      mutate((lineage) => ({
-        records: [...state.records, { ...clone(r), id: genId(), name: `${r.name} (másolat)`, updatedAt: Date.now(), syncVc: bump({}, lineage), syncCvc: undefined }],
-        deletions: state.deletions,
-      }));
+      commit([...state.records, { ...clone(r), id: genId(), name: `${r.name} (másolat)`, updatedAt: Date.now(), syncVc: bump({}, deviceId()), syncCvc: undefined }], state.deletions, true);
     },
 
     // After this device got a fresh id because another device was using the old one: the versions made
@@ -291,7 +224,7 @@ export const createRosterStore = () => {
     // count they were built on (the highest one of that character's versions in Drive, `ancestry`, that
     // they contain): an edit or deletion made here on top of a published version still replaces that
     // version, instead of looking parallel to its own ancestor.
-    relabelDevice(oldId: string, newId: string, published: Set<string> = new Set(), ancestry: Map<string, VersionVector[]> = new Map()): void {
+    relabelDevice(oldId: string, newId: string, published: Set<string> = new Set(), ancestry: Map<string, VersionVector[]> = new Map()): boolean {
       refresh();
       const move = (id: string, vc: VersionVector, h: string): VersionVector => {
         if (vc[oldId] === undefined || published.has(versionKeyOf(vc, h))) return vc;
@@ -305,34 +238,21 @@ export const createRosterStore = () => {
         return vc === r.syncVc ? r : { ...r, syncVc: vc, syncCvc: undefined };
       });
       const deletions = Object.fromEntries(Object.entries(state.deletions).map(([id, d]) => [id, { ...d, vc: move(id, d.vc, DELETED_HASH) }]));
-      commit(records, deletions, false);
+      return commit(records, deletions, false);
     },
 
     // The result of a sync round (not a local edit), applied to the roster as saved NOW: what changed
-    // since the round started (here or in another tab) is kept, see driveMerge.reconcile.
-    applyRound(snapshot: { records: CharacterRecord[]; deletions: Deletions }, merged: { records: CharacterRecord[]; deletions: Deletions }): void {
+    // since the round started (here or in another tab) is kept, see driveMerge.reconcile. False if it
+    // couldn't be saved (the round then counts as failed, and is tried again).
+    applyRound(snapshot: { records: CharacterRecord[]; deletions: Deletions }, merged: { records: CharacterRecord[]; deletions: Deletions }): boolean {
       refresh();
       const next = reconcile(snapshot, state, merged);
-      commit(next.records, next.deletions, false);
-    },
-
-    // Before the page is replaced while saving fails: park memory for the next start (see STASH_KEY).
-    // False if that isn't possible either: then leaving would lose the latest edits.
-    parkUnsaved(): boolean {
-      if (!state.saveFailed) return true;
-      try {
-        const s = session();
-        if (!s) return false;
-        s.setItem(STASH_KEY, JSON.stringify({ records: state.records, deletions: state.deletions }));
-        return true;
-      } catch {
-        return false;
-      }
+      return commit(next.records, next.deletions, false);
     },
 
     // The player downloaded the saved data that couldn't be read (storage.unreadableKeys) and dropped it.
     // The unreadable roster itself, if it's among them (there was no room to keep it aside), is replaced
-    // by what's in memory: what could be read of it, plus any edits since.
+    // by what could be read of it.
     dropUnreadable(keys: string[]): void {
       for (const k of keys) {
         if (k === ROSTER_KEY) {
@@ -347,8 +267,7 @@ export const createRosterStore = () => {
       }
     },
 
-    // re-read what's saved (another tab changed it, or right before a sync round); a no-op while
-    // saving fails, so the unsaved edits in memory survive and can be synced
+    // re-read what's saved (another tab changed it, or right before a sync round)
     reload(): void {
       if (refresh()) emit();
     },

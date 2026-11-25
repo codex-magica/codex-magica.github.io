@@ -58,12 +58,6 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
     if (!this.state.error) return this.props.children;
     if (this.props.fallback) return this.props.fallback(this.state.error);
     const btn = { as: "button" as const, type: "button" as const, px: "16px", py: "10px", borderRadius: "9px", fontWeight: 700, fontSize: "15px", border: "1px solid" };
-    let unsaved = false; // saving to this device was failing: the latest edits exist only in memory
-    try {
-      unsaved = rosterStore().getState().saveFailed;
-    } catch {
-      /* the store itself is broken */
-    }
     const primary = { borderColor: "accent", bg: "accentSoft", color: "accentTx" };
     const secondary = { borderColor: "hair", color: "fg" };
     return (
@@ -72,34 +66,19 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode; 
           <Heading fontSize="22px" mb="10px">
             Hiba történt
           </Heading>
-          {unsaved ? (
-            <Text fontSize="15px" lineHeight="1.55" mb="16px">
-              A legutóbbi módosításaidat nem sikerült elmenteni ezen az eszközön. Mielőtt újratöltöd az alkalmazást, exportáld a karaktereidet, különben ezek a módosítások elvesznek.
-            </Text>
-          ) : (
-            <>
-              <Text fontSize="15px" lineHeight="1.55" mb="8px">
-                A karaktereid nem vesztek el: minden módosításodat azonnal elmenti az alkalmazás ezen az eszközön. Töltsd újra az alkalmazást.
-              </Text>
-              <Text fontSize="14px" color="muted" lineHeight="1.55" mb="16px">
-                Ha a hiba ismét jelentkezik, mentsd el a karaktereidet egy fájlba, és jelezd a hibát a projekt GitHub-oldalán.
-              </Text>
-            </>
-          )}
+          <Text fontSize="15px" lineHeight="1.55" mb="8px">
+            A karaktereid nem vesztek el: minden módosításodat azonnal elmenti az alkalmazás ezen az eszközön. Töltsd újra az alkalmazást.
+          </Text>
+          <Text fontSize="14px" color="muted" lineHeight="1.55" mb="16px">
+            Ha a hiba ismét jelentkezik, exportáld a karaktereidet, és jelezd a hibát a projekt GitHub-oldalán.
+          </Text>
           <Box display="flex" gap="10px" flexWrap="wrap" mb="16px">
-            {unsaved && (
-              <Box {...btn} {...primary} onClick={this.saveAll}>
-                Karakterek exportálása
-              </Box>
-            )}
-            <Box {...btn} {...(unsaved ? secondary : primary)} onClick={this.reload}>
+            <Box {...btn} {...primary} onClick={this.reload}>
               Újratöltés
             </Box>
-            {!unsaved && (
-              <Box {...btn} {...secondary} onClick={this.saveAll}>
-                Karakterek exportálása
-              </Box>
-            )}
+            <Box {...btn} {...secondary} onClick={this.saveAll}>
+              Karakterek exportálása
+            </Box>
           </Box>
           <Text fontSize="12px" color="fgFaint" wordBreak="break-word">
             {String(this.state.error.message || this.state.error).slice(0, 300)}

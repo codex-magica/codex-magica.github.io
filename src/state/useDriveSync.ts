@@ -351,17 +351,10 @@ export function useDriveSync(): DriveSyncApi {
   }, [available, getToken, round, scheduleRetry, needTap]);
   autoRef.current = autoSync;
 
-  // With a token service: off to Google's consent page (turning sync on, or reconnecting).
+  // Off to Google's consent page (turning sync on, or reconnecting).
   const leaveForGoogle = useCallback((backups?: boolean) => {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
       setNote("Nincs internetkapcsolat. A Google-engedélyhez internet kell; próbáld újra, ha lesz.");
-      return;
-    }
-    if (!store.parkUnsaved()) {
-      // the latest edits exist only in memory and can't be parked for the page change: it would lose them
-      setNote(
-        "Most nem léphetsz át a Google oldalára: ezen az eszközön nem sikerül menteni (valószínűleg megtelt a tárhely), és elvesznének a legutóbbi módosításaid. Exportáld a karaktereidet, törölj egy feleslegeset, aztán próbáld újra."
-      );
       return;
     }
     void beginConnect(loadDriveSettings().email, backups).then((r) => {
@@ -550,19 +543,6 @@ export function useDriveSync(): DriveSyncApi {
       window.removeEventListener("online", onOnline);
     };
   }, [available, settings.enabled, autoSync]);
-
-  // edits that exist only in memory (storage full): parked whenever the page may go away (the phone may
-  // discard a background app), so they're back on the next start in this tab
-  useEffect(() => {
-    const park = () => void store.parkUnsaved();
-    const onHide = () => document.visibilityState === "hidden" && park();
-    document.addEventListener("visibilitychange", onHide);
-    window.addEventListener("pagehide", park);
-    return () => {
-      document.removeEventListener("visibilitychange", onHide);
-      window.removeEventListener("pagehide", park);
-    };
-  }, []);
 
 
 

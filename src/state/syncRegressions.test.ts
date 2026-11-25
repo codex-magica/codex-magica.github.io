@@ -293,27 +293,11 @@ describe("saving when storage is full", () => {
     expect(a.store.getState().saveFailed).toBe(true);
     expect(qs.getItem("magus.roster.v1")).toBe(before.roster);
     expect(qs.getItem("magus.deletions.v1")).toBe(before.deletions);
-    expect(tokensOf(a.records()[0]).some((t) => t.startsWith("xxx"))).toBe(true); // kept in memory
-  });
-
-  test("edits made while saving fails get a lineage of their own; once there's room, the device's own again", () => {
-    const a = new Device("deva");
-    const qs = new QuotaStorage();
-    a.storage = qs;
-    a.store = a.run(() => createRosterStore());
-    const x = a.create("Xena");
-    qs.cap = qs.used();
-    a.edit(x.id, "y".repeat(400));
-    const unsaved = Object.keys(a.records()[0].syncVc ?? {});
-    expect(unsaved.some((k) => k.startsWith("deva.u"))).toBe(true);
-    qs.cap = Infinity;
+    expect(tokensOf(a.records()[0]).some((t) => t.startsWith("xxx"))).toBe(false); // not made: memory is what's saved
     later();
-    a.edit(x.id, "after"); // saved: memory and storage agree again
+    a.remove(x.id); // deleting still works (it's how the player makes room)
     expect(a.store.getState().saveFailed).toBe(false);
-    later();
-    a.edit(x.id, "next");
-    const vc = a.records()[0].syncVc ?? {};
-    expect(vc.deva).toBeGreaterThan(1); // the next edit is the device's own again
+    expect(a.records()).toEqual([]);
   });
 
   test("an unreadable roster with no room to keep it aside: offered for download, then replaced by what could be read", () => {
@@ -329,14 +313,16 @@ describe("saving when storage is full", () => {
     const keys = a.run(() => unreadableKeys());
     expect(keys).toEqual(["magus.roster.v1"]); // the roster itself is what's offered
     a.edit("c_ok", "note");
-    expect(qs.getItem("magus.roster.v1")).toBe(raw); // not saved over
+    expect(qs.getItem("magus.roster.v1")).toBe(raw); // not saved over...
+    expect(a.store.getState().saveFailed).toBe(true); // ...and said
     qs.cap = Infinity;
     a.run(() => a.store.dropUnreadable(keys)); // downloaded, then "Törlés erről az eszközről"
     expect(a.store.getState().saveFailed).toBe(false);
     expect(a.run(() => unreadableKeys())).toEqual([]);
     const saved = JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[];
     expect(saved.map((r) => r.name)).toEqual(["Megvan"]);
-    expect(tokensOf(saved[0])).toContain("note");
+    a.edit("c_ok", "note");
+    expect(tokensOf(a.records()[0])).toContain("note"); // editing works again
   });
 });
 

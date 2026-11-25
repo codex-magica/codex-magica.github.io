@@ -130,7 +130,9 @@ describe("token service", () => {
   test("a tampered credential, or one made for another client, is refused without asking Google", async () => {
     const credential = await sealCredential(env(), { rt: "rt-1", iat: 1 });
     const g = google();
-    const tampered = credential.slice(0, -2) + (credential.endsWith("A") ? "BB" : "AA");
+    // change a character inside the ciphertext (the last one may only carry padding bits)
+    const at = credential.length - 6;
+    const tampered = credential.slice(0, at) + (credential[at] === "A" ? "B" : "A") + credential.slice(at + 1);
     expect((await handle(post("/v1/token", { credential: tampered }), env(), g.doFetch)).status).toBe(401);
     expect((await handle(post("/v1/token", { credential }), env({ GOOGLE_CLIENT_ID: "other.apps.googleusercontent.com" }), g.doFetch)).status).toBe(401);
     expect((await handle(post("/v1/token", { credential: "v1.x.y.z" }), env(), g.doFetch)).status).toBe(401);
