@@ -30,7 +30,6 @@ export const contentHash = (record: CharacterRecord): string => {
   return (a >>> 0).toString(16).padStart(8, "0") + (b >>> 0).toString(16).padStart(8, "0");
 };
 
-
 // The edit stamp. Causality is the version vector's job; this time only orders parallel edits and dates
 // backups. It stays just ahead of the version it was made from when that one is a little in the future
 // (a slightly fast clock elsewhere), but a stamp far in the future (a badly wrong clock) is ignored, so it

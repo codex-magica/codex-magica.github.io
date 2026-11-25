@@ -279,7 +279,7 @@ describe("a cloned device relabelling its edits keeps their history", () => {
     expect(a.byName("Wulf")).toBeUndefined();
   });
 
-  test("a clone edits a character the original didn't touch: no '(másik változat)' copy of its own ancestor", async () => {
+  test("a clone edits a character the original didn't touch: no conflict about its own ancestor", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const w = a.create("Wulf");

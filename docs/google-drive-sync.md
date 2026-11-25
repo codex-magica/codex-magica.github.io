@@ -24,15 +24,15 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   - one contains the other → the newer one;
   - edited in parallel and one of them deleted → the edit wins;
   - edited in parallel, same content → one version;
-  - edited in parallel, different content → **both are kept, and the player picks one**: the one edited
-    last stays listed, the other is stored as an alternative (id `Név-id~…`, synced like any character but
-    not listed), and a "Szinkronütközés" popup asks which version stays (or keeps both, the other as
-    "Név (másik változat)"). The choice is an ordinary edit plus deleting the alternative, so it reaches
-    every device; two devices choosing differently at once meet as a new conflict. Closing the popup puts
-    it off until the app is next opened. Every device resolves the merge identically (the alternative's id
-    comes from its content, and it starts a history of its own, counted from the losing version's edits),
-    so they converge without extra copies, a later alternative of the same content can't replace edits
-    made to an earlier one, and one the player dropped can come back only as a new question. The kept version also remembers which version its
+  - edited in parallel, different content → **both are kept, and the player picks one**: the one edited last
+    stays listed, the other is stored as an alternative (id `Név-id~…`, synced like any character but not
+    listed), and a "Szinkronütközés" popup asks which version stays (or keeps both, the other as "Név (másik
+    változat)"). The choice is an ordinary edit plus deleting the alternative, so it reaches every device; two
+    devices choosing differently at once meet as a new conflict. Closing the popup puts it off until the app
+    is next opened. Every device resolves the merge identically (the alternative's id comes from its content,
+    and it starts a history of its own, counted from the losing version's edits), so they converge without
+    extra copies, a later alternative of the same content can't replace edits made to an earlier one, and one
+    the player dropped can come back only as a new question. The kept version also remembers which version its
     content was made as, so when the device it came from edits it again before seeing the merge, that edit
     counts as continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
@@ -106,11 +106,11 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   storage is full and only they can make room; rounds keep being retried (slowly), so sync goes on by
   itself afterwards.
 - **What the player is told, and where.** The roster says at the top what sync needs from the player
-  (reconnect, an app update, Google storage full, changes stuck on this device for hours), with a button
-  to the sync window, and names the characters a round brought back after a deletion (an edit made
-  elsewhere in parallel), until dismissed. Characters changed on two devices are asked about in a popup. The roster footer keeps the
-  quiet status. If Google's permission goes away while the player is elsewhere (a character sheet), a
-  card says so once on any screen. Coming back from Google's page with a problem reopens the sync window
+  (reconnect, an app update, Google storage full, changes stuck on this device for hours), with a button to
+  the sync window, and names the characters a round brought back after a deletion (an edit made elsewhere in
+  parallel), until dismissed. Characters changed on two devices are asked about in a popup. The roster footer
+  keeps the quiet status. If Google's permission goes away while the player is elsewhere (a character sheet),
+  a card says so once on any screen. Coming back from Google's page with a problem reopens the sync window
   with what happened.
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
   months) does the app ask the player to reconnect: the roster says so,
@@ -130,25 +130,27 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   Nothing is deleted: the
   characters stay on the device, and the files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
 
-Code: `src/state/rosterStore.ts` (the roster, edit stamps and deletion markers), `storage.ts` (reading and
-saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflict resolution, backup
-selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, backups, write),
+Code: `src/state/rosterStore.ts` (the roster, edit stamps, deletion markers and conflicts), `storage.ts`
+(reading and saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflict resolution,
+backup selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, backups, write),
 `driveSyncRound.ts` (a round with this device's saved sync state, clone handling), `syncState.ts` (what's
 published, nonces, settings), `googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive
 calls), `driveSyncController.ts` (when to sync, connecting, what to tell the player; no React),
-`useDriveSync.ts` (the screens' view of it), `driveStatus.ts` (the status texts),
-`activeTab.ts` (one tab at a time), `transfer.ts` (export and import files); `src/ui/DriveSyncModal.tsx`,
-`DriveHopNotice.tsx`, `TabGate.tsx`; the token service in `worker/src/index.ts` (tested in
+`useDriveSync.ts` (the screens' view of it), `driveStatus.ts` (the status texts), `activeTab.ts` (one tab at a
+time), `transfer.ts` (export and import files); `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`,
+`TabGate.tsx`, `SyncConflictModal.tsx`; the token service in `worker/src/index.ts` (tested in
 `worker/src/index.test.ts`).
+
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
-and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw it.
-`src/state/syncConflicts.test.ts` and `syncConflictFuzz.test.ts` cover the conflict question, `src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full,
-cloned devices, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between
-several devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real hook against a
-fake Google and token service (retries, renewals, the return from the consent page). They share the harness
-in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts` and `activeTab.test.ts`
-cover the Drive client, the status texts and the one-tab rule.
+and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw
+it. `src/state/syncConflicts.test.ts` and `syncConflictFuzz.test.ts` cover the conflict question,
+`src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full, cloned
+devices, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between several
+devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real hook
+against a fake Google and token service (retries, renewals, the return from the consent page). They share the
+harness in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts` and
+`activeTab.test.ts` cover the Drive client, the status texts and the one-tab rule.
 
 ## Scope and deliberate limitations
 

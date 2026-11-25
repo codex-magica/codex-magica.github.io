@@ -118,7 +118,7 @@ describe("Google Drive sync: rounds between devices", () => {
     f.version++;
     b.run(() => b.store.upsert({ ...defaultRecord, id, name: "Aldar (b)" }));
     await b.sync(drive);
-    expect(b.records().map((r) => r.name).sort()).toEqual(["Aldar (b)", conflictCopyName("Aldar (odd)")].sort().reverse().sort());
+    expect(b.records().map((r) => r.name).sort()).toEqual(["Aldar (b)", conflictCopyName("Aldar (odd)")].sort());
   });
 
   test("parallel edits keep both versions, and every device ends up with the same two (no extra copies)", async () => {
@@ -964,24 +964,6 @@ describe("an edit before a losing deletion", () => {
 });
 
 describe("what a round tells the player", () => {
-  test("a parallel edit kept as a copy is named, on the device that gets the copy", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const b = new Device("devb");
-    const x = a.create("Kael");
-    await a.sync(drive);
-    await b.sync(drive);
-    later();
-    a.edit(x.id, "a-edit");
-    b.edit(x.id, "b-edit");
-    const first = await a.sync(drive);
-    expect(first.copied).toEqual([]);
-    later();
-    const second = await b.sync(drive); // b sees a's parallel edit
-    expect(second.copied).toEqual(["Kael"]);
-    expect(second.undeleted).toEqual([]);
-  });
-
   test("a deletion undone by a parallel edit elsewhere is named on the device that deleted", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");

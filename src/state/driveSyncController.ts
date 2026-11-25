@@ -47,7 +47,7 @@ export type DriveStatus = "off" | "idle" | "syncing" | "needsTap" | "error";
 // "lost": sync stopped because Google's permission is gone (shown once, on any screen, until dismissed).
 export type DriveHop = "backSyncing" | "backDone" | "lost" | null;
 
-// `error`: something failed (shown as a warning); otherwise information (a conflict copy was made).
+// `error`: something failed (shown as a warning); otherwise information (a deleted character came back).
 // `seq` changes with every new note, also when the same text comes again, so the window can show that
 // the last tap did something.
 export interface DriveNote {
@@ -60,7 +60,7 @@ export interface DriveSyncState {
   settings: DriveSettings;
   status: DriveStatus;
   note: DriveNote | null; // the last error, or a notice about something just tapped
-  notice: DriveNote | null; // what a round did that the player should know (copies, undone deletions), until dismissed
+  notice: DriveNote | null; // what a round did that the player should know (deletions undone by a parallel edit), until dismissed
   hop: DriveHop;
   needsUpdate: boolean; // Drive holds data from a newer app version: sync waits for this one to update
   driveFull: boolean; // the player's Google storage is full: sync waits for them to free some space
@@ -73,7 +73,6 @@ const FOREGROUND_MIN_GAP_MS = 20_000;
 const RETRY_FIRST_MS = 30_000; // after a failed round (Drive or the token service unreachable): try again,
 const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
-
 
 // ── the Hungarian notes ─────────────────────────────────────────────────────────────────────────────
 const authNote = (reason: string): string => {

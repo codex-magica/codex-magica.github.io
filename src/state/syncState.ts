@@ -68,8 +68,6 @@ export const savePublished = (p: Published): void => write(PUBLISHED_KEY, p);
 const recordKey = (r: CharacterRecord): string => versionKeyOf(r.syncVc ?? {}, contentHash(r));
 const deletionKey = (d: { vc: Record<string, number> }): string => versionKeyOf(d.vc, DELETED_HASH);
 
-
-
 // Changes on this device not yet in its Drive file: edits, new characters and deletions. `oldest` is
 // when the oldest of them happened (for the "sync before switching devices" hint).
 export const pendingChanges = (records: CharacterRecord[], deletions: Deletions, published: Published): { count: number; oldest: number | null } => {

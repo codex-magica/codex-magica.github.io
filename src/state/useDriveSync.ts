@@ -19,7 +19,7 @@ export interface DriveSyncApi {
   backups: boolean; // daily backups in Drive
   pending: { count: number; oldest: number | null }; // local changes not yet in Drive
   note: DriveNote | null; // the last error, or a notice about something just tapped, in Hungarian
-  notice: DriveNote | null; // what a sync round did that the player should know (copies, undone deletions), until dismissed
+  notice: DriveNote | null; // what a sync round did that the player should know (deletions undone by a parallel edit), until dismissed
   enable: (backups: boolean) => void;
   syncNow: () => void;
   disable: () => void;

@@ -14,7 +14,7 @@
 //     tab, see activeTab.ts, but a page brought back from the browser's cache or an older copy of the
 //     app could still have saved meanwhile: re-reading is cheap insurance);
 //   - an edit made from an older version than the one stored now (an editor stayed open while a sync
-//     changed the character) is saved next to the newer version, not over it;
+//     changed the character) is saved, and the version it replaced is kept as a conflict alternative;
 //   - memory is always what's saved: a change that can't be saved (storage full or blocked) isn't made,
 //     and `saveFailed` says so until a save works again. (Characters take a few kilobytes and browsers
 //     give the app megabytes, so this is for blocked storage and the unexpected, not for everyday use.)
@@ -23,7 +23,7 @@ import { CharacterRecord } from "../model/character";
 import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
 import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, vcOfKey, versionKeyOf } from "./versions";
-import { conflictCopyName, reconcile } from "./driveMerge";
+import { alternativeId, conflictCopyName, plainName, reconcile } from "./driveMerge";
 import { loadDriveSettings } from "./syncState";
 
 export interface Deletion {
@@ -62,9 +62,6 @@ export const conflictsOf = (records: CharacterRecord[]): Conflict[] =>
     .filter((r) => mainIdOf(r.id) === null)
     .map((main) => ({ main, alternatives: records.filter((r) => mainIdOf(r.id) === main.id) }))
     .filter((c) => c.alternatives.length > 0);
-const COPY_SUFFIX = conflictCopyName("");
-const plainName = (name: string): string => (name.endsWith(COPY_SUFFIX) ? name.slice(0, -COPY_SUFFIX.length) : name);
-
 
 const DELETIONS_KEY = "magus.deletions.v1";
 
@@ -218,7 +215,7 @@ export const createRosterStore = () => {
       delete deletions[record.id];
       // the editor started from a version a sync has replaced meanwhile: that one is kept as an alternative
       // (outranking an earlier answer that dropped an alternative with the same content: this is new)
-      const altId = prev ? `${record.id}~${contentHash(prev).slice(0, 10)}` : "";
+      const altId = prev ? alternativeId(record.id, contentHash(prev)) : "";
       if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped) && !find(altId)) {
         const dropped = deletions[altId];
         records = [...records, { ...prev, id: altId, name: conflictCopyName(prev.name), updatedAt: nextStamp(Math.max(prev.updatedAt ?? 0, dropped?.t ?? 0)), syncVc: bump(dropped?.vc ?? {}, me), syncCvc: undefined }];
@@ -244,8 +241,8 @@ export const createRosterStore = () => {
 
     // Characters from an import file (transfer.parseImportFile: new ones, or ones this device doesn't
     // have). Each import gets a history of its own, parallel to everything else: a character Drive
-    // already has comes back as one if the content is the same, or as a second character
-    // ("(másik változat)") if it differs. Numbering it as this device's next edit instead could make an
+    // already has comes back as one if the content is the same, or as a conflict the player is asked
+    // about if it differs. Numbering it as this device's next edit instead could make an
     // old file silently replace a newer version of the same character in Drive.
     importRecords(records: CharacterRecord[]): void {
       refresh();
@@ -303,7 +300,7 @@ export const createRosterStore = () => {
     // version keys Drive holds now plus what this device last published) keeps only the part of the old
     // id's count that this device itself last published for that character (`ownPublished`, id → version
     // key: surely its own history), and takes the new id for the rest. It then looks parallel to whatever
-    // the other copy made since, so the merge keeps both (a "(másik változat)" copy, or a deleted character
+    // the other copy made since, so the merge keeps both (a conflict question, or a deleted character
     // coming back, with a notice) instead of letting one replace the other unseen; and an edit made here
     // on top of what was published still simply replaces it.
     relabelDevice(oldId: string, newId: string, published: Set<string>, ownPublished: Record<string, string>): boolean {

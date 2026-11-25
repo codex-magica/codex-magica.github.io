@@ -155,7 +155,6 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
     });
   };
 
-
   const views: CardView[] = useMemo(
     () =>
       records.map((r) => {
@@ -349,7 +348,7 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
               {importError ?? importInfo}
             </Text>
           )}
-      </Box>
+        </Box>
       </Box>
 
       {confirmDropAside && (

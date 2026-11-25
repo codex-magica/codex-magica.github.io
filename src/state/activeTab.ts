@@ -5,7 +5,7 @@
 // re-reads what's saved before every change).
 //
 // The active tab holds a Web Lock for as long as it's open. A new tab takes it only if it's free (it
-// never queues for it: a tab left on Google's consent page must find it free when it comes back).
+// never queues for it); a return from Google's consent page takes it outright.
 // "Folytatás itt" takes it over; the tab that had it switches to the "open in another tab" screen. Where
 // Web Locks don't exist, every tab is active.
 //

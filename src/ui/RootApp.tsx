@@ -12,7 +12,7 @@ import { exportBackupFile, exportRecordFile } from "../state/transfer";
 import { CreditsModal } from "./CreditsModal";
 import { creditsSeen, markCreditsSeen } from "../state/creditsNotice";
 import { useRoster } from "../state/useRoster";
-import { rosterStore } from "../state/rosterStore";
+import { Conflict, rosterStore } from "../state/rosterStore";
 import { useDriveSync } from "../state/useDriveSync";
 import { createBlankRecord } from "../state/storage";
 import { refreshStatusTint } from "./statusTint";
@@ -34,10 +34,11 @@ const SaveFailedBanner: React.FC<{ onExport: () => void }> = ({ onExport }) => (
   </Box>
 );
 
+const conflictKey = (cs: Conflict[]): string => cs.flatMap((c) => c.alternatives.map((a) => a.id)).join(",");
+
 // Top-level navigation: the roster is home; opening a character shows the sheet; create / edit /
 // level-up open the shared full-screen creator as an overlay. Characters persist to local storage
 // via the roster; the creator commits a working copy on save.
-const conflictKey = (cs: { alternatives: CharacterRecord[] }[]): string => cs.flatMap((c) => c.alternatives.map((a) => a.id)).join(",");
 
 export const RootApp: React.FC = () => {
   const roster = useRoster();

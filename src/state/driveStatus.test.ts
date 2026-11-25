@@ -29,7 +29,6 @@ describe("sync status in words", () => {
     expect(driveStatusLine(drive({ status: "error" }), NOW)).toContain("magától újra megpróbálja");
   });
 
-
   test("the permission is gone: a reconnect, said once (the button next to it does it)", () => {
     expect(driveAttention(drive({ status: "needsTap" }), NOW)).toEqual({ kind: "reconnect", text: "Google Drive: a szinkron leállt, mert megszűnt a Google-engedély." });
     expect(driveAttention(drive({ status: "needsTap" }), NOW, true)?.text).toBe("A szinkron leállt, mert megszűnt a Google-engedély."); // no prefix inside the Google Drive window
@@ -60,7 +59,7 @@ describe("sync status in words", () => {
     expect(driveStatusLine(drive({ status: "error" }), NOW, true, true)).toBe("Szinkronizálva 5 perce.");
   });
 
-  test("what a round did is named: copies and deletions that came back", () => {
+  test("what a round did is named: deletions that came back", () => {
     expect(roundNotice([])).toBeNull();
     expect(roundNotice(["Kael"])).toBe("A törölt „Kael” visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.");
     expect(roundNotice(["Kael", "Mira"])).toContain("A törölt „Kael” és „Mira” visszakerültek a listára");
