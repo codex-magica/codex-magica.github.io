@@ -24,9 +24,8 @@ import { DELETED_HASH, VersionVector, dominatedBy, isVersionVector, join, vcKey,
 // The name a parallel version gets when both are kept. Neutral, so it reads right on every device.
 export const conflictCopyName = (name: string): string => `${name} (másik változat)`;
 
-export const SYNC_FORMAT = "codex-magica-sync";
+const SYNC_FORMAT = "codex-magica-sync";
 export const SYNC_VERSION = 2;
-export const DELETED = DELETED_HASH;
 
 export interface Version {
   id: string;
@@ -35,7 +34,7 @@ export interface Version {
   // The vector of the version whose content this is, when a merge gave it a joined vector (absent: vc).
   // A later edit of exactly this content then counts as continuing it, not as a parallel edit.
   cvc?: VersionVector;
-  h: string; // content fingerprint, or DELETED
+  h: string; // content fingerprint, or DELETED_HASH
   record?: CharacterRecord; // absent for a deletion
 }
 const cvcOf = (v: Version): VersionVector => v.cvc ?? v.vc;
@@ -48,7 +47,7 @@ interface FileEntry {
   deleted?: true;
   record?: CharacterRecord;
 }
-export interface DeviceFile {
+interface DeviceFile {
   format: typeof SYNC_FORMAT;
   version: typeof SYNC_VERSION;
   device: string;
@@ -76,7 +75,7 @@ const withVc = (v: Version, vc: VersionVector, cvc: VersionVector): Version => {
 
 export const localVersions = (records: CharacterRecord[], deletions: Deletions): Map<string, Version> => {
   const out = new Map<string, Version>();
-  for (const [id, d] of Object.entries(deletions)) out.set(id, { id, t: d.t, vc: d.vc, h: DELETED });
+  for (const [id, d] of Object.entries(deletions)) out.set(id, { id, t: d.t, vc: d.vc, h: DELETED_HASH });
   for (const r of records) out.set(r.id, fromRecord(r));
   return out;
 };
@@ -103,7 +102,7 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
       continue;
     }
     if (e.deleted) {
-      versions.set(id, { id, t, vc, h: DELETED });
+      versions.set(id, { id, t, vc, h: DELETED_HASH });
       continue;
     }
     const cvc = isVersionVector(e.cvc) && Object.keys(e.cvc).length > 0 ? e.cvc : undefined;
@@ -113,7 +112,7 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
   return { ok: true, device: f.device, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque, skipped };
 };
 
-export const copyId = (id: string, loser: Version): string => `${id}~${loser.h.slice(0, 10)}`;
+const copyId = (id: string, loser: Version): string => `${id}~${loser.h.slice(0, 10)}`;
 
 // Merges two versions of one character. Deterministic and order-independent, so every device that sees
 // the same versions reaches the same result. Returns the version for the id, plus a copy if both kept.
@@ -124,8 +123,8 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   if (!sameVc && dominatedBy(b.vc, a.vc)) return { version: a };
   // parallel versions
   const vc = join(a.vc, b.vc);
-  const aDel = a.h === DELETED;
-  const bDel = b.h === DELETED;
+  const aDel = a.h === DELETED_HASH;
+  const bDel = b.h === DELETED_HASH;
   if (aDel && bDel) return { version: { ...a, t: Math.max(a.t, b.t), vc } };
   // A deletion made after seeing the other side's content: the vectors look parallel only because a merge
   // joined them (the version that lost there is already kept as a copy). The deletion stands. (With the
@@ -170,7 +169,6 @@ export interface MergeResult {
   publishNeeded: boolean;
   published: Record<string, string>; // id → version key of what the file holds
   pulled: number; // characters changed here because of another device
-  conflictCopies: number; // parallel edits kept as a second character
   copied: string[]; // the names those copies were made from (to tell the player)
   undeleted: string[]; // characters deleted here that came back: an edit made elsewhere in parallel won
   backups: BackupCandidate[];
@@ -251,7 +249,7 @@ export function mergeRound(
     .sort((x, y) => (order.get(x.id) ?? 1e9) - (order.get(y.id) ?? 1e9) || x.t - y.t || (x.id < y.id ? -1 : 1))
     .map((v) => v.record!);
   const deletions: Deletions = {};
-  for (const v of acc.values()) if (v.h === DELETED) deletions[v.id] = { t: v.t, vc: v.vc };
+  for (const v of acc.values()) if (v.h === DELETED_HASH) deletions[v.id] = { t: v.t, vc: v.vc };
 
   let pulled = 0;
   const copied: string[] = [];
@@ -263,10 +261,9 @@ export function mergeRound(
       else if (v.record) pulled++;
     } else if (before.h !== v.h) {
       pulled++;
-      if (before.h === DELETED && v.record) undeleted.push(v.record.name);
+      if (before.h === DELETED_HASH && v.record) undeleted.push(v.record.name);
     }
   }
-  const conflictCopies = copied.length;
 
   // Daily backups: a version of a character that gets replaced by one from another day, or by a deletion,
   // is kept (the last state of each day the character was edited, and the last state before deleting it).
@@ -277,7 +274,7 @@ export function mergeRound(
     for (const [id, versions] of seen) {
       const latest = acc.get(id);
       if (!latest) continue;
-      const deleted = latest.h === DELETED;
+      const deleted = latest.h === DELETED_HASH;
       const replaced = [...versions.values()].filter(
         (v) => v.record && versionKey(v) !== versionKey(latest) && dominatedBy(v.vc, latest.vc) && (deleted || (dayOf(latest.t) !== dayOf(v.t) && v.h !== latest.h))
       );
@@ -290,7 +287,7 @@ export function mergeRound(
   if (backups)
     for (const v of lastStates) {
       const latest = acc.get(v.id);
-      if (!latest || latest.h === DELETED || latest.h === v.h) continue;
+      if (!latest || latest.h === DELETED_HASH || latest.h === v.h) continue;
       if (backupList.some((b) => b.id === v.id && versionKey(b.version) === versionKey(v))) continue;
       backupList.push({ id: v.id, version: v, reason: "deleted" });
     }
@@ -300,14 +297,16 @@ export function mergeRound(
   for (const [id, raw] of Object.entries(ownOpaque)) if (!acc.has(id)) characters[id] = raw;
   for (const v of acc.values())
     characters[v.id] =
-      v.h === DELETED ? { t: v.t, vc: v.vc, h: DELETED, deleted: true } : { t: v.t, vc: v.vc, ...(v.cvc ? { cvc: v.cvc } : {}), h: v.h, record: stripBookkeeping(v.record!) };
+      v.h === DELETED_HASH ? { t: v.t, vc: v.vc, h: DELETED_HASH, deleted: true } : { t: v.t, vc: v.vc, ...(v.cvc ? { cvc: v.cvc } : {}), h: v.h, record: stripBookkeeping(v.record!) };
   const publishNeeded = !ownPrevious || canonical(ownPrevious) !== canonical(acc);
 
   const published: Record<string, string> = {};
   for (const v of acc.values()) published[v.id] = versionKey(v);
-  return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, nonce, characters }, publishNeeded, published, pulled, conflictCopies, copied, undeleted, backups: backupList };
+  return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, nonce, characters }, publishNeeded, published, pulled, copied, undeleted, backups: backupList };
 }
 
+// `updatedAt`, `syncVc` and `syncCvc` are this device's bookkeeping: they mustn't make the same content look
+// different (fingerprints, files).
 export const stripBookkeeping = (r: CharacterRecord): CharacterRecord => {
   const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...rest } = r;
   return rest as CharacterRecord;

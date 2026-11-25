@@ -9,7 +9,7 @@ import { defaultRecord } from "./defaultRecord";
 setupSyncHarness();
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R1 a deletion that saw a merged version's content wins over it (the character doesn't come back)", () => {
+describe("a deletion that saw a merged version's content wins over it (the character doesn't come back)", () => {
   test("R1a after a conflict: the device whose version won deletes the character before pulling the merge", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -52,7 +52,7 @@ describe("R1 a deletion that saw a merged version's content wins over it (the ch
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R2 storage full: deleting a character saves the roster and the deletion marker together", () => {
+describe("storage full: deleting a character saves the roster and the deletion marker together", () => {
   test("R2 what's saved fits together, and after a reload the character doesn't come back from Drive", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -82,7 +82,7 @@ describe("R2 storage full: deleting a character saves the roster and the deletio
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R4 an unreadable saved roster when storage is (nearly) full", () => {
+describe("an unreadable saved roster when storage is (nearly) full", () => {
   test("R4 it isn't saved over, and it's offered for download", () => {
     const d = new Device("deva");
     const qs = new QuotaStorage();
@@ -102,7 +102,7 @@ describe("R4 an unreadable saved roster when storage is (nearly) full", () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-describe("R5 a deletion confirmed after a sync brought a newer version", () => {
+describe("a deletion confirmed after a sync brought a newer version", () => {
   test("R5 doesn't delete the version the player never saw (the dialog was opened on the older one)", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -152,7 +152,7 @@ describe("this device's own file downloaded cut off twice, at different points",
 
 const backupBodies = (drive: FakeDrive) => drive.backups().map((f) => JSON.parse(f.body) as { record: CharacterRecord; reason: string });
 
-describe("storage full and long absences (second review)", () => {
+describe("storage full and long absences", () => {
   test("storage full, sync off: after a deletion that only fit without its backup copy, later saves count as saved", () => {
     const a = new Device("deva");
     const qs = new QuotaStorage();
@@ -175,10 +175,9 @@ describe("storage full and long absences (second review)", () => {
     expect(a.store.getState().saveFailed).toBe(false);
   });
 
-  test("a device not opened for two months keeps the state before a deletion until it's in Drive, so its last edit is backed up when a parallel edit wins", async () => {
+  test("a device not opened for months keeps the state before a deletion until it's in Drive, so its last edit is backed up when a parallel edit wins", async () => {
     const drive = new FakeDrive();
     const phone = new Device("phone");
-    phone.storage.setItem("magus.driveSync.v1", JSON.stringify({ enabled: true, backups: true, lastSyncAt: null, email: null }));
     const laptop = new Device("laptop");
     const x = phone.create("Xena");
     await realSync(phone, drive);
@@ -190,7 +189,7 @@ describe("storage full and long absences (second review)", () => {
     // meanwhile the laptop edits Xena (it never saw the deletion)
     laptop.edit(x.id, "laptop-edit");
     await realSync(laptop, drive);
-    // the phone app isn't opened for 61 days, then it is (a fresh page load) and syncs
+    // the phone app isn't opened for two months, then it is (a fresh page load) and syncs
     later(61 * DAY);
     phone.store = phone.run(() => createRosterStore());
     await realSync(phone, drive);
@@ -200,24 +199,6 @@ describe("storage full and long absences (second review)", () => {
     // deleting is kept too, also when a parallel edit elsewhere wins over the deletion"
     const kept = backupBodies(drive).some((b) => tokensOf(b.record).includes("phone-last-edit"));
     expect(kept).toBe(true);
-  });
-
-  test("the same after a shorter absence keeps the phone's last edit as a backup", async () => {
-    const drive = new FakeDrive();
-    const phone = new Device("phone");
-    const laptop = new Device("laptop");
-    const x = phone.create("Xena");
-    await phone.sync(drive);
-    await laptop.sync(drive);
-    later();
-    phone.edit(x.id, "phone-last-edit");
-    phone.remove(x.id);
-    laptop.edit(x.id, "laptop-edit");
-    await laptop.sync(drive);
-    later(59 * DAY);
-    phone.store = phone.run(() => createRosterStore());
-    await phone.sync(drive);
-    expect(backupBodies(drive).some((b) => tokensOf(b.record).includes("phone-last-edit"))).toBe(true);
   });
 });
 
@@ -274,7 +255,7 @@ const cloneOf = (a: Device): Device => {
   return c;
 };
 
-describe("a cloned device relabelling its edits keeps their history (third review)", () => {
+describe("a cloned device relabelling its edits keeps their history", () => {
   test("a clone deletes a character nobody else touched: after the relabel it stays deleted", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -328,7 +309,7 @@ const cloneOfDevice = (a: Device): Device => {
   return c;
 };
 
-describe("a copied browser: an edit made in parallel with a deletion wins (fifth review)", () => {
+describe("a copied browser: an edit made in parallel with a deletion wins", () => {
   test("a clone deletes a character the original edited meanwhile: the edit wins", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");

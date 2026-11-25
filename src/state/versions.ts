@@ -15,8 +15,7 @@ let sessionId: string | null = null; // only when the id can't be saved
 let testId: string | null = null;
 
 // This browser's id for the sync. Stable as long as the browser keeps the app's storage. Read from
-// storage every time (not cached), so when one tab takes a new id (see resetDeviceId) the others follow
-// at once instead of numbering edits under the old one.
+// storage every time (not cached), so a new id (see resetDeviceId) applies at once.
 export const deviceId = (): string => {
   if (testId) return testId;
   let id: string | null = null;

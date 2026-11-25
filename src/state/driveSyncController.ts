@@ -74,7 +74,6 @@ const RETRY_FIRST_MS = 30_000; // after a failed round (Drive or the token servi
 const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 
-class AccountMismatchError extends Error {}
 
 // ── the Hungarian notes ─────────────────────────────────────────────────────────────────────────────
 const authNote = (reason: string): string => {
@@ -101,8 +100,7 @@ const errorNote = (e: unknown): string => {
 // finishing the connection failed before it was set up: a tap is needed (nothing retries by itself)
 const connectNote = (e: unknown): string => {
   if (e instanceof TokenServiceError) return "A Google-kapcsolat most egy átmeneti hiba miatt nem jött létre. Próbáld újra pár perc múlva.";
-  if (e instanceof DriveAuthError && (e.message === "drive permission not granted" || e.message === "access_denied")) return authNote(e.message);
-  if (e instanceof AccountMismatchError) return e.message;
+  if (e instanceof DriveAuthError && e.message === "drive permission not granted") return authNote(e.message);
   return "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.";
 };
 const startNote = (r: "insecure" | "storage" | "failed"): string =>
@@ -112,7 +110,7 @@ const startNote = (r: "insecure" | "storage" | "failed"): string =>
       ? "Nem sikerült elindítani a Google-bejelentkezést, mert ezen az eszközön betelt a tárhely. Exportáld a karaktereidet, töröld, amire nincs szükséged, és próbáld újra."
       : "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra.";
 
-export const createDriveSync = () => {
+const createDriveSync = () => {
   const available = driveSyncAvailable();
   const store = rosterStore();
   // Google's answer from the consent page, read once at startup (before rendering)
@@ -131,7 +129,9 @@ export const createDriveSync = () => {
             text:
               outcome.error === "access_denied" && initialSettings.enabled
                 ? "Nem adtál engedélyt a Google oldalán, ezért a szinkron továbbra is áll. Bármikor újra megpróbálhatod." // a reconnect, cancelled
-                : authNote(outcome.error),
+                : ["access_denied", "no answer"].includes(outcome.error)
+                  ? authNote(outcome.error)
+                  : "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.",
             error: outcome.error !== "access_denied", // cancelling isn't a failure
             seq: ++noteSeq,
           }
@@ -302,11 +302,7 @@ export const createDriveSync = () => {
     if (!got.email) return failed("Nem sikerült ellenőrizni, melyik Google-fiókkal jelentkeztél be. Próbáld újra.");
     if (expected && expected.toLowerCase() !== got.email.toLowerCase())
       return failed(
-        connectNote(
-          new AccountMismatchError(
-            `Ezzel a fiókkal jelentkeztél be: ${got.email}, de a szinkron ehhez tartozik: ${expected}. Kattints az „Újrakapcsolás” gombra, és válaszd ezt: ${expected}. Ha inkább a másik fiókot használnád, kapcsold ki, majd kapcsold be újra a szinkront.`
-          )
-        )
+        `Ezzel a fiókkal jelentkeztél be: ${got.email}, de a szinkron ehhez tartozik: ${expected}. Kattints az „Újrakapcsolás” gombra, és válaszd ezt: ${expected}. Ha inkább a másik fiókot használnád, kapcsold ki, majd kapcsold be újra a szinkront.`
       );
     keepConnection(got);
     patchSettings({ email: expected ?? got.email, ...(enabling ? { enabled: true, ...(o.backups === undefined ? {} : { backups: o.backups }) } : {}) });

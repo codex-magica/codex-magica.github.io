@@ -200,7 +200,7 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           <BackupsView drive={drive} records={records} />
         </Box>
         {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
-      {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
+        {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
         <Box display="flex" justifyContent="flex-end" p="12px 22px 18px" borderTop="1px solid" borderColor="rule" mt="10px">
           <Box {...btn} onClick={() => setView("main")} border="1px solid" borderColor="hair" color="muted">
             Vissza
@@ -224,15 +224,15 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
           ezen az eszközön már vannak karaktereid, azok is megmaradnak, és a többi mellé kerülnek.
         </Text>
         {!drive.enabled && (
-        <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
-          Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google oldalán egyszer engedélyt adsz (ha
-          kérdezi, jelöld be a Google Drive-hozzáférést is), utána visszajutsz ide, és az alkalmazás magától szinkronizál.{" "}
-          Részletek az{" "}
-          <Box as="a" href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
-            adatvédelmi tájékoztatóban
-          </Box>
-          .
-        </Text>
+          <Text fontSize={{ base: "13px", md: "14px" }} color="muted" lineHeight="1.55" mb="12px">
+            Nem kell regisztrálnod, és a karaktereid más szerverre nem kerülnek. A Google oldalán egyszer engedélyt adsz (ha
+            kérdezi, jelöld be a Google Drive-hozzáférést is), utána visszakerülsz az alkalmazásba, és az magától szinkronizál.{" "}
+            Részletek az{" "}
+            <Box as="a" href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noopener noreferrer" color="accentTx" textDecoration="underline" textUnderlineOffset="3px">
+              adatvédelmi tájékoztatóban
+            </Box>
+            .
+          </Text>
         )}
 
         <BackupsChoice on={drive.enabled ? drive.backups : backupsChoice} onChange={drive.enabled ? drive.setBackups : setBackupsChoice} />
@@ -258,29 +258,29 @@ export const DriveSyncModal: React.FC<{ drive: DriveSyncApi; records: CharacterR
       </Box>
 
       <Box borderTop="1px solid" borderColor="rule" pt="12px">
-      {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
-      {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
-      <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap="10px" p="0 22px 18px">
-        {drive.enabled ? (
-          <>
-            <Box {...btn} onClick={turnOff} border="1px solid" borderColor="hair" color="muted" mr="auto">
-              Kikapcsolás
-            </Box>
-            <Box {...btn} onClick={drive.syncNow} disabled={busy} opacity={busy ? 0.6 : 1} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-              {busy ? "Szinkronizálás…" : drive.status === "needsTap" ? "Újrakapcsolás" : "Szinkronizálás most"}
-            </Box>
-          </>
-        ) : (
-          <>
-            <Box {...btn} onClick={onClose} border="1px solid" borderColor="hair" color="muted">
-              Mégse
-            </Box>
-            <Box {...btn} onClick={() => drive.enable(backupsChoice)} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-              Bekapcsolás
-            </Box>
-          </>
-        )}
-      </Box>
+        {drive.notice && <NoteCallout key={`n${drive.notice.seq}`} note={drive.notice} onDismiss={drive.dismissNotice} />}
+        {drive.note && <NoteCallout key={drive.note.seq} note={drive.note} />}
+        <Box display="flex" alignItems="center" justifyContent="flex-end" flexWrap="wrap" gap="10px" p="0 22px 18px">
+          {drive.enabled ? (
+            <>
+              <Box {...btn} onClick={turnOff} border="1px solid" borderColor="hair" color="muted" mr="auto">
+                Kikapcsolás
+              </Box>
+              <Box {...btn} onClick={drive.syncNow} disabled={busy} opacity={busy ? 0.6 : 1} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
+                {busy ? "Szinkronizálás…" : drive.status === "needsTap" ? "Újrakapcsolás" : "Szinkronizálás most"}
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box {...btn} onClick={onClose} border="1px solid" borderColor="hair" color="muted">
+                Mégse
+              </Box>
+              <Box {...btn} onClick={() => drive.enable(backupsChoice)} border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
+                Bekapcsolás
+              </Box>
+            </>
+          )}
+        </Box>
       </Box>
       {confirmOff && (
         <ConfirmModal

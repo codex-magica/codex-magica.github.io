@@ -33,33 +33,6 @@ const R = vi.hoisted(() => {
     return [c.slots[i], c];
   };
   const react: any = {
-    useState(init: any) {
-      const [s, c] = slot(() => ({ v: typeof init === "function" ? init() : init }));
-      return [
-        s.v,
-        (u: any) => {
-          const nv = typeof u === "function" ? u(s.v) : u;
-          if (!Object.is(nv, s.v)) {
-            s.v = nv;
-            schedule(c);
-          }
-        },
-      ];
-    },
-    useRef(init: any) {
-      return slot(() => ({ current: init }))[0];
-    },
-    useReducer(reducer: (s: any, a: any) => any, arg: any, init?: (a: any) => any) {
-      const [s, c] = slot(() => ({ v: init ? init(arg) : arg, dispatch: null as null | ((a: any) => void) }));
-      s.dispatch ??= (a: any) => {
-        const nv = reducer(s.v, a);
-        if (!Object.is(nv, s.v)) {
-          s.v = nv;
-          schedule(c);
-        }
-      };
-      return [s.v, s.dispatch];
-    },
     useMemo(fn: () => any, deps: unknown[]) {
       const [s] = slot(() => ({ deps: undefined, v: undefined }));
       if (changed(s.deps, deps)) {
@@ -67,9 +40,6 @@ const R = vi.hoisted(() => {
         s.deps = deps;
       }
       return s.v;
-    },
-    useCallback(fn: any, deps: unknown[]) {
-      return react.useMemo(() => fn, deps);
     },
     useEffect(fn: () => any, deps: unknown[]) {
       const [s, c] = slot(() => ({ deps: undefined, cleanup: undefined, first: true }));
@@ -493,7 +463,7 @@ const codeReturn = (state: string) => {
   win.location.search = `?state=${state}&code=C-${state}`;
 };
 
-describe("sync orchestration: other tabs, reconnects, Google storage", () => {
+describe("sync orchestration: reconnects, Google storage", () => {
   test("Google storage full (403 storageQuotaExceeded): the player is told their storage is full, and sync goes on once there's room", async () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();

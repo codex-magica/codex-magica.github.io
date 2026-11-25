@@ -52,7 +52,7 @@ export const driveStatusLine = (drive: DriveSyncApi, now: number, inWindow = fal
   const attention = driveAttention(drive, now, inWindow);
   if (attention) return attention.text;
   if (drive.status === "error")
-    return say(online() ? "most nem érhető el, az alkalmazás magától újra megpróbálja." : "nincs internet, a módosítások később kerülnek fel.", inWindow);
+    return say(online() ? "a legutóbbi szinkron nem sikerült, az alkalmazás magától újra megpróbálja." : "nincs internet, a módosítások később kerülnek fel.", inWindow);
   return synced;
 };
 
@@ -67,7 +67,7 @@ export const roundNotice = (copied: string[], undeleted: string[]): string | nul
   if (copied.length === 1)
     parts.push(`${quoted(copied)} két eszközön is módosult, mielőtt szinkronizálódott volna, ezért mindkét változata megmaradt. A másikat „${copied[0]} (másik változat)” néven találod a listán; nézd át, és töröld, amelyik nem kell.`);
   else if (copied.length > 1)
-    parts.push(`${copied.length} karaktered két eszközön is módosult, mielőtt szinkronizálódtak volna: ${quoted(copied)}. Mindegyiknek megmaradt mindkét változata; a másikat „(másik változat)” végződéssel találod a listán. Nézd át őket, és töröld, amelyik nem kell.`);
+    parts.push(`${copied.length} karaktered két eszközön is módosult, mielőtt szinkronizálódott volna: ${quoted(copied)}. Mindegyiknek megmaradt mindkét változata; a másikat „(másik változat)” végződéssel találod a listán. Nézd át őket, és töröld, amelyik nem kell.`);
   if (undeleted.length === 1) parts.push(`A törölt ${quoted(undeleted)} visszakerült a listára, mert közben egy másik eszközön módosították. Ha nem kell, töröld újra.`);
   else if (undeleted.length > 1) parts.push(`A törölt ${quoted(undeleted)} visszakerültek a listára, mert közben egy másik eszközön módosították őket. Ha nem kellenek, töröld őket újra.`);
   return parts.length ? parts.join(" ") : null;

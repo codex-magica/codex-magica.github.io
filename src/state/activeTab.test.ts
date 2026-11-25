@@ -64,7 +64,7 @@ describe("one tab in use at a time", () => {
     expect(reload).toHaveBeenCalledTimes(1); // a's screens were stale: it starts over
   });
 
-  test("without Web Locks every tab is in use (as before)", async () => {
+  test("without Web Locks every tab is in use", async () => {
     vi.stubGlobal("navigator", {});
     expect((await openTab()).tabState()).toBe("active");
     expect((await openTab()).tabState()).toBe("active");

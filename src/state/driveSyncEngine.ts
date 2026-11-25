@@ -50,7 +50,6 @@ export interface SyncOutput {
   backedUp: Set<string>;
   // for tests and diagnostics: characters changed here by another device, copies made
   pulled: number;
-  conflictCopies: number;
   copied: string[]; // names of characters kept twice (parallel edits), for the player
   undeleted: string[]; // characters deleted here that came back (a parallel edit won)
   uploaded: boolean;
@@ -155,5 +154,5 @@ export async function runSync(drive: DriveTransport, input: SyncInput, now: () =
     uploaded = true;
   }
 
-  return { records: result.records, deletions: result.deletions, published: result.published, backedUp, pulled: result.pulled, conflictCopies: result.conflictCopies, copied: result.copied, undeleted: result.undeleted, uploaded, skippedFiles };
+  return { records: result.records, deletions: result.deletions, published: result.published, backedUp, pulled: result.pulled, copied: result.copied, undeleted: result.undeleted, uploaded, skippedFiles };
 }

@@ -13,7 +13,6 @@ import { rulesFor } from "../model/rulesVariants";
 
 // (the app was called "magus" while it was private: the keys keep the name, renaming them would need a migration)
 export const ROSTER_KEY = "magus.roster.v1";
-const KEY = ROSTER_KEY;
 
 // Collision-resistant id. `prefix` distinguishes id kinds (e.g. "c" characters, "v" skill variants).
 // (64 random bits after the time: a bulk import makes many ids within one millisecond)
@@ -52,7 +51,7 @@ const renameSub = <T extends { skill: string; subtype?: string }>(x: T): T => {
 //
 // Path choices are matched by the trigger LABEL, so a renamed
 // trigger ("Pszi út" → "Pszi fa") must be remapped or old records lose their committed choice.
-export const migrateRecord = (r: CharacterRecord): CharacterRecord => {
+const migrateRecord = (r: CharacterRecord): CharacterRecord => {
   let out = r;
   if (out.pathChoices?.some((c) => c.trigger === "Pszi út"))
     out = { ...out, pathChoices: out.pathChoices.map((c) => (c.trigger === "Pszi út" ? { ...c, trigger: "Pszi fa" } : c)) };
@@ -81,12 +80,10 @@ export const migrateRecord = (r: CharacterRecord): CharacterRecord => {
   return out;
 };
 
-// First run starts empty (the demo seed lives on only as the derive.test.ts golden fixture);
-// the welcome screen's empty state points at "Új karakter".
 // If the saved roster can't be read, it's kept aside under another key before anything new is saved
 // over it, so a bug or a damaged write never costs the characters. The roster screen offers these for
 // download. At most a few are kept (they count against the browser's storage limit).
-const UNREADABLE_PREFIX = `${KEY}.unreadable.`;
+const UNREADABLE_PREFIX = `${ROSTER_KEY}.unreadable.`;
 const UNREADABLE_MAX = 3;
 const asideKeys = (): string[] => {
   const out: string[] = [];
@@ -100,7 +97,7 @@ const asideKeys = (): string[] => {
   }
   return out.sort();
 };
-export const unreadableKeys = (): string[] => (stillHeld() ? [...asideKeys(), KEY] : asideKeys());
+export const unreadableKeys = (): string[] => (stillHeld() ? [...asideKeys(), ROSTER_KEY] : asideKeys());
 // The saved roster couldn't be read and there was no room to keep it aside: it stays where it is, nothing
 // is saved over it (saving reports failure, so the app says so), and it's offered for download like the
 // ones kept aside. Once it's gone from there (downloaded and discarded, or replaced from elsewhere),
@@ -109,7 +106,7 @@ let held: string | null = null;
 const stillHeld = (): boolean => {
   if (held === null) return false;
   try {
-    if (localStorage.getItem(KEY) === held) return true;
+    if (localStorage.getItem(ROSTER_KEY) === held) return true;
   } catch {
     return true;
   }
@@ -139,7 +136,7 @@ const keepOrHold = (raw: string) => {
 export const loadRoster = (): CharacterRecord[] => {
   let raw: string | null = null;
   try {
-    raw = localStorage.getItem(KEY);
+    raw = localStorage.getItem(ROSTER_KEY);
   } catch {
     return [];
   }
@@ -166,7 +163,7 @@ export const loadRoster = (): CharacterRecord[] => {
 export const saveRoster = (records: CharacterRecord[]): boolean => {
   if (stillHeld()) return false;
   try {
-    localStorage.setItem(KEY, JSON.stringify(records));
+    localStorage.setItem(ROSTER_KEY, JSON.stringify(records));
     return true;
   } catch {
     return false;

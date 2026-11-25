@@ -90,11 +90,9 @@ export const loadBackedUp = (): Set<string> => new Set(read<string[]>(BACKED_UP_
 export const saveBackedUp = (s: Set<string>): void => write(BACKED_UP_KEY, [...s].slice(-BACKED_UP_MAX));
 
 // ── the marks this device wrote into its Drive file (to notice another device writing it) ──────────
-// Three places, so a mark of ours is never mistaken for another device's:
+// Two places, so a mark of ours is never mistaken for another device's:
 //   - the mark last seen in (or written to) the file, kept on its own: failed writes can't push it out;
-//   - the marks of recent write attempts (an answer can get lost after the write happened);
-//   - all of these in memory too, for when storage is full.
-// (Keyed by the storage object, which is one per browser; tests simulate several devices with one each.)
+//   - the marks of recent write attempts (an answer can get lost after the write happened).
 export const loadNonces = (): string[] => {
   const confirmed = read<string | null>(CONFIRMED_NONCE_KEY, null);
   return [...new Set([...read<string[]>(NONCES_KEY, []), ...(confirmed ? [confirmed] : [])])];
@@ -125,6 +123,6 @@ export const clearDriveState = (): void => {
   } catch {
     /* ignore */
   }
-  forgetNonces(); // this tab's in-memory marks too
+  forgetNonces();
   saveDriveSettings({ ...OFF_SETTINGS, backups });
 };

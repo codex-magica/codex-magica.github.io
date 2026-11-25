@@ -63,7 +63,7 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   "(másik változat)", or a deleted character coming back (both with a notice); never a silent loss.
 - **Deletions** are kept as small markers (time + vector) and never expire, so an old copy in another device's
   file can't bring a deleted character back. A deletion beats only what it saw: the delete dialog deletes
-  the version it showed (if a sync or another tab changed the character meanwhile, nothing is deleted and
+  the version it showed (if a sync changed the character meanwhile, nothing is deleted and
   the roster says why), and a deletion made after seeing a merged version's content wins over it even
   though the merge made their vectors look parallel.
 - **Daily backups** (if on, a per-device setting): before Drive's copy of a character is replaced by an edit
@@ -81,9 +81,9 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   tab in use syncs: a round in a tab that stepped back writes nothing to Drive, and that tab neither
   retries nor keeps a sign-in it was finishing (the player turns sync on again in the tab in use). Saving
   stays safe across tabs regardless: every change re-reads what's saved first.
-- **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background (renewing the token
-  if it ran out, so an edit made just before locking the phone still goes), when it comes back, and when
-  the device is back online.
+- **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background with changes waiting
+  (renewing the token if it ran out, so an edit made just before locking the phone still goes), when it
+  comes back (at most every 20 seconds), and when the device is back online.
 - **Renewal.** Google's access tokens last an hour. Turning sync on uses the authorization-code flow
   (`access_type=offline`, `prompt=consent`, PKCE): the token service exchanges the code for an access token
   and a refresh token, and hands the refresh token back **encrypted** (AES-GCM, with a key only the service

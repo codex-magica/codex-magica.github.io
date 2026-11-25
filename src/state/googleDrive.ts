@@ -15,7 +15,6 @@
 
 const GOOGLE_CLIENT_ID: string = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() ?? "";
 const TOKEN_SERVICE: string = ((import.meta.env.VITE_TOKEN_SERVICE_URL as string | undefined)?.trim() ?? "").replace(/\/+$/, "");
-// Sync needs both: without them the feature is simply absent (no Google Drive button).
 export const driveSyncAvailable = (): boolean => GOOGLE_CLIENT_ID !== "" && TOKEN_SERVICE !== "";
 
 const SCOPE = "https://www.googleapis.com/auth/drive.appdata";

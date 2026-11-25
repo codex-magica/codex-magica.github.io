@@ -58,7 +58,7 @@ export const RootApp: React.FC = () => {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [creator, setCreator] = useState<{ mode: CreatorMode; record: CharacterRecord } | null>(null);
   const go = (s: typeof screen) => setScreen(s);
-  // optional Google Drive sync (absent without a client ID)
+  // optional Google Drive sync (absent without a client ID and a token service)
   const drive = useDriveSync();
   // "sync stopped" card: for the other screens; the roster says it at the top already (and seeing that
   // counts as having seen it)
@@ -71,7 +71,7 @@ export const RootApp: React.FC = () => {
   const [showCredits, setShowCredits] = useState(() => !creditsSeen());
 
   const current = currentId ? roster.get(currentId) : undefined;
-  // the open character disappeared (deleted in another tab or on another device): back to the roster,
+  // the open character disappeared (deleted on another device): back to the roster,
   // which says why
   const lastName = useRef<string | null>(null);
   if (current) lastName.current = current.name;
@@ -105,13 +105,13 @@ export const RootApp: React.FC = () => {
     <>
       {screen === "sheet" && current ? (
         <ErrorBoundary key={current.id} fallback={(error) => <CharacterTrouble error={error} onBack={() => go("roster")} onExport={() => void exportRecordFile(current)} />}>
-        <AppShell
-          record={current}
-          onBack={() => go("roster")}
-          onEdit={() => editChar(current.id)}
-          onLevelup={() => setCreator({ mode: "levelup", record: current })}
-          onPatchRecord={(next, base) => roster.upsert(next, base)}
-        />
+          <AppShell
+            record={current}
+            onBack={() => go("roster")}
+            onEdit={() => editChar(current.id)}
+            onLevelup={() => setCreator({ mode: "levelup", record: current })}
+            onPatchRecord={(next, base) => roster.upsert(next, base)}
+          />
         </ErrorBoundary>
       ) : screen === "compendium" ? (
         <CompendiumScreen
@@ -144,13 +144,13 @@ export const RootApp: React.FC = () => {
             <CharacterTrouble error={error} onBack={() => setCreator(null)} onExport={() => void exportRecordFile(creator.record)} />
           </Box>
         )}>
-        <CreatorScreen
-          key={`${creator.mode}:${creator.record.id}`}
-          mode={creator.mode}
-          initialRecord={creator.record}
-          onClose={() => setCreator(null)}
-          onCommit={commit}
-        />
+          <CreatorScreen
+            key={`${creator.mode}:${creator.record.id}`}
+            mode={creator.mode}
+            initialRecord={creator.record}
+            onClose={() => setCreator(null)}
+            onCommit={commit}
+          />
         </ErrorBoundary>
       )}
 
@@ -165,7 +165,7 @@ export const RootApp: React.FC = () => {
 
       {roster.saveFailed && <SaveFailedBanner onExport={() => void exportBackupFile(roster.records)} />}
       <DriveHopNotice hop={hop} onDismiss={drive.dismissHop} />
-      <UpdateBanner paused={creator !== null || drive.hop === "backSyncing" || drive.hop === "backDone"} required={drive.needsUpdate} />
+      <UpdateBanner paused={creator !== null || drive.hop !== null} required={drive.needsUpdate} />
     </>
   );
 };

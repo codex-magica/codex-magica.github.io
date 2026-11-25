@@ -8,6 +8,7 @@
 
 import { CharacterRecord } from "../model/character";
 import { genId, isSafeId, normalizeRecord } from "./storage";
+import { stripBookkeeping } from "./driveMerge";
 import { contentHash } from "./recordHash";
 
 export const BACKUP_FORMAT = "codex-magica-backup";
@@ -18,13 +19,6 @@ interface BackupFile {
   exportedAt: string;
   characters: CharacterRecord[];
 }
-
-// `updatedAt` and `syncVc` are local bookkeeping; they're meaningless in a file and must not make copies
-// look different.
-const withoutStamp = (record: CharacterRecord): CharacterRecord => {
-  const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...rest } = record;
-  return rest;
-};
 
 const isBackup = (raw: unknown): raw is BackupFile => {
   const b = raw as BackupFile | null;
@@ -66,7 +60,7 @@ export const exportUnreadableFile = (entries: Record<string, string>): Promise<b
 const safeName = (name: string) => name.replace(/[^\p{L}\p{N} _-]/gu, "").trim() || "karakter";
 
 export const exportRecordFile = (record: CharacterRecord): Promise<boolean> =>
-  saveJsonFile(`${safeName(record.name)}.json`, withoutStamp(record));
+  saveJsonFile(`${safeName(record.name)}.json`, stripBookkeeping(record));
 
 // ── backups ───────────────────────────────────────────────────────────────────────────────────────
 
@@ -87,7 +81,7 @@ export const exportBackupFile = async (records: CharacterRecord[]): Promise<bool
     format: BACKUP_FORMAT,
     version: 1,
     exportedAt: now.toISOString(),
-    characters: records.map(withoutStamp),
+    characters: records.map(stripBookkeeping),
   };
   const saved = await saveJsonFile(`codex-magica-mentes-${now.toISOString().slice(0, 10)}.json`, backup);
   if (saved) {
@@ -129,7 +123,7 @@ export const parseImportFile = (text: string, existing: CharacterRecord[]): Impo
         continue;
       }
       // keep ids, so restoring twice is a no-op; an odd or missing one gets a fresh id
-      const clean = withoutStamp(isSafeId((raw as CharacterRecord).id) ? rec : { ...rec, id: genId() });
+      const clean = stripBookkeeping(isSafeId((raw as CharacterRecord).id) ? rec : { ...rec, id: genId() });
       const current = have.get(clean.id);
       const kept = current === undefined ? clean : current === contentHash(clean) ? null : { ...clean, id: genId() }; // differs: keep both
       if (!kept) skipped++;
@@ -142,6 +136,6 @@ export const parseImportFile = (text: string, existing: CharacterRecord[]): Impo
   }
 
   const rec = normalizeRecord(data);
-  if (rec) return { add: [{ ...withoutStamp(rec), id: genId() }], skipped: 0, invalid: 0, kind: "character" };
+  if (rec) return { add: [{ ...stripBookkeeping(rec), id: genId() }], skipped: 0, invalid: 0, kind: "character" };
   return null;
 };

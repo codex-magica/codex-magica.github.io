@@ -536,7 +536,7 @@ describe("Google Drive sync: building blocks", () => {
 });
 
 // ── found by an independent review: each of these lost data before it was fixed ──────────────────
-describe("Google Drive sync: review findings", () => {
+describe("Google Drive sync: edge cases", () => {
   afterEach(() => breakDerive(null));
   const reopen = (d: Device) => {
     d.cache = new Map();
@@ -807,7 +807,7 @@ describe("Google Drive sync: randomized multi-device runs", () => {
 
 // ═══════════════════ second adversarial review: each test was a proven failure ═══════════════════
 
-describe("nonces, tabs, conflicts, clones (earlier review findings)", () => {
+describe("nonces, tabs, conflicts, clones", () => {
   test("storage full: a round whose mark can't be saved writes nothing, and no false clone follows", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");

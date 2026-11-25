@@ -196,7 +196,7 @@ export class Device {
   remove(id: string, base?: CharacterRecord) {
     return this.run(() => this.store.remove(id, base));
   }
-  // one round, the way useDriveSync does it; `during` runs while the round is waiting on Drive
+  // one round, the way driveSyncRound does it; `during` runs while the round is waiting on Drive
   async sync(drive: FakeDrive, during?: () => void) {
     const snapshot = this.run(() => {
       this.store.reload();

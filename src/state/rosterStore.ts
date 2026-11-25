@@ -69,7 +69,7 @@ const readDeletions = (): Deletions => {
   return out;
 };
 
-// A record without a vector (made before the sync existed, or imported) gets this device's lineage, and
+// A record without a vector (made before the sync existed) gets this device's lineage, and
 // one without an edit time gets the time it was first seen here (so backups get a real date).
 const withVector = (r: CharacterRecord): CharacterRecord => {
   const out = isVersionVector(r.syncVc) && Object.keys(r.syncVc).length > 0 ? r : { ...r, syncVc: { [deviceId()]: 1 } };

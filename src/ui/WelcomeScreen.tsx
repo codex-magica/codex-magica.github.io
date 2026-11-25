@@ -197,158 +197,158 @@ export const WelcomeScreen: React.FC<Props> = ({ records, onOpenCharacter, onNew
         onKompendium={onOpenCompendium}
       />
       <Box flex="1 1 auto" overflowY="auto" position="relative">
-      <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "32px", md: "30px" }} pb="90px">
-        <Box textAlign="center" mb={{ base: "44px", md: "36px" }}>
-          <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
-          <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
-          <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
-            Válassz egy karaktert, vagy hozz létre egy újat.{" "}
-            {drive.enabled && !driveNeeds
-              ? "A karaktereid ezen az eszközön tárolódnak, és a Google Drive-oddal is szinkronizálódnak."
-              : "A karaktereid ezen az eszközön, a böngészőben tárolódnak."}
-          </Text>
-        </Box>
-
-        {(driveNeeds || deleteNote || aside.length > 0 || infos.length > 0) && (
-          <Box display="flex" flexDirection="column" gap="10px" mt={{ base: "-24px", md: "-16px" }} mb="22px" maxW="640px" mx="auto">
-            {driveNeeds && <Callout kind="warn" actions={needsAction[driveNeeds.kind]}>{driveNeeds.text}</Callout>}
-            {deleteNote && <Callout kind="warn" actions={[{ label: "Rendben", onClick: () => setDeleteNote(null) }]}>{deleteNote}</Callout>}
-            {aside.length > 0 && (
-              <Callout
-                kind="warn"
-                actions={[{ label: "Letöltés", onClick: saveAside }, ...(asideSaved ? [{ label: "Törlés erről az eszközről", onClick: () => setConfirmDropAside(true) }] : [])]}
-              >
-                Az alkalmazás ezen az eszközön olyan elmentett adatot talált, amelyet nem tudott beolvasni, ezért félretette. Töltsd le; ha
-                hiányzik egy karaktered, jelezd a projekt GitHub-oldalán, és csatold a fájlt.
-              </Callout>
-            )}
-            {infos.length > 0 && (
-              <Callout
-                key={drive.notice?.seq}
-                kind="info"
-                actions={[
-                  { label: "Rendben", onClick: dismissInfos },
-                  ...(notice && drive.enabled && drive.backups ? [{ label: "Biztonsági másolatok", onClick: () => openDrive("backups") }] : []),
-                ]}
-              >
-                {infos.join(" ")}
-              </Callout>
-            )}
+        <Box maxW="1080px" mx="auto" px={SIDE} pt={{ base: "32px", md: "30px" }} pb="90px">
+          <Box textAlign="center" mb={{ base: "44px", md: "36px" }}>
+            <Text fontFamily="system-ui" fontSize="11px" fontWeight={700} letterSpacing=".34em" textTransform="uppercase" color="accentTx" mb="14px">M · A · G · U · S</Text>
+            <Heading as="h1" fontSize={{ base: "38px", sm: "52px", md: "44px" }} fontWeight={700} color="fg" lineHeight="1.04">Karakterek</Heading>
+            <Text fontFamily="system-ui" fontSize={{ base: "15.5px", md: "14.5px" }} lineHeight="1.55" color="muted" maxW="46ch" mx="auto" mt="11px">
+              Válassz egy karaktert, vagy hozz létre egy újat.{" "}
+              {drive.enabled && !driveNeeds
+                ? "A karaktereid ezen az eszközön tárolódnak, és a Google Drive-oddal is szinkronizálódnak."
+                : "A karaktereid ezen az eszközön, a böngészőben tárolódnak."}
+            </Text>
           </Box>
-        )}
 
-        <HStack align="baseline" justify="space-between" gap="14px" mb="13px" px="2px">
-          <Heading as="h2" fontFamily="system-ui" fontSize="11.5px" fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint">
-            Mentett karakterek <Text as="span" color="muted">· {records.length}</Text>
-          </Heading>
-          <Box as="button" type="button" onClick={onNew} display="inline-flex" alignItems="center" gap="7px" px="13px" py="7px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx" fontWeight={700} fontSize="13.5px" whiteSpace="nowrap">
-            {PlusIcon}Új karakter
-          </Box>
-        </HStack>
-
-        <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", md: "repeat(auto-fill, minmax(300px, 1fr))" }} gap={{ base: "14px", sm: "20px", md: "16px" }}>
-          {views.map((c) => (
-            <Box key={c.id} position="relative">
-            <ParchPanel as="button" onClick={() => onOpenCharacter(c.id)} display="flex" flexDirection="column" textAlign="left" cursor="pointer" w="100%" h="100%" transition="box-shadow .16s, border-color .16s" _hover={{ borderColor: "accentBd", boxShadow: hoverShadow }}>
-              <HStack align="flex-start" justify="space-between" gap="10px">
-                <Box minW={0} textAlign="left">
-                  <Text fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg" lineHeight="1.12" noOfLines={2}>{c.name}</Text>
-                  <Text fontFamily="system-ui" fontSize="12.5px" color="muted" mt="3px">{c.line}</Text>
-                </Box>
-                <Box flexShrink={0} display="inline-flex" flexDirection="column" alignItems="center" justifyContent="center" w="46px" h="46px" borderRadius="11px" bg="accentSoft" border="1px solid" borderColor="accentBd">
-                  <Text fontFamily="system-ui" fontSize="8.5px" fontWeight={700} letterSpacing=".08em" textTransform="uppercase" color="accentTx" lineHeight="1">Szint</Text>
-                  <Text fontWeight={700} fontSize="19px" color="accentTx" lineHeight="1.1" sx={{ fontVariantNumeric: "tabular-nums" }}>{c.level}</Text>
-                </Box>
-              </HStack>
-
-              <Box h="1px" bg="rule" my="13px" />
-
-              <HStack gap="7px" mb="3px" align="stretch">
-                {c.pips.map((p) => {
-                  const pct = p.max > 0 ? Math.max(4, Math.min(100, (p.cur / p.max) * 100)) : 0;
-                  return (
-                    <Box key={p.k} flex="1 1 0" minW={0}>
-                      <HStack justify="space-between" align="baseline" gap="4px" mb="4px">
-                        <Text fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".04em" color="fgFaint">{p.k}</Text>
-                        <Text fontFamily="system-ui" fontSize="10.5px" fontWeight={600} color="muted" sx={{ fontVariantNumeric: "tabular-nums" }}>{p.cur}/{p.max}</Text>
-                      </HStack>
-                      <Box h="4px" borderRadius="3px" bg="vitTrack" overflow="hidden"><Box h="100%" w={`${pct}%`} bg={VIT[p.kind]} borderRadius="3px" /></Box>
-                    </Box>
-                  );
-                })}
-              </HStack>
-
-              <HStack justify="flex-end" mt="11px">
-                <Box as="span" role="button" tabIndex={0} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setMenuId(c.id); }} title="További műveletek" display="inline-flex" alignItems="center" justifyContent="center" w="30px" h="30px" mr="-5px" borderRadius="8px" color="fgFaint" cursor="pointer" _hover={{ bg: "accentSoft", color: "fg" }}>
-                  {KebabIcon}
-                </Box>
-              </HStack>
-            </ParchPanel>
-            {menuAsPopover && menuId === c.id && (
-              <QuietPopover onClose={() => setMenuId(null)} minW="228px" p="8px">
-                {menuActions(c)}
-              </QuietPopover>
-            )}
+          {(driveNeeds || deleteNote || aside.length > 0 || infos.length > 0) && (
+            <Box display="flex" flexDirection="column" gap="10px" mt={{ base: "-24px", md: "-16px" }} mb="22px" maxW="640px" mx="auto">
+              {driveNeeds && <Callout kind="warn" actions={needsAction[driveNeeds.kind]}>{driveNeeds.text}</Callout>}
+              {deleteNote && <Callout kind="warn" actions={[{ label: "Rendben", onClick: () => setDeleteNote(null) }]}>{deleteNote}</Callout>}
+              {aside.length > 0 && (
+                <Callout
+                  kind="warn"
+                  actions={[{ label: "Letöltés", onClick: saveAside }, ...(asideSaved ? [{ label: "Törlés erről az eszközről", onClick: () => setConfirmDropAside(true) }] : [])]}
+                >
+                  Az alkalmazás ezen az eszközön olyan elmentett adatot talált, amelyet nem tudott beolvasni, ezért félretette. Töltsd le; ha
+                  hiányzik egy karaktered, jelezd a projekt GitHub-oldalán, és csatold a fájlt.
+                </Callout>
+              )}
+              {infos.length > 0 && (
+                <Callout
+                  key={drive.notice?.seq}
+                  kind="info"
+                  actions={[
+                    { label: "Rendben", onClick: dismissInfos },
+                    ...(notice && drive.enabled && drive.backups ? [{ label: "Biztonsági másolatok", onClick: () => openDrive("backups") }] : []),
+                  ]}
+                >
+                  {infos.join(" ")}
+                </Callout>
+              )}
             </Box>
-          ))}
-        </Box>
-
-        {views.length === 0 && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="13.5px" color="fgFaint" mt="40px">
-            Még nincs mentett karakter. Kezdd az „Új karakter” gombbal.
-          </Text>
-        )}
-
-        <HStack justify="center" columnGap="18px" rowGap="8px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
-          {records.length > 0 && (
-            <>
-              <Box as="button" type="button" onClick={handleBackup} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{BackupIcon}Exportálás</Box>
-              <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
-            </>
           )}
-          <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás</Box>
-          {drive.available && (
-            <>
-              <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
-              <Box as="button" type="button" onClick={() => openDrive()} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
-                color={drive.status === "needsTap" || drive.status === "error" ? "accentTx" : "muted"} fontWeight={drive.status === "needsTap" ? 700 : undefined}>
-                {CloudIcon}Google Drive
-                {drive.pending.count > 0 && drive.status !== "syncing" && (
-                  <Box as="span" role="img" aria-label={`${drive.pending.count} karakter módosítása még nem került fel a Drive-ra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
+
+          <HStack align="baseline" justify="space-between" gap="14px" mb="13px" px="2px">
+            <Heading as="h2" fontFamily="system-ui" fontSize="11.5px" fontWeight={700} letterSpacing=".13em" textTransform="uppercase" color="fgFaint">
+              Mentett karakterek <Text as="span" color="muted">· {records.length}</Text>
+            </Heading>
+            <Box as="button" type="button" onClick={onNew} display="inline-flex" alignItems="center" gap="7px" px="13px" py="7px" borderRadius="9px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx" fontWeight={700} fontSize="13.5px" whiteSpace="nowrap">
+              {PlusIcon}Új karakter
+            </Box>
+          </HStack>
+
+          <Box display="grid" gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", md: "repeat(auto-fill, minmax(300px, 1fr))" }} gap={{ base: "14px", sm: "20px", md: "16px" }}>
+            {views.map((c) => (
+              <Box key={c.id} position="relative">
+                <ParchPanel as="button" onClick={() => onOpenCharacter(c.id)} display="flex" flexDirection="column" textAlign="left" cursor="pointer" w="100%" h="100%" transition="box-shadow .16s, border-color .16s" _hover={{ borderColor: "accentBd", boxShadow: hoverShadow }}>
+                  <HStack align="flex-start" justify="space-between" gap="10px">
+                    <Box minW={0} textAlign="left">
+                      <Text fontSize={{ base: "23px", md: "20px" }} fontWeight={700} color="fg" lineHeight="1.12" noOfLines={2}>{c.name}</Text>
+                      <Text fontFamily="system-ui" fontSize="12.5px" color="muted" mt="3px">{c.line}</Text>
+                    </Box>
+                    <Box flexShrink={0} display="inline-flex" flexDirection="column" alignItems="center" justifyContent="center" w="46px" h="46px" borderRadius="11px" bg="accentSoft" border="1px solid" borderColor="accentBd">
+                      <Text fontFamily="system-ui" fontSize="8.5px" fontWeight={700} letterSpacing=".08em" textTransform="uppercase" color="accentTx" lineHeight="1">Szint</Text>
+                      <Text fontWeight={700} fontSize="19px" color="accentTx" lineHeight="1.1" sx={{ fontVariantNumeric: "tabular-nums" }}>{c.level}</Text>
+                    </Box>
+                  </HStack>
+
+                  <Box h="1px" bg="rule" my="13px" />
+
+                  <HStack gap="7px" mb="3px" align="stretch">
+                    {c.pips.map((p) => {
+                      const pct = p.max > 0 ? Math.max(4, Math.min(100, (p.cur / p.max) * 100)) : 0;
+                      return (
+                        <Box key={p.k} flex="1 1 0" minW={0}>
+                          <HStack justify="space-between" align="baseline" gap="4px" mb="4px">
+                            <Text fontFamily="system-ui" fontSize="9px" fontWeight={700} letterSpacing=".04em" color="fgFaint">{p.k}</Text>
+                            <Text fontFamily="system-ui" fontSize="10.5px" fontWeight={600} color="muted" sx={{ fontVariantNumeric: "tabular-nums" }}>{p.cur}/{p.max}</Text>
+                          </HStack>
+                          <Box h="4px" borderRadius="3px" bg="vitTrack" overflow="hidden"><Box h="100%" w={`${pct}%`} bg={VIT[p.kind]} borderRadius="3px" /></Box>
+                        </Box>
+                      );
+                    })}
+                  </HStack>
+
+                  <HStack justify="flex-end" mt="11px">
+                    <Box as="span" role="button" tabIndex={0} onClick={(e: React.MouseEvent) => { e.stopPropagation(); setMenuId(c.id); }} title="További műveletek" display="inline-flex" alignItems="center" justifyContent="center" w="30px" h="30px" mr="-5px" borderRadius="8px" color="fgFaint" cursor="pointer" _hover={{ bg: "accentSoft", color: "fg" }}>
+                      {KebabIcon}
+                    </Box>
+                  </HStack>
+                </ParchPanel>
+                {menuAsPopover && menuId === c.id && (
+                  <QuietPopover onClose={() => setMenuId(null)} minW="228px" p="8px">
+                    {menuActions(c)}
+                  </QuietPopover>
                 )}
               </Box>
-            </>
-          )}
-          <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
-          <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
-        </HStack>
-        {records.length > 0 && !drive.enabled && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
-            {lastBackupAt === null ? "Még nem exportáltad a karaktereidet." : `Utolsó exportálás: ${daysAgo(lastBackupAt, now)}.`}
-            {backupStale && (drive.available ? " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket, vagy bekapcsolni a Google Drive-szinkront." : " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket.")}
-          </Text>
-        )}
-        {driveLine && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mt="4px" maxW="52ch" mx="auto">
-            {driveLine}
-          </Text>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json,.json"
-          style={{ display: "none" }}
-          onChange={(e) => {
-            handleImportFile(e.target.files?.[0]);
-            e.target.value = ""; // allow re-picking the same file
-          }}
-        />
+            ))}
+          </Box>
 
-        {(importError || importInfo) && (
-          <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={importError ? "bad" : "good"} mt="9px" maxW="52ch" mx="auto">
-            {importError ?? importInfo}
-          </Text>
-        )}
+          {views.length === 0 && (
+            <Text textAlign="center" fontFamily="system-ui" fontSize="13.5px" color="fgFaint" mt="40px">
+              Még nincs mentett karakter. Kezdd az „Új karakter” gombbal.
+            </Text>
+          )}
+
+          <HStack justify="center" columnGap="18px" rowGap="8px" mt="30px" fontFamily="system-ui" fontSize="12px" color="fgFaint" flexWrap="wrap">
+            {records.length > 0 && (
+              <>
+                <Box as="button" type="button" onClick={handleBackup} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{BackupIcon}Exportálás</Box>
+                <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
+              </>
+            )}
+            <Box as="button" type="button" onClick={() => fileInputRef.current?.click()} display="inline-flex" alignItems="center" gap="6px" color="muted" fontSize="12px">{ImportIcon}Importálás</Box>
+            {drive.available && (
+              <>
+                <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
+                <Box as="button" type="button" onClick={() => openDrive()} display="inline-flex" alignItems="center" gap="6px" fontSize="12px"
+                  color={drive.status === "needsTap" || drive.status === "error" ? "accentTx" : "muted"} fontWeight={drive.status === "needsTap" ? 700 : undefined}>
+                  {CloudIcon}Google Drive
+                  {drive.pending.count > 0 && drive.status !== "syncing" && (
+                    <Box as="span" role="img" aria-label={`${drive.pending.count} karakter módosítása még nem került fel a Drive-ra`} w="7px" h="7px" borderRadius="50%" bg="accent" ml="-1px" />
+                  )}
+                </Box>
+              </>
+            )}
+            <Text as="span" opacity={0.5} display={{ base: "none", sm: "inline" }} aria-hidden="true">·</Text>
+            <Box as="button" type="button" onClick={onOpenCredits} color="muted" fontSize="12px">Névjegy</Box>
+          </HStack>
+          {records.length > 0 && !drive.enabled && (
+            <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={backupStale ? "warn" : "fgFaint"} mt="8px" maxW="52ch" mx="auto">
+              {lastBackupAt === null ? "Még nem exportáltad a karaktereidet." : `Utolsó exportálás: ${daysAgo(lastBackupAt, now)}.`}
+              {backupStale && (drive.available ? " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket, vagy bekapcsolni a Google Drive-szinkront." : " A karakterek csak ebben a böngészőben vannak meg, ezért érdemes exportálni őket.")}
+            </Text>
+          )}
+          {driveLine && (
+            <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mt="4px" maxW="52ch" mx="auto">
+              {driveLine}
+            </Text>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              handleImportFile(e.target.files?.[0]);
+              e.target.value = ""; // allow re-picking the same file
+            }}
+          />
+
+          {(importError || importInfo) && (
+            <Text textAlign="center" fontFamily="system-ui" fontSize="11.5px" color={importError ? "bad" : "good"} mt="9px" maxW="52ch" mx="auto">
+              {importError ?? importInfo}
+            </Text>
+          )}
       </Box>
       </Box>
 
