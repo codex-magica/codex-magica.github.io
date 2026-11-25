@@ -61,8 +61,6 @@ export type ParsedFile =
   | { ok: true; device: string; nonce: string | null; versions: Map<string, Version>; opaque: Record<string, unknown>; skipped: number }
   | { ok: false; reason: "newer" | "unreadable"; version?: number };
 
-const LEGACY_VC = { legacy: 1 };
-
 export const versionKey = (v: Pick<Version, "vc" | "h">): string => versionKeyOf(v.vc, v.h);
 
 const fromRecord = (r: CharacterRecord): Version => {
@@ -90,16 +88,14 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
   const f = raw as Partial<DeviceFile> & { characters?: Record<string, unknown> } | null;
   if (!f || typeof f !== "object" || f.format !== SYNC_FORMAT || typeof f.version !== "number") return { ok: false, reason: "unreadable" };
   if (f.version > SYNC_VERSION) return { ok: false, reason: "newer", version: f.version };
-  if (!f.characters || typeof f.characters !== "object") return { ok: false, reason: "unreadable" };
-  const legacy = (f.version as number) === 1;
-  if (!legacy && typeof f.device !== "string") return { ok: false, reason: "unreadable" };
+  if (f.version !== SYNC_VERSION || !f.characters || typeof f.characters !== "object" || typeof f.device !== "string") return { ok: false, reason: "unreadable" };
   const versions = new Map<string, Version>();
   const opaque: Record<string, unknown> = {};
   let skipped = 0;
   for (const [id, raw] of Object.entries(f.characters)) {
-    const e = raw as (FileEntry & { updatedAt?: number }) | null;
-    const t = legacy ? e?.updatedAt : e?.t;
-    const vc = legacy ? LEGACY_VC : e?.vc;
+    const e = raw as FileEntry | null;
+    const t = e?.t;
+    const vc = e?.vc;
     const rec = e && !e.deleted ? repairRecord({ ...(e.record as object), id }) : null;
     if (!e || typeof e !== "object" || typeof t !== "number" || !isVersionVector(vc) || (!e.deleted && !rec)) {
       skipped++;
@@ -107,14 +103,14 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
       continue;
     }
     if (e.deleted) {
-      if (!legacy) versions.set(id, { id, t, vc, h: DELETED });
+      versions.set(id, { id, t, vc, h: DELETED });
       continue;
     }
-    const cvc = !legacy && isVersionVector(e.cvc) && Object.keys(e.cvc).length > 0 ? e.cvc : undefined;
+    const cvc = isVersionVector(e.cvc) && Object.keys(e.cvc).length > 0 ? e.cvc : undefined;
     const record = { ...rec!, id, updatedAt: t, syncVc: vc, syncCvc: cvc };
     versions.set(id, { id, t, vc, h: contentHash(record), record, ...(cvc ? { cvc } : {}) });
   }
-  return { ok: true, device: legacy ? "" : f.device!, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque, skipped };
+  return { ok: true, device: f.device, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque, skipped };
 };
 
 export const copyId = (id: string, loser: Version): string => `${id}~${loser.h.slice(0, 10)}`;

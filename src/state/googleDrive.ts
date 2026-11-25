@@ -457,10 +457,6 @@ export interface DriveTransport {
 }
 
 const SYNC_FILE_PREFIX = "codex-magica-sync"; // codex-magica-sync.<device>.json
-// The first version of the sync kept ONE shared file of this name (no version vectors). It's still read as
-// one more source (driveMerge gives its characters a lineage of their own, so nothing in it is lost or
-// silently overridden, and doesn't apply its deletions), never written.
-const LEGACY_SYNC_FILE = "codex-magica-roster.json";
 
 const API = "https://www.googleapis.com/drive/v3/files";
 const UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
@@ -535,9 +531,8 @@ export const httpDrive = (token: string): DriveTransport => {
   type Props = { appProperties?: Record<string, string> };
   return {
     async listSyncFiles() {
-      // the device files, plus the single shared file of the first sync version if it's still there
       const files = await list<{ id: string; version: string; createdTime: string } & Props>(
-        `(appProperties has { key='kind' and value='sync' } or name='${LEGACY_SYNC_FILE}') and trashed=false`,
+        "appProperties has { key='kind' and value='sync' } and trashed=false",
         "id,version,createdTime,appProperties"
       );
       return files.map((f) => ({ id: f.id, version: f.version, createdTime: f.createdTime, device: f.appProperties?.device ?? "" }));

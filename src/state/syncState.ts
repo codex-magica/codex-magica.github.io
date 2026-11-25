@@ -16,7 +16,6 @@ const PUBLISHED_KEY = "magus.drivePublished.v2";
 const BACKED_UP_KEY = "magus.driveBackedUp.v1";
 const NONCES_KEY = "magus.driveNonces.v1";
 const CONFIRMED_NONCE_KEY = "magus.driveNonceConfirmed.v1";
-const LEGACY_BASE_KEY = "magus.syncBase.v1"; // the first version of the sync; no longer used
 
 const write = (key: string, value: unknown): void => {
   try {
@@ -136,7 +135,6 @@ export const clearDriveState = (): void => {
   const backups = loadDriveSettings().backups;
   try {
     localStorage.removeItem(PUBLISHED_KEY);
-    localStorage.removeItem(LEGACY_BASE_KEY);
     localStorage.removeItem(BACKED_UP_KEY); // another account may be next: its backups are its own
   } catch {
     /* ignore */

@@ -80,7 +80,7 @@ export class FakeDrive implements DriveTransport {
   }
   async listSyncFiles() {
     await this.step("list");
-    return [...this.files.entries()].filter(([, f]) => f.props.kind === "sync" || f.name === "codex-magica-roster.json").map(([id]) => this.meta(id));
+    return [...this.files.entries()].filter(([, f]) => f.props.kind === "sync").map(([id]) => this.meta(id));
   }
   async readFile(id: string): Promise<FileBody> {
     await this.step("read");

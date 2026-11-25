@@ -558,16 +558,6 @@ describe("Google Drive sync: review findings", () => {
     expect([...drive.files.values()].some((f) => f.props.kind === "sync" && f.body.includes("day2"))).toBe(true);
   });
 
-  test("an old deletion marker from the first sync version never removes a live character", () => {
-    const d = new Device("deva");
-    const x = { ...defaultRecord, id: "c_x", name: "Visszaállított", updatedAt: Date.UTC(2026, 10, 20, 12) };
-    d.storage.setItem("magus.roster.v1", JSON.stringify([x]));
-    d.storage.setItem("magus.tombstones.v1", JSON.stringify({ c_x: Date.UTC(2026, 10, 20, 10), c_gone: 5 }));
-    d.store = d.run(() => createRosterStore());
-    expect(d.records().map((r) => r.name)).toEqual(["Visszaállított"]);
-    expect(Object.keys(d.store.getState().deletions)).toEqual(["c_gone"]); // a real old deletion still counts
-  });
-
   test("storage full: the edit stays on screen and reaches Drive", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -701,19 +691,6 @@ describe("Google Drive sync: review findings", () => {
     expect(result([[P], [Q]])).toHaveLength(2); // Q and R; P is part of Q
   });
 
-  test("characters from the first sync version's shared file are picked up", async () => {
-    const drive = new FakeDrive();
-    const legacyRec = { ...defaultRecord, id: "c_old", name: "Régi hős", inventoryText: "legacy" };
-    drive.files.set("legacy", { name: "codex-magica-roster.json", props: {}, body: JSON.stringify({ format: "codex-magica-sync", version: 1, savedAt: 1, characters: { c_old: { updatedAt: 5, record: legacyRec } } }), version: 1, created: 0 });
-    const a = new Device("deva");
-    await a.sync(drive);
-    expect(a.byName("Régi hős")).toBeDefined();
-    later();
-    a.remove(a.byName("Régi hős")!.id); // and deleting it sticks
-    await a.sync(drive);
-    await a.sync(drive);
-    expect(a.byName("Régi hős")).toBeUndefined();
-  });
 });
 
 // ── randomized: many devices, random edits, concurrent rounds, failures, skewed clocks ──────────────

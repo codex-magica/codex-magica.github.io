@@ -45,7 +45,6 @@ export interface RosterState {
 
 
 const DELETIONS_KEY = "magus.deletions.v1";
-const LEGACY_TOMBSTONES_KEY = "magus.tombstones.v1"; // id → time, from the first version of the Drive sync
 const KEEP_LAST_MS = 60 * 24 * 3600_000; // a deleted character's last state is kept this long (with sync, until it's in Drive)
 // While saving fails (storage full), memory is the only copy of the latest edits. Before the page is
 // replaced (the round trip to Google's consent page, an app update), memory is parked here: the tab's
@@ -67,7 +66,7 @@ const readRaw = (key: string): string | null => {
   }
 };
 
-const readDeletions = (liveIds: Set<string>): Deletions => {
+const readDeletions = (): Deletions => {
   const out: Deletions = {};
   const now = Date.now();
   try {
@@ -78,12 +77,6 @@ const readDeletions = (liveIds: Set<string>): Deletions => {
           const keepLast = d.last && typeof d.last === "object" && (now - d.t < KEEP_LAST_MS || deletionAwaitsDrive(id, d));
           out[id] = keepLast ? { t: d.t, vc: d.vc, last: d.last } : { t: d.t, vc: d.vc };
         }
-    // The first sync version wrote a time per deleted id and never cleared it while sync was off, so a
-    // character restored later under the same id may still have one: those don't count as deletions.
-    const legacy = JSON.parse(readRaw(LEGACY_TOMBSTONES_KEY) ?? "{}");
-    if (legacy && typeof legacy === "object" && !Array.isArray(legacy))
-      for (const [id, t] of Object.entries(legacy as Record<string, number>))
-        if (typeof t === "number" && !out[id] && !liveIds.has(id)) out[id] = { t, vc: { [deviceId()]: 1 } };
   } catch {
     /* unreadable: no deletions known */
   }
@@ -114,7 +107,7 @@ const consistent = (records: CharacterRecord[], deletions: Deletions): { records
 
 const load = () => {
   const records = loadRoster().map(withVector);
-  return consistent(records, readDeletions(new Set(records.map((r) => r.id))));
+  return consistent(records, readDeletions());
 };
 
 type Listener = () => void;
@@ -139,7 +132,6 @@ export const createRosterStore = () => {
   const writeDeletions = (deletions: Deletions): boolean => {
     try {
       localStorage.setItem(DELETIONS_KEY, JSON.stringify(deletions));
-      localStorage.removeItem(LEGACY_TOMBSTONES_KEY);
       return true;
     } catch {
       return false;
