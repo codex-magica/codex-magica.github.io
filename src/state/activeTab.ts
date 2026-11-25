@@ -6,7 +6,7 @@
 //
 // The active tab holds a Web Lock for as long as it's open. A new tab takes it only if it's free (it
 // never queues for it: a tab left on Google's consent page must find it free when it comes back).
-// "Használat itt" takes it over; the tab that had it switches to the "open in another tab" screen. Where
+// "Folytatás itt" takes it over; the tab that had it switches to the "open in another tab" screen. Where
 // Web Locks don't exist, every tab is active.
 //
 // States: "checking" (for a moment at start), "active", "elsewhere" (another tab has it; `wasActive`:
@@ -74,7 +74,7 @@ export const startActiveTab = (): void => {
   }
 };
 
-// "Használat itt": continue in this tab. A tab that was already in use before reloads, so nothing it
+// "Folytatás itt": continue in this tab. A tab that was already in use before reloads, so nothing it
 // shows is stale; a tab that never was simply takes over.
 export const continueHere = (): void => {
   if (wasActive) {

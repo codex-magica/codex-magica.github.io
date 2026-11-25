@@ -78,19 +78,19 @@ const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 // ── the Hungarian notes ─────────────────────────────────────────────────────────────────────────────
 const authNote = (reason: string): string => {
   if (reason === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és a Google oldalán jelöld be a Drive-ra vonatkozó négyzetet is.";
-  if (reason === "access_denied") return "A szinkron nem kapcsolt be, mert a Google oldalán nem adtál engedélyt. Bármikor újra megpróbálhatod.";
+  if (reason === "access_denied") return "Nem adtál engedélyt a Google oldalán, így a szinkron kikapcsolva maradt. Bármikor újra megpróbálhatod.";
   if (reason === "no answer") return "A Google-bejelentkezés nem fejeződött be. Próbáld újra.";
   if (reason === "credential revoked")
-    return "A szinkron engedélye megszűnt (például mert a Google-fiókodban eltávolítottad, vagy hónapokig nem használtad). Kattints az „Újrakapcsolás” gombra; addig a karaktereid ezen az eszközön megmaradnak.";
-  return "Újra engedélyt kell adnod a Google-nek. Kattints az „Újrakapcsolás” gombra.";
+    return "Megszűnt a Google-engedély (például mert visszavontad a Google-fiókodban, vagy hónapokig nem használtad a szinkront). Az „Újrakapcsolás” gombbal adhatod meg újra; addig a karaktereid megmaradnak ezen az eszközön.";
+  return "Újra engedélyt kell adnod a Google-nek. Ezt az „Újrakapcsolás” gombbal teheted meg.";
 };
 // a round, or a renewal, that failed
 const errorNote = (e: unknown): string => {
   if (e instanceof SyncNewerVersionError)
-    return "Egy másik eszközöd már az alkalmazás újabb verzióját használja. Kattints a lent megjelenő „Frissítés” gombra; ha nem látod, zárd be az alkalmazást, és nyisd meg újra.";
+    return "Egy másik eszközöd már az alkalmazás újabb verzióját használja. A szinkron folytatásához frissítsd az alkalmazást a lent megjelenő „Frissítés” gombbal; ha nem látod, zárd be, és nyisd meg újra.";
   if (e instanceof DriveAuthError) return authNote(e.message);
   if (e instanceof LocalSaveError)
-    return "Ezen az eszközön most nem sikerül menteni (valószínűleg megtelt a böngésző tárhelye), ezért a szinkron szünetel. Exportáld a karaktereidet, és törölj, amire nincs szükséged.";
+    return "Ezen az eszközön most nem sikerül menteni (valószínűleg megtelt vagy le van tiltva a böngésző tárhelye), ezért a szinkron szünetel. Exportáld a karaktereidet, hogy biztonságban legyenek.";
   if (e instanceof DriveFullError)
     return "Betelt a Google-tárhelyed, ezért a szinkron szünetel. Szabadíts fel helyet a Google-fiókodban (a Drive, a Gmail és a Fotók közösen használják); utána a szinkron magától folytatódik.";
   if (typeof navigator !== "undefined" && navigator.onLine === false) return "Nincs internetkapcsolat. Amint lesz, a szinkron magától folytatódik.";
@@ -107,7 +107,7 @@ const startNote = (r: "insecure" | "storage" | "failed"): string =>
   r === "insecure"
     ? "A Google-bejelentkezés csak biztonságos (https) kapcsolaton keresztül indul el. Nyisd meg az alkalmazást a szokásos címén."
     : r === "storage"
-      ? "Nem sikerült elindítani a Google-bejelentkezést, mert ezen az eszközön betelt a tárhely. Exportáld a karaktereidet, töröld, amire nincs szükséged, és próbáld újra."
+      ? "A Google-bejelentkezés nem indult el, mert ezen az eszközön most nem sikerül menteni (valószínűleg megtelt vagy le van tiltva a böngésző tárhelye)."
       : "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra.";
 
 const createDriveSync = () => {
@@ -128,7 +128,7 @@ const createDriveSync = () => {
         ? {
             text:
               outcome.error === "access_denied" && initialSettings.enabled
-                ? "Nem adtál engedélyt a Google oldalán, ezért a szinkron továbbra is áll. Bármikor újra megpróbálhatod." // a reconnect, cancelled
+                ? "Nem adtál engedélyt a Google oldalán, így a szinkron továbbra is szünetel. Bármikor újra megpróbálhatod." // a reconnect, cancelled
                 : ["access_denied", "no answer"].includes(outcome.error)
                   ? authNote(outcome.error)
                   : "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.",
@@ -302,7 +302,7 @@ const createDriveSync = () => {
     if (!got.email) return failed("Nem sikerült ellenőrizni, melyik Google-fiókkal jelentkeztél be. Próbáld újra.");
     if (expected && expected.toLowerCase() !== got.email.toLowerCase())
       return failed(
-        `Ezzel a fiókkal jelentkeztél be: ${got.email}, de a szinkron ehhez tartozik: ${expected}. Kattints az „Újrakapcsolás” gombra, és válaszd ezt: ${expected}. Ha inkább a másik fiókot használnád, kapcsold ki, majd kapcsold be újra a szinkront.`
+        `A szinkron ehhez a fiókhoz tartozik: ${expected}, de ezzel jelentkeztél be: ${got.email}. Az „Újrakapcsolás” gombbal próbáld újra, és a Google oldalán ezt válaszd: ${expected}. Ha inkább a másik fiókot használnád, kapcsold ki, majd kapcsold be újra a szinkront.`
       );
     keepConnection(got);
     patchSettings({ email: expected ?? got.email, ...(enabling ? { enabled: true, ...(o.backups === undefined ? {} : { backups: o.backups }) } : {}) });

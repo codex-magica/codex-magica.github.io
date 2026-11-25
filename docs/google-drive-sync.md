@@ -80,7 +80,7 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.
 - **One tab at a time.** The app runs in one browser tab at a time (`src/state/activeTab.ts`, a Web Lock
-  held by the tab in use; another tab offers "Használat itt" to continue there, and a tab that was taken
+  held by the tab in use; another tab offers "Folytatás itt" to continue there, and a tab that was taken
   over reloads when continued; the lock is let go when the page is left, a busy lock is tried again for a
   moment before saying "another tab", and a return from Google's consent page takes it outright). Only the
   tab in use syncs: a round in a tab that stepped back writes nothing to Drive, and that tab neither

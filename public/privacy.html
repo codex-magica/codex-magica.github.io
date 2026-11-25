@@ -49,7 +49,7 @@
         újra, melyik fiókot használod. Ezen az eszközön tárolja.</li>
       <li>A bekapcsoláskor kapott tartós Google-engedélyt az alkalmazás titkosítva, ezen az eszközön tárolja. Ezzel kér
         óránként új hozzáférési kódot (tokent) egy kis szolgáltatástól, amely a Cloudflare-en fut. Ez a szolgáltatás
-        csak a Google-lel váltja ki a kódot: a karaktereidet nem látja, semmit nem tárol, és a kéréseket nem naplózza.
+        csak a Google bejelentkezési szolgáltatásával kommunikál: a karaktereidet nem látja, semmit nem tárol, és a kéréseket nem naplózza.
         A Cloudflare a működéshez kezeli a kérések technikai adatait, például az IP-címet; erre a
         <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare adatvédelmi szabályzata</a> vonatkozik.</li>
       <li>A hozzáférési kód legfeljebb egy óráig marad a böngésződben, kizárólag a szinkronhoz.</li>
@@ -95,8 +95,8 @@
         Google account by mistake, and so that Google doesn't ask which account to use next time. It is stored on this
         device.</li>
       <li>The lasting Google permission you give when turning sync on is stored encrypted, on this device. With it, the
-        app gets a new access token every hour from a small service running on Cloudflare. That service only exchanges
-        the token with Google: it cannot see your characters, stores nothing and keeps no request logs. Cloudflare
+        app gets a new access token every hour from a small service running on Cloudflare. That service only talks to
+        Google's sign-in service: it cannot see your characters, stores nothing and keeps no request logs. Cloudflare
         processes the technical data of the requests, such as IP addresses, to run it; the
         <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">Cloudflare Privacy Policy</a> applies to that.</li>
       <li>The access token stays in your browser for at most an hour, used only for syncing.</li>

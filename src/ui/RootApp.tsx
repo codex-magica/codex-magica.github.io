@@ -86,7 +86,7 @@ export const RootApp: React.FC = () => {
     if (screen === "sheet" && !current) {
       if (currentId && lastName.current)
         setRosterNotice(
-          `„${lastName.current}” bezárult, mert közben törölték egy másik eszközön.` +
+          `„${lastName.current}” karakterlapja bezárult, mert a karaktert közben törölték egy másik eszközön.` +
             (drive.enabled && drive.backups ? " Ha tévedés volt, a Google Drive ablakban, a biztonsági másolatok közül visszaállíthatod." : "")
         );
       go("roster");

@@ -16,12 +16,12 @@ export const TabGate: React.FC<{ children: React.ReactNode }> = ({ children }) =
           Az alkalmazás egy másik lapon van nyitva
         </Heading>
         <Text fontSize="14.5px" color="muted" lineHeight="1.55" mb="18px">
-          Egyszerre csak egy lapon használhatod, hogy a karaktereid ne keveredjenek össze. Ha inkább itt folytatnád, kattints a
-          gombra; a másik lapon ekkor szünetel.
+          Egyszerre csak egy lapon használhatod, hogy a karaktereid ne keveredjenek össze. Ha itt folytatod, a másik lapon
+          leáll az alkalmazás.
         </Text>
         <Box display="flex" gap="10px" justifyContent="center" flexWrap="wrap">
           <Box as="button" type="button" onClick={continueHere} px="18px" py="10px" borderRadius="9px" fontWeight={700} fontSize="15px" border="1px solid" borderColor="accent" bg="accentSoft" color="accentTx">
-            Használat itt
+            Folytatás itt
           </Box>
         </Box>
       </Box>

@@ -450,7 +450,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     await settle(100);
     expect(tab.api.status).toBe("off");
     expect(tab.api.note?.error).toBe(false);
-    expect(tab.api.note?.text).toContain("nem adtál engedélyt");
+    expect(tab.api.note?.text).toContain("kikapcsolva maradt");
     expect(tab.api.connectProblem).toBe(true);
   });
 
@@ -518,7 +518,7 @@ describe("sync orchestration: reconnects, Google storage", () => {
     win.location.search = "?state=S1&error=access_denied";
     const { tab } = await openTab();
     await settle(100);
-    expect(tab.api.note?.text).toContain("továbbra is áll");
+    expect(tab.api.note?.text).toContain("továbbra is szünetel");
   });
 
   test("offline, it doesn't leave for Google's page (the browser's error page, outside the app)", async () => {
@@ -534,7 +534,7 @@ describe("sync orchestration: reconnects, Google storage", () => {
 
 });
 
-// ── the app continued in another tab ("Használat itt"): the tab that stepped back does nothing more ──
+// ── the app continued in another tab ("Folytatás itt"): the tab that stepped back does nothing more ──
 const syncFiles = (account: string) => [...(drives[account]?.values() ?? [])].filter((f) => f.props.kind === "sync");
 
 describe("taking over in another tab", () => {
@@ -548,7 +548,7 @@ describe("taking over in another tab", () => {
     const A = await openTab();
     A.store.upsert(A.storage.createBlankRecord("c_a", "Aragorn"));
     await settle(100); // exchanging the code
-    A.tab.unmount(); // "Használat itt" in another tab
+    A.tab.unmount(); // "Folytatás itt" in another tab
     win.location.search = "";
     const B = await openTab();
     await settle(100);
@@ -590,7 +590,7 @@ describe("taking over in another tab", () => {
     let holding = true;
     override = (url) => (holding && url.startsWith("https://www.googleapis.com/drive/v3/files?") ? (held.then(() => null) as any) : null);
     await settle(2500); // the next round waits on the listing...
-    A.tab.unmount(); // ...when "Használat itt" in another tab takes over
+    A.tab.unmount(); // ...when "Folytatás itt" in another tab takes over
     holding = false;
     release();
     await settle(100);

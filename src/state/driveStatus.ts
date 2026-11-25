@@ -36,7 +36,7 @@ export const driveAttention = (drive: DriveSyncApi, now: number, inWindow = fals
   if (drive.pending.count > 0 && drive.pending.oldest !== null && now - drive.pending.oldest > STALE_PENDING_MS) {
     const n = drive.pending.count;
     return online()
-      ? a("stuck", `${n} karakter módosítása még csak ezen az eszközön van meg. Mielőtt másik eszközön folytatnád, kattints a „Szinkronizálás most” gombra.`)
+      ? a("stuck", `${n} karakter módosítása még csak ezen az eszközön van meg. Mielőtt másik eszközön folytatnád, szinkronizálj a „Szinkronizálás most” gombbal.`)
       : a("stuckOffline", `${n} karakter módosítása még csak ezen az eszközön van meg, mert nincs internet. Amint lesz, magától feltöltődik.`);
   }
   return null;
