@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Heading, Text } from "@chakra-ui/react";
-import { ModalShell } from "./Modal";
+import { ModalCloseButton, ModalShell } from "./Modal";
 import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
@@ -76,8 +76,9 @@ export const SyncConflictModal: React.FC<{
   const several = alternatives.length > 1;
   return (
     <ModalShell onClose={onClose} width="min(440px, 100%)" zIndex={60}>
-      <Box p="22px" overflowY="auto">
-        <Heading fontSize="18px" fontWeight={700} color="fg" mb={2}>
+      <Box p="22px" overflowY="auto" position="relative">
+        <ModalCloseButton onClose={onClose} />
+        <Heading fontSize="18px" fontWeight={700} color="fg" mb={2} pr="36px">
           Szinkronütközés
         </Heading>
         <Text fontSize="14px" color="muted" lineHeight="1.55" mb={4}>
@@ -101,8 +102,8 @@ export const SyncConflictModal: React.FC<{
         />
 
         <Text fontFamily="system-ui" fontSize="11.5px" color="fgFaint" mt="6px" lineHeight="1.5">
-          {remaining > 1 ? `Még ${remaining - 1} további karakternél kell döntened. ` : ""}A bezárással elhalasztod a döntést: addig a most látható
-          változat marad, és az alkalmazás következő megnyitásakor újra megkérdezi.
+          {remaining > 1 ? `Még ${remaining - 1} karakternél kell döntened. ` : ""}Ha most bezárod, később is dönthetsz: addig a most látható
+          változat marad, és az alkalmazás a következő megnyitásakor újra rákérdez.
         </Text>
       </Box>
     </ModalShell>
