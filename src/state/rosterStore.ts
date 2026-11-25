@@ -222,7 +222,7 @@ export const createRosterStore = () => {
       const added = records.map((r) => {
         const deletion = deletions[r.id];
         delete deletions[r.id]; // restoring a deleted character undoes the deletion here
-        return { ...r, updatedAt: nextStamp(Math.max(now, deletion?.t ?? 0)), syncVc: { ...(deletion?.vc ?? {}), [lineage]: 1 }, syncCvc: undefined };
+        return { ...r, updatedAt: nextStamp(Math.max(now, deletion?.t ?? 0)), syncVc: { ...deletion?.vc, [lineage]: 1 }, syncCvc: undefined };
       });
       commit([...state.records.filter((r) => !added.some((a) => a.id === r.id)), ...added], deletions, true);
     },
