@@ -23,7 +23,6 @@ import { Version, combine, conflictCopyName, localVersions, mergeRound, parseDev
 import { SyncNewerVersionError } from "./driveSyncEngine";
 import { createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
-import { forgetSessionNoncesForTests } from "./syncState";
 import { normalizeRecord } from "./storage";
 import { parseImportFile } from "./transfer";
 import { DAY, Device, FakeDrive, QuotaStorage, clashes, later, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
@@ -809,29 +808,28 @@ describe("Google Drive sync: randomized multi-device runs", () => {
 // ═══════════════════ second adversarial review: each test was a proven failure ═══════════════════
 
 describe("nonces, tabs, conflicts, clones (earlier review findings)", () => {
-  test("storage full: an unsaved nonce doesn't make the next round take the device for a clone", async () => {
+  test("storage full: a round whose mark can't be saved writes nothing, and no false clone follows", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const qs = new QuotaStorage();
     a.storage = qs;
     a.store = a.run(() => createRosterStore());
     const b = new Device("devb");
-    const x = a.create("Xena");
+    a.create("Xena");
     const w = a.create("Wulf");
     const v = a.create("Vera");
     await realSync(a, drive);
     await b.sync(drive);
     await realSync(a, drive);
-    // storage fills up (the case the design says is handled: "the sync uploads from memory")
-    qs.cap = qs.used();
-    later();
-    a.edit(x.id, "while-full");
-    expect(a.store.getState().saveFailed).toBe(true);
-    await realSync(a, drive); // uploads the edit; rememberNonce silently fails
     later();
     b.remove(w.id);
     b.edit(v.id, "b-edit");
     await b.sync(drive);
+    const before = drive.syncFileOf("deva")!.body;
+    qs.cap = qs.used(); // storage full: a's round would have to rewrite its file
+    await expect(realSync(a, drive)).rejects.toThrow();
+    expect(drive.syncFileOf("deva")!.body).toBe(before); // nothing written without its mark saved
+    qs.cap = Infinity;
     await realSync(a, drive);
     for (let i = 0; i < 2; i++) {
       await realSync(a, drive);
@@ -862,7 +860,6 @@ describe("nonces, tabs, conflicts, clones (earlier review findings)", () => {
       await realSync(a, drive).catch(() => undefined);
     }
     drive.failOn = null;
-    a.run(() => forgetSessionNoncesForTests()); // and the app was reopened meanwhile: only what's saved counts
     await realSync(a, drive);
     for (let i = 0; i < 2; i++) {
       await b.sync(drive);

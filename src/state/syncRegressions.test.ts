@@ -202,7 +202,7 @@ describe("storage full and long absences (second review)", () => {
     expect(kept).toBe(true);
   });
 
-  test("the same within 60 days keeps the phone's last edit as a backup", async () => {
+  test("the same after a shorter absence keeps the phone's last edit as a backup", async () => {
     const drive = new FakeDrive();
     const phone = new Device("phone");
     const laptop = new Device("laptop");

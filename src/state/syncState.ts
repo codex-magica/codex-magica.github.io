@@ -68,10 +68,7 @@ export const savePublished = (p: Published): void => write(PUBLISHED_KEY, p);
 const recordKey = (r: CharacterRecord): string => versionKeyOf(r.syncVc ?? {}, contentHash(r));
 const deletionKey = (d: { vc: Record<string, number> }): string => versionKeyOf(d.vc, DELETED_HASH);
 
-// A deletion made here that sync still has to take to Drive (sync on, and Drive doesn't have it yet):
-// the deleted character's last state must stay until then, however long that takes, so it can be backed up.
-export const deletionAwaitsDrive = (id: string, d: { vc: Record<string, number> }): boolean =>
-  loadDriveSettings().enabled && loadPublished()[id] !== deletionKey(d);
+
 
 // Changes on this device not yet in its Drive file: edits, new characters and deletions. `oldest` is
 // when the oldest of them happened (for the "sync before switching devices" hint).
@@ -98,28 +95,17 @@ export const saveBackedUp = (s: Set<string>): void => write(BACKED_UP_KEY, [...s
 //   - the marks of recent write attempts (an answer can get lost after the write happened);
 //   - all of these in memory too, for when storage is full.
 // (Keyed by the storage object, which is one per browser; tests simulate several devices with one each.)
-const sessions = new WeakMap<object, Set<string>>();
-const session = (): Set<string> => {
-  const key = (globalThis as { localStorage?: object }).localStorage ?? sessions;
-  let s = sessions.get(key);
-  if (!s) sessions.set(key, (s = new Set()));
-  return s;
-};
-export const forgetSessionNoncesForTests = (): void => session().clear(); // as after a reload
 export const loadNonces = (): string[] => {
   const confirmed = read<string | null>(CONFIRMED_NONCE_KEY, null);
-  return [...new Set([...read<string[]>(NONCES_KEY, []), ...(confirmed ? [confirmed] : []), ...session()])];
+  return [...new Set([...read<string[]>(NONCES_KEY, []), ...(confirmed ? [confirmed] : [])])];
 };
+// Must be saved before the write it marks (otherwise the next round would take this device's own file
+// for a clone's): if it can't be, the round fails here, before writing anything.
 export const rememberNonce = (n: string): void => {
-  session().add(n);
-  write(NONCES_KEY, [...read<string[]>(NONCES_KEY, []), n].slice(-20));
+  localStorage.setItem(NONCES_KEY, JSON.stringify([...read<string[]>(NONCES_KEY, []), n].slice(-20)));
 };
-export const confirmNonce = (n: string): void => {
-  session().add(n);
-  write(CONFIRMED_NONCE_KEY, n);
-};
+export const confirmNonce = (n: string): void => write(CONFIRMED_NONCE_KEY, n);
 export const forgetNonces = (): void => {
-  session().clear();
   write(NONCES_KEY, []);
   try {
     localStorage.removeItem(CONFIRMED_NONCE_KEY);

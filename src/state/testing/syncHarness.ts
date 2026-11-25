@@ -162,6 +162,8 @@ export class Device {
     public id: string,
     public skew = 0
   ) {
+    // sync is on (a deleted character's last state is kept for its Drive backup only then)
+    this.storage.setItem("magus.driveSync.v1", JSON.stringify({ enabled: true, backups: true, lastSyncAt: null, email: null }));
     this.store = this.run(() => createRosterStore());
   }
   // everything this device does runs with its own storage, id and clock

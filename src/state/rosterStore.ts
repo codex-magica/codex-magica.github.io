@@ -24,7 +24,7 @@ import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } f
 import { contentHash, nextStamp } from "./recordHash";
 import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
 import { conflictCopyName, reconcile } from "./driveMerge";
-import { deletionAwaitsDrive } from "./syncState";
+import { loadDriveSettings } from "./syncState";
 
 export interface Deletion {
   t: number;
@@ -42,7 +42,6 @@ export interface RosterState {
 
 
 const DELETIONS_KEY = "magus.deletions.v1";
-const KEEP_LAST_MS = 60 * 24 * 3600_000; // a deleted character's last state is kept this long (with sync, until it's in Drive)
 
 const readRaw = (key: string): string | null => {
   try {
@@ -54,13 +53,14 @@ const readRaw = (key: string): string | null => {
 
 const readDeletions = (): Deletions => {
   const out: Deletions = {};
-  const now = Date.now();
+  const syncOn = loadDriveSettings().enabled;
   try {
     const parsed = JSON.parse(readRaw(DELETIONS_KEY) ?? "{}");
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
       for (const [id, d] of Object.entries(parsed as Record<string, Deletion>))
         if (d && typeof d.t === "number" && isVersionVector(d.vc)) {
-          const keepLast = d.last && typeof d.last === "object" && (now - d.t < KEEP_LAST_MS || deletionAwaitsDrive(id, d));
+          // the last state is only for a Drive backup: kept while sync is on (the next round drops it)
+          const keepLast = d.last && typeof d.last === "object" && syncOn;
           out[id] = keepLast ? { t: d.t, vc: d.vc, last: d.last } : { t: d.t, vc: d.vc };
         }
   } catch {
@@ -204,7 +204,9 @@ export const createRosterStore = () => {
       const prev = find(id);
       if (!prev) return true;
       if (base && contentHash(prev) !== contentHash(base)) return false;
-      commit(state.records.filter((r) => r.id !== id), { ...state.deletions, [id]: { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, deviceId()), last: prev } }, true);
+      // the last state goes with the marker only while sync is on: it's for the Drive backup of the deletion
+      const marker = { t: nextStamp(prev.updatedAt), vc: bump(prev.syncVc, deviceId()), ...(loadDriveSettings().enabled ? { last: prev } : {}) };
+      commit(state.records.filter((r) => r.id !== id), { ...state.deletions, [id]: marker }, true);
       return true;
     },
 
