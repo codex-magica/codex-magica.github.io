@@ -762,3 +762,51 @@ describe("one round at a time, and what failures say", () => {
   });
 });
 
+describe("the notice that a deleted character came back", () => {
+  // Sync runs when the app goes to the background with changes waiting, which is exactly when a phone's
+  // OS may end the app: the notice must survive that (it's kept on the device until dismissed).
+  test("a deletion undone by a background round is still announced after the app was closed and reopened", async () => {
+    const lsA = ls;
+    const lsB = new MemStorage();
+    // device A: Aragorn, synced
+    lsA.setItem(DEVICE_KEY, "deviceaa");
+    enableWith("x@test", "at-1", "cred-x");
+    let t = await openTab();
+    await settle(100);
+    t.store.upsert(t.storage.createBlankRecord("c_a", "Aragorn"));
+    await settle(2500);
+    expect(t.tab.api.pending.count).toBe(0);
+    t.tab.unmount();
+    // device B: gets Aragorn, edits it, syncs
+    ls = lsB;
+    vi.stubGlobal("localStorage", lsB);
+    lsB.setItem(DEVICE_KEY, "devicebb");
+    enableWith("x@test", "at-2", "cred-x");
+    t = await openTab();
+    await settle(100);
+    const got = t.store.getState().records.find((r) => r.id === "c_a")!;
+    expect(got).toBeDefined();
+    t.store.upsert({ ...got, inventoryText: "edited on B" }, got);
+    await settle(2500);
+    t.tab.unmount();
+    // device A, not synced since: the player deletes Aragorn and locks the phone
+    ls = lsA;
+    vi.stubGlobal("localStorage", lsA);
+    t = await openTab();
+    // (no foreground round yet: the app was just opened; the deletion happens right away)
+    const before = t.store.getState().records.find((r) => r.id === "c_a")!;
+    expect(t.store.remove("c_a", before)).toBe(true);
+    doc.visibilityState = "hidden";
+    doc.dispatchEvent(new Event("visibilitychange"));
+    await settle(100);
+    expect(t.store.getState().records.some((r) => r.id === "c_a")).toBe(true); // back: B's edit wins (by design)
+    expect(t.tab.api.notice?.text).toContain("Aragorn"); // said, in memory
+    // the OS ends the app in the background; the player opens it again
+    t.tab.unmount();
+    doc.visibilityState = "visible";
+    t = await openTab();
+    await settle(100);
+    expect(t.store.getState().records.some((r) => r.id === "c_a")).toBe(true);
+    expect(t.tab.api.notice?.text ?? null).not.toBeNull(); // the player must still be told why it's back
+  });
+});

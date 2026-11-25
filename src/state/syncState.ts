@@ -16,6 +16,7 @@ const PUBLISHED_KEY = "magus.drivePublished.v2";
 const BACKED_UP_KEY = "magus.driveBackedUp.v1";
 const NONCES_KEY = "magus.driveNonces.v1";
 const CONFIRMED_NONCE_KEY = "magus.driveNonceConfirmed.v1";
+const UNDELETED_KEY = "magus.driveUndeleted.v1";
 
 const write = (key: string, value: unknown): void => {
   try {
@@ -113,11 +114,17 @@ export const forgetNonces = (): void => {
 // Turning sync off forgets the pairing with Drive. The characters (and deletion markers) stay, and the
 // device keeps its id, so turning it back on later continues where it left off. The backups choice is
 // remembered for next time.
+// Deleted characters a round brought back (an edit made elsewhere in parallel), until the player dismisses
+// the notice: kept on the device, so it's still said after the app was closed right after the round.
+export const loadUndeleted = (): string[] => read<string[]>(UNDELETED_KEY, []);
+export const saveUndeleted = (names: string[]): void => write(UNDELETED_KEY, names);
+
 export const clearDriveState = (): void => {
   const backups = loadDriveSettings().backups;
   try {
     localStorage.removeItem(PUBLISHED_KEY);
     localStorage.removeItem(BACKED_UP_KEY); // another account may be next: its backups are its own
+    localStorage.removeItem(UNDELETED_KEY);
   } catch {
     /* ignore */
   }

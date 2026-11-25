@@ -221,3 +221,63 @@ describe("the round notice for an alternative asked about again", () => {
     expect(told).toEqual([]);
   });
 });
+
+const parallelEditsOn = async (devs: Device[]) => {
+  const drive = new FakeDrive();
+  const [a, b] = devs;
+  const x = a.create("Xena");
+  await settle(drive, ...devs);
+  later();
+  a.edit(x.id, "a1");
+  later();
+  b.edit(x.id, "b1"); // later: B's version stays listed, A's waits as an alternative
+  await settle(drive, a, b);
+  return { drive, x };
+};
+const listedTokensOf = (d: Device) => listedRecords(d.records()).map((r) => tokensOf(r).join(","));
+
+describe("notices and dropped alternatives across devices", () => {
+  // A deleted character that comes back because another device edited it in parallel must be announced
+  // (driveMerge.mergeRound `undeleted`). An alternative listed as "(másik változat)" (its character was
+  // deleted) is a character like any other to the player, but its id contains "~", so it comes back
+  // silently.
+  test("a listed alternative the player deleted, edited in parallel elsewhere, comes back WITH a notice", async () => {
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const { drive, x } = await parallelEditsOn([a, b]);
+    later();
+    a.remove(x.id); // Xena deleted with the question unanswered: "Xena (másik változat)" is listed
+    await settle(drive, a, b);
+    const alt = listedRecords(a.records())[0];
+    expect(alt.id).toContain("~");
+    expect(listedRecords(b.records()).map((r) => r.id)).toEqual([alt.id]);
+    later();
+    expect(a.remove(alt.id, alt)).toBe(true); // the player deletes it on A
+    later();
+    b.edit(alt.id, "b2"); // ...while B (offline) edits it
+    await b.sync(drive);
+    const out = await a.sync(drive);
+    expect(listedRecords(a.records()).map((r) => r.id)).toEqual([alt.id]); // back on A's list (the edit wins: by design)
+    expect(out.undeleted).toEqual([alt.name]); // ...and the player must be told
+  });
+
+  // A dropped alternative's marker must not swallow a later alternative of the same content from another
+  // branch of the character's history (a device that was offline at the table).
+  test("a third device's offline edit, same content as the dropped alternative, is asked about, not dropped", async () => {
+    const a = new Device("deva");
+    const b = new Device("devb");
+    const c = new Device("devc");
+    const { drive, x } = await parallelEditsOn([a, b, c]); // C synced the original Xena, then went offline
+    // C, offline, makes the same change A made (ÉP 10 → 7 on both, say), while the conflict is pending
+    const cRec = c.records().find((r) => r.id === x.id)!;
+    expect(tokensOf(cRec)).toEqual(["Xena#0"]);
+    c.run(() => c.store.upsert({ ...cRec, inventoryText: "Xena#0\na1" }, cRec));
+    later();
+    b.run(() => b.store.resolveConflict(x.id, x.id)); // the player keeps b1 (drops a1)
+    await settle(drive, a, b);
+    expect(conflictsOf(a.records())).toEqual([]);
+    await settle(drive, c, a, b);
+    // C's edit is one nobody has seen: some device must still show it, listed or as a question
+    for (const d of [a, b, c]) expect({ dev: d.id, listed: listedTokensOf(d), conflicts: conflictsOf(d.records()).length }).toEqual({ dev: d.id, listed: ["Xena#0,b1"], conflicts: 1 });
+  });
+});

@@ -30,11 +30,11 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
     változat)"). The choice is an ordinary edit plus deleting the alternative, so it reaches every device; two
     devices choosing differently at once meet as a new conflict. Closing the popup puts it off until the app
     is next opened. Every device resolves the merge identically (the alternative's id comes from its content,
-    and it starts a history of its own, counted from the losing version's edits), so they converge without
-    extra copies, a later alternative of the same content can't replace edits made to an earlier one, and one
-    the player dropped can come back only as a new question. The kept version also remembers which version its
-    content was made as, so when the device it came from edits it again before seeing the merge, that edit
-    counts as continuing it, not as one more parallel edit.
+    and its history is the losing version's under keys of its own), so they converge without extra copies, a
+    later alternative of the same content can't replace edits made to an earlier one, and one the player
+    dropped can come back only as a new question. The kept version also remembers which version its content
+    was made as, so when the device it came from edits it again before seeing the merge, that edit counts as
+    continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
   download that isn't valid JSON is fetched again (a cut-off response reads fine the second time; two
   different texts mean cut-off downloads, not a damaged file, and stop the round); a damaged
@@ -108,10 +108,10 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
 - **What the player is told, and where.** The roster says at the top what sync needs from the player
   (reconnect, an app update, Google storage full, changes stuck on this device for hours), with a button to
   the sync window, and names the characters a round brought back after a deletion (an edit made elsewhere in
-  parallel), until dismissed. Characters changed on two devices are asked about in a popup. The roster footer
-  keeps the quiet status. If Google's permission goes away while the player is elsewhere (a character sheet),
-  a card says so once on any screen. Coming back from Google's page with a problem reopens the sync window
-  with what happened.
+  parallel), until dismissed (kept on the device, so it's still said after the app was closed). Characters
+  changed on two devices are asked about in a popup. The roster footer keeps the quiet status. If Google's
+  permission goes away while the player is elsewhere (a character sheet), a card says so once on any screen.
+  Coming back from Google's page with a problem reopens the sync window with what happened.
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
   months) does the app ask the player to reconnect: the roster says so,
   and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
@@ -189,8 +189,9 @@ Deliberately not covered (and what happens instead):
   An edit made in parallel with a deletion wins. Deleting a character whose question is unanswered keeps
   the other version, listed as "(másik változat)".
 - **A copied browser** (data restored onto a second device) is detected by the marks in its sync file and
-  moves to a new device id; it is not detected on the first round after sync was turned off and on. What
-  both copies changed before that is kept twice, and a character one copy deleted may come back.
+  moves to a new device id. What both copies changed before that is kept twice, and a character one copy
+  deleted may come back. It is not detected on the first round after sync was turned off and on; if both
+  copies keep editing then, an edit can be lost.
 - **Nothing in Drive is ever cleaned up automatically:** daily backups, deletion markers, files of device
   ids that are no longer used, and copies of unreadable files all stay (they are small). The player can
   delete the app's data in Drive's settings.

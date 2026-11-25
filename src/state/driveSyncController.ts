@@ -40,7 +40,7 @@ import { roundNotice } from "./driveStatus";
 import { rosterStore } from "./rosterStore";
 import { repairRecord, genId } from "./storage";
 import { CharacterRecord } from "../model/character";
-import { DriveSettings, clearDriveState, loadDriveSettings, loadPublished, pendingChanges, updateDriveSettings } from "./syncState";
+import { DriveSettings, clearDriveState, loadDriveSettings, loadPublished, loadUndeleted, pendingChanges, saveUndeleted, updateDriveSettings } from "./syncState";
 
 export type DriveStatus = "off" | "idle" | "syncing" | "needsTap" | "error";
 // The notice after coming back from Google's consent page: syncing, then done.
@@ -135,7 +135,7 @@ const createDriveSync = () => {
             seq: ++noteSeq,
           }
         : null,
-    notice: null,
+    notice: ((t) => (t ? { text: t, error: false, seq: ++noteSeq } : null))(roundNotice(loadUndeleted())),
     hop: back ? "backSyncing" : null,
     needsUpdate: false,
     driveFull: false,
@@ -202,7 +202,10 @@ const createDriveSync = () => {
       const result = await syncRound({ store, drive: httpDrive(token), backups: state.settings.backups, current });
       if (result && current()) {
         patchSettings({ lastSyncAt: Date.now() });
-        const told = roundNotice(result.out.undeleted);
+        // (added to what's not dismissed yet, and kept on the device until it is)
+        const undeleted = result.out.undeleted.length ? [...new Set([...loadUndeleted(), ...result.out.undeleted])] : [];
+        if (undeleted.length) saveUndeleted(undeleted);
+        const told = undeleted.length ? roundNotice(undeleted) : null;
         const hopDone = state.hop === "backSyncing";
         set({
           status: "idle",
@@ -381,7 +384,10 @@ const createDriveSync = () => {
       set({ settings: loadDriveSettings(), status: "off", hop: null, needsUpdate: false, driveFull: false, note: null });
     },
     setBackups: (on: boolean) => patchSettings({ backups: on }),
-    dismissNotice: () => set({ notice: null }),
+    dismissNotice: () => {
+      saveUndeleted([]);
+      set({ notice: null });
+    },
     dismissHop: () => set({ hop: null }),
     ackConnectProblem: () => set({ connectProblem: false }),
 

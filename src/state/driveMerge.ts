@@ -151,13 +151,14 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   const [win, lose] = a.t > b.t || (a.t === b.t && a.h > b.h) ? [a, b] : [b, a];
   const version: Version = withVc(win, vc, cvcOf(win));
   if (a.h === b.h) return { version };
-  // The copy starts a history of its own, not the losing version's: a later copy of the same content
-  // lands on the same id, and with that history it would replace edits made to this copy meanwhile. Its
-  // one count is how many edits the losing version had, which grows with every later edit of the
-  // character, so a later copy isn't taken for one the player already dropped (resolving a conflict
-  // deletes the copy). The same copy made on several devices is the same version, so it merges into one.
+  // The copy's history is the losing version's, under keys of its own ("~" + device): a later copy of the
+  // same content lands on the same id, and with the very same keys it would replace edits made to this
+  // copy meanwhile. Under its own keys, a later copy (from a later version, or from another branch of the
+  // character's history) isn't taken for one the player already dropped (resolving a conflict deletes the
+  // copy), and edits to the copy stay parallel to it. The same copy made on several devices is the same
+  // version, so it merges into one.
   const id = alternativeId(a.id, lose.h);
-  const copyVc = { [`~${id}`]: Math.max(1, Object.values(lose.vc).reduce((s, n) => s + n, 0)) };
+  const copyVc = Object.keys(lose.vc).length ? Object.fromEntries(Object.entries(lose.vc).map(([k, n]) => [`~${k}`, n])) : { [`~${id}`]: 1 };
   const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: copyVc, syncCvc: undefined };
   return { version, copy: { id, t: lose.t, vc: copyVc, h: contentHash(record), record } };
 };
@@ -264,8 +265,11 @@ export function mergeRound(
       if (v.record) pulled++;
     } else if (before.h !== v.h) {
       pulled++;
-      // (an alternative a conflict answer dropped can come back as a new question: that's not on the list)
-      if (before.h === DELETED_HASH && v.record && !v.id.includes("~")) undeleted.push(v.record.name);
+      // (an alternative a conflict answer dropped can come back as a new question, while its character is
+      // there: that's not on the list)
+      const main = v.id.includes("~") ? acc.get(v.id.slice(0, v.id.indexOf("~"))) : undefined;
+      const question = main !== undefined && main.h !== DELETED_HASH;
+      if (before.h === DELETED_HASH && v.record && !question) undeleted.push(v.record.name);
     }
   }
 
