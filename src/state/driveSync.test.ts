@@ -197,7 +197,7 @@ describe("Google Drive sync: rounds between devices", () => {
     expect(drive.snapshot()).toBe(before);
   });
 
-  test("entries that can't be read are skipped, not applied and not deleted", async () => {
+  test("entries that can't be read are skipped, not applied, and kept when their device rewrites its file", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -211,6 +211,11 @@ describe("Google Drive sync: rounds between devices", () => {
     await b.sync(drive);
     expect(b.records().map((r) => r.name)).toEqual(["Aldar"]);
     expect(JSON.parse(drive.syncFileOf("deva")!.body).characters.c_broken).toBeDefined();
+    later();
+    a.create("Brenna"); // A writes its own file again: the entry it can't read is carried over as it was
+    await a.sync(drive);
+    expect(JSON.parse(drive.syncFileOf("deva")!.body).characters.c_broken?.record?.name).toBe("Broken");
+    expect(a.records().map((r) => r.name).sort()).toEqual(["Aldar", "Brenna"]);
   });
 
   test("edits made while a round is running are kept, and merged properly next time", async () => {
@@ -487,6 +492,9 @@ describe("Google Drive sync: building blocks", () => {
     expect(normalizeRecord({ name: "x" })).toBeNull();
     expect(normalizeRecord({ name: "x", levels: "nope" })).toBeNull();
     expect(normalizeRecord(null)).toBeNull();
+    breakDerive("Rossz"); // a record the rules engine can't compute isn't imported
+    expect(normalizeRecord({ ...defaultRecord, name: "Rossz" })).toBeNull();
+    breakDerive(null);
     const { identity: _i, inventory: _inv, vitalsState: _vs, ...missing } = defaultRecord;
     const fixed = normalizeRecord(missing);
     expect(fixed?.identity).toBeDefined();
@@ -494,6 +502,14 @@ describe("Google Drive sync: building blocks", () => {
     const imported = parseImportFile(JSON.stringify({ format: "codex-magica-backup", version: 1, exportedAt: "x", characters: [defaultRecord, { name: "bad" }] }), []);
     expect(imported?.add).toHaveLength(1);
     expect(imported?.invalid).toBe(1);
+  });
+
+  test("a deletion and an edit with the very same vector (two copies of one browser): the edit wins", () => {
+    const record = { ...defaultRecord, id: "c1", inventoryText: "edit", syncVc: { d: 2 }, updatedAt: 10 };
+    const edit: Version = { id: "c1", t: 10, vc: { d: 2 }, h: contentHash(record), record };
+    const deletion: Version = { id: "c1", t: 20, vc: { d: 2 }, h: localVersions([], { c1: { t: 20, vc: { d: 2 } } }).get("c1")!.h };
+    expect(combine(edit, deletion).version.record?.inventoryText).toBe("edit");
+    expect(combine(deletion, edit).version.record?.inventoryText).toBe("edit");
   });
 
   test("local versions include deletions", () => {
@@ -644,9 +660,10 @@ describe("Google Drive sync: edge cases", () => {
       const record = { ...base, inventoryText: inv, syncVc: vc, updatedAt: t };
       return { id: "c1", t, vc, h: contentHash(record), record };
     };
-    const P = v("P", { a: 2 }, 20);
-    const Q = v("P\nQ", { a: 2, b: 1 }, 30); // continues P
-    const R = v("R", { a: 1, c: 1 }, 10); // parallel
+    // (P sorts before R and Q here, and loses to R by time: merged first, it would leave a copy of itself)
+    const P = v("P", { b: 1 }, 20);
+    const Q = v("P\nQ", { b: 2 }, 30); // continues P
+    const R = v("R", { a: 5 }, 25); // parallel to both
     const local = { records: [R.record!], deletions: {} };
     const result = (srcs: Version[][]) =>
       mergeRound(local, srcs.map((x) => new Map(x.map((y) => [y.id, y]))), null, "c", 0, false).records.map((r) => r.inventoryText).sort();

@@ -675,10 +675,19 @@ describe("one round at a time, and what failures say", () => {
     await settle(25_000);
     win.dispatchEvent(new Event("online"));
     doc.dispatchEvent(new Event("visibilitychange")); // visible, > 20 s since last attempt... (no round yet: lastAttempt 0)
-    await settle(100);
-    const before = calls.filter((c) => c.includes("/v1/token")).length;
-    await settle(65_000); // second failure: the next try should come 60 s later (30, 60, 120, ...)
-    expect(calls.filter((c) => c.includes("/v1/token")).length).toBeGreaterThan(before);
+    await settle(100); // both fail on the token service: still the one retry, 30 s after the start
+    const tries = () => calls.filter((c) => c.includes("/v1/token")).length;
+    const n = tries();
+    await settle(5_000); // 30 s
+    expect(tries()).toBe(n + 1);
+    await settle(58_000);
+    expect(tries()).toBe(n + 1);
+    await settle(4_000); // then 60 s later (not sooner, and not 120 s)
+    expect(tries()).toBe(n + 2);
+    await settle(115_000);
+    expect(tries()).toBe(n + 2);
+    await settle(8_000); // then 120 s
+    expect(tries()).toBe(n + 3);
   });
 
   test("React's development double start (start, stop, start) while finishing sign-in syncs once and settles", async () => {

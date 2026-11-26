@@ -153,9 +153,10 @@ describe("this device's own file downloaded cut off twice, at different points",
 const backupBodies = (drive: FakeDrive) => drive.backups().map((f) => JSON.parse(f.body) as { record: CharacterRecord; reason: string });
 
 describe("storage full and long absences", () => {
-  test("storage full, sync off: after a deletion that only fit without its backup copy, later saves count as saved", () => {
+  test("storage full: a deletion that only fits without the deleted character's last state is saved without it, and later saves count as saved", () => {
     const a = new Device("deva");
     const qs = new QuotaStorage();
+    qs.setItem("magus.driveSync.v1", a.storage.getItem("magus.driveSync.v1")!); // sync on: a deletion keeps the last state, for its Drive backup
     a.storage = qs;
     a.store = a.run(() => createRosterStore());
     const x = a.create("Xena");
@@ -167,6 +168,7 @@ describe("storage full and long absences", () => {
     // the roster and the marker were saved (only the backup copy of Xena's last state didn't fit)
     const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, { last?: unknown }>;
     expect(savedDeletions[x.id]).toBeDefined();
+    expect(savedDeletions[x.id].last).toBeUndefined();
     later();
     a.edit(w.id, "w1"); // an ordinary edit that fits
     const savedW = (JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[]).find((r) => r.id === w.id)!;
@@ -203,6 +205,21 @@ describe("storage full and long absences", () => {
 });
 
 describe("saving when storage is full", () => {
+  test("half a change saved is put back: a deletion whose roster can't be saved leaves the saved deletions as they were", () => {
+    const a = new Device("deva");
+    const x = a.create("Xena");
+    a.create("Wulf");
+    const before = { roster: a.storage.getItem("magus.roster.v1"), deletions: a.storage.getItem("magus.deletions.v1") };
+    a.storage.full.add("magus.roster.v1"); // the roster can't be written; the deletions still can
+    later();
+    a.remove(x.id);
+    expect(a.store.getState().saveFailed).toBe(true);
+    expect({ roster: a.storage.getItem("magus.roster.v1"), deletions: a.storage.getItem("magus.deletions.v1") }).toEqual(before);
+    a.storage.full.clear();
+    a.store = a.run(() => createRosterStore()); // a reload: Xena is still there
+    expect(a.records().map((r) => r.name).sort()).toEqual(["Wulf", "Xena"]);
+  });
+
   test("nothing fits: what was saved before stays exactly as it was", () => {
     const a = new Device("deva");
     const qs = new QuotaStorage();
