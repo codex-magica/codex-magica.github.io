@@ -1,8 +1,7 @@
-// Failure and race scenarios for the Drive sync orchestration (useDriveSync + googleDrive), found in the
-// pre-release review and fixed; run against the real hook
-// with a tiny stand-in for React's hooks, an in-memory localStorage shared by "tabs" (separate module
-// instances), fake timers, and a fake fetch for Google (Drive REST) and the token service.
-// Each test asserts the intended behaviour.
+// The Drive sync as the app runs it (driveSyncController through the useDriveSync hook): retries, renewals,
+// the return from Google's page, taking over in another tab, what the player is told. Run with a tiny
+// stand-in for React's hooks, an in-memory localStorage shared by "tabs" (separate module instances), fake
+// timers, and a fake fetch for Google (Drive REST) and the token service.
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { MemStorage } from "./testing/syncHarness";
 
@@ -200,6 +199,35 @@ const settle = async (ms = 0) => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
 };
 
+// ── helpers ──
+const syncFiles = (account: string) => [...(drives[account]?.values() ?? [])].filter((f) => f.props.kind === "sync");
+const syncFileHas = (account: string, text: string) => syncFiles(account).some((f) => f.body.includes(text));
+const listing = (url: string) => url.startsWith("https://www.googleapis.com/drive/v3/files?") && url.includes("'sync'");
+// back from Google's page with this answer (an authorization code by default)
+const backFromGoogle = (state: string, answer = `code=C-${state}`) => {
+  ls.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), verifier: "v".repeat(43) }));
+  win.location.search = `?state=${state}&${answer}`;
+};
+// the token service's answer to the code exchange waits until the returned answer() is called
+const holdExchange = () => {
+  let answer!: () => void;
+  tokenService = (path) =>
+    path === "/v1/exchange"
+      ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }))))
+      : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+  return () => answer();
+};
+// requests matching `match` wait (a slow network) until the returned release() is called
+const hold = (match: (url: string, init?: RequestInit) => boolean) => {
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  let holding = true;
+  override = (url, init) => (holding && match(url, init) ? (held.then(() => null) as any) : null);
+  return () => {
+    release();
+  };
+};
+
 const enableWith = (email: string, token: string | null, credential: string | null) => {
   ls.setItem(SETTINGS_KEY, JSON.stringify({ enabled: true, backups: false, lastSyncAt: null, email }));
   if (token) ls.setItem(TOKEN_KEY, JSON.stringify({ token, exp: Date.now() + 3600_000 }));
@@ -247,7 +275,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     await settle(2500);
     expect(tab.api.status).toBe("idle");
     expect(tab.api.pending.count).toBe(0);
-    expect([...(drives["x@test"]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes("Aragorn"))).toBe(true);
+    expect(syncFileHas("x@test", "Aragorn")).toBe(true);
   });
 
   test("a renewal answered after turning sync off leaves no token on the device", async () => {
@@ -267,8 +295,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
 
   test("reconnecting with the wrong account keeps the right account's credential", async () => {
     enableWith("x@test", null, "cred-x");
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
-    win.location.search = "?state=S1&code=C1";
+    backFromGoogle("S1");
     tokenService = (path) =>
       path === "/v1/exchange" ? jsonRes(200, { access_token: "y-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-y" }) : jsonRes(200, { access_token: "at-r", expires_in: 3600 });
     const { tab } = await openTab();
@@ -284,19 +311,16 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     let t = await openTab();
     t.store.upsert(t.storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500);
-    expect([...drives["y@test"].values()].filter((f) => f.props.kind === "sync")).toHaveLength(1);
+    expect(syncFiles("y@test")).toHaveLength(1);
     t.tab.api.disable();
     const device = ls.getItem(DEVICE_KEY);
     // 2. later: sync with account X; turned off while X's upload is on its way
     enableWith("x@test", "at-1", "cred-x");
-    let release!: () => void;
-    const held = new Promise<void>((r) => (release = r));
-    override = (url, init) => (url.startsWith("https://www.googleapis.com/upload/") && init?.method === "POST" && !String(init.body).includes("backup") ? (held.then(() => null) as any) : null);
+    const release = hold((url, init) => url.startsWith("https://www.googleapis.com/upload/") && init?.method === "POST" && !String(init?.body).includes("backup"));
     t = await openTab();
     t.store.upsert({ ...t.store.getState().records[0], name: "Aragorn II" }, t.store.getState().records[0]); // an edit while syncing with X
     await settle(2500); // that round's upload held
     t.tab.api.disable();
-    override = null;
     release();
     await settle(100);
     expect(ls.getItem(NONCES_KEY) ?? "[]").toBe("[]");
@@ -323,8 +347,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
   });
 
   test("a failed return from Google (permission refused) reopens the window with the reason", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
-    win.location.search = "?state=S1&code=C1";
+    backFromGoogle("S1");
     tokenService = (path) => (path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: "openid email" }) : jsonRes(500, {}));
     const { tab } = await openTab();
     expect(tab.api.connectProblem).toBe(false);
@@ -408,8 +431,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
   });
 
   test("cancelling on Google's page is a notice, not an error; the window says it once", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
-    win.location.search = "?state=S1&error=access_denied";
+    backFromGoogle("S1", "error=access_denied");
     const { tab } = await openTab();
     await settle(100);
     expect(tab.api.status).toBe("off");
@@ -422,13 +444,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
   });
 
 });
-
-// ── helpers for the tests below ──
-const syncFileHas = (account: string, text: string) => [...(drives[account]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes(text));
-const codeReturn = (state: string) => {
-  ls.setItem(RETURN_KEY, JSON.stringify({ state, at: Date.now(), verifier: "v".repeat(43) }));
-  win.location.search = `?state=${state}&code=C-${state}`;
-};
 
 describe("sync orchestration: reconnects, Google storage", () => {
   test("Google storage full (403 storageQuotaExceeded): the player is told their storage is full, and sync goes on once there's room", async () => {
@@ -470,8 +485,7 @@ describe("sync orchestration: reconnects, Google storage", () => {
 
   test("cancelling a reconnect says sync is still stopped (not that it didn't turn on)", async () => {
     enableWith("x@test", null, null);
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
-    win.location.search = "?state=S1&error=access_denied";
+    backFromGoogle("S1", "error=access_denied");
     const { tab } = await openTab();
     await settle(100);
     expect(tab.api.note?.text).toContain("továbbra is szünetel");
@@ -491,16 +505,11 @@ describe("sync orchestration: reconnects, Google storage", () => {
 });
 
 // ── the app continued in another tab ("Folytatás itt"): the tab that stepped back does nothing more ──
-const syncFiles = (account: string) => [...(drives[account]?.values() ?? [])].filter((f) => f.props.kind === "sync");
 
 describe("taking over in another tab", () => {
   test("while this tab finishes turning sync on: it keeps nothing (the player turns it on again in the tab in use)", async () => {
-    codeReturn("S1"); // back from Google's page, turning sync on
-    let answer!: () => void;
-    tokenService = (path) =>
-      path === "/v1/exchange"
-        ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }))))
-        : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    backFromGoogle("S1"); // back from Google's page, turning sync on
+    const answer = holdExchange();
     const A = await openTab();
     A.store.upsert(A.storage.createBlankRecord("c_a", "Aragorn"));
     await settle(100); // exchanging the code
@@ -517,12 +526,8 @@ describe("taking over in another tab", () => {
     expect(B.tab.api.enabled).toBe(false);
   });
   test("while this tab finishes turning sync on and Drive is unreachable: it doesn't keep retrying in the background", async () => {
-    codeReturn("S1");
-    let answer!: () => void;
-    tokenService = (path) =>
-      path === "/v1/exchange"
-        ? new Promise<Response>((res) => (answer = () => res(jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }))))
-        : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
+    backFromGoogle("S1");
+    const answer = holdExchange();
     override = (url) => (url.startsWith("https://www.googleapis.com/drive/v3/files?") ? jsonRes(503, {}) : null);
     const A = await openTab();
     await settle(100);
@@ -541,13 +546,9 @@ describe("taking over in another tab", () => {
     await settle(2500); // first round: this device's file and mark exist
     A.store.upsert({ ...A.store.getState().records[0], name: "Aragorn II" }, A.store.getState().records[0]);
     const device = ls.getItem(DEVICE_KEY);
-    let release!: () => void;
-    const held = new Promise<void>((r) => (release = r));
-    let holding = true;
-    override = (url) => (holding && url.startsWith("https://www.googleapis.com/drive/v3/files?") ? (held.then(() => null) as any) : null);
+    const release = hold((url) => url.startsWith("https://www.googleapis.com/drive/v3/files?"));
     await settle(2500); // the next round waits on the listing...
     A.tab.unmount(); // ...when "Folytatás itt" in another tab takes over
-    holding = false;
     release();
     await settle(100);
     expect(syncFiles("x@test")[0].body).not.toContain("Aragorn II"); // the round that's no longer wanted wrote nothing
@@ -561,7 +562,7 @@ describe("taking over in another tab", () => {
 
   test("a sign-in answer that doesn't name the account isn't kept (the account can't be checked)", async () => {
     enableWith("x@test", null, "cred-x");
-    codeReturn("S1");
+    backFromGoogle("S1");
     tokenService = (path) =>
       path === "/v1/exchange" ? jsonRes(200, { access_token: "x-2", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-new", email: "" }) : jsonRes(500, {});
     const { tab } = await openTab();
@@ -572,7 +573,6 @@ describe("taking over in another tab", () => {
   });
 });
 
-const listing = (url: string) => url.startsWith("https://www.googleapis.com/drive/v3/files?") && url.includes("'sync'");
 
 describe("one round at a time, and what failures say", () => {
   test("an edit made while a round runs, with the token service down for a moment: it still reaches Drive by itself", async () => {
@@ -580,10 +580,7 @@ describe("one round at a time, and what failures say", () => {
     const { tab, store, storage } = await openTab();
     await settle(100);
     expect(tab.api.status).toBe("idle");
-    let release!: () => void;
-    const held = new Promise<void>((r) => (release = r));
-    let holding = true;
-    override = (url) => (holding && listing(url) ? (held.then(() => null) as any) : null);
+    const release = hold(listing);
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500); // round 1 starts with at-1 and waits on Drive
     // the access token runs out meanwhile, and the token service has a hiccup
@@ -591,7 +588,6 @@ describe("one round at a time, and what failures say", () => {
     tokenService = () => jsonRes(503, {});
     store.upsert(storage.createBlankRecord("c_b", "Boromir")); // an edit while round 1 runs
     await settle(2500); // asked for while round 1 runs: it runs right after it
-    holding = false;
     release();
     await settle(100); // round 1 succeeds (Aragorn), and clears the retry meant for Boromir
     let n = 0;
@@ -605,17 +601,13 @@ describe("one round at a time, and what failures say", () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();
     await settle(100);
-    let release!: () => void;
-    const held = new Promise<void>((r) => (release = r));
-    let holding = true;
-    override = (url) => (holding && listing(url) ? (held.then(() => null) as any) : null);
+    const release = hold(listing);
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500);
     ls.removeItem(TOKEN_KEY);
     tokenService = () => jsonRes(401, { error: "invalid_grant" });
     store.upsert(storage.createBlankRecord("c_b", "Boromir"));
     await settle(2500);
-    holding = false;
     release();
     await settle(100);
     expect(tab.api.status).toBe("needsTap"); // Boromir can't go up without a reconnect
@@ -625,10 +617,7 @@ describe("one round at a time, and what failures say", () => {
     enableWith("x@test", "at-1", "cred-x");
     const { store, storage } = await openTab();
     await settle(100);
-    let release!: () => void;
-    const held = new Promise<void>((r) => (release = r));
-    let holding = true;
-    override = (url) => (holding && listing(url) ? (held.then(() => null) as any) : null);
+    const release = hold(listing);
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500); // round 1 waits on a slow network
     store.upsert(storage.createBlankRecord("c_b", "Boromir"));
@@ -636,7 +625,6 @@ describe("one round at a time, and what failures say", () => {
     doc.visibilityState = "hidden"; // phone locked: a round is asked for, one is running
     doc.dispatchEvent(new Event("visibilitychange"));
     await settle(10);
-    holding = false;
     release();
     await settle(1000); // the page gets a moment before it's frozen
     expect(syncFileHas("x@test", "Aragorn")).toBe(true);
@@ -691,8 +679,7 @@ describe("one round at a time, and what failures say", () => {
   });
 
   test("React's development double start (start, stop, start) while finishing sign-in syncs once and settles", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
-    win.location.search = "?state=S1&code=C1";
+    backFromGoogle("S1");
     tokenService = (path) =>
       path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-x" }) : jsonRes(200, { access_token: "x-r", expires_in: 3600, scope: DRIVE_SCOPE });
     vi.resetModules();
