@@ -33,7 +33,7 @@ Böngészőben fut · telepíthető a kezdőképernyőre · internet nélkül is
 
 ## Mi ez?
 
-A csapatunk az Új Törvénykönyv szerint játszik, a nyomtatott könyvből és egy gyenge minőségű
+A csapatunk az Új Törvénykönyv szerint játszik, a nyomtatott könyvből és egy alacsony felbontású
 szkennelt PDF-ből. Emiatt három dolog volt a kelleténél nehezebb:
 
 - **Játék közben** sokáig tartott kikeresni egy varázslatot vagy szabályt a könyvben vagy a PDF-ben.
@@ -158,7 +158,7 @@ szerver mindig a friss kódot adja. A Google Drive-szinkron helyi kipróbálás�
 
 ## Hibát találtál?
 
-A szöveg egy rossz minőségű szkennelésből, OCR-rel készült, és bár kézzel alaposan átnéztük, maradhattak
+A szöveg egy alacsony felbontású szkennelésből, OCR-rel készült, és bár kézzel alaposan átnéztük, maradhattak
 benne hibák. Ha elírást, hibás táblázatértéket vagy rosszul számolt szabályt találsz, nyiss egy
 [issue-t](https://github.com/codex-magica/codex-magica.github.io/issues/new/choose) (van hozzá űrlap). Írd meg az
 oldalszámot vagy a fejezetet, és azt, hogy mi szerepel a könyvben. Pull requestet is szívesen fogadunk.

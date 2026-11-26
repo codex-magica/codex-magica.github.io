@@ -306,7 +306,7 @@ be sent to someone the same way: character menu → **Exportálás fájlba** (ex
 
 ## Found a mistake?
 
-The text comes from OCR of a low-quality scan and was proofread by hand, but errors can remain. If you spot
+The text comes from OCR of a low-resolution scan and was proofread by hand, but errors can remain. If you spot
 a typo, a wrong table value or a rule the app calculates differently from the book, please
 [open an issue](https://github.com/codex-magica/codex-magica.github.io/issues/new/choose) (there's a form for it) with the
 page or chapter and what the book says. Pull requests are welcome too.
