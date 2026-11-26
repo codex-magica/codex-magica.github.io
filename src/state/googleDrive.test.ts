@@ -1,18 +1,6 @@
 // Google Drive client pieces: how Drive's answers are read, token renewal through the token service.
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-
-class MemStorage {
-  m = new Map<string, string>();
-  getItem(k: string) {
-    return this.m.has(k) ? this.m.get(k)! : null;
-  }
-  setItem(k: string, v: string) {
-    this.m.set(k, String(v));
-  }
-  removeItem(k: string) {
-    this.m.delete(k);
-  }
-}
+import { MemStorage } from "./testing/syncHarness";
 
 const TS = "https://ts.test";
 let ls: MemStorage;

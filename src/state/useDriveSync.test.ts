@@ -4,6 +4,7 @@
 // instances), fake timers, and a fake fetch for Google (Drive REST) and the token service.
 // Each test asserts the intended behaviour.
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { MemStorage } from "./testing/syncHarness";
 
 // ── a minimal hooks runtime (enough for useDriveSync) ─────────────────────────────────────────────
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -94,30 +95,6 @@ const R = vi.hoisted(() => {
 vi.mock("react", () => ({ ...R.react, default: R.react }));
 
 // ── browser stand-ins ────────────────────────────────────────────────────────────────────────────────
-class MemStorage {
-  m = new Map<string, string>();
-  full = new Set<string>(); // keys whose writes fail (storage full)
-  getItem(k: string) {
-    return this.m.has(k) ? this.m.get(k)! : null;
-  }
-  setItem(k: string, v: string) {
-    if (this.full.has(k)) throw new Error("QuotaExceededError");
-    this.m.set(k, String(v));
-  }
-  removeItem(k: string) {
-    this.m.delete(k);
-  }
-  clear() {
-    this.m.clear();
-  }
-  key(i: number) {
-    return [...this.m.keys()][i] ?? null;
-  }
-  get length() {
-    return this.m.size;
-  }
-}
-
 const TS = "https://ts.test";
 const SETTINGS_KEY = "magus.driveSync.v1";
 const TOKEN_KEY = "magus.driveToken.v1";
@@ -261,7 +238,7 @@ afterEach(() => {
 });
 
 describe("sync orchestration (useDriveSync): failure and race scenarios", () => {
-  test("harness sanity: an edit is uploaded 2 s later and the status settles on idle", async () => {
+  test("an edit is uploaded 2 s later and the status settles on idle", async () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();
     await settle(100);
@@ -271,21 +248,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.status).toBe("idle");
     expect(tab.api.pending.count).toBe(0);
     expect([...(drives["x@test"]?.values() ?? [])].some((f) => f.props.kind === "sync" && f.body.includes("Aragorn"))).toBe(true);
-  });
-
-  test("a failed round (Drive 503) retries by itself and the edit reaches Drive while the app stays open", async () => {
-    enableWith("x@test", "at-1", "cred-x");
-    const { tab, store, storage } = await openTab();
-    await settle(100);
-    let fail = true;
-    override = (url) => (fail && url.startsWith("https://www.googleapis.com/drive/v3/files?") ? jsonRes(503, {}) : null);
-    store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
-    await settle(2500);
-    expect(tab.api.status).toBe("error");
-    expect(tab.api.note?.text).toContain("magától újra megpróbálja"); // "it will retry by itself"
-    fail = false;
-    await settle(30 * 60_000); // half an hour, app open in the foreground, no further edits
-    expect(tab.api.pending.count).toBe(0);
   });
 
   test("a renewal answered after turning sync off leaves no token on the device", async () => {
@@ -373,7 +335,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.connectProblem).toBe(true);
   });
 
-  test("retries wait 30 s, then twice as long each time; a success starts over; turning off stops them", async () => {
+  test("a failed round retries by itself: after 30 s, then twice as long each time; a success starts over; turning off stops them", async () => {
     enableWith("x@test", "at-1", "cred-x");
     const { tab, store, storage } = await openTab();
     await settle(100);
@@ -382,6 +344,8 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     const rounds = () => calls.filter((c) => c.startsWith("GET https://www.googleapis.com/drive/v3/files")).length;
     store.upsert(storage.createBlankRecord("c_a", "Aragorn"));
     await settle(2500); // the edit's round fails
+    expect(tab.api.status).toBe("error");
+    expect(tab.api.note?.text).toContain("magától újra megpróbálja"); // "it will retry by itself"
     const n = rounds();
     await settle(28_000);
     expect(rounds()).toBe(n); // not yet
@@ -443,7 +407,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(calls.length).toBe(n); // nothing to gain by asking again
   });
 
-  test("cancelling on Google's page is a notice, not an error, and the window says it", async () => {
+  test("cancelling on Google's page is a notice, not an error; the window says it once", async () => {
     ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
     win.location.search = "?state=S1&error=access_denied";
     const { tab } = await openTab();
@@ -452,6 +416,9 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(tab.api.note?.error).toBe(false);
     expect(tab.api.note?.text).toContain("kikapcsolva maradt");
     expect(tab.api.connectProblem).toBe(true);
+    tab.api.ackConnectProblem(); // the player closed the window
+    await settle(0);
+    expect(tab.api.connectProblem).toBe(false); // the roster screen coming back doesn't reopen it
   });
 
 });
@@ -499,17 +466,6 @@ describe("sync orchestration: reconnects, Google storage", () => {
     await settle(1000); // still before the 2-second timer (which a frozen page never reaches)
     expect(calls.some((c) => c.includes("/v1/token"))).toBe(true); // a renewal was at least attempted
     expect(syncFileHas("x@test", "Aragorn")).toBe(true);
-  });
-
-  test("after a failed return from Google the window shows once: once closed, it stays closed", async () => {
-    ls.setItem(RETURN_KEY, JSON.stringify({ state: "S1", at: Date.now(), verifier: "v".repeat(43) }));
-    win.location.search = "?state=S1&error=access_denied";
-    const { tab } = await openTab();
-    await settle(100);
-    expect(tab.api.connectProblem).toBe(true);
-    tab.api.ackConnectProblem(); // the player closed the window
-    await settle(0);
-    expect(tab.api.connectProblem).toBe(false); // the roster screen coming back doesn't reopen it
   });
 
   test("cancelling a reconnect says sync is still stopped (not that it didn't turn on)", async () => {

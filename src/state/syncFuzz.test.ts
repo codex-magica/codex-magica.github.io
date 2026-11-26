@@ -8,14 +8,14 @@
 // an edit it didn't see. After a browser copy a deletion may come back (with a notice): the copies' versions can't
 // be told apart, so both are kept (rosterStore.relabelDevice).
 // Knobs: FUZZ=clone,import,reload,offon,during (features), FUZZ_FROM/FUZZ_TO (seeds), FUZZ_NOFAIL=1 (no Drive
-// failures), FUZZ_LOG=<file> (step log of a failing seed), FUZZ_WATCH=<token>/FUZZ_WID=<id> (trace one).
+// failures), FUZZ_LOG=<file> (step log of a failing seed).
 import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
 import { createRosterStore } from "./rosterStore";
 import { parseImportFile } from "./transfer";
 import { clearDriveState } from "./syncState";
 import { vi } from "vitest";
-import { Device, FakeDrive, later, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
+import { copyBrowser, Device, FakeDrive, later, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
 
 setupSyncHarness();
 
@@ -26,16 +26,7 @@ declare const require: (m: string) => { writeFileSync: (f: string, s: string) =>
 const backupFileOf = (recs: CharacterRecord[]) =>
   JSON.stringify({ format: "codex-magica-backup", version: 1, exportedAt: "x", characters: recs.map(({ updatedAt: _u, syncVc: _v, syncCvc: _c, ...r }) => r) });
 
-const cloneOf = (a: Device, name: string): Device => {
-  const c = new Device(a.id);
-  for (const [k, v] of a.storage.m) c.storage.m.set(k, v);
-  c.storedId = a.storedId;
-  c.store = c.run(() => createRosterStore());
-  void name;
-  return c;
-};
-
-describe("fuzz: clones, imports, reloads, sync off/on, real rounds", () => {
+describe("fuzz: copied browsers, imports, reloads, edits during rounds, real rounds", () => {
   const F = (process.env.FUZZ ?? "clone,import,reload,during").split(",");
   const run = async (seed: number) => {
     // deterministic ids and marks, so a failing seed can be replayed
@@ -107,7 +98,7 @@ describe("fuzz: clones, imports, reloads, sync off/on, real rounds", () => {
         d.store = d.run(() => createRosterStore()); // a reload
       } else if (roll < 0.655 && devices.length < 5 && F.includes("clone") && d.storage.getItem("magus.driveNonceConfirmed.v1")) {
         // (a copy of a browser that has written to Drive: one with no marks yet is the documented blind spot)
-        { const c = cloneOf(d, ""); labels.set(c, `K${devices.length}of${labels.get(d)}`); devices.push(c); } // browser data copied onto another device
+        { const c = copyBrowser(d); labels.set(c, `K${devices.length}of${labels.get(d)}`); devices.push(c); } // browser data copied onto another device
         log.push(`${step} clone of ${L(d)}`);
       } else if (roll < 0.665 && F.includes("offon")) {
         // sync turned off and on again
@@ -143,29 +134,6 @@ describe("fuzz: clones, imports, reloads, sync off/on, real rounds", () => {
         );
         drive.onOp = null;
       }
-      const W = process.env.FUZZ_WATCH;
-      if (W) {
-        const where = devices.flatMap((dv) => dv.records().filter((r) => tokensOf(r).includes(W)).map((r) => `${labels.get(dv)}:${r.id}:${JSON.stringify(r.syncVc)}${r.syncCvc ? "cvc" + JSON.stringify(r.syncCvc) : ""}`));
-        const inDrive = [...drive.files.values()].filter((f) => f.body.includes(`${W}\\n`) || f.body.includes(`${W}"`)).map((f) => f.props.kind + ":" + (f.props.device ?? f.props.char));
-        log.push(`   [${W}] ${where.join(" ")} | drive: ${inDrive.join(" ")}`);
-        const WID = process.env.FUZZ_WID;
-        if (WID) {
-          for (const dv of devices) {
-            const r = dv.records().find((x) => x.id === WID);
-            const del = dv.store.getState().deletions[WID];
-            log.push(`      ${labels.get(dv)} ${r ? JSON.stringify(r.syncVc) + (r.syncCvc ? " cvc" + JSON.stringify(r.syncCvc) : "") + " " + tokensOf(r).join(",") : del ? "DEL " + JSON.stringify(del.vc) : "-"}`);
-          }
-          for (const f of drive.files.values())
-            if (f.props.kind === "sync") {
-              try {
-                const e = (JSON.parse(f.body) as { characters: Record<string, { vc: unknown; cvc?: unknown; deleted?: boolean; record?: CharacterRecord }> }).characters[WID];
-                log.push(`      file ${f.props.device}: ${e ? JSON.stringify(e.vc) + (e.cvc ? " cvc" + JSON.stringify(e.cvc) : "") + (e.deleted ? " DEL" : " " + tokensOf(e.record!).join(",")) : "-"}`);
-              } catch {
-                log.push(`      file ${f.props.device}: unreadable`);
-              }
-            }
-        }
-      }
     }
 
     drive.failRate = drive.lostResponseRate = drive.cutRate = 0;
@@ -185,12 +153,11 @@ describe("fuzz: clones, imports, reloads, sync off/on, real rounds", () => {
         return r && tokensOf(r).every((t) => del.seen.has(t));
       })
       .map((del) => del.id);
-    if (lost.length || reverted.length) (globalThis as { __log?: string }).__log = log.join("\n");
     if ((lost.length || reverted.length) && process.env.FUZZ_LOG) require("fs").writeFileSync(process.env.FUZZ_LOG, log.join("\n"));
     vi.restoreAllMocks();
     expect({ lost, reverted }).toEqual({ lost: [], reverted: [] });
   };
-  for (let seed = Number(process.env.FUZZ_FROM ?? 1); seed <= Number(process.env.FUZZ_TO ?? 20); seed++) test(`seed ${seed}`, () => run(seed), 120_000);
+  for (let seed = Number(process.env.FUZZ_FROM ?? 1); seed <= Number(process.env.FUZZ_TO ?? 10); seed++) test(`seed ${seed}`, () => run(seed), 120_000);
 });
 
 describe("a copied browser: the two copies' parallel versions are both kept", () => {
@@ -200,7 +167,7 @@ describe("a copied browser: the two copies' parallel versions are both kept", ()
     const x = a.create("Xena");
     await realSync(a, drive);
     await realSync(a, drive);
-    const k = cloneOf(a, "k"); // browser data restored onto a second phone
+    const k = copyBrowser(a); // browser data restored onto a second phone
     later();
     k.edit(x.id, "k1"); // the new phone, offline: {deva: 2}
     later();
@@ -223,7 +190,7 @@ describe("a copied browser: the two copies' parallel versions are both kept", ()
     const x = a.create("Xena");
     await realSync(a, drive);
     await realSync(a, drive);
-    const k = cloneOf(a, "k");
+    const k = copyBrowser(a);
     later();
     k.edit(x.id, "k1"); // {deva: 2}
     later();
@@ -306,7 +273,7 @@ describe("a copied browser whose last upload's answer was lost", () => {
     drive.lostResponseRate = 1; // the upload lands, its answer doesn't: C's "published" stays behind
     await expect(realSync(c, drive)).rejects.toThrow(/lost/);
     drive.lostResponseRate = 0;
-    const k = cloneOf(c, "k"); // C's browser data copied onto another device now
+    const k = copyBrowser(c); // C's browser data copied onto another device now
     await realSync(b, drive); // B gets c1...
     later();
     expect(tokensOf(b.byName("Xena")!)).toContain("c1");

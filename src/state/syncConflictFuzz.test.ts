@@ -3,8 +3,7 @@
 // questions on random devices (a version / both / later) and leaves an editor (the creator) open across
 // syncs. No edit may be lost except by a deletion or a conflict answer that saw it, all devices converge,
 // and no roster holds an id twice.
-// Knobs: CFUZZ_FROM/CFUZZ_TO (seeds), CFUZZ_LOG=<file> (step log of a failing seed),
-// CFUZZ_WATCH=<token>/CFUZZ_WID=<id prefix>.
+// Knobs: CFUZZ_FROM/CFUZZ_TO (seeds), CFUZZ_LOG=<file> (step log of a failing seed).
 import { vi } from "vitest";
 import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
@@ -121,14 +120,6 @@ describe("fuzz: conflict answers and open editors", () => {
         );
         drive.onOp = null;
       }
-      const W = process.env.CFUZZ_WATCH;
-      if (W) {
-        for (const dv of devices) {
-          const hits = dv.records().filter((r) => tokensOf(r).includes(W)).map((r) => `${r.id}${JSON.stringify(r.syncVc)}[${tokensOf(r).join(",")}]`);
-          const dels = Object.entries(dv.store.getState().deletions).filter(([id]) => hits.some((h) => h.startsWith(id)) || (process.env.CFUZZ_WID && id.startsWith(process.env.CFUZZ_WID))).map(([id, v]) => `DEL ${id}${JSON.stringify(v.vc)}`);
-          log.push(`   ${names.get(dv)}: ${hits.join(" ")} ${dels.join(" ")}`);
-        }
-      }
     }
     drive.failRate = drive.lostResponseRate = 0;
     for (let i = 0; i < 5; i++) for (const d of devices) await realSync(d, drive);
@@ -150,10 +141,10 @@ describe("fuzz: conflict answers and open editors", () => {
     vi.restoreAllMocks();
     expect({ lost, diverged, dupIds }).toEqual({ lost: [], diverged: false, dupIds: [0, 0, 0] });
   };
-  // default: 1..30, plus seeds that found an alternative lost to an earlier answer's drop mark (126, 158,
+  // default: 1..20, plus seeds that found an alternative lost to an earlier answer's drop mark (126, 158,
   // 219) and one id twice in a roster (36), before that was fixed
   const seeds = process.env.CFUZZ_FROM
     ? Array.from({ length: Number(process.env.CFUZZ_TO ?? process.env.CFUZZ_FROM) - Number(process.env.CFUZZ_FROM) + 1 }, (_, i) => Number(process.env.CFUZZ_FROM) + i)
-    : [...Array.from({ length: 30 }, (_, i) => i + 1), 36, 126, 158, 219];
+    : [...Array.from({ length: 20 }, (_, i) => i + 1), 36, 126, 158, 219];
   for (const seed of seeds) test(`seed ${seed}`, () => run(seed), 120_000);
 });

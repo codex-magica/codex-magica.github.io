@@ -155,13 +155,6 @@ describe("token service", () => {
     expect((await handle(post("/v1/token", { credential: old }), env({ BLOB_KEY: KEY2 }), g.doFetch)).status).toBe(401);
   });
 
-  test("revoke is not offered (turning sync off is device-only)", async () => {
-    const credential = await sealCredential(env(), { rt: "rt-9", iat: 1 });
-    const g = google();
-    expect((await handle(post("/v1/revoke", { credential }), env(), g.doFetch)).status).toBe(404);
-    expect(g.calls).toHaveLength(0);
-  });
-
   test("health: a broken previous key counts as not configured (every renewal would fail)", async () => {
     expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: "short" })))).configured).toBe(false);
     expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: KEY2 })))).configured).toBe(true);
@@ -215,12 +208,14 @@ describe("token service", () => {
     expect(g.calls).toHaveLength(0);
   });
 
-  test("unknown routes and methods", async () => {
+  test("unknown routes and methods (no revoke either: turning sync off is device-only)", async () => {
     const g = google();
     expect((await handle(post("/v1/other", {}), env(), g.doFetch)).status).toBe(404);
+    expect((await handle(post("/v1/revoke", { credential: "x" }), env(), g.doFetch)).status).toBe(404);
     expect((await handle(new Request("https://x/v1/token", { method: "GET", headers: { Origin: APP } }), env(), g.doFetch)).status).toBe(405);
     expect((await handle(post("/v1/token", "x".repeat(9000)), env(), g.doFetch)).status).toBe(413);
     const big = new Request("https://x/v1/token", { method: "POST", headers: { Origin: APP, "Content-Length": "100000" }, body: "{}" });
     expect((await handle(big, env(), g.doFetch)).status).toBe(413);
+    expect(g.calls).toHaveLength(0);
   });
 });

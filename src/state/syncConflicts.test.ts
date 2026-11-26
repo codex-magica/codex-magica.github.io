@@ -103,28 +103,8 @@ describe("conflicts: the player picks a version", () => {
     a.run(() => a.store.upsert({ ...opened, inventoryText: `${opened.inventoryText}\neditor` }, opened));
     expect(listed(a)).toEqual(["Xena: editor"]);
     expect(conflictsOf(a.records())[0].alternatives.map(tokensOf)).toEqual([["Xena#0", "b1"]]);
-  });
-});
-
-describe("a conflict over content the player already dropped once", () => {
-  test("ÉP set back to the same value on A while B edits in parallel: asked again, not dropped", async () => {
-    const { drive, a, b, x } = await parallelEdits(); // a1 vs b1: Xena shows b1
-    later();
-    b.run(() => b.store.resolveConflict(x.id, x.id)); // the player keeps b1 (drops a1)
-    await settle(drive, a, b);
-    // A puts the content back exactly as a1 was (e.g. ÉP back to the same value), B edits in parallel
-    later();
-    a.run(() => {
-      const r = a.records().find((v) => v.id === x.id)!;
-      a.store.upsert({ ...r, inventoryText: "Xena#0\na1" }, r);
-    });
-    later();
-    b.edit(x.id, "b2");
-    await settle(drive, a, b);
-    for (const d of [a, b]) {
-      const [c] = conflictsOf(d.records());
-      expect(c?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]);
-    }
+    await settle(drive, a, b); // both versions reach every device
+    for (const d of [a, b]) expect(d.records().flatMap(tokensOf)).toEqual(expect.arrayContaining(["editor", "b1"]));
   });
 });
 
@@ -205,8 +185,8 @@ describe("two devices answering differently, one of them 'keep both'", () => {
   });
 });
 
-describe("the round notice for an alternative asked about again", () => {
-  test("a dropped alternative coming back as a new question is not announced as a deleted character back on the list", async () => {
+describe("a conflict over content the player already dropped once", () => {
+  test("ÉP set back to the same value on A while B edits in parallel: asked again (not dropped, and not announced as a deleted character)", async () => {
     const { drive, a, b, x } = await parallelEdits();
     later();
     b.run(() => b.store.resolveConflict(x.id, x.id)); // B keeps b1 (drops a1)
@@ -219,6 +199,8 @@ describe("the round notice for an alternative asked about again", () => {
     const told = (await b.sync(drive)).undeleted;
     expect(conflictsOf(b.records())).toHaveLength(1); // asked again (as designed)
     expect(told).toEqual([]);
+    await settle(drive, a, b);
+    for (const d of [a, b]) expect(conflictsOf(d.records())[0]?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]);
   });
 });
 

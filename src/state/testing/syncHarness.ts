@@ -6,7 +6,7 @@ import { afterEach, beforeEach, vi } from "vitest";
 import { CharacterRecord } from "../../model/character";
 import { defaultRecord } from "../defaultRecord";
 import { BackupMeta, DriveFileMeta, DriveTransport, FileBody } from "../googleDrive";
-import { DeviceIdClashError, SyncOutput, runSync } from "../driveSyncEngine";
+import { SyncOutput, runSync } from "../driveSyncEngine";
 import { syncRound } from "../driveSyncRound";
 import { RosterStore, createRosterStore } from "../rosterStore";
 import { contentHash } from "../recordHash";
@@ -24,10 +24,12 @@ export const rngFrom = (seed: number) => () => {
 // ── in-memory localStorage, one per device ───────────────────────────────────────────────────────
 export class MemStorage {
   m = new Map<string, string>();
+  full = new Set<string>(); // keys whose writes fail (storage full)
   getItem(k: string) {
     return this.m.has(k) ? this.m.get(k)! : null;
   }
   setItem(k: string, v: string) {
+    if (this.full.has(k)) throw new Error("QuotaExceededError");
     this.m.set(k, String(v));
   }
   removeItem(k: string) {
@@ -147,14 +149,12 @@ let worldTime = START;
 export const DAY = 24 * 3600_000;
 // the shared clock every simulated device reads (plus its own skew); `later` moves it on
 export const later = (ms = 60_000) => (worldTime += ms);
-export const worldNow = () => worldTime;
 
 export class Device {
   storage = new MemStorage();
   store: RosterStore;
   backups = true;
   cache = new Map();
-  published: Record<string, string> = {};
   backedUp = new Set<string>();
   nonces: string[] = [];
   storedId = false; // like the app: the id comes from this storage (shared by tabs), not pinned by the test
@@ -219,24 +219,11 @@ export class Device {
         const input = { records: snap.records, deletions: snap.deletions, device: this.id, backups: this.backups, backedUp: this.backedUp, ourNonces: this.nonces, rememberNonce: (n: string) => this.nonces.push(n) };
         return runSync(drive, input, this.now, this.cache);
       };
-      let out;
-      try {
-        out = await go();
-      } catch (e) {
-        if (!(e instanceof DeviceIdClashError)) throw e;
-        // what driveSyncRound does: a fresh id, this device's versions relabelled, sync again
-        const old = this.id;
-        this.id = `${old}x${Math.floor(Math.random() * 1e6)}`;
-        this.run(() => this.store.relabelDevice(old, this.id, new Set<string>([...e.published, ...Object.values(this.published)]), this.published));
-        this.nonces = [];
-        this.published = {};
-        out = await go();
-      }
+      const out = await go(); // (a copied browser's clash: only realSync, the app's own round, handles it)
       const snapshotUsed = snap;
       this.run(() => {
         this.store.applyRound(snapshotUsed, out);
       });
-      this.published = out.published;
       this.backedUp = out.backedUp;
       return out;
     } finally {
@@ -291,6 +278,15 @@ export async function realSync(dev: Device, drive: FakeDrive): Promise<SyncOutpu
   return result.out;
 }
 
+// Browser data copied onto a second device (restored from a backup, a cloned profile): the same storage,
+// so the same device id.
+export const copyBrowser = (a: Device): Device => {
+  const c = new Device(a.id);
+  for (const [k, v] of a.storage.m) c.storage.m.set(k, v);
+  c.storedId = a.storedId;
+  c.store = c.run(() => createRosterStore());
+  return c;
+};
 export const tokensOf = (r: CharacterRecord) => (r.inventoryText ?? "").split("\n").filter(Boolean);
 export const settle = async (drive: FakeDrive, ...devs: Device[]) => {
   for (let i = 0; i < 3; i++) for (const d of devs) await d.sync(drive);

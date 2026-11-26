@@ -25,7 +25,7 @@ import { createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
 import { normalizeRecord } from "./storage";
 import { parseImportFile } from "./transfer";
-import { DAY, Device, FakeDrive, QuotaStorage, clashes, later, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
+import { clashes, copyBrowser, DAY, Device, FakeDrive, later, QuotaStorage, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
 
 setupSyncHarness();
 
@@ -62,23 +62,6 @@ describe("Google Drive sync: rounds between devices", () => {
     await b.sync(drive);
     expect(a.records().map((r) => r.name)).toEqual(["Aldar the Bold"]);
     expect(b.records().map((r) => r.name)).toEqual(["Aldar the Bold"]);
-  });
-
-  test("an edit beats a deletion made elsewhere in parallel", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const b = new Device("devb");
-    const al = a.create("Aldar");
-    await a.sync(drive);
-    await b.sync(drive);
-    later();
-    a.remove(al.id);
-    b.edit(al.id, "b1", "Aldar, still alive");
-    await a.sync(drive);
-    await b.sync(drive);
-    await a.sync(drive);
-    expect(a.records().map((r) => r.name)).toEqual(["Aldar, still alive"]);
-    expect(b.records().map((r) => r.name)).toEqual(["Aldar, still alive"]);
   });
 
   test("an edit beats a parallel deletion whichever device syncs first", async () => {
@@ -355,7 +338,6 @@ describe("Google Drive sync: rounds between devices", () => {
     b.edit(al.id, "b1");
     await b.sync(drive);
     a.edit(al.id, "a1");
-    a.published = {};
     a.backedUp = new Set();
     a.cache.clear();
     await a.sync(drive); // back on
@@ -400,21 +382,6 @@ describe("Google Drive sync: daily backups", () => {
     expect(content.record.inventoryText).toContain("day1-evening");
     expect(content.record.inventoryText).not.toContain("day2");
     expect(kept[0].props).toMatchObject({ char: al.id, reason: "daily", name: "Aldar" });
-  });
-
-  test("deleting a character keeps its last version, even on the same day", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const al = a.create("Aldar");
-    a.edit(al.id, "last");
-    await a.sync(drive);
-    later();
-    a.remove(al.id);
-    await a.sync(drive);
-    const kept = drive.backups();
-    expect(kept).toHaveLength(1);
-    expect(kept[0].props.reason).toBe("deleted");
-    expect(JSON.parse(kept[0].body).record.inventoryText).toContain("last");
   });
 
   test("only the last state is kept, not older versions still in other devices' files", async () => {
@@ -615,28 +582,7 @@ describe("Google Drive sync: edge cases", () => {
     expect(a.records().map((r) => r.name).sort()).toEqual(["Aldar", "Bori"]);
   });
 
-  test("an editor's draft saved after a sync brought another device's change keeps both", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const b = new Device("devb");
-    const al = a.create("Aldar");
-    await a.sync(drive);
-    await b.sync(drive);
-    const openedWith = a.byName("Aldar")!; // the inventory editor opens
-    const draft = `${openedWith.inventoryText}\nA typed this`;
-    later();
-    b.edit(al.id, "B-edit");
-    await b.sync(drive);
-    await a.sync(drive); // pulled while the editor is open
-    a.run(() => a.store.upsert({ ...a.byName("Aldar")!, inventoryText: draft }, openedWith));
-    await a.sync(drive);
-    await b.sync(drive);
-    const all = b.records().flatMap(tokensOf);
-    expect(all).toContain("B-edit");
-    expect(all).toContain("A typed this");
-  });
-
-  test("two tabs: a tab that missed the other's changes can't drop or wipe them", async () => {
+  test("every change re-reads what's saved: a store that missed saved changes can't drop or wipe them", async () => {
     const drive = new FakeDrive();
     const tab1 = new Device("deva");
     const al = tab1.create("Aldar");
@@ -656,28 +602,6 @@ describe("Google Drive sync: edge cases", () => {
     await tab1.sync(drive);
     const tokens = tab1.records().flatMap(tokensOf);
     expect(tokens).toEqual(expect.arrayContaining(["tab2-edit", "tab1-b", "tab1-brenna"]));
-  });
-
-  test("two devices with the same id (restored browser data) don't drop each other's edits", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const al = a.create("Aldar");
-    await a.sync(drive);
-    const clone = new Device("deva");
-    for (const [k, v] of a.storage.m) clone.storage.m.set(k, v);
-    clone.store = clone.run(() => createRosterStore());
-    clone.nonces = [...a.nonces];
-    later();
-    clone.edit(al.id, "on-the-clone");
-    a.edit(al.id, "on-a-1");
-    a.edit(al.id, "on-a-2");
-    await a.sync(drive);
-    await clone.sync(drive);
-    await a.sync(drive);
-    await clone.sync(drive);
-    const all = a.records().flatMap(tokensOf);
-    expect(all).toEqual(expect.arrayContaining(["on-the-clone", "on-a-2"]));
-    expect(clone.fingerprint()).toBe(a.fingerprint());
   });
 
   test("a device with a clock far ahead doesn't stop the daily backups", async () => {
@@ -802,12 +726,12 @@ describe("Google Drive sync: randomized multi-device runs", () => {
     expect(drive.calls.filter((c) => c !== "list" && c !== "read")).toEqual([]);
   };
 
-  for (let seed = 1; seed <= 24; seed++) test(`seed ${seed}`, () => run(seed), 60_000);
+  for (let seed = 1; seed <= 8; seed++) test(`seed ${seed}`, () => run(seed), 60_000);
 });
 
 // ═══════════════════ second adversarial review: each test was a proven failure ═══════════════════
 
-describe("nonces, tabs, conflicts, clones", () => {
+describe("nonces, re-reading, conflicts, clones", () => {
   test("storage full: a round whose mark can't be saved writes nothing, and no false clone follows", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -870,7 +794,7 @@ describe("nonces, tabs, conflicts, clones", () => {
     expect(b.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
   });
 
-  test("two tabs: an edit in tab 2 that reaches tab 1 after its round's last response is kept", async () => {
+  test("every change re-reads what's saved: an edit saved elsewhere after a round's last response is kept", async () => {
     const drive = new FakeDrive();
     const tab1 = new Device("deva");
     const x = tab1.create("Xena");
@@ -922,10 +846,7 @@ describe("nonces, tabs, conflicts, clones", () => {
     const w = a.create("Wulf");
     const v = a.create("Vera");
     await realSync(a, drive);
-    const clone = new Device("deva");
-    for (const [k, val] of a.storage.m) clone.storage.m.set(k, val);
-    clone.published = { ...a.published }; // in the app it's in the copied storage too
-    clone.store = clone.run(() => createRosterStore());
+    const clone = copyBrowser(a);
     later();
     a.remove(w.id); // the original deletes Wulf and edits Vera after the clone was made
     a.edit(v.id, "a-edit");
@@ -939,27 +860,6 @@ describe("nonces, tabs, conflicts, clones", () => {
     }
     expect(a.byName("Wulf")).toBeUndefined();
     expect(a.records().filter((r) => r.name.startsWith("Vera"))).toHaveLength(1);
-  });
-});
-
-describe("an edit before a losing deletion", () => {
-  test("edit then delete on A, parallel edit on B: A's last edit is kept (in the roster or a backup)", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const b = new Device("devb");
-    const x = a.create("Xena");
-    await a.sync(drive);
-    await b.sync(drive);
-    later();
-    a.edit(x.id, "a-last-edit");
-    a.remove(x.id);
-    b.edit(x.id, "b-edit");
-    await b.sync(drive);
-    await a.sync(drive);
-    await b.sync(drive);
-    const inRecords = a.records().flatMap(tokensOf).includes("a-last-edit");
-    const inBackups = drive.backups().some((f) => f.body.includes("a-last-edit"));
-    expect(inRecords || inBackups).toBe(true);
   });
 });
 

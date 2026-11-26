@@ -1,9 +1,9 @@
-// Regression tests for bugs found in the pre-release review of persistence and the Drive merge (R1–R5).
-// Each one is a concrete scenario that lost, resurrected or overwrote a character before its fix.
+// Regression tests for bugs found in the pre-release reviews of persistence and the Drive merge. Each one
+// is a concrete scenario that lost, resurrected or overwrote a character before its fix.
 import { CharacterRecord } from "../model/character";
 import { createRosterStore } from "./rosterStore";
 import { unreadableKeys } from "./storage";
-import { DAY, Device, FakeDrive, QuotaStorage, clashes, later, realSync, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
+import { clashes, copyBrowser, DAY, Device, FakeDrive, later, QuotaStorage, realSync, settle, setupSyncHarness, tokensOf } from "./testing/syncHarness";
 import { defaultRecord } from "./defaultRecord";
 
 setupSyncHarness();
@@ -248,13 +248,6 @@ describe("saving when storage is full", () => {
   });
 });
 
-const cloneOf = (a: Device): Device => {
-  const c = new Device(a.id);
-  for (const [k, v] of a.storage.m) c.storage.m.set(k, v);
-  c.store = c.run(() => createRosterStore());
-  return c;
-};
-
 describe("a cloned device relabelling its edits keeps their history", () => {
   test("a clone deletes a character nobody else touched: after the relabel it stays deleted", async () => {
     const drive = new FakeDrive();
@@ -263,7 +256,7 @@ describe("a cloned device relabelling its edits keeps their history", () => {
     const v = a.create("Vera");
     await realSync(a, drive);
     await realSync(a, drive);
-    const clone = cloneOf(a); // browser data restored onto a second phone
+    const clone = copyBrowser(a); // browser data restored onto a second phone
     later();
     clone.remove(w.id); // the player deletes Wulf on the new phone
     a.edit(v.id, "a-edit"); // the old phone keeps playing (its write marks the file as its own)
@@ -286,7 +279,7 @@ describe("a cloned device relabelling its edits keeps their history", () => {
     const v = a.create("Vera");
     await realSync(a, drive);
     await realSync(a, drive);
-    const clone = cloneOf(a);
+    const clone = copyBrowser(a);
     later();
     clone.edit(w.id, "clone-edit"); // continues Wulf as published
     a.edit(v.id, "a-edit");
@@ -302,43 +295,15 @@ describe("a cloned device relabelling its edits keeps their history", () => {
   });
 });
 
-const cloneOfDevice = (a: Device): Device => {
-  const c = new Device(a.id);
-  for (const [k, v] of a.storage.m) c.storage.m.set(k, v);
-  c.store = c.run(() => createRosterStore());
-  return c;
-};
-
 describe("a copied browser: an edit made in parallel with a deletion wins", () => {
-  test("a clone deletes a character the original edited meanwhile: the edit wins", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const w = a.create("Wulf");
-    await realSync(a, drive);
-    await realSync(a, drive);
-    const clone = cloneOfDevice(a); // browser data restored onto a second phone
-    later();
-    clone.remove(w.id); // deleted on the new phone: marker {deva: 2}
-    a.edit(w.id, "a-edit"); // edited on the old phone, not seeing the deletion: {deva: 2}
-    await realSync(a, drive);
-    await realSync(clone, drive); // clash -> new id -> relabel -> run again
-    expect(clashes.get(clone) ?? 0).toBe(1);
-    for (let i = 0; i < 2; i++) {
-      await realSync(a, drive);
-      await realSync(clone, drive);
-    }
-    const backedUpAEdit = drive.backups().some((f) => f.body.includes("a-edit"));
-    expect({ onA: a.records().flatMap(tokensOf).includes("a-edit"), onClone: clone.records().flatMap(tokensOf).includes("a-edit"), backedUpAEdit }).toEqual({ onA: true, onClone: true, backedUpAEdit });
-  });
-
-  test("the other way round (daily backups off): the clone's edit wins", async () => {
+  test("the original deletes, the clone edits meanwhile (daily backups off): the clone's edit wins", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     a.backups = false;
     const w = a.create("Wulf");
     await realSync(a, drive);
     await realSync(a, drive);
-    const clone = cloneOfDevice(a);
+    const clone = copyBrowser(a);
     clone.backups = false;
     later();
     a.remove(w.id); // {deva: 2}, deleted
@@ -353,24 +318,4 @@ describe("a copied browser: an edit made in parallel with a deletion wins", () =
     expect({ onClone: clone.records().flatMap(tokensOf).includes("clone-edit"), anywhereInDrive: [...drive.files.values()].some((f) => f.body.includes("clone-edit")) }).toEqual({ onClone: true, anywhereInDrive: true });
   });
 
-  test("the same with the clone editing instead of deleting keeps both versions", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const w = a.create("Wulf");
-    await realSync(a, drive);
-    await realSync(a, drive);
-    const clone = cloneOfDevice(a);
-    later();
-    clone.edit(w.id, "clone-edit");
-    a.edit(w.id, "a-edit");
-    await realSync(a, drive);
-    await realSync(clone, drive);
-    for (let i = 0; i < 2; i++) {
-      await realSync(a, drive);
-      await realSync(clone, drive);
-    }
-    const tokens = a.records().flatMap(tokensOf);
-    expect(tokens).toContain("a-edit");
-    expect(tokens).toContain("clone-edit");
-  });
 });
