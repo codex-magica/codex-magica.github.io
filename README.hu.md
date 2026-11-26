@@ -13,6 +13,8 @@ Böngészőben fut · telepíthető a kezdőképernyőre · internet nélkül is
 
 [**Az alkalmazás megnyitása**](https://codex-magica.github.io/) · [English](README.md) · **Magyar**
 
+[Amit tud](#amit-tud) · [Telepítés](#hogyan-használhatod) · [Hogyan készült?](#hogyan-készült)
+
 [![CI](https://github.com/codex-magica/codex-magica.github.io/actions/workflows/ci.yml/badge.svg)](https://github.com/codex-magica/codex-magica.github.io/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
@@ -97,8 +99,8 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
   szinkronizál.
 - A módosítások néhány másodperc múlva szinkronizálódnak, és akkor is, amikor kilépsz az alkalmazásból
   vagy visszatérsz. Ami internet nélkül változott, az a kapcsolat helyreálltakor töltődik fel.
-- Ha ugyanazt a karaktert két eszközön is módosítottad, mielőtt szinkronizálódhattak volna, mindkét
-  változat megmarad. Semmi sem íródik felül észrevétlenül.
+- Ha ugyanazt a karaktert két eszközön is módosítottad, mielőtt szinkronizálódhattak volna, az alkalmazás
+  megkérdezi, melyik változat maradjon (vagy mindkettőt megtartja). Semmi sem íródik felül észrevétlenül.
 - A napi biztonsági másolat (alapból bekapcsolva) a Drive-on azt is megőrzi, milyen volt egy karakter
   azoknak a napoknak a végén, amikor módosítottad, és hogy milyen volt törlés előtt. Ezeket a Google
   Drive ablakban állíthatod vissza.
@@ -204,5 +206,5 @@ A felület betűtípusa a [Crimson Pro](https://github.com/Fonthausen/CrimsonPro
 
 <div align="center">
 <br>
-<sub>Egy játékoscsapatnak készült, és mindenkinek szól, aki még mindig Yneven kalandozik. 🎲</sub>
+<sub>Készítette <a href="https://github.com/marcigo36">Márton Dániel</a> egy játékoscsapatnak, és mindenkinek szól, aki még mindig Yneven kalandozik. 🎲</sub>
 </div>

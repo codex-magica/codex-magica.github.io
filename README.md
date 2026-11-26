@@ -14,6 +14,8 @@ Runs in the browser · installs to the home screen · works offline · optional 
 
 [**Open the app**](https://codex-magica.github.io/) · **English** · [Magyar](README.hu.md)
 
+[Features](#features) · [Install it](#use-it) · [How it was built](#how-it-was-built)
+
 [![CI](https://github.com/codex-magica/codex-magica.github.io/actions/workflows/ci.yml/badge.svg)](https://github.com/codex-magica/codex-magica.github.io/actions/workflows/ci.yml)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React_19-149ECA?logo=react&logoColor=white)
@@ -49,6 +51,19 @@ Codex Magica turns the book into:
 
 It covers 12 classes, 6 races, 83 skills, 636 spells, prayers and psi disciplines, 83 weapons and 21 armors
 and shields. The UI is in Hungarian, like the game.
+
+### Under the hood, in short
+
+- **A 514-page scanned rulebook turned into data** by an OCR + LLM pipeline, then proofread by hand
+  ([how](#1--from-a-scanned-pdf-to-markdown)).
+- **A pure rules engine:** every value on the sheet is recomputed from the character's per-level decisions,
+  with its provenance, and golden snapshot tests pin the rules ([how](#2--from-text-to-a-rules-engine)).
+- **Local-first sync with no backend of my own:** each device writes its own file to the player's Google
+  Drive; version vectors tell replaced from parallel edits, a conflict asks the player which version to
+  keep, and randomized multi-device tests check that nothing is lost ([how](#3--an-app-without-a-server)).
+- **A stateless token service** on Cloudflare's free plan keeps Google's permission renewed without
+  storing anything.
+- **250+ tests**, type-checked and linted in CI.
 
 ## Features
 
@@ -133,8 +148,8 @@ same on your phone, tablet and computer:
   of your other files. Google also shares your email address, so the app can show which account syncs.
 - Changes sync a few seconds after you make them, when you leave the app and when you come back. Changes
   made offline go up once you're back online.
-- If the same character was edited on two devices before they could sync, both versions are kept.
-  Nothing is overwritten silently.
+- If the same character was edited on two devices before they could sync, the app asks which version to
+  keep (or keeps both). Nothing is overwritten silently.
 - With daily backups on (the default), the last state of each day a character was edited, and its last
   state before deletion, stay in your Drive too, and can be restored from the sync window.
 - You give Google's permission once per device, and the app keeps it renewed by itself: no hourly prompts.
@@ -232,7 +247,8 @@ flowchart LR
   only its own JSON file in the player's app-data folder and reads the others', so two devices can never
   overwrite each other (Drive has no conditional writes). Every character carries a version vector, so
   "replaced" and "edited in parallel" are told apart without trusting device clocks: an edit beats a
-  parallel deletion, and parallel edits keep both versions, resolved identically on every device. A failed or
+  parallel deletion, and for parallel edits the player is asked which version to keep; the other one is
+  stored alongside until then, identically on every device. A failed or
   damaged download never leads to an overwrite, and optional daily backups keep each day's last state and
   the last state before a deletion. Randomized tests run several devices with concurrent rounds, failing
   requests and skewed clocks, and check that they converge and lose nothing.
@@ -244,7 +260,13 @@ flowchart LR
   never sees Drive data. Setup, details and the
   options weighed: [docs/google-drive-sync.md](docs/google-drive-sync.md).
 
-### 4 · Hosting
+### 4 · How I worked
+
+I built this with AI coding assistants (Claude). I set the direction, the architecture and the game's
+rules, checked the data against the book, and reviewed the changes; the commits made together with an
+assistant are marked as co-authored. The PDF pipeline above also uses LLMs, as described there.
+
+### 5 · Hosting
 
 The app is a static, offline-capable build (a service worker precaches everything), so any static host
 works. This repository deploys itself to GitHub Pages with a GitHub Actions workflow, and a fork can do the
@@ -363,5 +385,5 @@ from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons); their l
 
 <div align="center">
 <br>
-<sub>Made for one gaming group, shared with everyone who still plays on Ynev. 🎲</sub>
+<sub>Made by <a href="https://github.com/marcigo36">Márton Dániel</a> for one gaming group, shared with everyone who still plays on Ynev. 🎲</sub>
 </div>
