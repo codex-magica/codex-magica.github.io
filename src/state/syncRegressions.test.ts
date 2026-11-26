@@ -1,7 +1,6 @@
 // Regression tests for bugs found in the pre-release reviews of persistence and the Drive merge. Each one
 // is a concrete scenario that lost, resurrected or overwrote a character before its fix.
 import { CharacterRecord } from "../model/character";
-import { createRosterStore } from "./rosterStore";
 import { unreadableKeys } from "./storage";
 import { clashes, copyBrowser, DAY, Device, FakeDrive, later, QuotaStorage, realSync, settle, setupSyncHarness, tokensOf } from "./testing/syncHarness";
 import { defaultRecord } from "./defaultRecord";
@@ -57,8 +56,7 @@ describe("storage full: deleting a character saves the roster and the deletion m
     const drive = new FakeDrive();
     const a = new Device("deva");
     const qs = new QuotaStorage();
-    a.storage = qs;
-    a.store = a.run(() => createRosterStore());
+    a.useStorage(qs); // (what was saved, sync on included)
     const b = new Device("devb");
     const x = a.create("Xena");
     a.create("Wulf");
@@ -74,7 +72,7 @@ describe("storage full: deleting a character saves the roster and the deletion m
     const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, unknown>;
     expect(savedRoster.some((r) => r.id === x.id) || savedDeletions[x.id] !== undefined).toBe(true);
     // the app is closed before the next round (offline, or within the 2-second delay), and reopened
-    a.store = a.run(() => createRosterStore());
+    a.reopen();
     later();
     await a.sync(drive);
     expect(a.records().find((r) => r.id === x.id)).toBeUndefined();
@@ -92,7 +90,7 @@ describe("an unreadable saved roster when storage is (nearly) full", () => {
     const damaged = big.slice(0, big.length - 3);
     qs.setItem("magus.roster.v1", damaged);
     qs.cap = qs.used() + 2000;
-    d.store = d.run(() => createRosterStore());
+    d.reopen();
     expect(d.records()).toEqual([]);
     d.create("Új"); // the player starts over: the new small roster is saved over the damaged one
     const keptSomewhere = [...qs.m.values()].some((v) => v === damaged);
@@ -156,9 +154,7 @@ describe("storage full and long absences", () => {
   test("storage full: a deletion that only fits without the deleted character's last state is saved without it, and later saves count as saved", () => {
     const a = new Device("deva");
     const qs = new QuotaStorage();
-    qs.setItem("magus.driveSync.v1", a.storage.getItem("magus.driveSync.v1")!); // sync on: a deletion keeps the last state, for its Drive backup
-    a.storage = qs;
-    a.store = a.run(() => createRosterStore());
+    a.useStorage(qs); // sync on: a deletion keeps the last state, for its Drive backup
     const x = a.create("Xena");
     const w = a.create("Wulf");
     a.create("Yorick");
@@ -193,7 +189,7 @@ describe("storage full and long absences", () => {
     await realSync(laptop, drive);
     // the phone app isn't opened for two months, then it is (a fresh page load) and syncs
     later(61 * DAY);
-    phone.store = phone.run(() => createRosterStore());
+    phone.reopen();
     await realSync(phone, drive);
     const back = phone.byName("Xena");
     expect(back && tokensOf(back)).toContain("laptop-edit"); // the parallel edit wins (by design)
@@ -216,15 +212,14 @@ describe("saving when storage is full", () => {
     expect(a.store.getState().saveFailed).toBe(true);
     expect({ roster: a.storage.getItem("magus.roster.v1"), deletions: a.storage.getItem("magus.deletions.v1") }).toEqual(before);
     a.storage.full.clear();
-    a.store = a.run(() => createRosterStore()); // a reload: Xena is still there
+    a.reopen(); // a reload: Xena is still there
     expect(a.records().map((r) => r.name).sort()).toEqual(["Wulf", "Xena"]);
   });
 
   test("nothing fits: what was saved before stays exactly as it was", () => {
     const a = new Device("deva");
     const qs = new QuotaStorage();
-    a.storage = qs;
-    a.store = a.run(() => createRosterStore());
+    a.useStorage(qs); // (what was saved, sync on included)
     const x = a.create("Xena");
     const before = { roster: qs.getItem("magus.roster.v1"), deletions: qs.getItem("magus.deletions.v1") };
     qs.cap = qs.used(); // not a byte more
@@ -247,7 +242,7 @@ describe("saving when storage is full", () => {
     const raw = JSON.stringify([good, { broken: true }]); // one record can't be read
     qs.setItem("magus.roster.v1", raw);
     qs.cap = qs.used() + 50; // no room for a copy
-    a.store = a.run(() => createRosterStore());
+    a.reopen();
     expect(a.records().map((r) => r.name)).toEqual(["Megvan"]);
     const keys = a.run(() => unreadableKeys());
     expect(keys).toEqual(["magus.roster.v1"]); // the roster itself is what's offered
@@ -332,7 +327,7 @@ describe("a copied browser: an edit made in parallel with a deletion wins", () =
       await realSync(a, drive);
       await realSync(clone, drive);
     }
-    expect({ onClone: clone.records().flatMap(tokensOf).includes("clone-edit"), anywhereInDrive: [...drive.files.values()].some((f) => f.body.includes("clone-edit")) }).toEqual({ onClone: true, anywhereInDrive: true });
+    expect({ onClone: clone.tokens().includes("clone-edit"), anywhereInDrive: [...drive.files.values()].some((f) => f.body.includes("clone-edit")) }).toEqual({ onClone: true, anywhereInDrive: true });
   });
 
 });

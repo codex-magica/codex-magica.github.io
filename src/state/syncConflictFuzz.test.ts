@@ -7,36 +7,21 @@
 import { vi } from "vitest";
 import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
-import { conflictsOf, createRosterStore, listedRecords } from "./rosterStore";
-import { Device, FakeDrive, later, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
+import { conflictsOf, listedRecords } from "./rosterStore";
+import { Device, env, FakeDrive, later, realSync, rngFrom, seedRandomIds, setupSyncHarness, storedDevice, tokensOf, writeLog } from "./testing/syncHarness";
 
 setupSyncHarness();
-
-// (vitest runs under node; the app's tsconfig has no node types)
-declare const process: { env: Record<string, string | undefined> };
-declare const require: (m: string) => { writeFileSync: (f: string, s: string) => void };
+afterEach(() => vi.restoreAllMocks()); // the seeded ids (seedRandomIds)
 
 describe("fuzz: conflict answers and open editors", () => {
   const run = async (seed: number) => {
-    const idRng = rngFrom(seed * 31 + 7);
-    vi.spyOn(Math, "random").mockImplementation(idRng);
-    vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation(<T extends ArrayBufferView | null>(a: T): T => {
-      const u = a as unknown as Uint32Array;
-      for (let i = 0; i < u.length; i++) u[i] = Math.floor(idRng() * 2 ** 32);
-      return a;
-    });
+    seedRandomIds(seed);
     const rng = rngFrom(seed);
     const drive = new FakeDrive();
     drive.rng = rngFrom(seed * 13 + 5);
     drive.failRate = 0.03;
     drive.lostResponseRate = 0.03;
-    const stored = (id: string, skew = 0) => {
-      const d = new Device(id, skew);
-      d.storage.setItem("magus.deviceId.v1", id);
-      d.storedId = true;
-      return d;
-    };
-    const devices = [stored("deviceaa"), stored("devicebb", -2 * 3600_000), stored("devicecc", 90_000)];
+    const devices = [storedDevice("deviceaa"), storedDevice("devicebb", -2 * 3600_000), storedDevice("devicecc", 90_000)];
     devices[1].backups = false;
     const names = new Map(devices.map((d, i) => [d, "ABC"[i]]));
     const created = new Set<string>();
@@ -97,7 +82,7 @@ describe("fuzz: conflict answers and open editors", () => {
         d.run(() => d.store.resolveConflict(c.main.id, keep));
         log.push(`${step} ${L} resolve ${c.main.id} keep ${keep}`);
       } else if (roll < 0.69) {
-        d.store = d.run(() => createRosterStore());
+        d.reopen();
         log.push(`${step} ${L} reload`);
       } else {
         let fired = false;
@@ -136,15 +121,14 @@ describe("fuzz: conflict answers and open editors", () => {
         log.push(`   dels ${JSON.stringify(Object.fromEntries(Object.entries(d.store.getState().deletions).map(([k, v]) => [k, v.vc])))}`);
       }
     }
-    if ((lost.length || diverged) && process.env.CFUZZ_LOG) require("fs").writeFileSync(process.env.CFUZZ_LOG, log.join("\n"));
+    if ((lost.length || diverged) && env("CFUZZ_LOG")) writeLog(env("CFUZZ_LOG")!, log);
     const dupIds = devices.map((d) => d.records().length - new Set(d.records().map((r) => r.id)).size);
-    vi.restoreAllMocks();
     expect({ lost, diverged, dupIds }).toEqual({ lost: [], diverged: false, dupIds: [0, 0, 0] });
   };
   // default: 1..20, plus seeds that found an alternative lost to an earlier answer's drop mark (126, 158,
   // 219) and one id twice in a roster (36), before that was fixed
-  const seeds = process.env.CFUZZ_FROM
-    ? Array.from({ length: Number(process.env.CFUZZ_TO ?? process.env.CFUZZ_FROM) - Number(process.env.CFUZZ_FROM) + 1 }, (_, i) => Number(process.env.CFUZZ_FROM) + i)
+  const seeds = env("CFUZZ_FROM")
+    ? Array.from({ length: Number(env("CFUZZ_TO") ?? env("CFUZZ_FROM")) - Number(env("CFUZZ_FROM")) + 1 }, (_, i) => Number(env("CFUZZ_FROM")) + i)
     : [...Array.from({ length: 20 }, (_, i) => i + 1), 36, 126, 158, 219];
   for (const seed of seeds) test(`seed ${seed}`, () => run(seed), 120_000);
 });

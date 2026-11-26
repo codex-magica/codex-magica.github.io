@@ -9,50 +9,27 @@
 // be told apart, so both are kept (rosterStore.relabelDevice).
 // Knobs: FUZZ=clone,import,reload,offon,during (features), FUZZ_FROM/FUZZ_TO (seeds), FUZZ_NOFAIL=1 (no Drive
 // failures), FUZZ_LOG=<file> (step log of a failing seed).
-import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
-import { createRosterStore } from "./rosterStore";
 import { parseImportFile } from "./transfer";
 import { clearDriveState } from "./syncState";
 import { vi } from "vitest";
-import { copyBrowser, Device, FakeDrive, later, realSync, rngFrom, setupSyncHarness, tokensOf } from "./testing/syncHarness";
+import { backupFileOf, copyBrowser, Device, env, FakeDrive, later, realSync, rngFrom, seedRandomIds, setText, setupSyncHarness, storedDevice, tokensOf, writeLog } from "./testing/syncHarness";
 
 setupSyncHarness();
-
-// (vitest runs under node; the app's tsconfig has no node types)
-declare const process: { env: Record<string, string | undefined> };
-declare const require: (m: string) => { writeFileSync: (f: string, s: string) => void };
-
-const backupFileOf = (recs: CharacterRecord[]) =>
-  JSON.stringify({ format: "codex-magica-backup", version: 1, exportedAt: "x", characters: recs.map(({ updatedAt: _u, syncVc: _v, syncCvc: _c, ...r }) => r) });
+afterEach(() => vi.restoreAllMocks()); // the seeded ids (seedRandomIds)
 
 describe("fuzz: copied browsers, imports, reloads, edits during rounds, real rounds", () => {
-  const F = (process.env.FUZZ ?? "clone,import,reload,during").split(",");
+  const F = (env("FUZZ") ?? "clone,import,reload,during").split(",");
   const run = async (seed: number) => {
-    // deterministic ids and marks, so a failing seed can be replayed
-    const idRng = rngFrom(seed * 31 + 7);
-    vi.spyOn(Math, "random").mockImplementation(idRng);
-    vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation(<T extends ArrayBufferView | null>(a: T): T => {
-      const u = a as unknown as Uint32Array;
-      for (let i = 0; i < u.length; i++) u[i] = Math.floor(idRng() * 2 ** 32);
-      return a;
-    });
+    seedRandomIds(seed);
     const rng = rngFrom(seed);
     const drive = new FakeDrive();
     drive.rng = rngFrom(seed * 13 + 5);
     drive.failRate = 0.04;
     drive.lostResponseRate = 0.04;
     drive.cutRate = 0.02;
-    if (process.env.FUZZ_NOFAIL) drive.failRate = drive.lostResponseRate = drive.cutRate = 0;
-    // ids from storage, like the app (the harness pins Device.id otherwise, and a round that fails right
-    // after taking a new id would go on under the old one)
-    const stored = (id: string, skew = 0) => {
-      const d = new Device(id, skew);
-      d.storage.setItem("magus.deviceId.v1", id);
-      d.storedId = true;
-      return d;
-    };
-    const devices = [stored("deviceaa"), stored("devicebb", -2 * 3600_000), stored("devicecc", 90_000)];
+    if (env("FUZZ_NOFAIL")) drive.failRate = drive.lostResponseRate = drive.cutRate = 0;
+    const devices = [storedDevice("deviceaa"), storedDevice("devicebb", -2 * 3600_000), storedDevice("devicecc", 90_000)];
     const deletedSaw = new Set<string>();
     const deletions: { id: string; seen: Set<string>; step: number }[] = [];
     const recreated = new Map<string, number>(); // id → last step it was deliberately brought back (import)
@@ -95,7 +72,7 @@ describe("fuzz: copied browsers, imports, reloads, edits during rounds, real rou
         d.run(() => d.store.importRecords(parsed.add));
         log.push(`${step} ${L(d)} import ${parsed.add.map((r) => r.id).join(",")}`);
       } else if (roll < 0.64 && F.includes("reload")) {
-        d.store = d.run(() => createRosterStore()); // a reload
+        d.reopen(); // a reload
       } else if (roll < 0.655 && devices.length < 5 && F.includes("clone") && d.storage.getItem("magus.driveNonceConfirmed.v1")) {
         // (a copy of a browser that has written to Drive: one with no marks yet is the documented blind spot)
         { const c = copyBrowser(d); labels.set(c, `K${devices.length}of${labels.get(d)}`); devices.push(c); } // browser data copied onto another device
@@ -153,11 +130,10 @@ describe("fuzz: copied browsers, imports, reloads, edits during rounds, real rou
         return r && tokensOf(r).every((t) => del.seen.has(t));
       })
       .map((del) => del.id);
-    if ((lost.length || reverted.length) && process.env.FUZZ_LOG) require("fs").writeFileSync(process.env.FUZZ_LOG, log.join("\n"));
-    vi.restoreAllMocks();
+    if ((lost.length || reverted.length) && env("FUZZ_LOG")) writeLog(env("FUZZ_LOG")!, log);
     expect({ lost, reverted }).toEqual({ lost: [], reverted: [] });
   };
-  for (let seed = Number(process.env.FUZZ_FROM ?? 1); seed <= Number(process.env.FUZZ_TO ?? 10); seed++) test(`seed ${seed}`, () => run(seed), 120_000);
+  for (let seed = Number(env("FUZZ_FROM") ?? 1); seed <= Number(env("FUZZ_TO") ?? 10); seed++) test(`seed ${seed}`, () => run(seed), 120_000);
 });
 
 describe("a copied browser: the two copies' parallel versions are both kept", () => {
@@ -180,8 +156,7 @@ describe("a copied browser: the two copies' parallel versions are both kept", ()
       await realSync(a, drive);
       await realSync(k, drive);
     }
-    const everywhere = (d: Device) => d.records().flatMap(tokensOf);
-    expect({ a: everywhere(a).includes("a1"), k: everywhere(k).includes("a1"), k2: everywhere(a).includes("k2") }).toEqual({ a: true, k: true, k2: true });
+    expect({ a: a.tokens().includes("a1"), k: k.tokens().includes("a1"), k2: a.tokens().includes("k2") }).toEqual({ a: true, k: true, k2: true });
   });
 
   test("the same with the clone deleting after an edit: the original's parallel edit wins", async () => {
@@ -203,7 +178,7 @@ describe("a copied browser: the two copies' parallel versions are both kept", ()
       await realSync(a, drive);
       await realSync(k, drive);
     }
-    expect(a.records().flatMap(tokensOf)).toContain("a1"); // an edit made in parallel with a deletion wins
+    expect(a.tokens()).toContain("a1"); // an edit made in parallel with a deletion wins
   });
 });
 
@@ -212,12 +187,6 @@ describe("a copied browser: the two copies' parallel versions are both kept", ()
 // second copy lands on the same id: it must not replace edits made to the first one (the copy has a
 // history of its own, not the losing version's).
 describe("a second conflict copy of the same content", () => {
-  const setText = (d: Device, id: string, text: string) =>
-    d.run(() => {
-      const r = d.records().find((x) => x.id === id)!;
-      d.store.upsert({ ...r, inventoryText: text }, r);
-    });
-
   test("HP down and back up on two devices at the table, twice: the edit made on the first copy is kept", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -253,8 +222,7 @@ describe("a second conflict copy of the same content", () => {
       await realSync(a, drive);
       await realSync(b, drive);
     }
-    const all = (d: Device) => d.records().flatMap(tokensOf);
-    expect({ onA: all(a).includes("copy-edit"), onB: all(b).includes("copy-edit") }).toEqual({ onA: true, onB: true });
+    expect({ onA: a.tokens().includes("copy-edit"), onB: b.tokens().includes("copy-edit") }).toEqual({ onA: true, onB: true });
   });
 });
 

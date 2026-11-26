@@ -1,7 +1,7 @@
 // A character changed differently on two devices: the other version waits as an alternative (not
 // listed), the player picks which one stays, and the choice reaches every device.
-import { conflictsOf, createRosterStore, listedRecords } from "./rosterStore";
-import { Device, FakeDrive, later, settle, tokensOf, setupSyncHarness } from "./testing/syncHarness";
+import { conflictsOf, listedRecords } from "./rosterStore";
+import { Device, FakeDrive, later, setText, settle, setupSyncHarness, tokensOf } from "./testing/syncHarness";
 
 setupSyncHarness();
 
@@ -74,7 +74,7 @@ describe("conflicts: the player picks a version", () => {
     b.run(() => b.store.resolveConflict(x.id, x.id)); // b1
     await settle(drive, a, b);
     for (const d of [a, b]) {
-      const all = d.records().flatMap(tokensOf);
+      const all = d.tokens();
       expect(all).toContain("a1");
       expect(all).toContain("b1");
       expect(conflictsOf(d.records())).toHaveLength(1);
@@ -104,16 +104,9 @@ describe("conflicts: the player picks a version", () => {
     expect(listed(a)).toEqual(["Xena: editor"]);
     expect(conflictsOf(a.records())[0].alternatives.map(tokensOf)).toEqual([["Xena#0", "b1"]]);
     await settle(drive, a, b); // both versions reach every device
-    for (const d of [a, b]) expect(d.records().flatMap(tokensOf)).toEqual(expect.arrayContaining(["editor", "b1"]));
+    for (const d of [a, b]) expect(d.tokens()).toEqual(expect.arrayContaining(["editor", "b1"]));
   });
 });
-
-const everywhere = (d: Device) => d.records().flatMap(tokensOf);
-const setText = (d: Device, id: string, text: string) =>
-  d.run(() => {
-    const r = d.records().find((v) => v.id === id)!;
-    d.store.upsert({ ...r, inventoryText: text }, r);
-  });
 
 describe("an alternative made by an editor's save, on an id an earlier answer dropped", () => {
   test("B re-makes content A dropped; A's open creator saves over it: B's edit is kept as an alternative (sync + reload)", async () => {
@@ -130,10 +123,10 @@ describe("an alternative made by an editor's save, on an id an earlier answer dr
     // the safety net works for a moment: B's version waits as an alternative...
     expect(conflictsOf(a.records())[0]?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]);
     // ...but its vector is {deva: 1}, below A's own deletion marker of the same id ({~id: n, deva: 1})
-    a.store = a.run(() => createRosterStore()); // a reload
+    a.reopen(); // a reload
     const afterReload = conflictsOf(a.records()).length;
     await settle(drive, a, b);
-    expect({ afterReload, a: everywhere(a).includes("a1"), b: everywhere(b).includes("a1") }).toEqual({ afterReload: 1, a: true, b: true });
+    expect({ afterReload, a: a.tokens().includes("a1"), b: b.tokens().includes("a1") }).toEqual({ afterReload: 1, a: true, b: true });
   });
 
   test("the same without a reload: the next round keeps it", async () => {
@@ -148,7 +141,7 @@ describe("an alternative made by an editor's save, on an id an earlier answer dr
     later();
     a.run(() => a.store.upsert({ ...opened, inventoryText: `${opened.inventoryText}\neditor` }, opened));
     await settle(drive, a, b);
-    expect({ a: everywhere(a).includes("a1"), b: everywhere(b).includes("a1"), asked: conflictsOf(b.records()).length }).toEqual({ a: true, b: true, asked: 1 });
+    expect({ a: a.tokens().includes("a1"), b: b.tokens().includes("a1"), asked: conflictsOf(b.records()).length }).toEqual({ a: true, b: true, asked: 1 });
   });
 
   test("same device: a sheet editor open on Xena while the player picks the other version in the popup; the editor's save keeps it as a question", async () => {
@@ -167,7 +160,7 @@ describe("an alternative made by an editor's save, on an id an earlier answer dr
     expect(conflictsOf(a.records())[0]?.alternatives.map(tokensOf)).toEqual([["Xena#0", "a1"]]); // asked again, for now
     await settle(drive, a, b);
     // the version the player just picked (a1) must not vanish without an answer
-    expect({ a: everywhere(a).includes("a1"), b: everywhere(b).includes("a1") }).toEqual({ a: true, b: true });
+    expect({ a: a.tokens().includes("a1"), b: b.tokens().includes("a1") }).toEqual({ a: true, b: true });
   });
 });
 
@@ -179,7 +172,7 @@ describe("two devices answering differently, one of them 'keep both'", () => {
     a.run(() => a.store.resolveConflict(x.id, "both")); // A: keep b1 AND a1
     b.run(() => b.store.resolveConflict(x.id, alt.id)); // B, at the same time: a1 replaces b1
     await settle(drive, a, b);
-    const outcome = (d: Device) => ({ b1: everywhere(d).includes("b1"), asked: conflictsOf(d.records()).length });
+    const outcome = (d: Device) => ({ b1: d.tokens().includes("b1"), asked: conflictsOf(d.records()).length });
     // design (docs, combine/resolveConflict comments): two devices choosing differently meet as a new conflict
     expect([outcome(a), outcome(b)].map((o) => o.b1 || o.asked > 0)).toEqual([true, true]);
   });

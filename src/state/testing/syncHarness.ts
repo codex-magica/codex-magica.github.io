@@ -6,10 +6,10 @@ import { afterEach, beforeEach, vi } from "vitest";
 import { CharacterRecord } from "../../model/character";
 import { defaultRecord } from "../defaultRecord";
 import { BackupMeta, DriveFileMeta, DriveTransport, FileBody } from "../googleDrive";
-import { SyncOutput, runSync } from "../driveSyncEngine";
+import { RunSyncCache, SyncOutput, runSync } from "../driveSyncEngine";
 import { syncRound } from "../driveSyncRound";
 import { RosterStore, createRosterStore } from "../rosterStore";
-import { contentHash } from "../recordHash";
+import { contentHash, stripBookkeeping } from "../recordHash";
 import { deviceId, setDeviceIdForTests } from "../versions";
 
 // ── a tiny seeded random generator ───────────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ export class Device {
   storage = new MemStorage();
   store: RosterStore;
   backups = true;
-  cache = new Map();
+  cache: RunSyncCache = new Map();
   backedUp = new Set<string>();
   nonces: string[] = [];
   storedId = false; // like the app: the id comes from this storage (shared by tabs), not pinned by the test
@@ -175,8 +175,22 @@ export class Device {
     return fn();
   }
   now = () => worldTime + this.skew;
+  // the app opened again: a fresh store from what's saved
+  reopen(): this {
+    this.store = this.run(() => createRosterStore());
+    return this;
+  }
+  // another storage (a full one, say), with what's saved so far, then reopened
+  useStorage(s: MemStorage): this {
+    for (const [k, v] of this.storage.m) s.setItem(k, v);
+    this.storage = s;
+    return this.reopen();
+  }
   records() {
     return this.store.getState().records;
+  }
+  tokens() {
+    return this.records().flatMap(tokensOf);
   }
   byName(name: string) {
     return this.records().find((r) => r.name === name);
@@ -213,17 +227,10 @@ export class Device {
         return prevOnOp?.(op);
       };
     try {
-      let snap = snapshot;
-      const go = () => {
-        snap = this.store.getState();
-        const input = { records: snap.records, deletions: snap.deletions, device: this.id, backups: this.backups, backedUp: this.backedUp, ourNonces: this.nonces, rememberNonce: (n: string) => this.nonces.push(n) };
-        return runSync(drive, input, this.now, this.cache);
-      };
-      const out = await go(); // (a copied browser's clash: only realSync, the app's own round, handles it)
-      const snapshotUsed = snap;
-      this.run(() => {
-        this.store.applyRound(snapshotUsed, out);
-      });
+      // (a copied browser's clash: only realSync, the app's own round, handles it)
+      const input = { records: snapshot.records, deletions: snapshot.deletions, device: this.id, backups: this.backups, backedUp: this.backedUp, ourNonces: this.nonces, rememberNonce: (n: string) => this.nonces.push(n) };
+      const out = await runSync(drive, input, this.now, this.cache);
+      this.run(() => this.store.applyRound(snapshot, out));
       this.backedUp = out.backedUp;
       return out;
     } finally {
@@ -284,8 +291,41 @@ export const copyBrowser = (a: Device): Device => {
   const c = new Device(a.id);
   for (const [k, v] of a.storage.m) c.storage.m.set(k, v);
   c.storedId = a.storedId;
-  c.store = c.run(() => createRosterStore());
-  return c;
+  return c.reopen();
+};
+// A device whose id lives in its storage, like the app's (the harness pins Device.id otherwise, and a
+// round that fails right after taking a new id would go on under the old one).
+export const storedDevice = (id: string, skew = 0): Device => {
+  const d = new Device(id, skew);
+  d.storage.setItem("magus.deviceId.v1", id);
+  d.storedId = true;
+  return d;
+};
+// An edit that sets the character's text (rather than adding a line to it).
+export const setText = (d: Device, id: string, text: string) =>
+  d.run(() => {
+    const r = d.records().find((v) => v.id === id)!;
+    d.store.upsert({ ...r, inventoryText: text }, r);
+  });
+// An export file (transfer.ts) with these characters.
+export const backupFileOf = (records: CharacterRecord[]): string =>
+  JSON.stringify({ format: "codex-magica-backup", version: 1, exportedAt: "x", characters: records.map(stripBookkeeping) });
+
+// ── randomized runs ───────────────────────────────────────────────────────────────────────────────
+// (vitest runs under node; the app's tsconfig has no node types)
+declare const process: { env: Record<string, string | undefined> };
+declare const require: (m: string) => { writeFileSync: (f: string, s: string) => void };
+export const env = (name: string): string | undefined => process.env[name];
+export const writeLog = (file: string, lines: string[]): void => require("fs").writeFileSync(file, lines.join("\n"));
+// Deterministic ids and marks, so a failing seed can be replayed. Undone by vi.restoreAllMocks.
+export const seedRandomIds = (seed: number): void => {
+  const idRng = rngFrom(seed * 31 + 7);
+  vi.spyOn(Math, "random").mockImplementation(idRng);
+  vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation(<T extends ArrayBufferView | null>(a: T): T => {
+    const u = a as unknown as Uint32Array;
+    for (let i = 0; i < u.length; i++) u[i] = Math.floor(idRng() * 2 ** 32);
+    return a;
+  });
 };
 export const tokensOf = (r: CharacterRecord) => (r.inventoryText ?? "").split("\n").filter(Boolean);
 export const settle = async (drive: FakeDrive, ...devs: Device[]) => {

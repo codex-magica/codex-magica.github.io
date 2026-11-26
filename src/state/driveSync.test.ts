@@ -21,7 +21,6 @@ import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
 import { Version, combine, alternativeName, localVersions, mergeRound, parseDeviceFile, reconcile } from "./driveMerge";
 import { SyncNewerVersionError } from "./driveSyncEngine";
-import { createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
 import { normalizeRecord } from "./storage";
 import { parseImportFile } from "./transfer";
@@ -233,7 +232,7 @@ describe("Google Drive sync: rounds between devices", () => {
     await a.sync(drive, () => a.edit(al.id, "a-during", "Aldar (A)"));
     expect(a.byName("Aldar (A)")).toBeDefined(); // the user's edit is still there
     for (let i = 0; i < 2; i++) for (const d of [a, b]) await d.sync(drive);
-    const all = a.records().flatMap(tokensOf);
+    const all = a.tokens();
     expect(all).toContain("b1");
     expect(all).toContain("a-during");
     expect(b.fingerprint()).toBe(a.fingerprint());
@@ -275,7 +274,7 @@ describe("Google Drive sync: rounds between devices", () => {
     ipad.run(() => ipad.store.importRecords(parseImportFile(backupFile, ipad.records())!.add));
     await ipad.sync(drive);
     await phone.sync(drive);
-    const tokens = ipad.records().flatMap(tokensOf);
+    const tokens = ipad.tokens();
     expect(tokens).toContain("level-up");
     expect(ipad.records()).toHaveLength(2); // the restored old one and the newer one, both kept
     expect(phone.fingerprint()).toBe(ipad.fingerprint());
@@ -304,11 +303,11 @@ describe("Google Drive sync: rounds between devices", () => {
     await phone.sync(drive);
     // the saved roster becomes unreadable (it loads empty), the player imports the old file, offline
     phone.storage.setItem("magus.roster.v1", "{damaged");
-    phone.store = phone.run(() => createRosterStore());
+    phone.reopen();
     expect(phone.records()).toHaveLength(0);
     phone.run(() => phone.store.importRecords(parseImportFile(backupFile, phone.records())!.add));
     await phone.sync(drive);
-    expect(phone.records().flatMap(tokensOf)).toContain("same-day-edit"); // both kept, nothing silently lost
+    expect(phone.tokens()).toContain("same-day-edit"); // both kept, nothing silently lost
     expect(phone.records()).toHaveLength(2);
   });
 
@@ -347,7 +346,7 @@ describe("Google Drive sync: rounds between devices", () => {
     a.cache.clear();
     await a.sync(drive); // back on
     await b.sync(drive);
-    const all = a.records().flatMap(tokensOf);
+    const all = a.tokens();
     expect(all).toEqual(expect.arrayContaining(["a1", "b1"]));
     expect(b.fingerprint()).toBe(a.fingerprint());
   });
@@ -523,7 +522,7 @@ describe("Google Drive sync: edge cases", () => {
   afterEach(() => breakDerive(null));
   const reopen = (d: Device) => {
     d.cache = new Map();
-    d.store = d.run(() => createRosterStore()); // a fresh page load (an app update is one)
+    d.reopen(); // a fresh page load (an app update is one)
   };
 
   test("a character the rules engine can't compute (a future engine bug) is never dropped, anywhere", async () => {
@@ -561,16 +560,12 @@ describe("Google Drive sync: edge cases", () => {
     const a = new Device("deva");
     const al = a.create("Aldar");
     await a.sync(drive);
-    const real = a.storage.setItem.bind(a.storage);
-    a.storage.setItem = (k: string, v: string) => {
-      if (k === "magus.roster.v1") throw new Error("QuotaExceededError");
-      real(k, v);
-    };
+    a.storage.full.add("magus.roster.v1");
     later();
     a.edit(al.id, "while-full");
     expect(a.store.getState().saveFailed).toBe(true);
     expect(tokensOf(a.byName("Aldar")!)).not.toContain("while-full");
-    a.storage.setItem = real; // room again
+    a.storage.full.clear(); // room again
     later();
     a.edit(al.id, "after");
     expect(a.store.getState().saveFailed).toBe(false);
@@ -586,14 +581,10 @@ describe("Google Drive sync: edge cases", () => {
     await realSync(a, drive);
     b.create("Bori");
     await realSync(b, drive);
-    const real = a.storage.setItem.bind(a.storage);
-    a.storage.setItem = (k: string, v: string) => {
-      if (k === "magus.roster.v1") throw new Error("QuotaExceededError");
-      real(k, v);
-    };
+    a.storage.full.add("magus.roster.v1");
     await expect(realSync(a, drive)).rejects.toThrow("couldn't save");
     expect(a.records().map((r) => r.name)).toEqual(["Aldar"]);
-    a.storage.setItem = real;
+    a.storage.full.clear();
     await realSync(a, drive);
     expect(a.records().map((r) => r.name).sort()).toEqual(["Aldar", "Bori"]);
   });
@@ -606,7 +597,7 @@ describe("Google Drive sync: edge cases", () => {
     await tab1.sync(drive);
     const tab2 = new Device("deva");
     tab2.storage = tab1.storage;
-    tab2.store = tab2.run(() => createRosterStore());
+    tab2.reopen();
     later();
     tab1.edit(al.id, "tab1-a");
     tab1.edit(al.id, "tab1-b");
@@ -616,7 +607,7 @@ describe("Google Drive sync: edge cases", () => {
     tab2.run(() => tab2.store.upsert({ ...shown, inventoryText: `${shown.inventoryText}\ntab2-edit` }, shown));
     tab1.run(() => tab1.store.reload());
     await tab1.sync(drive);
-    const tokens = tab1.records().flatMap(tokensOf);
+    const tokens = tab1.tokens();
     expect(tokens).toEqual(expect.arrayContaining(["tab2-edit", "tab1-b", "tab1-brenna"]));
   });
 
@@ -753,8 +744,7 @@ describe("nonces, re-reading, conflicts, clones", () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const qs = new QuotaStorage();
-    a.storage = qs;
-    a.store = a.run(() => createRosterStore());
+    a.useStorage(qs); // (what was saved, sync on included)
     const b = new Device("devb");
     a.create("Xena");
     const w = a.create("Wulf");
@@ -818,7 +808,7 @@ describe("nonces, re-reading, conflicts, clones", () => {
     await tab1.sync(drive);
     const tab2 = new Device("deva");
     tab2.storage = tab1.storage;
-    tab2.store = tab2.run(() => createRosterStore());
+    tab2.reopen();
     later();
     tab1.edit(x.id, "tab1-edit"); // something to publish, so the round ends with an update
     let fired = false;
