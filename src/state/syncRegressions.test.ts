@@ -1,5 +1,5 @@
-// Regression tests for bugs found in the pre-release reviews of persistence and the Drive merge. Each one
-// is a concrete scenario that lost, resurrected or overwrote a character before its fix.
+// Scenarios that once lost, brought back or overwrote a character (persistence and the Drive merge), one
+// test each; the name says the rule it protects.
 import { CharacterRecord } from "../model/character";
 import { unreadableKeys } from "./storage";
 import { clashes, copyBrowser, DAY, Device, FakeDrive, later, QuotaStorage, realSync, settle, setupSyncHarness, tokensOf } from "./testing/syncHarness";
@@ -7,9 +7,8 @@ import { defaultRecord } from "./defaultRecord";
 
 setupSyncHarness();
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe("a deletion that saw a merged version's content wins over it (the character doesn't come back)", () => {
-  test("R1a after a conflict: the device whose version won deletes the character before pulling the merge", async () => {
+  test("after a conflict: the device whose version won deletes the character before pulling the merge", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -30,7 +29,7 @@ describe("a deletion that saw a merged version's content wins over it (the chara
     expect(a.records().find((r) => r.id === x.id)).toBeUndefined();
   });
 
-  test("R1b after an edit beat a parallel deletion: the editing device deletes it too", async () => {
+  test("after an edit beat a parallel deletion: the editing device deletes it too", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -50,9 +49,8 @@ describe("a deletion that saw a merged version's content wins over it (the chara
   });
 });
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe("storage full: deleting a character saves the roster and the deletion marker together", () => {
-  test("R2 what's saved fits together, and after a reload the character doesn't come back from Drive", async () => {
+  test("what's saved fits together, and after a reload the character doesn't come back from Drive", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const qs = new QuotaStorage();
@@ -65,9 +63,9 @@ describe("storage full: deleting a character saves the roster and the deletion m
     qs.cap = qs.used(); // storage full (the usual reason a player starts deleting characters)
     later();
     a.remove(x.id);
-    // Before the fix this saved the roster without Xena but no deletion marker (the marker write, carrying
-    // her whole last state, failed first; the shrinking roster write then succeeded). What's saved must fit
-    // together: Xena in the roster, or her marker saved.
+    // What's saved must fit together: Xena in the roster, or her marker saved (never the roster without her
+    // and no marker: the marker write, carrying her whole last state, can fail where the shrinking roster
+    // write succeeds).
     const savedRoster = JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[];
     const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, unknown>;
     expect(savedRoster.some((r) => r.id === x.id) || savedDeletions[x.id] !== undefined).toBe(true);
@@ -79,9 +77,8 @@ describe("storage full: deleting a character saves the roster and the deletion m
   });
 });
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe("an unreadable saved roster when storage is (nearly) full", () => {
-  test("R4 it isn't saved over, and it's offered for download", () => {
+  test("it isn't saved over, and it's offered for download", () => {
     const d = new Device("deva");
     const qs = new QuotaStorage();
     d.storage = qs;
@@ -99,9 +96,8 @@ describe("an unreadable saved roster when storage is (nearly) full", () => {
   });
 });
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe("a deletion confirmed after a sync brought a newer version", () => {
-  test("R5 doesn't delete the version the player never saw (the dialog was opened on the older one)", async () => {
+  test("doesn't delete the version the player never saw (the dialog was opened on the older one)", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -122,7 +118,6 @@ describe("a deletion confirmed after a sync brought a newer version", () => {
   });
 });
 
-// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe("this device's own file downloaded cut off twice, at different points", () => {
   test("the round stops (tried again later) instead of treating the file as damaged and rewriting it", async () => {
     const drive = new FakeDrive();
@@ -150,29 +145,7 @@ describe("this device's own file downloaded cut off twice, at different points",
 
 const backupBodies = (drive: FakeDrive) => drive.backups().map((f) => JSON.parse(f.body) as { record: CharacterRecord; reason: string });
 
-describe("storage full and long absences", () => {
-  test("storage full: a deletion that only fits without the deleted character's last state is saved without it, and later saves count as saved", () => {
-    const a = new Device("deva");
-    const qs = new QuotaStorage();
-    a.useStorage(qs); // sync on: a deletion keeps the last state, for its Drive backup
-    const x = a.create("Xena");
-    const w = a.create("Wulf");
-    a.create("Yorick");
-    qs.cap = qs.used() + 40; // full: the last save that grew failed (that's when players start deleting)
-    later();
-    expect(a.remove(x.id)).toBe(true);
-    // the roster and the marker were saved (only the backup copy of Xena's last state didn't fit)
-    const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, { last?: unknown }>;
-    expect(savedDeletions[x.id]).toBeDefined();
-    expect(savedDeletions[x.id].last).toBeUndefined();
-    later();
-    a.edit(w.id, "w1"); // an ordinary edit that fits
-    const savedW = (JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[]).find((r) => r.id === w.id)!;
-    expect(tokensOf(savedW)).toContain("w1"); // it IS saved...
-    // ...and the app doesn't keep saying "Nem sikerül menteni"
-    expect(a.store.getState().saveFailed).toBe(false);
-  });
-
+describe("long absences", () => {
   test("a device not opened for months keeps the state before a deletion until it's in Drive, so its last edit is backed up when a parallel edit wins", async () => {
     const drive = new FakeDrive();
     const phone = new Device("phone");
@@ -201,6 +174,28 @@ describe("storage full and long absences", () => {
 });
 
 describe("saving when storage is full", () => {
+  test("a deletion that only fits without the deleted character's last state is saved without it, and later saves count as saved", () => {
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.useStorage(qs); // sync on: a deletion keeps the last state, for its Drive backup
+    const x = a.create("Xena");
+    const w = a.create("Wulf");
+    a.create("Yorick");
+    qs.cap = qs.used() + 40; // full: the last save that grew failed (that's when players start deleting)
+    later();
+    expect(a.remove(x.id)).toBe(true);
+    // the roster and the marker were saved (only the backup copy of Xena's last state didn't fit)
+    const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, { last?: unknown }>;
+    expect(savedDeletions[x.id]).toBeDefined();
+    expect(savedDeletions[x.id].last).toBeUndefined();
+    later();
+    a.edit(w.id, "w1"); // an ordinary edit that fits
+    const savedW = (JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[]).find((r) => r.id === w.id)!;
+    expect(tokensOf(savedW)).toContain("w1"); // it IS saved...
+    // ...and the app doesn't keep saying "Nem sikerül menteni"
+    expect(a.store.getState().saveFailed).toBe(false);
+  });
+
   test("half a change saved is put back: a deletion whose roster can't be saved leaves the saved deletions as they were", () => {
     const a = new Device("deva");
     const x = a.create("Xena");
@@ -260,7 +255,7 @@ describe("saving when storage is full", () => {
   });
 });
 
-describe("a cloned device relabelling its edits keeps their history", () => {
+describe("a copied browser (browser data restored onto a second device): relabelling keeps each copy's edits", () => {
   test("a clone deletes a character nobody else touched: after the relabel it stays deleted", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -305,9 +300,7 @@ describe("a cloned device relabelling its edits keeps their history", () => {
     expect(wulfs.flatMap(tokensOf)).toContain("clone-edit");
     expect(wulfs).toHaveLength(1); // the clone's edit simply continues Wulf
   });
-});
 
-describe("a copied browser: an edit made in parallel with a deletion wins", () => {
   test("the original deletes, the clone edits meanwhile (daily backups off): the clone's edit wins", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -329,5 +322,4 @@ describe("a copied browser: an edit made in parallel with a deletion wins", () =
     }
     expect({ onClone: clone.tokens().includes("clone-edit"), anywhereInDrive: [...drive.files.values()].some((f) => f.body.includes("clone-edit")) }).toEqual({ onClone: true, anywhereInDrive: true });
   });
-
 });

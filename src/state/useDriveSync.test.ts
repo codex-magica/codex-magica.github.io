@@ -442,7 +442,6 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     await settle(0);
     expect(tab.api.connectProblem).toBe(false); // the roster screen coming back doesn't reopen it
   });
-
 });
 
 describe("sync orchestration: reconnects, Google storage", () => {
@@ -501,7 +500,6 @@ describe("sync orchestration: reconnects, Google storage", () => {
     expect(win.location.assign).not.toHaveBeenCalled();
     expect(tab.api.note?.text).toContain("Nincs internetkapcsolat");
   });
-
 });
 
 // ── the app continued in another tab ("Folytatás itt"): the tab that stepped back does nothing more ──

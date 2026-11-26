@@ -121,7 +121,7 @@ describe("Google Drive sync: rounds between devices", () => {
     expect(c.fingerprint()).toBe(a.fingerprint());
   });
 
-  test("a failed download writes nothing and loses nothing (the overwrite bug)", async () => {
+  test("a failed download writes nothing and loses nothing", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -517,7 +517,6 @@ describe("Google Drive sync: building blocks", () => {
   });
 });
 
-// ── found by an independent review: each of these lost data before it was fixed ──────────────────
 describe("Google Drive sync: edge cases", () => {
   afterEach(() => breakDerive(null));
   const reopen = (d: Device) => {
@@ -661,7 +660,6 @@ describe("Google Drive sync: edge cases", () => {
     expect(result([[P], [Q]])).toEqual(result([[Q], [P]]));
     expect(result([[P], [Q]])).toHaveLength(2); // Q and R; P is part of Q
   });
-
 });
 
 // ── randomized: many devices, random edits, concurrent rounds, failures, skewed clocks ──────────────
@@ -737,9 +735,8 @@ describe("Google Drive sync: randomized multi-device runs", () => {
   for (let seed = 1; seed <= 8; seed++) test(`seed ${seed}`, () => run(seed), 60_000);
 });
 
-// ═══════════════════ second adversarial review: each test was a proven failure ═══════════════════
 
-describe("nonces, re-reading, conflicts, clones", () => {
+describe("Google Drive sync: marks, re-reading, conflicts, copied browsers", () => {
   test("storage full: a round whose mark can't be saved writes nothing, and no false clone follows", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
@@ -870,7 +867,7 @@ describe("nonces, re-reading, conflicts, clones", () => {
   });
 });
 
-describe("what a round tells the player", () => {
+describe("Google Drive sync: what a round tells the player", () => {
   test("a deletion undone by a parallel edit elsewhere is named on the device that deleted", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
