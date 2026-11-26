@@ -71,6 +71,19 @@ const readRaw = (key: string): string | null => {
     return null;
   }
 };
+const writeRaw = (key: string, raw: string | null): boolean => {
+  try {
+    if (raw === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, raw);
+    return true;
+  } catch {
+    return false;
+  }
+};
+// what's saved now, as text: a change from elsewhere shows up as a difference
+const readSaved = () => ({ roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) });
+const writeDeletions = (deletions: Deletions): boolean => writeRaw(DELETIONS_KEY, JSON.stringify(deletions));
+const withoutLastStates = (deletions: Deletions): Deletions => Object.fromEntries(Object.entries(deletions).map(([id, { t, vc }]) => [id, { t, vc }]));
 
 const readDeletions = (): Deletions => {
   const out: Deletions = {};
@@ -121,29 +134,9 @@ type Listener = () => void;
 
 export const createRosterStore = () => {
   let state: RosterState = { ...load(), revision: 0, saveFailed: false };
-  // what's saved, as last read or written here: a change from elsewhere shows up as a difference
-  let seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
+  let seen = readSaved(); // as last read or written here
   const listeners = new Set<Listener>();
   const emit = () => listeners.forEach((l) => l());
-
-  const writeDeletions = (deletions: Deletions): boolean => {
-    try {
-      localStorage.setItem(DELETIONS_KEY, JSON.stringify(deletions));
-      return true;
-    } catch {
-      return false;
-    }
-  };
-  const writeRaw = (key: string, raw: string | null): boolean => {
-    try {
-      if (raw === null) localStorage.removeItem(key);
-      else localStorage.setItem(key, raw);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-  const withoutLastStates = (deletions: Deletions): Deletions => Object.fromEntries(Object.entries(deletions).map(([id, { t, vc }]) => [id, { t, vc }]));
 
   // Saves the roster and the deletion markers together: never a roster without a character whose
   // deletion marker isn't saved (it would come back from Drive after a reload), never a marker for a
@@ -152,17 +145,14 @@ export const createRosterStore = () => {
   // both orders are tried, then the markers without the deleted characters' last states (kept only for
   // a Drive backup). If nothing fits, what was saved before is put back and false is returned.
   const persist = (records: CharacterRecord[], deletions: Deletions): boolean => {
-    const before = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
+    const before = readSaved();
     const ok =
       (writeDeletions(deletions) && saveRoster(records)) ||
       (saveRoster(records) && writeDeletions(deletions)) ||
       (saveRoster(records) && writeDeletions(withoutLastStates(deletions)));
-    if (!ok)
-      for (let i = 0; i < 2; i++) {
-        const back = i === 0 ? writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions) : writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster);
-        if (back) break;
-      }
-    seen = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
+    // nothing fits: put back what was saved before (in either order: one of them may need the other's room)
+    if (!ok) void ((writeRaw(ROSTER_KEY, before.roster) && writeRaw(DELETIONS_KEY, before.deletions)) || (writeRaw(DELETIONS_KEY, before.deletions) && writeRaw(ROSTER_KEY, before.roster)));
+    seen = readSaved();
     return ok;
   };
 
@@ -177,7 +167,7 @@ export const createRosterStore = () => {
 
   // Re-read what's saved if it changed elsewhere.
   const refresh = (): boolean => {
-    const now = { roster: readRaw(ROSTER_KEY), deletions: readRaw(DELETIONS_KEY) };
+    const now = readSaved();
     if (now.roster === seen.roster && now.deletions === seen.deletions) return false;
     state = { ...state, ...load() };
     seen = now;
