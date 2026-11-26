@@ -130,15 +130,15 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   Manage apps can delete them).
 
 Code: `src/state/rosterStore.ts` (the roster, edit stamps, deletion markers and conflicts), `storage.ts`
-(reading and saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflict alternatives,
-backup selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, backups, write),
-`driveSyncRound.ts` (a round with this device's saved sync state, clone handling), `syncState.ts` (what's
-published, nonces, settings), `googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive
-calls), `driveSyncController.ts` (when to sync, connecting, what to tell the player; no React),
-`useDriveSync.ts` (the screens' view of it), `driveStatus.ts` (the status texts), `activeTab.ts` (one tab at a
-time), `transfer.ts` (export and import files); `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`,
-`TabGate.tsx`, `SyncConflictModal.tsx`; the token service in `worker/src/index.ts` (tested in
-`worker/src/index.test.ts`).
+(reading and saving it), `versions.ts` (version vectors), `recordHash.ts` (content fingerprints and edit
+stamps), `driveMerge.ts` (the merge, conflict alternatives, backup selection, reconciling),
+`driveSyncEngine.ts` (one round against Drive: reads, backups, write), `driveSyncRound.ts` (a round with this
+device's saved sync state, clone handling), `syncState.ts` (what's published, nonces, settings),
+`googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive calls), `driveSyncController.ts`
+(when to sync, connecting, what to tell the player; no React), `useDriveSync.ts` (the screens' view of it),
+`driveStatus.ts` (the status texts), `activeTab.ts` (one tab at a time), `transfer.ts` (export and import
+files); `src/ui/DriveSyncModal.tsx`, `DriveHopNotice.tsx`, `TabGate.tsx`, `SyncConflictModal.tsx`; the token
+service in `worker/src/index.ts` (tested in `worker/src/index.test.ts`).
 
 Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices against an in-memory Drive,
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks

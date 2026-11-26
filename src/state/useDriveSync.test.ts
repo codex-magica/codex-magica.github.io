@@ -294,6 +294,18 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(ls.getItem(TOKEN_KEY)).toBeNull();
   });
 
+  test("a sign-in answer that doesn't name the account isn't kept (the account can't be checked)", async () => {
+    enableWith("x@test", null, "cred-x");
+    backFromGoogle("S1");
+    tokenService = (path) =>
+      path === "/v1/exchange" ? jsonRes(200, { access_token: "x-2", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-new", email: "" }) : jsonRes(500, {});
+    const { tab } = await openTab();
+    await settle(100);
+    expect(tab.api.status).toBe("needsTap");
+    expect(tab.api.note?.text).toContain("Nem sikerült ellenőrizni");
+    expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // the right account's credential stays
+  });
+
   test("reconnecting with the wrong account keeps the right account's credential", async () => {
     enableWith("x@test", null, "cred-x");
     backFromGoogle("S1");
@@ -558,17 +570,6 @@ describe("taking over in another tab", () => {
     expect(syncFiles("x@test")[0].body).toContain("Aragorn II"); // the tab in use sent it
   });
 
-  test("a sign-in answer that doesn't name the account isn't kept (the account can't be checked)", async () => {
-    enableWith("x@test", null, "cred-x");
-    backFromGoogle("S1");
-    tokenService = (path) =>
-      path === "/v1/exchange" ? jsonRes(200, { access_token: "x-2", expires_in: 3600, scope: `${DRIVE_SCOPE} openid email`, credential: "cred-new", email: "" }) : jsonRes(500, {});
-    const { tab } = await openTab();
-    await settle(100);
-    expect(tab.api.status).toBe("needsTap");
-    expect(tab.api.note?.text).toContain("Nem sikerült ellenőrizni");
-    expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // the right account's credential stays
-  });
 });
 
 describe("one round at a time, and what failures say", () => {

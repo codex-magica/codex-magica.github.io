@@ -203,7 +203,7 @@ describe("saving when storage is full", () => {
     a.remove(x.id);
     qs.cap = qs.used() + 20; // full
     later();
-    a.run(() => a.store.upsert(last)); // brought back (from a backup file, say): the roster grows, the markers shrink
+    a.run(() => a.store.upsert(last)); // brought back under its own id: the roster grows, the markers shrink
     expect(a.store.getState().saveFailed).toBe(false);
     expect(a.reopen().records().map((r) => r.name).sort()).toEqual(["Wulf", "Xena"]);
   });
