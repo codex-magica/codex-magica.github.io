@@ -111,14 +111,14 @@ export const forgetNonces = (): void => {
   }
 };
 
-// Turning sync off forgets the pairing with Drive. The characters (and deletion markers) stay, and the
-// device keeps its id, so turning it back on later continues where it left off. The backups choice is
-// remembered for next time.
 // Deleted characters a round brought back (an edit made elsewhere in parallel), until the player dismisses
 // the notice: kept on the device, so it's still said after the app was closed right after the round.
 export const loadUndeleted = (): string[] => read<string[]>(UNDELETED_KEY, []);
 export const saveUndeleted = (names: string[]): void => write(UNDELETED_KEY, names);
 
+// Turning sync off forgets the pairing with Drive. The characters (and deletion markers) stay, and the
+// device keeps its id, so turning it back on later continues where it left off. The backups choice is
+// remembered for next time.
 export const clearDriveState = (): void => {
   const backups = loadDriveSettings().backups;
   try {

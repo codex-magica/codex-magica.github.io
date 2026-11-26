@@ -75,10 +75,17 @@ const RETRY_MAX_MS = 15 * 60_000; // waiting twice as long each time, up to this
 const HOP_DONE_MS = 2400; // "Szinkronizálva" stays this long after coming back
 
 // ── the Hungarian notes ─────────────────────────────────────────────────────────────────────────────
+const TRY_AGAIN = "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.";
+// what Google's page sent back instead of an answer (`reconnecting`: sync was on, its permission gone)
+const redirectNote = (error: string, reconnecting: boolean): string => {
+  if (error === "access_denied" && reconnecting) return "Nem adtál engedélyt a Google oldalán, így a szinkron továbbra is szünetel. Bármikor újra megpróbálhatod.";
+  if (error === "access_denied") return "Nem adtál engedélyt a Google oldalán, így a szinkron kikapcsolva maradt. Bármikor újra megpróbálhatod.";
+  if (error === "no answer") return "A Google-bejelentkezés nem fejeződött be. Próbáld újra.";
+  return TRY_AGAIN;
+};
+// Google refused (DriveAuthError's reason)
 const authNote = (reason: string): string => {
   if (reason === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és a Google oldalán jelöld be a Drive-ra vonatkozó négyzetet is.";
-  if (reason === "access_denied") return "Nem adtál engedélyt a Google oldalán, így a szinkron kikapcsolva maradt. Bármikor újra megpróbálhatod.";
-  if (reason === "no answer") return "A Google-bejelentkezés nem fejeződött be. Próbáld újra.";
   if (reason === "credential revoked")
     return "Megszűnt a Google-engedély (például mert visszavontad a Google-fiókodban, vagy hónapokig nem használtad a szinkront). Az „Újrakapcsolás” gombbal adhatod meg újra; addig a karaktereid megmaradnak ezen az eszközön.";
   return "Újra engedélyt kell adnod a Google-nek. Ezt az „Újrakapcsolás” gombbal teheted meg.";
@@ -100,14 +107,14 @@ const errorNote = (e: unknown): string => {
 const connectNote = (e: unknown): string => {
   if (e instanceof TokenServiceError) return "A Google-kapcsolat most egy átmeneti hiba miatt nem jött létre. Próbáld újra pár perc múlva.";
   if (e instanceof DriveAuthError && e.message === "drive permission not granted") return authNote(e.message);
-  return "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.";
+  return TRY_AGAIN;
 };
-const startNote = (r: "insecure" | "storage" | "failed"): string =>
-  r === "insecure"
-    ? "A Google-bejelentkezés csak biztonságos (https) kapcsolaton keresztül indul el. Nyisd meg az alkalmazást a szokásos címén."
-    : r === "storage"
-      ? "A Google-bejelentkezés nem indult el, mert ezen az eszközön most nem sikerül menteni (valószínűleg megtelt vagy le van tiltva a böngésző tárhelye)."
-      : "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra.";
+// leaving for Google's page didn't start
+const startNote: Record<"insecure" | "storage" | "failed", string> = {
+  insecure: "A Google-bejelentkezés csak biztonságos (https) kapcsolaton keresztül indul el. Nyisd meg az alkalmazást a szokásos címén.",
+  storage: "A Google-bejelentkezés nem indult el, mert ezen az eszközön most nem sikerül menteni (valószínűleg megtelt vagy le van tiltva a böngésző tárhelye).",
+  failed: "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra.",
+};
 
 const createDriveSync = () => {
   const available = driveSyncAvailable();
@@ -118,24 +125,14 @@ const createDriveSync = () => {
   const hasAccess = (): boolean => validToken() !== null || hasCredential();
 
   let noteSeq = 0;
+  const makeNote = (text: string, error: boolean): DriveNote => ({ text, error, seq: ++noteSeq });
   const initialSettings = loadDriveSettings();
   let state: DriveSyncState = {
     settings: initialSettings,
     status: back ? "syncing" : initialSettings.enabled ? (hasAccess() ? "idle" : "needsTap") : "off",
-    note:
-      outcome.kind === "error"
-        ? {
-            text:
-              outcome.error === "access_denied" && initialSettings.enabled
-                ? "Nem adtál engedélyt a Google oldalán, így a szinkron továbbra is szünetel. Bármikor újra megpróbálhatod." // a reconnect, cancelled
-                : ["access_denied", "no answer"].includes(outcome.error)
-                  ? authNote(outcome.error)
-                  : "Nem sikerült kapcsolódni a Google-hoz. Próbáld újra.",
-            error: outcome.error !== "access_denied", // cancelling isn't a failure
-            seq: ++noteSeq,
-          }
-        : null,
-    notice: ((t) => (t ? { text: t, error: false, seq: ++noteSeq } : null))(roundNotice(loadUndeleted())),
+    // (cancelling on Google's page isn't a failure)
+    note: outcome.kind === "error" ? makeNote(redirectNote(outcome.error, initialSettings.enabled), outcome.error !== "access_denied") : null,
+    notice: ((t) => (t ? makeNote(t, false) : null))(roundNotice(loadUndeleted())),
     hop: back ? "backSyncing" : null,
     needsUpdate: false,
     driveFull: false,
@@ -147,7 +144,7 @@ const createDriveSync = () => {
     state = { ...state, ...patch };
     listeners.forEach((l) => l());
   };
-  const say = (text: string | null, error = true) => set({ note: text === null ? null : { text, error, seq: ++noteSeq } });
+  const say = (text: string | null, error = true) => set({ note: text === null ? null : makeNote(text, error) });
   const patchSettings = (patch: Partial<DriveSettings>) => set({ settings: updateDriveSettings(patch) });
   const enabled = () => state.settings.enabled;
 
@@ -212,7 +209,7 @@ const createDriveSync = () => {
           syncs: state.syncs + 1,
           needsUpdate: false,
           driveFull: false,
-          ...(told ? { notice: { text: told, error: false, seq: ++noteSeq } } : {}),
+          ...(told ? { notice: makeNote(told, false) } : {}),
           ...(state.note?.error ? { note: null } : {}), // an error is over
           ...(hopDone ? { hop: "backDone" as const } : {}),
         });
@@ -279,7 +276,7 @@ const createDriveSync = () => {
   const leaveForGoogle = (backups?: boolean) => {
     if (typeof navigator !== "undefined" && navigator.onLine === false)
       return say("Nincs internetkapcsolat. A Google-engedélyhez internet kell; próbáld újra, ha lesz.");
-    void beginConnect(state.settings.email, backups).then((r) => r !== true && say(startNote(r)));
+    void beginConnect(state.settings.email, backups).then((r) => r !== true && say(startNote[r]));
   };
 
   // Back from Google's consent page with a code: exchange it, check the account, and sync.
