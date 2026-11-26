@@ -17,6 +17,7 @@
 
 import {
   BackupMeta,
+  ConnectStartFailure,
   Connection,
   DriveAuthError,
   DriveFullError,
@@ -83,9 +84,8 @@ const redirectNote = (error: string, reconnecting: boolean): string => {
   if (error === "no answer") return "A Google-bejelentkezés nem fejeződött be. Próbáld újra.";
   return TRY_AGAIN;
 };
-// Google refused (DriveAuthError's reason)
+// Google refused a token (DriveAuthError's reason)
 const authNote = (reason: string): string => {
-  if (reason === "drive permission not granted") return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és a Google oldalán jelöld be a Drive-ra vonatkozó négyzetet is.";
   if (reason === "credential revoked")
     return "Megszűnt a Google-engedély (például mert visszavontad a Google-fiókodban, vagy hónapokig nem használtad a szinkront). Az „Újrakapcsolás” gombbal adhatod meg újra; addig a karaktereid megmaradnak ezen az eszközön.";
   return "Újra engedélyt kell adnod a Google-nek. Ezt az „Újrakapcsolás” gombbal teheted meg.";
@@ -106,11 +106,12 @@ const errorNote = (e: unknown): string => {
 // finishing the connection failed before it was set up: a tap is needed (nothing retries by itself)
 const connectNote = (e: unknown): string => {
   if (e instanceof TokenServiceError) return "A Google-kapcsolat most egy átmeneti hiba miatt nem jött létre. Próbáld újra pár perc múlva.";
-  if (e instanceof DriveAuthError && e.message === "drive permission not granted") return authNote(e.message);
+  if (e instanceof DriveAuthError && e.message === "drive permission not granted")
+    return "Nem engedélyezted a Google Drive-hozzáférést. Próbáld újra, és a Google oldalán jelöld be a Drive-ra vonatkozó négyzetet is.";
   return TRY_AGAIN;
 };
 // leaving for Google's page didn't start
-const startNote: Record<"insecure" | "storage" | "failed", string> = {
+const startNote: Record<ConnectStartFailure, string> = {
   insecure: "A Google-bejelentkezés csak biztonságos (https) kapcsolaton keresztül indul el. Nyisd meg az alkalmazást a szokásos címén.",
   storage: "A Google-bejelentkezés nem indult el, mert ezen az eszközön most nem sikerül menteni (valószínűleg megtelt vagy le van tiltva a böngésző tárhelye).",
   failed: "Nem sikerült elindítani a Google-bejelentkezést. Próbáld újra.",

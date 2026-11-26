@@ -182,12 +182,12 @@ describe("a copied browser: the two copies' parallel versions are both kept", ()
   });
 });
 
-// A conflict copy's id comes from the losing content (`${id}~${hash}`). When the same content loses a
-// second time (HP back to where it was, a condition toggled off again, an old backup file imported), the
-// second copy lands on the same id: it must not replace edits made to the first one (the copy has a
-// history of its own, not the losing version's).
-describe("a second conflict copy of the same content", () => {
-  test("HP down and back up on two devices at the table, twice: the edit made on the first copy is kept", async () => {
+// A conflict alternative's id comes from the losing content (`${id}~${hash}`). When the same content loses
+// a second time (HP back to where it was, a condition toggled off again, an old backup file imported), the
+// second alternative lands on the same id: it must not replace edits made to the first one (its history is
+// under keys of its own).
+describe("a second conflict alternative of the same content", () => {
+  test("HP down and back up on two devices at the table, twice: the edit made on the first alternative is kept", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -204,11 +204,11 @@ describe("a second conflict copy of the same content", () => {
     await realSync(a, drive);
     await realSync(b, drive);
     await realSync(a, drive); // A: "Xena (másik változat)" = the "full" content, id Xena~hash(full)
-    const copy = a.records().find((r) => r.id.startsWith(`${x.id}~`))!;
-    expect(copy).toBeDefined();
-    // the player keeps playing the copy on A
+    const alt = a.records().find((r) => r.id.startsWith(`${x.id}~`))!;
+    expect(alt).toBeDefined();
+    // the player keeps playing the alternative on A
     later();
-    setText(a, copy.id, "full\ncopy-edit");
+    setText(a, alt.id, "full\nalt-edit");
     await realSync(a, drive);
     await realSync(b, drive);
     // round 2: the same happens again on Xena (A sets it back to "full", B edits in parallel, later)
@@ -222,7 +222,7 @@ describe("a second conflict copy of the same content", () => {
       await realSync(a, drive);
       await realSync(b, drive);
     }
-    expect({ onA: a.tokens().includes("copy-edit"), onB: b.tokens().includes("copy-edit") }).toEqual({ onA: true, onB: true });
+    expect({ onA: a.tokens().includes("alt-edit"), onB: b.tokens().includes("alt-edit") }).toEqual({ onA: true, onB: true });
   });
 });
 

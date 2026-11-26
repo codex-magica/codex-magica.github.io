@@ -9,7 +9,7 @@ import { alternativeName, plainName } from "../state/driveMerge";
 
 // A character changed differently on two devices (see rosterStore's Conflict): which version stays?
 // One conflict at a time; closing puts the decision off (the listed version stays meanwhile, and the
-// question comes back the next time the app is opened).
+// question comes back the next time the app is opened, or when another conflict arrives).
 
 const fmtTime = (ts?: number): string =>
   ts ? new Date(ts).toLocaleString("hu-HU", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "ismeretlen időpontban";

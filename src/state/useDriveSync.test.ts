@@ -224,6 +224,7 @@ const hold = (match: (url: string, init?: RequestInit) => boolean) => {
   let holding = true;
   override = (url, init) => (holding && match(url, init) ? (held.then(() => null) as any) : null);
   return () => {
+    holding = false;
     release();
   };
 };
@@ -346,7 +347,7 @@ describe("sync orchestration (useDriveSync): failure and race scenarios", () => 
     expect(calls.some((c) => c.includes("/v1/exchange"))).toBe(false);
   });
 
-  test("a failed return from Google (permission refused) reopens the window with the reason", async () => {
+  test("back from Google without the Drive permission (its box left unticked): the window reopens and says to tick it", async () => {
     backFromGoogle("S1");
     tokenService = (path) => (path === "/v1/exchange" ? jsonRes(200, { access_token: "x-1", expires_in: 3600, scope: "openid email" }) : jsonRes(500, {}));
     const { tab } = await openTab();
@@ -503,7 +504,6 @@ describe("sync orchestration: reconnects, Google storage", () => {
 });
 
 // ── the app continued in another tab ("Folytatás itt"): the tab that stepped back does nothing more ──
-
 describe("taking over in another tab", () => {
   test("while this tab finishes turning sync on: it keeps nothing (the player turns it on again in the tab in use)", async () => {
     backFromGoogle("S1"); // back from Google's page, turning sync on
@@ -570,7 +570,6 @@ describe("taking over in another tab", () => {
     expect(ls.getItem(CREDENTIAL_KEY)).toBe("cred-x"); // the right account's credential stays
   });
 });
-
 
 describe("one round at a time, and what failures say", () => {
   test("an edit made while a round runs, with the token service down for a moment: it still reaches Drive by itself", async () => {

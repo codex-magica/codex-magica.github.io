@@ -118,7 +118,7 @@ const b64url = (bytes: Uint8Array): string => {
 // If the round trip can't be made safely, it stays and says why: "insecure" (the page isn't on https, so
 // the browser withholds the cryptography the sign-in needs), "storage" (the sign-in couldn't be noted
 // down for the return), or "failed" (anything else).
-type ConnectStartFailure = "insecure" | "storage" | "failed";
+export type ConnectStartFailure = "insecure" | "storage" | "failed";
 export const beginConnect = async (loginHint: string | null, backups?: boolean): Promise<true | ConnectStartFailure> => {
   if (!driveSyncAvailable()) return "failed";
   if (typeof window !== "undefined" && window.isSecureContext === false) return "insecure";

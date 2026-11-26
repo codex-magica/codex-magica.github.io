@@ -31,7 +31,7 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
     devices choosing differently at once meet as a new conflict. Closing the popup puts it off until the app
     is next opened, or until another conflict arrives. Every device resolves the merge identically (the
     alternative's id comes from its content, and its history is the losing version's under keys of its own),
-    so they converge without extra copies, a later alternative of the same content can't replace edits made to
+    so they converge without extra alternatives, a later alternative of the same content can't replace edits made to
     an earlier one, and one the player dropped can come back only as a new question. The kept version also
     remembers which version its content was made as, so when the device it came from edits it again before
     seeing the merge, that edit counts as continuing it, not as one more parallel edit.

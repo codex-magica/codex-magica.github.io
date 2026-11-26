@@ -1,6 +1,6 @@
 // A short fingerprint of a character's content, used by the Drive sync to tell "the same version"
-// from "a different version with the same timestamp", and identical versions from real conflicts.
-// `updatedAt`, `syncVc` and `syncCvc` are bookkeeping, not content, so they're left out. Key order doesn't matter.
+// from "a different version with the same timestamp", and identical versions from real conflicts. Key
+// order doesn't matter, and the sync's bookkeeping is left out (stripBookkeeping).
 
 import { CharacterRecord } from "../model/character";
 

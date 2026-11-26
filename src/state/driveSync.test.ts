@@ -519,7 +519,7 @@ describe("Google Drive sync: building blocks", () => {
 
 describe("Google Drive sync: edge cases", () => {
   afterEach(() => breakDerive(null));
-  const reopen = (d: Device) => {
+  const freshLoad = (d: Device) => {
     d.cache = new Map();
     d.reopen(); // a fresh page load (an app update is one)
   };
@@ -537,16 +537,16 @@ describe("Google Drive sync: edge cases", () => {
     await a.sync(drive);
     await b.sync(drive);
     breakDerive("Aldar"); // an update breaks the engine for Aldar
-    reopen(a);
-    reopen(b);
+    freshLoad(a);
+    freshLoad(b);
     later();
     a.edit(br.id, "x");
     await a.sync(drive);
     await b.sync(drive);
     breakDerive(null); // the next update fixes it
     later();
-    reopen(a);
-    reopen(b);
+    freshLoad(a);
+    freshLoad(b);
     await a.sync(drive);
     await b.sync(drive);
     expect(tokensOf(a.byName("Aldar")!)).toContain("day2");
@@ -644,13 +644,13 @@ describe("Google Drive sync: edge cases", () => {
     expect(a.store.getState().deletions[al.id].last).toBeUndefined(); // dropped once it's in Drive
   });
 
-  test("the order files arrive in can't create a spurious copy of an older version", () => {
+  test("the order files arrive in can't create a spurious alternative of an older version", () => {
     const base = { ...defaultRecord, id: "c1" };
     const v = (inv: string, vc: Record<string, number>, t: number): Version => {
       const record = { ...base, inventoryText: inv, syncVc: vc, updatedAt: t };
       return { id: "c1", t, vc, h: contentHash(record), record };
     };
-    // (P sorts before R and Q here, and loses to R by time: merged first, it would leave a copy of itself)
+    // (P sorts before R and Q here, and loses to R by time: merged first, it would leave an alternative of itself)
     const P = v("P", { b: 1 }, 20);
     const Q = v("P\nQ", { b: 2 }, 30); // continues P
     const R = v("R", { a: 5 }, 25); // parallel to both
@@ -734,7 +734,6 @@ describe("Google Drive sync: randomized multi-device runs", () => {
 
   for (let seed = 1; seed <= 8; seed++) test(`seed ${seed}`, () => run(seed), 60_000);
 });
-
 
 describe("Google Drive sync: marks, re-reading, conflicts, copied browsers", () => {
   test("storage full: a round whose mark can't be saved writes nothing, and no false clone follows", async () => {
@@ -822,7 +821,7 @@ describe("Google Drive sync: marks, re-reading, conflicts, copied browsers", () 
     expect(saved.flatMap(tokensOf)).toContain("tab2-edit");
   });
 
-  test("after a conflict, the winning device's next edit (before it pulls the merge) makes no copy of its own older version", async () => {
+  test("after a conflict, the winning device's next edit (before it pulls the merge) makes no alternative of its own older version", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -834,14 +833,14 @@ describe("Google Drive sync: marks, re-reading, conflicts, copied browsers", () 
     later();
     b.edit(x.id, "B1");
     await b.sync(drive); // B1 in Drive
-    await a.sync(drive); // a: A1 ∥ B1 → B1 keeps Xena, A1 becomes the copy; a publishes B1 with the joined vector
+    await a.sync(drive); // a: A1 ∥ B1 → B1 keeps Xena, A1 becomes the alternative; a publishes B1 with the joined vector
     later();
     b.edit(x.id, "B2"); // b keeps playing; its 2-second round hasn't run yet
     for (let i = 0; i < 3; i++) {
       await b.sync(drive);
       await a.sync(drive);
     }
-    expect(a.records()).toHaveLength(2); // Xena [B1,B2] and the A1 copy
+    expect(a.records()).toHaveLength(2); // Xena [B1,B2] and the A1 alternative
   });
 
   test("a real clone: relabelling leaves the versions the clone never touched, so the original's deletions stay", async () => {

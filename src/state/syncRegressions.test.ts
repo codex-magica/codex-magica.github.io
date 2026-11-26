@@ -24,7 +24,7 @@ describe("a deletion that saw a merged version's content wins over it (the chara
     later();
     b.remove(x.id); // b, still on B1 (exactly the content a published), deletes Xena
     await settle(drive, b, a);
-    // b deleted Xena having seen every edit made to her content (A1 lives on as its own copy)
+    // b deleted Xena having seen every edit made to her content (A1 lives on as an alternative)
     expect(b.records().find((r) => r.id === x.id)).toBeUndefined();
     expect(a.records().find((r) => r.id === x.id)).toBeUndefined();
   });
@@ -46,53 +46,6 @@ describe("a deletion that saw a merged version's content wins over it (the chara
     await settle(drive, b, a);
     expect(b.records().find((r) => r.id === x.id)).toBeUndefined();
     expect(a.records().find((r) => r.id === x.id)).toBeUndefined();
-  });
-});
-
-describe("storage full: deleting a character saves the roster and the deletion marker together", () => {
-  test("what's saved fits together, and after a reload the character doesn't come back from Drive", async () => {
-    const drive = new FakeDrive();
-    const a = new Device("deva");
-    const qs = new QuotaStorage();
-    a.useStorage(qs); // (what was saved, sync on included)
-    const b = new Device("devb");
-    const x = a.create("Xena");
-    a.create("Wulf");
-    await a.sync(drive);
-    await b.sync(drive);
-    qs.cap = qs.used(); // storage full (the usual reason a player starts deleting characters)
-    later();
-    a.remove(x.id);
-    // What's saved must fit together: Xena in the roster, or her marker saved (never the roster without her
-    // and no marker: the marker write, carrying her whole last state, can fail where the shrinking roster
-    // write succeeds).
-    const savedRoster = JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[];
-    const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, unknown>;
-    expect(savedRoster.some((r) => r.id === x.id) || savedDeletions[x.id] !== undefined).toBe(true);
-    // the app is closed before the next round (offline, or within the 2-second delay), and reopened
-    a.reopen();
-    later();
-    await a.sync(drive);
-    expect(a.records().find((r) => r.id === x.id)).toBeUndefined();
-  });
-});
-
-describe("an unreadable saved roster when storage is (nearly) full", () => {
-  test("it isn't saved over, and it's offered for download", () => {
-    const d = new Device("deva");
-    const qs = new QuotaStorage();
-    d.storage = qs;
-    // a damaged roster (or one this version can't parse) that takes more than half the free space
-    const big = JSON.stringify(Array.from({ length: 40 }, (_, i) => ({ ...defaultRecord, id: `c_${i}`, name: `Hős ${i}` })));
-    const damaged = big.slice(0, big.length - 3);
-    qs.setItem("magus.roster.v1", damaged);
-    qs.cap = qs.used() + 2000;
-    d.reopen();
-    expect(d.records()).toEqual([]);
-    d.create("Új"); // the player starts over: the new small roster is saved over the damaged one
-    const keptSomewhere = [...qs.m.values()].some((v) => v === damaged);
-    expect(d.run(() => unreadableKeys())).not.toEqual([]);
-    expect(keptSomewhere).toBe(true);
   });
 });
 
@@ -174,6 +127,49 @@ describe("long absences", () => {
 });
 
 describe("saving when storage is full", () => {
+  test("deleting a character saves the roster and its deletion marker together: after a reload it doesn't come back from Drive", async () => {
+    const drive = new FakeDrive();
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.useStorage(qs); // (what was saved, sync on included)
+    const b = new Device("devb");
+    const x = a.create("Xena");
+    a.create("Wulf");
+    await a.sync(drive);
+    await b.sync(drive);
+    qs.cap = qs.used(); // storage full (the usual reason a player starts deleting characters)
+    later();
+    a.remove(x.id);
+    // What's saved must fit together: Xena in the roster, or her marker saved (never the roster without her
+    // and no marker: the marker write, carrying her whole last state, can fail where the shrinking roster
+    // write succeeds).
+    const savedRoster = JSON.parse(qs.getItem("magus.roster.v1")!) as CharacterRecord[];
+    const savedDeletions = JSON.parse(qs.getItem("magus.deletions.v1") ?? "{}") as Record<string, unknown>;
+    expect(savedRoster.some((r) => r.id === x.id) || savedDeletions[x.id] !== undefined).toBe(true);
+    // the app is closed before the next round (offline, or within the 2-second delay), and reopened
+    a.reopen();
+    later();
+    await a.sync(drive);
+    expect(a.records().find((r) => r.id === x.id)).toBeUndefined();
+  });
+
+  test("an unreadable saved roster bigger than the free space isn't saved over, and it's offered for download", () => {
+    const d = new Device("deva");
+    const qs = new QuotaStorage();
+    d.storage = qs;
+    // a damaged roster (or one this version can't parse) that takes more than half the free space
+    const big = JSON.stringify(Array.from({ length: 40 }, (_, i) => ({ ...defaultRecord, id: `c_${i}`, name: `Hős ${i}` })));
+    const damaged = big.slice(0, big.length - 3);
+    qs.setItem("magus.roster.v1", damaged);
+    qs.cap = qs.used() + 2000;
+    d.reopen();
+    expect(d.records()).toEqual([]);
+    d.create("Új"); // the player starts over: the new small roster is saved over the damaged one
+    const keptSomewhere = [...qs.m.values()].some((v) => v === damaged);
+    expect(d.run(() => unreadableKeys())).not.toEqual([]);
+    expect(keptSomewhere).toBe(true);
+  });
+
   test("a deletion that only fits without the deleted character's last state is saved without it, and later saves count as saved", () => {
     const a = new Device("deva");
     const qs = new QuotaStorage();
@@ -194,6 +190,22 @@ describe("saving when storage is full", () => {
     expect(tokensOf(savedW)).toContain("w1"); // it IS saved...
     // ...and the app doesn't keep saying "Nem sikerül menteni"
     expect(a.store.getState().saveFailed).toBe(false);
+  });
+
+  test("restoring a deleted character when storage is full: its marker (with the last state) goes first, making room for it", () => {
+    const a = new Device("deva");
+    const qs = new QuotaStorage();
+    a.useStorage(qs); // sync on: the marker keeps the deleted character's whole last state
+    const x = a.create("Xena");
+    a.create("Wulf");
+    later();
+    const last = a.records().find((r) => r.id === x.id)!;
+    a.remove(x.id);
+    qs.cap = qs.used() + 20; // full
+    later();
+    a.run(() => a.store.upsert(last)); // brought back (from a backup file, say): the roster grows, the markers shrink
+    expect(a.store.getState().saveFailed).toBe(false);
+    expect(a.reopen().records().map((r) => r.name).sort()).toEqual(["Wulf", "Xena"]);
   });
 
   test("half a change saved is put back: a deletion whose roster can't be saved leaves the saved deletions as they were", () => {
