@@ -1,12 +1,12 @@
 // A randomized test of the whole sync, and the scenarios it found.
 //
-// The fuzz runs the app's own rounds (driveSyncRound via
-// realSync) between three devices with Drive failures, imports of earlier backup files, reloads, edits
-// during rounds and copied browsers (only of browsers that have written to Drive: a copy with no marks
-// yet, or sync off/on next to a copy, is the documented blind spot). It checks that no edit is lost
-// unless a deletion saw it, and (when no browser was copied) that no deleted character comes back without
-// an edit it didn't see. After a browser copy a deletion may come back (with a notice): the copies' versions can't
-// be told apart, so both are kept (rosterStore.relabelDevice).
+// The fuzz runs the app's own rounds (driveSyncRound via realSync) between three devices with Drive
+// failures, imports of earlier backup files, reloads, edits during rounds and copied browsers (only of
+// browsers that have written to Drive: a copy with no marks yet, or sync off/on next to a copy, is the
+// documented blind spot). It checks that no edit is lost unless a deletion saw it, and (when no browser
+// was copied) that no deleted character comes back without an edit it didn't see. After a browser copy a
+// deletion may come back (with a notice): the copies' versions can't be told apart, so both are kept
+// (rosterStore.relabelDevice).
 // Knobs: FUZZ=clone,import,reload,offon,during (features), FUZZ_FROM/FUZZ_TO (seeds), FUZZ_NOFAIL=1 (no Drive
 // failures), FUZZ_LOG=<file> (step log of a failing seed).
 import { defaultRecord } from "./defaultRecord";

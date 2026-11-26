@@ -41,7 +41,7 @@ export interface SyncInput {
   rememberNonce: (nonce: string) => void; // called (and must persist) before a write
   confirmNonce?: (nonce: string) => void; // the mark now in the file is ours (read back, or written)
   // still wanted? Checked right before this device's file is written: a round no longer wanted (sync
-  // turned off, the app continued in another tab) writes nothing, so no mark of it lands unremembered
+  // turned off, the app continued in another tab) doesn't write it, so no mark of it lands unremembered
   current?: () => boolean;
 }
 export interface SyncOutput {

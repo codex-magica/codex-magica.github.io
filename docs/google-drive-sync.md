@@ -29,12 +29,12 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
     listed), and a "Szinkronütközés" popup asks which version stays (or keeps both, the other as "Név (másik
     változat)"). The choice is an ordinary edit plus deleting the alternative, so it reaches every device; two
     devices choosing differently at once meet as a new conflict. Closing the popup puts it off until the app
-    is next opened. Every device resolves the merge identically (the alternative's id comes from its content,
-    and its history is the losing version's under keys of its own), so they converge without extra copies, a
-    later alternative of the same content can't replace edits made to an earlier one, and one the player
-    dropped can come back only as a new question. The kept version also remembers which version its content
-    was made as, so when the device it came from edits it again before seeing the merge, that edit counts as
-    continuing it, not as one more parallel edit.
+    is next opened, or until another conflict arrives. Every device resolves the merge identically (the
+    alternative's id comes from its content, and its history is the losing version's under keys of its own),
+    so they converge without extra copies, a later alternative of the same content can't replace edits made to
+    an earlier one, and one the player dropped can come back only as a new question. The kept version also
+    remembers which version its content was made as, so when the device it came from edits it again before
+    seeing the merge, that edit counts as continuing it, not as one more parallel edit.
 - **Nothing is replaced unless it was read.** A failed download stops the round and nothing is written; a
   download that isn't valid JSON is fetched again (a cut-off response reads fine the second time; two
   different texts mean cut-off downloads, not a damaged file, and stop the round); a damaged
@@ -79,13 +79,13 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   Backups are written before the device's file, so nothing is ever replaced before its backup exists. The sync
   window lists them per character, deleted characters included; restoring adds the version as a new character
   with the date in its name and never replaces anything.
-- **One tab at a time.** The app runs in one browser tab at a time (`src/state/activeTab.ts`, a Web Lock
-  held by the tab in use; another tab offers "Folytatás itt" to continue there, and a tab that was taken
-  over reloads when continued; the lock is let go when the page is left, a busy lock is tried again for a
-  moment before saying "another tab", and a return from Google's consent page takes it outright). Only the
-  tab in use syncs: a round in a tab that stepped back writes nothing to Drive, and that tab neither
-  retries nor keeps a sign-in it was finishing (the player turns sync on again in the tab in use). Saving
-  stays safe across tabs regardless: every change re-reads what's saved first.
+- **One tab at a time.** The app runs in one browser tab at a time (`src/state/activeTab.ts`, a Web Lock held
+  by the tab in use; another tab offers "Folytatás itt" to continue there, and a tab that was taken over
+  reloads when continued; the lock is let go when the page is left, a busy lock is tried again for a moment
+  before saying "another tab", and a return from Google's consent page takes it outright). Only the tab in use
+  syncs: a round in a tab that stepped back doesn't write its device file, and that tab neither retries nor
+  keeps a sign-in it was finishing (the player turns sync on again in the tab in use). Saving stays safe
+  across tabs regardless: every change re-reads what's saved first.
 - **Timing.** Sync runs 2 seconds after an edit, when the app goes to the background with changes waiting
   (renewing the token if it ran out, so an edit made just before locking the phone still goes), when it
   comes back (at most every 20 seconds), and when the device is back online.
@@ -113,12 +113,11 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
   permission goes away while the player is elsewhere (a character sheet), a card says so once on any screen.
   Coming back from Google's page with a problem reopens the sync window with what happened.
 - **Reconnecting.** Only if Google withdrew the permission (revoked in the Google account, unused for six
-  months) does the app ask the player to reconnect: the roster says so,
-  and the window's **Újrakapcsolás** button goes through the consent page again, with the account pre-filled.
-  The answer is stored only after the account check (and not at all if it names no account: the player
-  tries again): if another account answers, nothing it gave is kept and the right account's
-  credential stays (the other account's permission stays in that account, which may
-  sync a roster of its own elsewhere).
+  months) does the app ask the player to reconnect: the roster says so, and the window's **Újrakapcsolás**
+  button goes through the consent page again, with the account pre-filled. The answer is stored only after the
+  account check (and not at all if it names no account: the player tries again): if another account answers,
+  nothing it gave is kept and the right account's credential stays (the other account's permission stays in
+  that account, which may sync a roster of its own elsewhere).
 - **Account check.** At sign-in, the token service passes on the account's email from Google's ID token,
   and the app checks it against the account sync was set up with: a different account is refused with an
   explanation (nothing it gave is kept), so characters never merge into someone else's Drive. Renewals
@@ -126,12 +125,12 @@ token service (`VITE_TOKEN_SERVICE_URL`). Without both, the app stays local-only
 - **Kikapcsolás** (turn off) affects that device only: it forgets the token and the credential there, and
   revokes nothing at Google, because revoking removes the whole permission and would disconnect the player's
   other devices too. To withdraw access everywhere, the player removes the app in their Google account
-  (myaccount.google.com/permissions); every device then gets `invalid_grant` and asks to reconnect.
-  Nothing is deleted: the
-  characters stay on the device, and the files and backups stay in Drive (Drive → Settings → Manage apps can delete them).
+  (myaccount.google.com/permissions); every device then gets `invalid_grant` and asks to reconnect. Nothing is
+  deleted: the characters stay on the device, and the files and backups stay in Drive (Drive → Settings →
+  Manage apps can delete them).
 
 Code: `src/state/rosterStore.ts` (the roster, edit stamps, deletion markers and conflicts), `storage.ts`
-(reading and saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflict resolution,
+(reading and saving it), `versions.ts` (version vectors), `driveMerge.ts` (the merge, conflict alternatives,
 backup selection, reconciling), `driveSyncEngine.ts` (one round against Drive: reads, backups, write),
 `driveSyncRound.ts` (a round with this device's saved sync state, clone handling), `syncState.ts` (what's
 published, nonces, settings), `googleDrive.ts` (sign-in, the consent round trip, token service calls, Drive
@@ -145,12 +144,13 @@ Tests: `src/state/driveSync.test.ts` runs rounds between simulated devices again
 including randomized runs with concurrent rounds, failed and cut-off requests, lost responses, skewed clocks
 and edits during rounds, checking that all devices converge and no edit is lost except by a deletion that saw
 it. `src/state/syncConflicts.test.ts` and `syncConflictFuzz.test.ts` cover the conflict question,
-`src/state/syncRegressions.test.ts` keeps the scenarios found in the pre-release reviews (storage full, cloned
-devices, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between several
-devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real hook
-against a fake Google and token service (retries, renewals, the return from the consent page). They share the
-harness in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts` and
-`activeTab.test.ts` cover the Drive client, the status texts and the one-tab rule.
+`src/state/syncRegressions.test.ts` keeps scenarios that once lost or brought back a character (storage full,
+copied browsers, deletions racing syncs), `src/state/syncFuzz.test.ts` runs the app's real rounds between
+several devices with imports, reloads and copied browsers, and `src/state/useDriveSync.test.ts` runs the real
+hook against a fake Google and token service (retries, renewals, the return from the consent page). They share
+the harness in `src/state/testing/syncHarness.ts`; `googleDrive.test.ts`, `driveStatus.test.ts`,
+`activeTab.test.ts` and `transfer.test.ts` cover the Drive client, the status texts, the one-tab rule and the
+export files.
 
 ## Scope and deliberate limitations
 
@@ -215,8 +215,8 @@ secret, and a secret can't be kept in a public web app. The options weighed:
 
 The token service keeps the refresh token inside the credential, encrypted, rather than in a database: there
 is nothing to breach on the server, and replacing its key without keeping the old one (`BLOB_KEY_PREVIOUS`)
-cancels every credential at once, should one ever leak. It answers only
-the app's own origins, and is rate-limited.
+cancels every credential at once, should one ever leak. It answers only the app's own origins, and is
+rate-limited.
 
 A native app would renew silently, but only for itself: tokens stay on the device, so it wouldn't help the
 web app.

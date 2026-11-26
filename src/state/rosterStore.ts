@@ -214,8 +214,8 @@ export const createRosterStore = () => {
     },
 
     // `base`: the version the player confirmed deleting (what the dialog showed). If it changed since (a
-    // sync brought another device's edit), nothing is deleted and false is
-    // returned: a deletion must never swallow an edit the player hasn't seen.
+    // sync brought another device's edit), nothing is deleted and false is returned: a deletion must never
+    // swallow an edit the player hasn't seen.
     remove(id: string, base?: CharacterRecord): boolean {
       refresh();
       const prev = find(id);
@@ -310,8 +310,8 @@ export const createRosterStore = () => {
     },
 
     // The result of a sync round (not a local edit), applied to the roster as saved NOW: what changed
-    // since the round started is kept, see driveMerge.reconcile. False if it
-    // couldn't be saved (the round then counts as failed, and is tried again).
+    // since the round started is kept, see driveMerge.reconcile. False if it couldn't be saved (the round
+    // then counts as failed, and is tried again).
     applyRound(snapshot: { records: CharacterRecord[]; deletions: Deletions }, merged: { records: CharacterRecord[]; deletions: Deletions }): boolean {
       refresh();
       const next = reconcile(snapshot, state, merged);

@@ -49,8 +49,8 @@ const renameSub = <T extends { skill: string; subtype?: string }>(x: T): T => {
 // come with a new Drive sync file version (driveMerge.SYNC_VERSION): older app versions then stop syncing
 // until they update, instead of seeing every migrated character as a parallel edit.
 //
-// Path choices are matched by the trigger LABEL, so a renamed
-// trigger ("Pszi út" → "Pszi fa") must be remapped or old records lose their committed choice.
+// Path choices are matched by the trigger LABEL, so a renamed trigger ("Pszi út" → "Pszi fa") must be
+// remapped or old records lose their committed choice.
 const migrateRecord = (r: CharacterRecord): CharacterRecord => {
   let out = r;
   if (out.pathChoices?.some((c) => c.trigger === "Pszi út"))

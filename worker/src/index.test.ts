@@ -49,6 +49,11 @@ describe("token service", () => {
     expect(missing.configured).toBe(false);
   });
 
+  test("health: a broken previous key counts as not configured (every renewal would fail)", async () => {
+    expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: "short" })))).configured).toBe(false);
+    expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: KEY2 })))).configured).toBe(true);
+  });
+
   test("only the app's own origins get in; preflight answers with CORS headers", async () => {
     const g = google();
     expect((await handle(post("/v1/token", { credential: "x" }, "https://evil.example"), env(), g.doFetch)).status).toBe(403);
@@ -103,6 +108,20 @@ describe("token service", () => {
     expect((await json(res)).error).toBe("invalid_grant");
   });
 
+  test("exchange: Google busy (429, 5xx) is a 502, so the app says to try again later", async () => {
+    for (const status of [429, 503]) {
+      const g = google({ exchange: [status, { error: "rate_limit_exceeded" }] });
+      expect((await handle(post("/v1/exchange", { code: "c", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch)).status).toBe(502);
+    }
+  });
+
+  test("exchange: no refresh token from Google means no credential", async () => {
+    const g = google({ exchange: [200, { access_token: "at-1", expires_in: 3599, scope: DRIVE }] });
+    const body = await json(await handle(post("/v1/exchange", { code: "c", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch));
+    expect(body.access_token).toBe("at-1");
+    expect(body.credential).toBeUndefined();
+  });
+
   test("token: a credential gets a fresh access token", async () => {
     const credential = await sealCredential(env(), { rt: "rt-1", iat: 1 });
     const g = google({ refresh: [200, { access_token: "at-2", expires_in: 3599, scope: DRIVE }] });
@@ -155,25 +174,6 @@ describe("token service", () => {
     expect((await handle(post("/v1/token", { credential: old }), env({ BLOB_KEY: KEY2 }), g.doFetch)).status).toBe(401);
   });
 
-  test("health: a broken previous key counts as not configured (every renewal would fail)", async () => {
-    expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: "short" })))).configured).toBe(false);
-    expect((await json(await handle(new Request("https://x/health"), env({ BLOB_KEY_PREVIOUS: KEY2 })))).configured).toBe(true);
-  });
-
-  test("exchange: Google busy (429, 5xx) is a 502, so the app says to try again later", async () => {
-    for (const status of [429, 503]) {
-      const g = google({ exchange: [status, { error: "rate_limit_exceeded" }] });
-      expect((await handle(post("/v1/exchange", { code: "c", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch)).status).toBe(502);
-    }
-  });
-
-  test("exchange: no refresh token from Google means no credential", async () => {
-    const g = google({ exchange: [200, { access_token: "at-1", expires_in: 3599, scope: DRIVE }] });
-    const body = await json(await handle(post("/v1/exchange", { code: "c", code_verifier: VERIFIER, redirect_uri: `${APP}/` }), env(), g.doFetch));
-    expect(body.access_token).toBe("at-1");
-    expect(body.credential).toBeUndefined();
-  });
-
   test("key rotation: a new refresh token under rotation is sealed with the new key and a fresh date", async () => {
     const old = await sealCredential(env({ BLOB_KEY: KEY }), { rt: "rt-1", iat: 5 });
     const g = google({ refresh: [200, { access_token: "at-4", scope: DRIVE, refresh_token: "rt-2" }] });
@@ -195,7 +195,7 @@ describe("token service", () => {
     expect(res.headers.get("Retry-After")).toBe("60");
   });
 
-  test("rate limit: a refused request gets 429 before Google is asked", async () => {
+  test("rate limit per credential (keyed by a hash of it, never the credential): 429 before Google is asked", async () => {
     const credential = await sealCredential(env(), { rt: "rt-1", iat: 1 });
     const seen: string[] = [];
     const limiter = { limit: async ({ key }: { key: string }) => (seen.push(key), { success: !key.startsWith("cred:") }) };
@@ -208,7 +208,7 @@ describe("token service", () => {
     expect(g.calls).toHaveLength(0);
   });
 
-  test("unknown routes and methods (no revoke either: turning sync off is device-only)", async () => {
+  test("unknown routes and methods are refused, and bodies over the size limit get 413 (no revoke route: turning sync off is device-only)", async () => {
     const g = google();
     expect((await handle(post("/v1/other", {}), env(), g.doFetch)).status).toBe(404);
     expect((await handle(post("/v1/revoke", { credential: "x" }), env(), g.doFetch)).status).toBe(404);

@@ -19,8 +19,8 @@ import { refreshStatusTint } from "./statusTint";
 import { CharacterRecord } from "../model/character";
 
 // Shown while saving to this device fails (storage full or blocked): edits aren't kept then, so the
-// player must know, and can take everything saved so far to a file. Below
-// the screens' top bar (never over their back button), with the way out right in it.
+// player must know, and can take everything saved so far to a file. Below the screens' top bar (never over
+// their back button), with the way out right in it.
 const SaveFailedBanner: React.FC<{ onExport: () => void }> = ({ onExport }) => (
   <Box role="alert" position="fixed" top="calc(max(10px, env(safe-area-inset-top)) + 58px)" left="50%" transform="translateX(-50%)" zIndex={62} w="min(520px, calc(100% - 32px))"
     display="flex" alignItems="center" gap="12px" px="14px" py="10px" borderRadius="12px" bg="sheet" border="1px solid" borderColor="warn" boxShadow="0 10px 30px rgba(0,0,0,.18)"
