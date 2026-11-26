@@ -43,7 +43,7 @@ szkennelt PDF-ből. Emiatt három dolog volt a kelleténél nehezebb:
 
 Ezekre készült ez az alkalmazás:
 
-- 📖 **Kompendium:** az összes képzettség, varázslat, ima, pszi diszciplína, fegyver, vért és méreg
+- 📖 **Kompendium:** az összes képzettség, varázslat, fohász, pszi diszciplína, fegyver, vért és méreg
   kereshetően, mindegyik a szabályszövegével, valamint a karakteralkotás táblázatai (tulajdonságok,
   fajok, kasztok, hátterek).
 - 🧙 **Karakteralkotó:** faj, kaszt, iskola, hátterek, pontvásárlás, szintenkénti képzettségvásárlás és
@@ -54,7 +54,7 @@ Ezekre készült ez az alkalmazás:
 - 📱 **Bárhová magaddal viheted:** alkalmazásbolt nélkül telepíthető a kezdőképernyőre, internet nélkül is
   működik, és a saját Google Drive-odon keresztül minden eszközödön ugyanazok a karakterek.
 
-Benne van 12 kaszt, 6 faj, 83 képzettség, 636 varázslat, ima és pszi diszciplína, 83 fegyver, valamint
+Benne van 12 kaszt, 6 faj, 83 képzettség, 636 varázslat, fohász és pszi diszciplína, 83 fegyver, valamint
 21 vért és pajzs.
 
 ## Amit tud
@@ -78,10 +78,10 @@ Benne van 12 kaszt, 6 faj, 83 képzettség, 636 varázslat, ima és pszi diszcip
   <img src="docs/assets/mobile-light.webp" alt="A karakterlap telefonon, lapozható oldalakra bontva">
 </picture>
 
-Telefonon a karakterlap lapozható oldalakra bomlik, iPaden és gépen oszlopokba rendeződik. Alapból sötét,
+Telefonon a karakterlap lapozható oldalakra bomlik, iPaden és gépen oszlopokba rendeződik. Alapból dark mode-ban van,
 de egy kattintással világosra váltható.
 
-**Alkalmazásként telepíthető.** Alkalmazásbolt nem kell hozzá: nyisd meg az oldalt, és add hozzá a
+**Alkalmazásként telepíthető.** App Store nem kell hozzá: nyisd meg az oldalt, és add hozzá a
 kezdőképernyőhöz ([így](#hogyan-használhatod)). Ezután teljes képernyőn, saját ikonnal indul, mint
 bármelyik másik alkalmazás.
 
@@ -95,8 +95,7 @@ karakter sem veszhet el.
 szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyanazok lesznek:
 
 - A Drive-odból csak egy rejtett mappához kér hozzáférést, amelyet csak ez az alkalmazás lát. A Drive-od
-  többi fájljához nem fér hozzá. Az e-mail-címedet is megkapja, hogy meg tudja mutatni, melyik fiókkal
-  szinkronizál.
+  többi fájljához nem fér hozzá.
 - A módosítások néhány másodperc múlva szinkronizálódnak, és akkor is, amikor kilépsz az alkalmazásból
   vagy visszatérsz. Ami internet nélkül változott, az a kapcsolat helyreálltakor töltődik fel.
 - Ha ugyanazt a karaktert két eszközön is módosítottad, mielőtt szinkronizálódhattak volna, az alkalmazás
@@ -104,11 +103,7 @@ szinkront, és a karaktereid a telefonodon, a tableteden és a gépeden is ugyan
 - A napi biztonsági másolat (alapból bekapcsolva) a Drive-on azt is megőrzi, milyen volt egy karakter
   azoknak a napoknak a végén, amikor módosítottad, és hogy milyen volt törlés előtt. Ezeket a Google
   Drive ablakban állíthatod vissza.
-- A Google-nek eszközönként egyszer kell engedélyt adnod, utána az alkalmazás magától megújítja: nem kér
-  óránként újra.
-- Nem kell fiókot létrehoznod, és a karaktereid közvetlenül a böngésződből a Drive-odra kerülnek. Egy apró
-  szolgáltatás csak a Google-hozzáférést újítja meg, a karaktereidet nem látja. Részletek az
-  [adatvédelmi tájékoztatóban](https://codex-magica.github.io/privacy.html).
+- Nem kell fiókot létrehoznod, és a karaktereid közvetlenül a böngésződből a Drive-odra kerülnek.
 
 **Az adataid nálad maradnak.** Szinkron nélkül a karakterek csak az eszközöd böngészőjében vannak. Az
 összes karakterről egy kattintással mentés készíthető, és a fájl egyenesen iCloud Drive-ba, Google
@@ -177,13 +172,16 @@ részletek angolul, a [fő README-ben](README.md#how-it-was-built) és a
 
 Az alkalmazásnak nincs saját adatszervere. A karakterlap minden értékét egy szabálymotor számolja ki újra a
 karakter szintenkénti döntéseiből, a karakterek a böngészőben tárolódnak, a szinkron pedig közvetlenül a
-játékos Google Drive-jával dolgozik: minden eszköz a saját fájljába ír, és verzióvektorok döntik el, mi
+játékos Google Drive-jával dolgozik: minden eszköz a saját fájljába ír, és a verziójuk dönti el, mi
 melyik változat folytatása, így semmi sem íródik felül észrevétlenül. Erről is a
 [fő README-ben](README.md#3--an-app-without-a-server) lehet bővebben olvasni.
 
 ## Köszönet és jogok
 
 A repóban található **forráskód** [MIT licenc](LICENSE) alatt szabadon felhasználható.
+
+Az [adatvédelmi tájékoztató](https://codex-magica.github.io/privacy.html) leírja, hogyan kezeli az adataidat
+a választható Google Drive-szinkron.
 
 A **M.A.G.U.S. tartalom**, valamint a játék nevei és fogalmai **nem** tartoznak e licenc alá, azok a
 jogosultak szellemi tulajdonát képezik. Az `src/data/` mappában lévő szabályadatokat a szabálykönyvből írtuk
@@ -206,5 +204,5 @@ A felület betűtípusa a [Crimson Pro](https://github.com/Fonthausen/CrimsonPro
 
 <div align="center">
 <br>
-<sub>Készítette <a href="https://github.com/marcigo36">Márton Dániel</a> egy játékoscsapatnak, és mindenkinek szól, aki még mindig Yneven kalandozik. 🎲</sub>
+<sub>Készítette <a href="https://github.com/marcigo36">Márton Dániel</a> eredetileg saját felhasználásra, de mindenkinek szól, aki még Yneven kalandozik. 🎲</sub>
 </div>

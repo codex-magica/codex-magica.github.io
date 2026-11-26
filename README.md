@@ -145,17 +145,14 @@ and offers to switch. It never reloads by itself, so a half-built character can'
 same on your phone, tablet and computer:
 
 - The only Drive access the app asks for is a hidden folder that only this app can see. It can't see any
-  of your other files. Google also shares your email address, so the app can show which account syncs.
+  of your other files.
 - Changes sync a few seconds after you make them, when you leave the app and when you come back. Changes
   made offline go up once you're back online.
 - If the same character was edited on two devices before they could sync, the app asks which version to
   keep (or keeps both). Nothing is overwritten silently.
 - With daily backups on (the default), the last state of each day a character was edited, and its last
   state before deletion, stay in your Drive too, and can be restored from the sync window.
-- You give Google's permission once per device, and the app keeps it renewed by itself: no hourly prompts.
-- There's no account to create, and your characters go straight from your browser to your Drive. A tiny
-  service only renews Google's access and never sees them. See the
-  [privacy notice](https://codex-magica.github.io/privacy.html).
+- There's no account to create, and your characters go straight from your browser to your Drive.
 
 **Your data stays with you.** Without sync, characters live only in the browser on your device. A backup
 of all of them is one tap away, and the file can go straight to iCloud Drive, Google Drive or Files.
@@ -366,6 +363,9 @@ docs/                Drive sync and PDF pipeline write-ups, icon sources, README
 
 The **code** in this repository is open source under the [MIT License](LICENSE).
 
+The [privacy notice](https://codex-magica.github.io/privacy.html) describes what the optional Google Drive
+sync does with your data.
+
 The **M.A.G.U.S. content** is **not** covered by that license and remains the property of its respective
 rights holders, as do the game's names and terms. The rules data in `src/data/` was transcribed and
 restructured from the rulebook for this project, so it is a **derivative work**. It contains
@@ -385,5 +385,5 @@ from [Lucide](https://lucide.dev) and [Tabler](https://tabler.io/icons); their l
 
 <div align="center">
 <br>
-<sub>Made by <a href="https://github.com/marcigo36">Márton Dániel</a> for one gaming group, shared with everyone who still plays on Ynev. 🎲</sub>
+<sub>Made by <a href="https://github.com/marcigo36">Márton Dániel</a>, originally for personal use, and shared with everyone who adventures on Ynev. 🎲</sub>
 </div>
