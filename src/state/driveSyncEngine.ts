@@ -10,7 +10,8 @@
 
 import { CharacterRecord } from "../model/character";
 import { DriveFileMeta, DriveTransport, FileBody, fitBytes } from "./googleDrive";
-import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, stripBookkeeping, versionKey } from "./driveMerge";
+import { BackupCandidate, ParsedFile, dayOf, mergeRound, parseDeviceFile, versionKey } from "./driveMerge";
+import { stripBookkeeping } from "./recordHash";
 import { Deletions } from "./rosterStore";
 import { Published } from "./syncState";
 
@@ -48,9 +49,9 @@ export interface SyncOutput {
   deletions: Deletions;
   published: Published;
   backedUp: Set<string>;
-  // for tests and diagnostics: characters changed here by another device, copies made
-  pulled: number;
-  undeleted: string[]; // characters deleted here that came back (a parallel edit won)
+  undeleted: string[]; // characters deleted here that came back (a parallel edit won): the player is told
+  // for tests and diagnostics
+  pulled: number; // characters changed here because of another device
   uploaded: boolean;
   skippedFiles: number; // other devices' files that couldn't be read (left alone)
 }

@@ -19,7 +19,7 @@ const breakDerive = (name: string | null) => ((globalThis as { __breakDerive?: s
 // Each device has its own localStorage and device id and uses the real roster store.
 import { CharacterRecord } from "../model/character";
 import { defaultRecord } from "./defaultRecord";
-import { Version, combine, conflictCopyName, localVersions, mergeRound, parseDeviceFile, reconcile } from "./driveMerge";
+import { Version, combine, alternativeName, localVersions, mergeRound, parseDeviceFile, reconcile } from "./driveMerge";
 import { SyncNewerVersionError } from "./driveSyncEngine";
 import { createRosterStore } from "./rosterStore";
 import { contentHash } from "./recordHash";
@@ -101,10 +101,10 @@ describe("Google Drive sync: rounds between devices", () => {
     f.version++;
     b.run(() => b.store.upsert({ ...defaultRecord, id, name: "Aldar (b)" }));
     await b.sync(drive);
-    expect(b.records().map((r) => r.name).sort()).toEqual(["Aldar (b)", conflictCopyName("Aldar (odd)")].sort());
+    expect(b.records().map((r) => r.name).sort()).toEqual(["Aldar (b)", alternativeName("Aldar (odd)")].sort());
   });
 
-  test("parallel edits keep both versions, and every device ends up with the same two (no extra copies)", async () => {
+  test("parallel edits keep both versions, and every device ends up with the same two (no extra alternatives)", async () => {
     const drive = new FakeDrive();
     const a = new Device("deva");
     const b = new Device("devb");
@@ -117,7 +117,7 @@ describe("Google Drive sync: rounds between devices", () => {
     b.edit(al.id, "b1", "Aldar (B)");
     for (let i = 0; i < 3; i++) for (const d of [a, b, c]) await d.sync(drive);
     const names = a.records().map((r) => r.name).sort();
-    expect(names).toEqual([conflictCopyName("Aldar (A)"), "Aldar (B)"].sort()); // the later edit keeps the character
+    expect(names).toEqual([alternativeName("Aldar (A)"), "Aldar (B)"].sort()); // the later edit keeps the character
     expect(b.fingerprint()).toBe(a.fingerprint());
     expect(c.fingerprint()).toBe(a.fingerprint());
   });
@@ -258,7 +258,7 @@ describe("Google Drive sync: rounds between devices", () => {
     }
     const tokens = tokensOf(a.byName("Aldar")!);
     for (let i = 0; i < 4; i++) expect(tokens).toEqual(expect.arrayContaining([`a${i}`, `b${i}`]));
-    expect(a.records()).toHaveLength(1); // sequential edits, no conflict copies
+    expect(a.records()).toHaveLength(1); // sequential edits, no conflict
     expect(b.fingerprint()).toBe(a.fingerprint());
   });
 
@@ -457,13 +457,13 @@ describe("Google Drive sync: building blocks", () => {
     const z = v("Z", { a: 1, c: 1 }, 12);
     const fold = (list: ReturnType<typeof v>[]) => {
       let acc = list[0];
-      const copies: string[] = [];
+      const alternatives: string[] = [];
       for (const n of list.slice(1)) {
         const r = combine(acc, n);
         acc = r.version as typeof acc;
-        if (r.copy) copies.push(r.copy.id);
+        if (r.alternative) alternatives.push(r.alternative.id);
       }
-      return { winner: acc.record.name, copies: copies.sort() };
+      return { winner: acc.record.name, alternatives: alternatives.sort() };
     };
     const results = [fold([x, y, z]), fold([z, y, x]), fold([y, x, z]), fold([z, x, y])];
     for (const r of results) expect(r).toEqual(results[0]);
@@ -485,7 +485,7 @@ describe("Google Drive sync: building blocks", () => {
     const openedInCreator = d.records().find((x) => x.id === al.id)!;
     d.edit(al.id, "synced-meanwhile", "Aldar (newer)");
     d.run(() => d.store.upsert({ ...openedInCreator, name: "Aldar (from creator)" }, openedInCreator));
-    expect(d.records().map((x) => x.name).sort()).toEqual([conflictCopyName("Aldar (newer)"), "Aldar (from creator)"].sort());
+    expect(d.records().map((x) => x.name).sort()).toEqual([alternativeName("Aldar (newer)"), "Aldar (from creator)"].sort());
   });
 
   test("damaged records are rejected or repaired, never let through", () => {

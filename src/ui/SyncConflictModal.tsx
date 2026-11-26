@@ -5,7 +5,7 @@ import { CharacterRecord, VitalKey } from "../model/character";
 import { rulesFor } from "../model/rulesVariants";
 import { derive } from "../engine/derive";
 import { Conflict } from "../state/rosterStore";
-import { conflictCopyName, plainName } from "../state/driveMerge";
+import { alternativeName, plainName } from "../state/driveMerge";
 
 // A character changed differently on two devices (see rosterStore's Conflict): which version stays?
 // One conflict at a time; closing puts the decision off (the listed version stays meanwhile, and the
@@ -94,7 +94,7 @@ export const SyncConflictModal: React.FC<{
           detail={
             several
               ? "A többi változat külön karakterként jelenik meg, „(másik változat)” végződéssel."
-              : `A másik változat külön karakterként jelenik meg: „${conflictCopyName(plainName(alternatives[0].name))}”.`
+              : `A másik változat külön karakterként jelenik meg: „${alternativeName(plainName(alternatives[0].name))}”.`
           }
           onClick={() => onResolve("both")}
         />

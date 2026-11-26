@@ -1,5 +1,5 @@
 // A short fingerprint of a character's content, used by the Drive sync to tell "the same version"
-// from "a different version with the same timestamp", and identical copies from real conflicts.
+// from "a different version with the same timestamp", and identical versions from real conflicts.
 // `updatedAt`, `syncVc` and `syncCvc` are bookkeeping, not content, so they're left out. Key order doesn't matter.
 
 import { CharacterRecord } from "../model/character";
@@ -15,11 +15,17 @@ const stable = (v: unknown): string => {
     .join(",")}}`;
 };
 
+// `updatedAt`, `syncVc` and `syncCvc` are this device's bookkeeping: they mustn't make the same content look
+// different (fingerprints, files).
+export const stripBookkeeping = (r: CharacterRecord): CharacterRecord => {
+  const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...rest } = r;
+  return rest as CharacterRecord;
+};
+
 // FNV-1a over the stable JSON, two independent 32-bit lanes → 16 hex characters. Not cryptographic;
 // it only has to make accidental collisions between versions of one character practically impossible.
 export const contentHash = (record: CharacterRecord): string => {
-  const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...content } = record;
-  const s = stable(content);
+  const s = stable(stripBookkeeping(record));
   let a = 0x811c9dc5;
   let b = 0x01000193 ^ s.length;
   for (let i = 0; i < s.length; i++) {

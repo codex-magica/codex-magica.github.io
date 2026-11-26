@@ -13,18 +13,20 @@
 //   - edited in parallel, different content       → BOTH are kept: the one edited last keeps the
 //     character, the other is stored as an alternative (`id~…`, not listed) and the player is asked
 //     which stays (see rosterStore's Conflict). Every device resolves it the same way (the alternative's
-//     id comes from its content), so they all end up with the same result and no extra copies.
+//     id comes from its content), so they all end up with the same result and no extra alternatives.
 // Versions that can't be read are never applied and never deleted: they stay in their file.
 
 import { CharacterRecord } from "../model/character";
 import { repairRecord } from "./storage";
-import { contentHash } from "./recordHash";
+import { contentHash, stripBookkeeping } from "./recordHash";
 import type { Deletions } from "./rosterStore";
 import { DELETED_HASH, VersionVector, dominatedBy, isVersionVector, join, vcKey, versionKeyOf } from "./versions";
 
-// The name a parallel version gets when both are kept. Neutral, so it reads right on every device.
-export const conflictCopyName = (name: string): string => `${name} (másik változat)`;
-export const plainName = (name: string): string => (name.endsWith(conflictCopyName("")) ? name.slice(0, -conflictCopyName("").length) : name);
+// The name a conflict's other version gets (shown once it's listed: kept as a character of its own, or its
+// character deleted). Neutral, so it reads right on every device.
+const ALTERNATIVE_SUFFIX = " (másik változat)";
+export const alternativeName = (name: string): string => `${name}${ALTERNATIVE_SUFFIX}`;
+export const plainName = (name: string): string => (name.endsWith(ALTERNATIVE_SUFFIX) ? name.slice(0, -ALTERNATIVE_SUFFIX.length) : name);
 
 const SYNC_FORMAT = "codex-magica-sync";
 export const SYNC_VERSION = 2;
@@ -59,7 +61,7 @@ interface DeviceFile {
 }
 
 export type ParsedFile =
-  | { ok: true; device: string; nonce: string | null; versions: Map<string, Version>; opaque: Record<string, unknown>; skipped: number }
+  | { ok: true; device: string; nonce: string | null; versions: Map<string, Version>; opaque: Record<string, unknown> }
   | { ok: false; reason: "newer" | "unreadable"; version?: number };
 
 export const versionKey = (v: Pick<Version, "vc" | "h">): string => versionKeyOf(v.vc, v.h);
@@ -68,8 +70,10 @@ const fromRecord = (r: CharacterRecord): Version => {
   const v: Version = { id: r.id, t: r.updatedAt ?? 0, vc: r.syncVc ?? {}, h: contentHash(r), record: r };
   return isVersionVector(r.syncCvc) && Object.keys(r.syncCvc).length > 0 ? { ...v, cvc: r.syncCvc } : v;
 };
-// a version with a (possibly) new vector: its record carries the same bookkeeping
-const withVc = (v: Version, vc: VersionVector, cvc: VersionVector): Version => {
+// a version with a (possibly) new vector, remembering which version its content was made as; its record
+// carries the same bookkeeping
+const withVc = (v: Version, vc: VersionVector): Version => {
+  const cvc = cvcOf(v);
   const own = vcKey(cvc) === vcKey(vc) ? undefined : cvc;
   const { cvc: _old, ...rest } = v;
   return { ...rest, vc, ...(own ? { cvc: own } : {}), record: v.record && { ...v.record, syncVc: vc, syncCvc: own } };
@@ -92,14 +96,12 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
   if (f.version !== SYNC_VERSION || !f.characters || typeof f.characters !== "object" || typeof f.device !== "string") return { ok: false, reason: "unreadable" };
   const versions = new Map<string, Version>();
   const opaque: Record<string, unknown> = {};
-  let skipped = 0;
   for (const [id, raw] of Object.entries(f.characters)) {
     const e = raw as FileEntry | null;
     const t = e?.t;
     const vc = e?.vc;
     const rec = e && !e.deleted ? repairRecord({ ...(e.record as object), id }) : null;
     if (!e || typeof e !== "object" || typeof t !== "number" || !isVersionVector(vc) || (!e.deleted && !rec)) {
-      skipped++;
       opaque[id] = raw;
       continue;
     }
@@ -111,16 +113,19 @@ export const parseDeviceFile = (raw: unknown): ParsedFile => {
     const record = { ...rec!, id, updatedAt: t, syncVc: vc, syncCvc: cvc };
     versions.set(id, { id, t, vc, h: contentHash(record), record, ...(cvc ? { cvc } : {}) });
   }
-  return { ok: true, device: f.device, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque, skipped };
+  return { ok: true, device: f.device, nonce: typeof f.nonce === "string" ? f.nonce : null, versions, opaque };
 };
 
 // A conflict's other version (see rosterStore's Conflict): its id comes from the character's id and the
 // version's content.
 export const alternativeId = (id: string, contentHash: string): string => `${id}~${contentHash.slice(0, 10)}`;
+// The character an alternative belongs to; null for a character's own id.
+export const mainIdOf = (id: string): string | null => (id.includes("~") ? id.slice(0, id.indexOf("~")) : null);
 
 // Merges two versions of one character. Deterministic and order-independent, so every device that sees
-// the same versions reaches the same result. Returns the version for the id, plus a copy if both kept.
-export const combine = (a: Version, b: Version): { version: Version; copy?: Version } => {
+// the same versions reaches the same result. Returns the version for the id, plus the other one as an
+// alternative if both are kept.
+export const combine = (a: Version, b: Version): { version: Version; alternative?: Version } => {
   const sameVc = vcKey(a.vc) === vcKey(b.vc);
   if (sameVc && a.h === b.h) return { version: a.t >= b.t ? a : b };
   if (!sameVc && dominatedBy(a.vc, b.vc)) return { version: b };
@@ -131,36 +136,36 @@ export const combine = (a: Version, b: Version): { version: Version; copy?: Vers
   const bDel = b.h === DELETED_HASH;
   if (aDel && bDel) return { version: { ...a, t: Math.max(a.t, b.t), vc } };
   // A deletion made after seeing the other side's content: the vectors look parallel only because a merge
-  // joined them (the version that lost there is already kept as a copy). The deletion stands. (With the
+  // joined them (the version that lost there is already kept as an alternative). The deletion stands. (With the
   // very same vector on both sides nothing came after anything: two devices under one id, a clone; the
   // edit wins.)
   if (aDel && !sameVc && dominatedBy(cvcOf(b), a.vc)) return { version: { ...a, t: Math.max(a.t, b.t), vc } };
   if (bDel && !sameVc && dominatedBy(cvcOf(a), b.vc)) return { version: { ...b, t: Math.max(a.t, b.t), vc } };
   // otherwise the edit the deletion didn't see wins
-  if (aDel) return { version: withVc(b, vc, cvcOf(b)) };
-  if (bDel) return { version: withVc(a, vc, cvcOf(a)) };
+  if (aDel) return { version: withVc(b, vc) };
+  if (bDel) return { version: withVc(a, vc) };
   // One side's content is an earlier step of the other side: a merge gave it a joined vector (the version
-  // it lost to is kept as a copy in that same merge), and then the device it came from edited it again
-  // before seeing the merge. That edit continues the content: no new copy.
+  // it lost to is kept as an alternative in that same merge), and then the device it came from edited it
+  // again before seeing the merge. That edit continues the content: no new alternative.
   const aSeenByB = dominatedBy(cvcOf(a), b.vc);
   const bSeenByA = dominatedBy(cvcOf(b), a.vc);
   if (aSeenByB !== bSeenByA) {
     const next = aSeenByB ? b : a;
-    return { version: withVc(next, vc, cvcOf(next)) };
+    return { version: withVc(next, vc) };
   }
   const [win, lose] = a.t > b.t || (a.t === b.t && a.h > b.h) ? [a, b] : [b, a];
-  const version: Version = withVc(win, vc, cvcOf(win));
+  const version: Version = withVc(win, vc);
   if (a.h === b.h) return { version };
-  // The copy's history is the losing version's, under keys of its own ("~" + device): a later copy of the
-  // same content lands on the same id, and with the very same keys it would replace edits made to this
-  // copy meanwhile. Under its own keys, a later copy (from a later version, or from another branch of the
-  // character's history) isn't taken for one the player already dropped (resolving a conflict deletes the
-  // copy), and edits to the copy stay parallel to it. The same copy made on several devices is the same
-  // version, so it merges into one.
+  // The alternative's history is the losing version's, under keys of its own ("~" + device): a later
+  // alternative of the same content lands on the same id, and with the very same keys it would replace
+  // edits made to this one meanwhile. Under its own keys, a later one (from a later version, or from
+  // another branch of the character's history) isn't taken for one the player already dropped (answering
+  // a conflict deletes the alternative), and edits to it stay parallel to it. The same alternative made on
+  // several devices is the same version, so it merges into one.
   const id = alternativeId(a.id, lose.h);
-  const copyVc = Object.keys(lose.vc).length ? Object.fromEntries(Object.entries(lose.vc).map(([k, n]) => [`~${k}`, n])) : { [`~${id}`]: 1 };
-  const record: CharacterRecord = { ...lose.record!, id, name: conflictCopyName(lose.record!.name), updatedAt: lose.t, syncVc: copyVc, syncCvc: undefined };
-  return { version, copy: { id, t: lose.t, vc: copyVc, h: contentHash(record), record } };
+  const altVc = Object.keys(lose.vc).length ? Object.fromEntries(Object.entries(lose.vc).map(([k, n]) => [`~${k}`, n])) : { [`~${id}`]: 1 };
+  const record: CharacterRecord = { ...lose.record!, id, name: alternativeName(lose.record!.name), updatedAt: lose.t, syncVc: altVc, syncCvc: undefined };
+  return { version, alternative: { id, t: lose.t, vc: altVc, h: contentHash(record), record } };
 };
 
 export interface BackupCandidate {
@@ -194,18 +199,18 @@ const canonical = (m: Map<string, Version>): string =>
 
 // Resolves all known versions of one character: versions contained in another are dropped first (so the
 // order the files arrive in can't matter), then the remaining parallel ones are merged in a fixed order.
-const resolve = (versions: Version[]): { version: Version; copies: Version[] } => {
+const resolve = (versions: Version[]): { version: Version; alternatives: Version[] } => {
   const distinct = [...new Map(versions.map((v) => [versionKey(v), v])).values()];
   const maximal = distinct.filter((v) => !distinct.some((u) => u !== v && vcKey(u.vc) !== vcKey(v.vc) && dominatedBy(v.vc, u.vc)));
   maximal.sort((x, y) => (versionKey(x) < versionKey(y) ? -1 : versionKey(x) > versionKey(y) ? 1 : 0));
   let acc = maximal[0];
-  const copies: Version[] = [];
+  const alternatives: Version[] = [];
   for (const v of maximal.slice(1)) {
     const r = combine(acc, v);
     acc = r.version;
-    if (r.copy) copies.push(r.copy);
+    if (r.alternative) alternatives.push(r.alternative);
   }
-  return { version: acc, copies };
+  return { version: acc, alternatives };
 };
 
 export function mergeRound(
@@ -232,10 +237,10 @@ export function mergeRound(
   const pending = [...groups.keys()];
   for (let guard = 0; pending.length && guard < 10_000; guard++) {
     const id = pending.shift()!;
-    const { version, copies } = resolve(groups.get(id)!);
+    const { version, alternatives } = resolve(groups.get(id)!);
     acc.set(id, version);
     // alternatives sync like characters (another device may already have the same one)
-    for (const c of copies) {
+    for (const c of alternatives) {
       const known = groups.get(c.id) ?? [];
       if (known.some((k) => versionKey(k) === versionKey(c))) continue;
       add(c);
@@ -267,7 +272,8 @@ export function mergeRound(
       pulled++;
       // (an alternative a conflict answer dropped can come back as a new question, while its character is
       // there: that's not on the list)
-      const main = v.id.includes("~") ? acc.get(v.id.slice(0, v.id.indexOf("~"))) : undefined;
+      const mainId = mainIdOf(v.id);
+      const main = mainId === null ? undefined : acc.get(mainId);
       const question = main !== undefined && main.h !== DELETED_HASH;
       if (before.h === DELETED_HASH && v.record && !question) undeleted.push(v.record.name);
     }
@@ -312,13 +318,6 @@ export function mergeRound(
   for (const v of acc.values()) published[v.id] = versionKey(v);
   return { records, deletions, file: { format: SYNC_FORMAT, version: SYNC_VERSION, device, savedAt: now, nonce, characters }, publishNeeded, published, pulled, undeleted, backups: backupList };
 }
-
-// `updatedAt`, `syncVc` and `syncCvc` are this device's bookkeeping: they mustn't make the same content look
-// different (fingerprints, files).
-export const stripBookkeeping = (r: CharacterRecord): CharacterRecord => {
-  const { updatedAt: _t, syncVc: _v, syncCvc: _c, ...rest } = r;
-  return rest as CharacterRecord;
-};
 
 // Applies a finished round to the roster as it is NOW. Whatever the user changed while the round was
 // running (edited, created or deleted) is kept as it is: it continues the version it was made from, so

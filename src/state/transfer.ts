@@ -8,7 +8,7 @@
 
 import { CharacterRecord } from "../model/character";
 import { genId, isSafeId, normalizeRecord } from "./storage";
-import { stripBookkeeping } from "./driveMerge";
+import { stripBookkeeping } from "./recordHash";
 import { contentHash } from "./recordHash";
 
 export const BACKUP_FORMAT = "codex-magica-backup";

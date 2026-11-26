@@ -23,7 +23,7 @@ import { CharacterRecord } from "../model/character";
 import { ROSTER_KEY, clone, genId, loadRoster, releaseHeldRoster, saveRoster } from "./storage";
 import { contentHash, nextStamp } from "./recordHash";
 import { DELETED_HASH, VersionVector, bump, deviceId, dominatedBy, isVersionVector, join, vcKey, vcOfKey, versionKeyOf } from "./versions";
-import { alternativeId, conflictCopyName, plainName, reconcile } from "./driveMerge";
+import { alternativeId, alternativeName, mainIdOf, plainName, reconcile } from "./driveMerge";
 import { loadDriveSettings } from "./syncState";
 
 export interface Deletion {
@@ -49,7 +49,6 @@ export interface Conflict {
   main: CharacterRecord; // the version listed now
   alternatives: CharacterRecord[];
 }
-const mainIdOf = (id: string): string | null => (id.includes("~") ? id.slice(0, id.indexOf("~")) : null);
 export const listedRecords = (records: CharacterRecord[]): CharacterRecord[] => {
   const ids = new Set(records.map((r) => r.id));
   return records.filter((r) => {
@@ -218,7 +217,7 @@ export const createRosterStore = () => {
       const altId = prev ? alternativeId(record.id, contentHash(prev)) : "";
       if (prev && base && contentHash(prev) !== contentHash(base) && contentHash(prev) !== contentHash(stamped) && !find(altId)) {
         const dropped = deletions[altId];
-        records = [...records, { ...prev, id: altId, name: conflictCopyName(prev.name), updatedAt: nextStamp(Math.max(prev.updatedAt ?? 0, dropped?.t ?? 0)), syncVc: bump(dropped?.vc ?? {}, me), syncCvc: undefined }];
+        records = [...records, { ...prev, id: altId, name: alternativeName(prev.name), updatedAt: nextStamp(Math.max(prev.updatedAt ?? 0, dropped?.t ?? 0)), syncVc: bump(dropped?.vc ?? {}, me), syncCvc: undefined }];
         delete deletions[altId];
       }
       commit(records, deletions, true);
@@ -274,7 +273,7 @@ export const createRosterStore = () => {
       let records = state.records.filter((r) => !alternatives.includes(r));
       const chosen = alternatives.find((a) => a.id === keep);
       if (keep === "both")
-        records = [...records, ...alternatives.map((a) => ({ ...clone(a), id: genId(), name: conflictCopyName(plainName(a.name)), updatedAt: nextStamp(a.updatedAt), syncVc: bump({}, me), syncCvc: undefined }))];
+        records = [...records, ...alternatives.map((a) => ({ ...clone(a), id: genId(), name: alternativeName(plainName(a.name)), updatedAt: nextStamp(a.updatedAt), syncVc: bump({}, me), syncCvc: undefined }))];
       else if (chosen)
         records = records.map((r) =>
           r.id === mainId ? { ...clone(chosen), id: mainId, name: plainName(chosen.name), updatedAt: nextStamp(Math.max(main.updatedAt ?? 0, chosen.updatedAt ?? 0)), syncVc: bump(main.syncVc, me), syncCvc: undefined } : r
